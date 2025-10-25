@@ -1,0 +1,204 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Trang Quản Lý</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #12121d;
+            font-family: 'Segoe UI', sans-serif;
+            overflow-x: hidden;
+        }
+
+        header {
+            background-color: #36363f;
+            height: 100px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            padding-left: 30px;
+            gap: 20px;
+            z-index: 200;
+            position: relative;
+        }
+
+
+        .menu-button {
+            width: 60px;
+            height: 60px;
+            background-color: #2b2b33;
+            border: none;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+            .menu-button:hover {
+                background-color: #4a4a55;
+            }
+
+
+        .menu-icon, .icon {
+            width: 28px;
+            height: 28px;
+            filter: invert(1); 
+        }
+
+        header img {
+            height: 80px;
+            width: auto;
+        }
+
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -260px;
+            width: 250px;
+            height: 100%;
+            background-color: #2b2b33;
+            color: white;
+            padding: 30px 20px;
+            box-shadow: 3px 0 10px rgba(0, 0, 0, 0.3);
+            transition: left 0.3s ease;
+            z-index: 150;
+        }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .sidebar h2 {
+                margin-top: 0;
+                font-size: 24px;
+                text-align: center;
+                margin-bottom: 40px;
+                border-bottom: 2px solid #444;
+                padding-bottom: 10px;
+            }
+
+            .sidebar a {
+                display: flex;
+                align-items: center;
+                color: white;
+                text-decoration: none;
+                padding: 12px;
+                border-radius: 8px;
+                transition: background-color 0.3s;
+                gap: 10px;
+            }
+
+                .sidebar a:hover {
+                    background-color: #444;
+                }
+
+       
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease;
+            z-index: 100;
+        }
+
+            .overlay.active {
+                opacity: 1;
+                visibility: visible;
+            }
+
+        
+        main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: calc(100vh - 100px);
+        }
+
+        .welcome-box {
+            background-color: #36363f;
+            color: white;
+            padding: 80px 120px;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+            .welcome-box h1 {
+                font-size: 42px;
+                margin: 0;
+                letter-spacing: 1px;
+            }
+    </style>
+</head>
+<body>
+    <header>
+        <button class="menu-button" id="menuBtn">
+            <img src="~/ImgResource/Icons/list-solid-full.svg" alt="Menu" class="menu-icon" />
+        </button>
+        <img src="~/ImgResource/LogoPhoneTech.png" alt="Logo PhoneTech" />
+    </header>
+
+    <div class="sidebar" id="sidebar">
+        <h2>Menu</h2>
+        <a href="#"><img src="~/ImgResource/Icons/id-card-regular-full.svg" class="icon" />Nhân Viên</a>
+        <a href="#"><img src="~/ImgResource/Icons/user-regular-full.svg" class="icon" />Khách Hàng</a>
+        <a href="#"><img src="~/ImgResource/Icons/mobile-screen-solid-full.svg" class="icon" />Sản Phẩm</a>
+        <a href="#"><img src="~/ImgResource/Icons/percent-solid-full.svg" class="icon" />Khuyến Mãi</a>
+        <a href="#"><img src="~/ImgResource/Icons/money-bill-solid-full.svg" class="icon" />Thanh Toán</a>
+        <a href="#"><img src="~/ImgResource/Icons/boxes-packing-solid-full.svg" class="icon" />Đơn Hàng</a>
+        <a href="#"><img src="~/ImgResource/Icons/file-invoice-dollar-solid-full.svg" class="icon" />Hóa Đơn</a>
+        <a href="#"><img src="~/ImgResource/Icons/screwdriver-wrench-solid-full.svg" class="icon" />Bảo Hành</a>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <main>
+        <div class="welcome-box">
+            <h1>Welcome to Tech Phone Management</h1>
+        </div>
+    </main>
+
+    <script>
+        const sidebar = document.getElementById("sidebar");
+        const overlay = document.getElementById("overlay");
+        const menuBtn = document.getElementById("menuBtn");
+
+        menuBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            sidebar.classList.toggle("active");
+            overlay.classList.toggle("active");
+        });
+
+        overlay.addEventListener("click", closeSidebar);
+
+        document.addEventListener("click", (e) => {
+            if (
+                sidebar.classList.contains("active") &&
+                !sidebar.contains(e.target) &&
+                !menuBtn.contains(e.target)
+            ) {
+                closeSidebar();
+            }
+        });
+
+        function closeSidebar() {
+            sidebar.classList.remove("active");
+            overlay.classList.remove("active");
+        }
+    </script>
+</body>
+</html>
