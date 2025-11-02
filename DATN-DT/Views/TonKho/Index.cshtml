@@ -1,0 +1,449 @@
+﻿@model IEnumerable<DATN_DT.Models.TonKho>
+
+@{
+    ViewData["Title"] = "Quản lý Tồn Kho";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <title>Quản lý Tồn Kho</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        body {
+            background-color: #12121d;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .container {
+            margin-top: 50px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #f5f5f5;
+        }
+
+        table {
+            background-color: #1e1e2a;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th {
+            background-color: #2b2b33;
+            color: #fff;
+        }
+
+        td {
+            color: #ddd;
+        }
+
+        .btn-create {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            transition: 0.3s;
+        }
+
+            .btn-create:hover {
+                background-color: #357ab8;
+            }
+
+        .modal-content {
+            background-color: #2b2b33;
+            color: white;
+            border-radius: 10px;
+        }
+
+        .form-control {
+            background-color: #1e1e2a;
+            color: white;
+            border: 1px solid #444;
+        }
+
+            .form-control:focus {
+                border-color: #4a90e2;
+                box-shadow: none;
+            }
+
+        .text-danger {
+            color: #ff4d4d !important;
+        }
+
+        .quantity-high {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .quantity-medium {
+            color: #ffc107;
+            font-weight: bold;
+        }
+
+        .quantity-low {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .text-muted {
+            color: #6c757d !important;
+            font-style: italic;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Quản Lý Tồn Kho</h2>
+
+        <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
+                + Thêm Tồn Kho
+            </button>
+        </div>
+
+        <table class="table table-hover text-center align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Model Sản Phẩm</th>
+                    <th>Kho</th>
+                    <th>Số Lượng</th>
+                    <th>Trạng Thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.IdTonKho</td>
+                        <td>
+                            @if (ViewBag.ModelSanPhams != null && item.IdModelSanPham.HasValue)
+                            {
+                                var modelSanPham = ((Dictionary<int, DATN_DT.Models.ModelSanPham>)ViewBag.ModelSanPhams).GetValueOrDefault(item.IdModelSanPham.Value);
+                                if (modelSanPham != null)
+                                {
+                                    @modelSanPham.TenModel
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Không tìm thấy (ID: @item.IdModelSanPham)</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">Chưa chọn</span>
+                            }
+                        </td>
+                        <td>
+                            @if (ViewBag.Khos != null && item.IdKho.HasValue)
+                            {
+                                var kho = ((Dictionary<int, DATN_DT.Models.Kho>)ViewBag.Khos).GetValueOrDefault(item.IdKho.Value);
+                                if (kho != null)
+                                {
+                                    @kho.TenKho
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Không tìm thấy (ID: @item.IdKho)</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">Chưa chọn</span>
+                            }
+                        </td>
+                        <td>
+                            @{
+                                var quantityClass = "quantity-high";
+                                if (item.SoLuong <= 5)
+                                {
+                                    quantityClass = "quantity-low";
+                                }
+                                else if (item.SoLuong <= 20)
+                                {
+                                    quantityClass = "quantity-medium";
+                                }
+                            }
+                            <span class="@quantityClass">@item.SoLuong</span>
+                        </td>
+                        <td>
+                            @if (item.SoLuong <= 0)
+                            {
+                                <span class="badge bg-danger">Hết hàng</span>
+                            }
+                            else if (item.SoLuong <= 5)
+                            {
+                                <span class="badge bg-warning">Sắp hết</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">Còn hàng</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-sm btn-warning btn-edit"
+                                        data-id="@item.IdTonKho"
+                                        data-idmodelsanpham="@item.IdModelSanPham"
+                                        data-idkho="@item.IdKho">
+                                    Sửa
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Create -->
+    <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title">Thêm Tồn Kho</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="createForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Model Sản Phẩm <span class="text-danger">*</span></label>
+                            <select id="IdModelSanPham" class="form-control">
+                                <option value="">Chọn model sản phẩm</option>
+                            </select>
+                            <small id="errorIdModelSanPham" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Kho <span class="text-danger">*</span></label>
+                            <select id="IdKho" class="form-control">
+                                <option value="">Chọn kho</option>
+                            </select>
+                            <small id="errorIdKho" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <small>
+                                <strong>Lưu ý:</strong> Số lượng sẽ được tự động tính từ số IMEI có trạng thái "Còn hàng" của model sản phẩm này.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!--Edit -->
+    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chỉnh sửa Tồn Kho</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editForm">
+                    <input type="hidden" id="EditIdTonKho" />
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Model Sản Phẩm <span class="text-danger">*</span></label>
+                            <select id="EditIdModelSanPham" class="form-control">
+                                <option value="">Chọn model sản phẩm</option>
+                            </select>
+                            <small id="errorEditIdModelSanPham" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Kho <span class="text-danger">*</span></label>
+                            <select id="EditIdKho" class="form-control">
+                                <option value="">Chọn kho</option>
+                            </select>
+                            <small id="errorEditIdKho" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <small>
+                                <strong>Lưu ý:</strong> Số lượng được tự động tính từ IMEI và không thể chỉnh sửa thủ công.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-warning">Cập nhật</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+   
+        async function loadDropdownData() {
+            try {
+                const responses = await Promise.all([
+                    fetch('/TonKho/GetAllModelSanPham').then(r => r.json()),
+                    fetch('/TonKho/GetAllKho').then(r => r.json())
+                ]);
+
+                const [modelSanPhamList, khoList] = responses;
+                populateDropdown('IdModelSanPham', modelSanPhamList, 'idModelSanPham', 'displayText');
+                populateDropdown('IdKho', khoList, 'idKho', 'displayText');
+
+              
+                populateDropdown('EditIdModelSanPham', modelSanPhamList, 'idModelSanPham', 'displayText');
+                populateDropdown('EditIdKho', khoList, 'idKho', 'displayText');
+
+            } catch (error) {
+                console.error('Error loading dropdown data:', error);
+                alert('Không thể tải dữ liệu dropdown. Vui lòng thử lại!');
+            }
+        }
+
+        function populateDropdown(selectId, dataList, valueField, textField) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="">Chọn...</option>';
+            dataList.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item[valueField];
+                option.textContent = item[textField];
+                select.appendChild(option);
+            });
+        }
+
+        // them
+        document.getElementById("createForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const tonKho = {
+                IdModelSanPham: parseInt(IdModelSanPham.value),
+                IdKho: parseInt(IdKho.value)
+            };
+
+            const response = await fetch('/TonKho/Create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(tonKho)
+            });
+
+            let data = {};
+            try { data = await response.json(); } catch { }
+
+            
+            ["errorIdModelSanPham", "errorIdKho"]
+                .forEach(id => document.getElementById(id).classList.add("d-none"));
+
+            if (!response.ok) {
+                if (response.status === 400 && typeof data === "object") {
+                    if (data.IdModelSanPham) showError("errorIdModelSanPham", data.IdModelSanPham);
+                    if (data.IdKho) showError("errorIdKho", data.IdKho);
+                    return;
+                }
+
+                if (response.status === 409 && data.message) {
+                    showError("errorIdModelSanPham", data.message);
+                    return;
+                }
+
+                alert(data.message || "Không thể thêm Tồn Kho. Vui lòng thử lại!");
+                return;
+            }
+
+            location.reload();
+        });
+
+    
+        document.querySelectorAll(".btn-edit").forEach(btn => {
+            btn.addEventListener("click", () => {
+                EditIdTonKho.value = btn.dataset.id;
+                EditIdModelSanPham.value = btn.dataset.idmodelsanpham;
+                EditIdKho.value = btn.dataset.idkho;
+                
+                new bootstrap.Modal(editModal).show();
+            });
+        });
+
+        // edit
+        document.getElementById("editForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const id = EditIdTonKho.value;
+            const tonKho = {
+                IdModelSanPham: parseInt(EditIdModelSanPham.value),
+                IdKho: parseInt(EditIdKho.value)
+            };
+
+       
+            ["errorEditIdModelSanPham", "errorEditIdKho"]
+                .forEach(id => document.getElementById(id).classList.add("d-none"));
+
+            const response = await fetch('/TonKho/Edit/' + id, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(tonKho)
+            });
+
+            let data = {};
+            try { data = await response.json(); } catch { }
+
+            if (!response.ok) {
+                if (response.status === 400 && typeof data === "object") {
+                    if (data.IdModelSanPham) showError("errorEditIdModelSanPham", data.IdModelSanPham);
+                    if (data.IdKho) showError("errorEditIdKho", data.IdKho);
+                    return;
+                }
+
+                if (response.status === 409 && data.message) {
+                    showError("errorEditIdModelSanPham", data.message);
+                    return;
+                }
+
+                alert(data.message || "Không thể cập nhật Tồn Kho. Vui lòng thử lại!");
+                return;
+            }
+
+            location.reload();
+        });
+
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.classList.remove("d-none");
+        }
+
+        // Reset form khi đóng modal
+        createModal.addEventListener("hidden.bs.modal", () => {
+            createForm.reset();
+            document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
+        });
+
+        editModal.addEventListener("hidden.bs.modal", () => {
+            editForm.reset();
+            document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
+        });
+
+      
+        document.addEventListener('DOMContentLoaded', loadDropdownData);
+    </script>
+</body>
+</html>

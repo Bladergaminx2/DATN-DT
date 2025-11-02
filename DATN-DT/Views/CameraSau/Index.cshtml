@@ -1,0 +1,357 @@
+﻿@model IEnumerable<DATN_DT.Models.CameraSau>
+
+@{
+    ViewData["Title"] = "Quản lý Camera Sau";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <title>Quản lý Camera Sau</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        body {
+            background-color: #12121d;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .container {
+            margin-top: 50px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #f5f5f5;
+        }
+
+        table {
+            background-color: #1e1e2a;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th {
+            background-color: #2b2b33;
+            color: #fff;
+        }
+
+        td {
+            color: #ddd;
+        }
+
+        .btn-create {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            transition: 0.3s;
+        }
+
+            .btn-create:hover {
+                background-color: #357ab8;
+            }
+
+        .modal-content {
+            background-color: #2b2b33;
+            color: white;
+            border-radius: 10px;
+        }
+
+        .form-control {
+            background-color: #1e1e2a;
+            color: white;
+            border: 1px solid #444;
+        }
+
+            .form-control:focus {
+                border-color: #4a90e2;
+                box-shadow: none;
+            }
+
+        .text-danger {
+            color: #ff4d4d !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Quản Lý Camera Sau</h2>
+
+        <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
+                + Thêm Camera Sau
+            </button>
+        </div>
+
+        <table class="table table-hover text-center align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Độ phân giải</th>
+                    <th>Số lượng ống kính</th>
+                    <th>Tính năng</th>
+                    <th>Quay video</th>
+                    <th>Mô tả</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.IdCameraSau</td>
+                        <td>@item.DoPhanGiaiCamSau</td>
+                        <td>@item.SoLuongOngKinh</td>
+                        <td>@item.TinhNangCamSau</td>
+                        <td>@item.QuayVideoCamSau</td>
+                        <td>@item.MoTaCamSau</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning btn-edit"
+                                    data-id="@item.IdCameraSau"
+                                    data-dophangiai="@item.DoPhanGiaiCamSau"
+                                    data-ongkinh="@item.SoLuongOngKinh"
+                                    data-tinhnang="@item.TinhNangCamSau"
+                                    data-quayvideo="@item.QuayVideoCamSau"
+                                    data-mota="@item.MoTaCamSau">
+                                Sửa
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Form create -->
+    <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title">Thêm Camera Sau</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="createForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Độ phân giải <span class="text-danger">*</span></label>
+                            <input type="text" id="DoPhanGiaiCamSau" class="form-control" placeholder="Nhập độ phân giải" />
+                            <small id="errorDoPhanGiaiCamSau" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Số lượng ống kính <span class="text-danger">*</span></label>
+                            <input type="text" id="SoLuongOngKinh" class="form-control" placeholder="Nhập số lượng ống kính" />
+                            <small id="errorSoLuongOngKinh" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tính năng <span class="text-danger">*</span></label>
+                            <input type="text" id="TinhNangCamSau" class="form-control" placeholder="Nhập tính năng" />
+                            <small id="errorTinhNangCamSau" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Quay video <span class="text-danger">*</span></label>
+                            <input type="text" id="QuayVideoCamSau" class="form-control" placeholder="Nhập khả năng quay video" />
+                            <small id="errorQuayVideoCamSau" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mô tả</label>
+                            <textarea id="MoTaCamSau" class="form-control" rows="3" placeholder="Nhập mô tả (nếu có)"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form edit -->
+    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chỉnh sửa Camera Sau</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editForm">
+                    <input type="hidden" id="EditIdCameraSau" />
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Độ phân giải <span class="text-danger">*</span></label>
+                            <input type="text" id="EditDoPhanGiaiCamSau" class="form-control" />
+                            <small id="errorEditDoPhanGiaiCamSau" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Số lượng ống kính <span class="text-danger">*</span></label>
+                            <input type="text" id="EditSoLuongOngKinh" class="form-control" />
+                            <small id="errorEditSoLuongOngKinh" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tính năng <span class="text-danger">*</span></label>
+                            <input type="text" id="EditTinhNangCamSau" class="form-control" />
+                            <small id="errorEditTinhNangCamSau" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Quay video <span class="text-danger">*</span></label>
+                            <input type="text" id="EditQuayVideoCamSau" class="form-control" />
+                            <small id="errorEditQuayVideoCamSau" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mô tả</label>
+                            <textarea id="EditMoTaCamSau" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-warning">Cập nhật</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Cam Sau
+        document.getElementById("createForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const cam = {
+                DoPhanGiaiCamSau: DoPhanGiaiCamSau.value.trim(),
+                SoLuongOngKinh: SoLuongOngKinh.value.trim(),
+                TinhNangCamSau: TinhNangCamSau.value.trim(),
+                QuayVideoCamSau: QuayVideoCamSau.value.trim(),
+                MoTaCamSau: MoTaCamSau.value.trim()
+            };
+
+            const response = await fetch('/CameraSau/Create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cam)
+            });
+
+            let data = {};
+            try { data = await response.json(); } catch { }
+
+            ["errorDoPhanGiaiCamSau", "errorSoLuongOngKinh", "errorTinhNangCamSau", "errorQuayVideoCamSau"]
+                .forEach(id => document.getElementById(id).classList.add("d-none"));
+
+            if (!response.ok) {
+                if (response.status === 400 && typeof data === "object") {
+                    if (data.DoPhanGiaiCamSau) showError("errorDoPhanGiaiCamSau", data.DoPhanGiaiCamSau);
+                    if (data.SoLuongOngKinh) showError("errorSoLuongOngKinh", data.SoLuongOngKinh);
+                    if (data.TinhNangCamSau) showError("errorTinhNangCamSau", data.TinhNangCamSau);
+                    if (data.QuayVideoCamSau) showError("errorQuayVideoCamSau", data.QuayVideoCamSau);
+                    return;
+                }
+
+                if (response.status === 409 && data.message) {
+                    ["errorDoPhanGiaiCamSau", "errorSoLuongOngKinh", "errorTinhNangCamSau", "errorQuayVideoCamSau"]
+                        .forEach(id => showError(id, data.message));
+                    return;
+                }
+
+                alert(data.message || "Không thể thêm Camera Sau. Vui lòng thử lại!");
+                return;
+            }
+
+            location.reload();
+        });
+
+        
+        document.querySelectorAll(".btn-edit").forEach(btn => {
+            btn.addEventListener("click", () => {
+                EditIdCameraSau.value = btn.dataset.id;
+                EditDoPhanGiaiCamSau.value = btn.dataset.dophangiai;
+                EditSoLuongOngKinh.value = btn.dataset.ongkinh;
+                EditTinhNangCamSau.value = btn.dataset.tinhnang;
+                EditQuayVideoCamSau.value = btn.dataset.quayvideo;
+                EditMoTaCamSau.value = btn.dataset.mota;
+                new bootstrap.Modal(editModal).show();
+            });
+        });
+
+        // Cap Nhat
+        document.getElementById("editForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const id = EditIdCameraSau.value;
+            const cam = {
+                IdCameraSau: id,
+                DoPhanGiaiCamSau: EditDoPhanGiaiCamSau.value.trim(),
+                SoLuongOngKinh: EditSoLuongOngKinh.value.trim(),
+                TinhNangCamSau: EditTinhNangCamSau.value.trim(),
+                QuayVideoCamSau: EditQuayVideoCamSau.value.trim(),
+                MoTaCamSau: EditMoTaCamSau.value.trim()
+            };
+
+            ["errorEditDoPhanGiaiCamSau", "errorEditSoLuongOngKinh", "errorEditTinhNangCamSau", "errorEditQuayVideoCamSau"]
+                .forEach(id => document.getElementById(id).classList.add("d-none"));
+
+            const response = await fetch('/CameraSau/Edit/' + id, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cam)
+            });
+
+            let data = {};
+            try { data = await response.json(); } catch { }
+
+            if (!response.ok) {
+                if (response.status === 400 && typeof data === "object") {
+                    if (data.DoPhanGiaiCamSau) showError("errorEditDoPhanGiaiCamSau", data.DoPhanGiaiCamSau);
+                    if (data.SoLuongOngKinh) showError("errorEditSoLuongOngKinh", data.SoLuongOngKinh);
+                    if (data.TinhNangCamSau) showError("errorEditTinhNangCamSau", data.TinhNangCamSau);
+                    if (data.QuayVideoCamSau) showError("errorEditQuayVideoCamSau", data.QuayVideoCamSau);
+                    return;
+                }
+
+                if (response.status === 409 && data.message) {
+                    ["errorEditDoPhanGiaiCamSau", "errorEditSoLuongOngKinh", "errorEditTinhNangCamSau", "errorEditQuayVideoCamSau"]
+                        .forEach(id => showError(id, data.message));
+                    return;
+                }
+
+                alert(data.message || "Không thể cập nhật Camera Sau. Vui lòng thử lại!");
+                return;
+            }
+
+            location.reload();
+        });
+
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.classList.remove("d-none");
+        }
+
+        // Reset form 
+        createModal.addEventListener("hidden.bs.modal", () => {
+            createForm.reset();
+            document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
+        });
+
+        editModal.addEventListener("hidden.bs.modal", () => {
+            editForm.reset();
+            document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
+        });
+    </script>
+</body>
+</html>

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DATN_DT.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20251023035105_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251101025251_PolytechPhone")]
+    partial class PolytechPhone
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -603,6 +603,9 @@ namespace DATN_DT.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdSanPham"));
+
+                    b.Property<decimal?>("GiaGoc")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal?>("GiaNiemYet")
                         .HasColumnType("decimal(18,2)");
