@@ -28,7 +28,6 @@
             position: relative;
         }
 
-
         .menu-button {
             width: 60px;
             height: 60px;
@@ -46,11 +45,10 @@
                 background-color: #4a4a55;
             }
 
-
         .menu-icon, .icon {
             width: 28px;
             height: 28px;
-            filter: invert(1); 
+            filter: invert(1);
         }
 
         header img {
@@ -58,7 +56,7 @@
             width: auto;
         }
 
-
+        /* Sidebar */
         .sidebar {
             position: fixed;
             top: 0;
@@ -71,6 +69,7 @@
             box-shadow: 3px 0 10px rgba(0, 0, 0, 0.3);
             transition: left 0.3s ease;
             z-index: 150;
+            overflow-y: auto;
         }
 
             .sidebar.active {
@@ -101,7 +100,24 @@
                     background-color: #444;
                 }
 
-       
+        /* Submenu */
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+            margin-left: 25px;
+        }
+
+            .submenu a {
+                font-size: 14px;
+                padding: 8px 0;
+            }
+
+            .submenu.show {
+                max-height: 300px;
+            }
+
+        /* Overlay */
         .overlay {
             position: fixed;
             top: 0;
@@ -120,7 +136,7 @@
                 visibility: visible;
             }
 
-        
+        /* Main */
         main {
             display: flex;
             justify-content: center;
@@ -156,7 +172,19 @@
         <h2>Menu</h2>
         <a href="#"><img src="~/ImgResource/Icons/id-card-regular-full.svg" class="icon" />Nhân Viên</a>
         <a href="#"><img src="~/ImgResource/Icons/user-regular-full.svg" class="icon" />Khách Hàng</a>
-        <a href="#"><img src="~/ImgResource/Icons/mobile-screen-solid-full.svg" class="icon" />Sản Phẩm</a>
+
+        <a href="#" id="productMenu">
+            <img src="~/ImgResource/Icons/mobile-screen-solid-full.svg" class="icon" />Sản Phẩm
+        </a>
+        <div class="submenu" id="productSubmenu">
+            <a href="#">Màn Hình</a>
+            <a href="#">Camera Trước</a>
+            <a href="#">Camera Sau</a>
+            <a href="#">Pin</a>
+            <a href="#">RAM</a>
+            <a href="#">ROM</a>
+        </div>
+
         <a href="#"><img src="~/ImgResource/Icons/percent-solid-full.svg" class="icon" />Khuyến Mãi</a>
         <a href="#"><img src="~/ImgResource/Icons/money-bill-solid-full.svg" class="icon" />Thanh Toán</a>
         <a href="#"><img src="~/ImgResource/Icons/boxes-packing-solid-full.svg" class="icon" />Đơn Hàng</a>
@@ -176,6 +204,8 @@
         const sidebar = document.getElementById("sidebar");
         const overlay = document.getElementById("overlay");
         const menuBtn = document.getElementById("menuBtn");
+        const productMenu = document.getElementById("productMenu");
+        const productSubmenu = document.getElementById("productSubmenu");
 
         menuBtn.addEventListener("click", (e) => {
             e.stopPropagation();
@@ -199,6 +229,12 @@
             sidebar.classList.remove("active");
             overlay.classList.remove("active");
         }
+
+        // Toggle submenu
+        productMenu.addEventListener("click", (e) => {
+            e.preventDefault();
+            productSubmenu.classList.toggle("show");
+        });
     </script>
 </body>
 </html>

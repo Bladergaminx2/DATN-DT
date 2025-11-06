@@ -1,0 +1,311 @@
+﻿@model IEnumerable<DATN_DT.Models.DonHang>
+
+@{
+    ViewData["Title"] = "Quản lý Đơn Hàng";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <title>Quản lý Đơn Hàng</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        /* CSS Dark Mode */
+        body {
+            background-color: #12121d;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .container {
+            margin-top: 50px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #f5f5f5;
+        }
+
+        .card {
+            background-color: #1e1e2a;
+            border: 1px solid #333;
+            margin-bottom: 20px;
+            border-radius: 10px;
+        }
+
+        .card-header {
+            background-color: #2b2b33;
+            color: #fff;
+            padding: 15px;
+            border-bottom: 1px solid #444;
+        }
+
+        .table {
+            color: #ddd;
+        }
+
+            .table th {
+                background-color: #3e3e4a;
+                color: #ccc;
+            }
+
+        .total-amount {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #ffc107;
+        }
+
+        .form-control, .form-select {
+            background-color: #1e1e2a;
+            color: white;
+            border: 1px solid #444;
+        }
+
+        .modal-content {
+            background-color: #2b2b33;
+            color: white;
+            border-radius: 10px;
+        }
+
+        .text-danger {
+            color: #ff4d4d !important;
+        }
+
+        .status-success {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            color: #ffc107;
+            font-weight: bold;
+        }
+
+        .status-danger {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .status-info {
+            color: #17a2b8;
+            font-weight: bold;
+        }
+
+        .btn-create {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            transition: 0.3s;
+        }
+
+        .form-control option {
+            background-color: #1e1e2a;
+            color: white;
+        }
+        /* Fix hiển thị Option */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Quản Lý Đơn Hàng</h2>
+
+        <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
+                + Tạo Đơn Hàng Header
+            </button>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="alert alert-info text-center">Chưa có đơn hàng nào được tạo.</div>
+        }
+
+        @foreach (var donHang in Model)
+        {
+            var totalAmount = donHang.DonHangChiTiets?.Sum(dhct => dhct.ThanhTien) ?? 0;
+            var dhStatusClass = donHang.TrangThaiDH switch { "Đã giao" => "status-success", "Đã hủy" => "status-danger", "Chờ xử lý" => "status-pending", _ => "status-info" };
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <div><strong>Mã Đơn: @donHang.MaDon</strong> | Khách Hàng: @donHang.KhachHang?.HoTenKhachHang</div>
+                    <div>Ngày Đặt: @donHang.NgayDat?.ToString("dd/MM/yyyy HH:mm")</div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">**Tổng tiền:** <span class="total-amount">@totalAmount.ToString("N0") ₫</span></div>
+                        <div class="col-md-4">**Trạng thái ĐH:** <span class="@dhStatusClass">@donHang.TrangThaiDH</span></div>
+                        <div class="col-md-4">**Trạng thái TT:** <span class="status-info">@donHang.TrangThaiHoaDon</span></div>
+                    </div>
+
+                    <h5>Chi Tiết Đơn Hàng (@donHang.DonHangChiTiets?.Count() sản phẩm)</h5>
+
+                    @if (donHang.DonHangChiTiets != null && donHang.DonHangChiTiets.Any())
+                    {
+                        <table class="table table-sm text-center">
+                            <thead>
+                                <tr><th>Model Sản Phẩm</th><th>Đơn Giá</th><th>SL</th><th>Thành Tiền</th><th>KM ID</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var chiTiet in donHang.DonHangChiTiets)
+                                {
+                                    <tr>
+                                        <td class="text-start">@chiTiet.ModelSanPham?.TenModel</td>
+                                        <td>@chiTiet.DonGia?.ToString("N0") ₫</td>
+                                        <td>@chiTiet.SoLuong</td>
+                                        <td class="text-warning">@chiTiet.ThanhTien?.ToString("N0") ₫</td>
+                                        <td>@(chiTiet.IdKhuyenMai.HasValue? chiTiet.IdKhuyenMai.Value.ToString() : "N/A")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Chưa có chi tiết sản phẩm. Cần tạo Chi Tiết cho Đơn hàng này.</p>
+                    }
+
+                    <div class="text-end mt-3">
+                        <button class="btn btn-sm btn-info">Thêm Chi Tiết</button>
+                        <button class="btn btn-sm btn-warning">Cập nhật Trạng Thái</button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title">Tạo Đơn Hàng Header Mới</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="createOrderHeaderForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Mã Đơn <span class="text-danger">*</span></label>
+                            <input type="text" id="MaDon" class="form-control" placeholder="Mã đơn hàng" />
+                            <small id="errorMaDon" class="text-danger d-none"></small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Khách Hàng <span class="text-danger">*</span></label>
+                            <select id="IdKhachHang" class="form-control form-select"></select>
+                            <small id="errorIdKhachHang" class="text-danger d-none"></small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Địa Chỉ Giao Hàng</label>
+                            <textarea id="DiaChiGiaoHang" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Phương thức TT</label>
+                            <select id="PhuongThucThanhToan" class="form-control form-select">
+                                <option value="Tiền mặt">Tiền mặt</option>
+                                <option value="Chuyển khoản">Chuyển khoản</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Ghi Chú</label>
+                            <input type="text" id="GhiChu" class="form-control" placeholder="Ghi chú (tùy chọn)" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Tạo Đơn Hàng</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.classList.remove("d-none");
+        }
+
+        // --- Load Data cho Dropdown ---
+        async function loadKhachHangs() {
+            try {
+                const khachHangsResponse = await fetch('/DonHang/GetKhachHangs');
+                const khachHangs = await khachHangsResponse.json();
+                populateSelect('IdKhachHang', khachHangs, 'idKhachHang', 'displayText', 'Chọn khách hàng');
+            } catch (error) {
+                console.error('Lỗi khi load dữ liệu khách hàng:', error);
+            }
+        }
+
+        function populateSelect(selectId, data, valueField, textField, defaultText) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = `<option value="">${defaultText}</option>`;
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item[valueField];
+                option.textContent = item[textField];
+                select.appendChild(option);
+            });
+        }
+
+        // --- Submit Header Đơn Hàng ---
+        document.getElementById('createOrderHeaderForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            document.getElementById('errorMaDon').classList.add('d-none');
+            document.getElementById('errorIdKhachHang').classList.add('d-none');
+
+            const donHang = {
+                MaDon: document.getElementById('MaDon').value.trim(),
+                IdKhachHang: parseInt(document.getElementById('IdKhachHang').value) || null,
+                DiaChiGiaoHang: document.getElementById('DiaChiGiaoHang').value.trim(),
+                PhuongThucThanhToan: document.getElementById('PhuongThucThanhToan').value,
+                GhiChu: document.getElementById('GhiChu').value.trim()
+            };
+
+            if (!donHang.MaDon) { showError('errorMaDon', 'Mã đơn hàng là bắt buộc!'); return; }
+            if (!donHang.IdKhachHang) { showError('errorIdKhachHang', 'Khách hàng là bắt buộc!'); return; }
+
+            const response = await fetch('/DonHang/Create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(donHang)
+            });
+
+            let data = {};
+            try { data = await response.json(); } catch { }
+
+            if (!response.ok) {
+                if (response.status === 409) {
+                    showError('errorMaDon', data.message);
+                } else {
+                    alert(data.message || "Lỗi tạo đơn hàng. Vui lòng thử lại!");
+                }
+                return;
+            }
+
+            alert(data.message || "Tạo Header Đơn hàng thành công! Vui lòng thêm chi tiết sản phẩm.");
+            location.reload();
+        });
+
+
+        // --- Khởi tạo ---
+        document.addEventListener('DOMContentLoaded', loadKhachHangs);
+
+        // Reset form khi đóng modal
+        const createModal = document.getElementById('createModal');
+        if (createModal) {
+            createModal.addEventListener("hidden.bs.modal", () => {
+                document.getElementById('createOrderHeaderForm').reset();
+                document.querySelectorAll('#createOrderHeaderForm small').forEach(e => e.classList.add("d-none"));
+            });
+        }
+    </script>
+</body>
+</html>

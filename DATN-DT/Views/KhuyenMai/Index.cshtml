@@ -1,0 +1,538 @@
+﻿@model IEnumerable<DATN_DT.Models.KhuyenMai>
+
+@{
+    ViewData["Title"] = "Quản lý Khuyến Mãi";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <title>Quản lý Khuyến Mãi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        body {
+            background-color: #12121d;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .container {
+            margin-top: 50px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #f5f5f5;
+        }
+
+        table {
+            background-color: #1e1e2a;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th {
+            background-color: #2b2b33;
+            color: #fff;
+        }
+
+        td {
+            color: #ddd;
+        }
+
+        .btn-create {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            transition: 0.3s;
+        }
+
+            .btn-create:hover {
+                background-color: #357ab8;
+            }
+
+        .modal-content {
+            background-color: #2b2b33;
+            color: white;
+            border-radius: 10px;
+        }
+
+        .form-control {
+            background-color: #1e1e2a;
+            color: white;
+            border: 1px solid #444;
+        }
+
+            .form-control:focus {
+                border-color: #4a90e2;
+                box-shadow: none;
+            }
+
+        .text-danger {
+            color: #ff4d4d !important;
+        }
+
+        .status-active {
+            color: #28a745;
+            font-weight: bold;
+        }
+        /* Đang diễn ra */
+        .status-inactive {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        /* Đã kết thúc */
+        .status-warning {
+            color: #ffc107;
+            font-weight: bold;
+        }
+        /* Sắp diễn ra */
+
+        .discount-value {
+            font-weight: bold;
+            color: #4a90e2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Quản Lý Khuyến Mãi</h2>
+
+        <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
+                + Thêm Khuyến Mãi
+            </button>
+        </div>
+
+        <table class="table table-hover text-center align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Mã KM</th>
+                    <th>Giá Trị</th>
+                    <th>Loại Giảm</th>
+                    <th>Áp Dụng Cho</th>
+                    <th>Ngày Bắt Đầu</th>
+                    <th>Ngày Kết Thúc</th>
+                    <th>Trạng Thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.IdKhuyenMai</td>
+                        <td>@item.MaKM</td>
+                        <td class="discount-value">
+                            @if (item.LoaiGiam == "Phần trăm")
+                            {
+                                <span>@item.GiaTri%</span>
+                            }
+                            else
+                            {
+                                <span>@item.GiaTri?.ToString("N0") ₫</span>
+                            }
+                        </td>
+                        <td>@item.LoaiGiam</td>
+                        <td>@item.ApDungVoi</td>
+                        <td>@item.NgayBatDau?.ToString("dd/MM/yyyy")</td>
+                        <td>@item.NgayKetThuc?.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            @{
+                                var statusClass = "status-info";
+                                if (item.TrangThaiKM == "Đang diễn ra")
+                                {
+                                    statusClass = "status-active";
+                                }
+                                else if (item.TrangThaiKM == "Đã kết thúc")
+                                {
+                                    statusClass = "status-inactive";
+                                }
+                                else if (item.TrangThaiKM == "Sắp diễn ra")
+                                {
+                                    statusClass = "status-warning";
+                                }
+                            }
+                            <span class="@statusClass">
+                                @item.TrangThaiKM
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-warning btn-edit"
+                                    data-id="@item.IdKhuyenMai"
+                                    data-makm="@item.MaKM"
+                                    data-mota="@item.MoTaKhuyenMai"
+                                    data-loaigiam="@item.LoaiGiam"
+                                    data-giatri="@item.GiaTri"
+                                    data-apdungvoi="@item.ApDungVoi"
+                                    data-batdau="@item.NgayBatDau?.ToString("yyyy-MM-dd")"
+                                    data-ketthuc="@item.NgayKetThuc?.ToString("yyyy-MM-dd")"
+                                    data-trangthai="@item.TrangThaiKM">
+                                Sửa
+                            </button>
+                            <button class="btn btn-sm btn-danger btn-delete" data-id="@item.IdKhuyenMai">
+                                Xóa
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title">Thêm Khuyến Mãi</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="createForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Mã KM <span class="text-danger">*</span></label>
+                                    <input type="text" id="MaKM" class="form-control" placeholder="Mã Khuyến Mãi" />
+                                    <small id="errorMaKM" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Loại Giảm <span class="text-danger">*</span></label>
+                                    <select id="LoaiGiam" class="form-control">
+                                        <option value="">Chọn loại giảm</option>
+                                        <option value="Phần trăm">Phần trăm (%)</option>
+                                        <option value="Số tiền">Số tiền (₫)</option>
+                                    </select>
+                                    <small id="errorLoaiGiam" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Giá Trị <span class="text-danger">*</span></label>
+                                    <input type="number" id="GiaTri" class="form-control" placeholder="Nhập giá trị giảm" min="1" />
+                                    <small id="errorGiaTri" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Áp Dụng Cho</label>
+                                    <select id="ApDungVoi" class="form-control">
+                                        <option value="Tất cả">Tất cả</option>
+                                        <option value="Khách hàng mới">Khách hàng mới</option>
+                                        <option value="Sản phẩm A">Sản phẩm cụ thể</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Ngày Bắt Đầu <span class="text-danger">*</span></label>
+                                    <input type="date" id="NgayBatDau" class="form-control" />
+                                    <small id="errorNgayBatDau" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Ngày Kết Thúc <span class="text-danger">*</span></label>
+                                    <input type="date" id="NgayKetThuc" class="form-control" />
+                                    <small id="errorNgayKetThuc" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mô Tả</label>
+                            <textarea id="MoTaKhuyenMai" class="form-control" placeholder="Mô tả chi tiết chương trình" rows="2"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Trạng Thái</label>
+                            <select id="TrangThaiKM" class="form-control">
+                                <option value="Sắp diễn ra">Sắp diễn ra</option>
+                                <option value="Đang diễn ra">Đang diễn ra</option>
+                                <option value="Đã kết thúc">Đã kết thúc</option>
+                                <option value="Tạm dừng">Tạm dừng</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chỉnh sửa Khuyến Mãi</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editForm">
+                    <input type="hidden" id="EditIdKhuyenMai" />
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Mã KM <span class="text-danger">*</span></label>
+                                    <input type="text" id="EditMaKM" class="form-control" />
+                                    <small id="errorEditMaKM" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Loại Giảm <span class="text-danger">*</span></label>
+                                    <select id="EditLoaiGiam" class="form-control">
+                                        <option value="Phần trăm">Phần trăm (%)</option>
+                                        <option value="Số tiền">Số tiền (₫)</option>
+                                    </select>
+                                    <small id="errorEditLoaiGiam" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Giá Trị <span class="text-danger">*</span></label>
+                                    <input type="number" id="EditGiaTri" class="form-control" min="1" />
+                                    <small id="errorEditGiaTri" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Áp Dụng Cho</label>
+                                    <select id="EditApDungVoi" class="form-control">
+                                        <option value="Tất cả">Tất cả</option>
+                                        <option value="Khách hàng mới">Khách hàng mới</option>
+                                        <option value="Sản phẩm A">Sản phẩm cụ thể</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Ngày Bắt Đầu <span class="text-danger">*</span></label>
+                                    <input type="date" id="EditNgayBatDau" class="form-control" />
+                                    <small id="errorEditNgayBatDau" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Ngày Kết Thúc <span class="text-danger">*</span></label>
+                                    <input type="date" id="EditNgayKetThuc" class="form-control" />
+                                    <small id="errorEditNgayKetThuc" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mô Tả</label>
+                            <textarea id="EditMoTaKhuyenMai" class="form-control" rows="2"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Trạng Thái</label>
+                            <select id="EditTrangThaiKM" class="form-control">
+                                <option value="Sắp diễn ra">Sắp diễn ra</option>
+                                <option value="Đang diễn ra">Đang diễn ra</option>
+                                <option value="Đã kết thúc">Đã kết thúc</option>
+                                <option value="Tạm dừng">Tạm dừng</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-warning">Cập nhật</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.classList.remove("d-none");
+        }
+
+        // --- Thêm Khuyến Mãi ---
+        document.getElementById("createForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const km = {
+                MaKM: MaKM.value.trim(),
+                MoTaKhuyenMai: MoTaKhuyenMai.value.trim() || null,
+                LoaiGiam: LoaiGiam.value,
+                ApDungVoi: ApDungVoi.value,
+                GiaTri: parseFloat(GiaTri.value) || 0,
+                NgayBatDau: NgayBatDau.value,
+                NgayKetThuc: NgayKetThuc.value,
+                TrangThaiKM: TrangThaiKM.value
+            };
+
+            // Reset errors
+            document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
+
+            const response = await fetch('/KhuyenMai/Create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(km)
+            });
+
+            let data = {};
+            try { data = await response.json(); } catch { }
+
+            if (!response.ok) {
+                if (response.status === 400 && typeof data === "object") {
+                    if (data.MaKM) showError("errorMaKM", data.MaKM);
+                    if (data.LoaiGiam) showError("errorLoaiGiam", data.LoaiGiam);
+                    if (data.GiaTri) showError("errorGiaTri", data.GiaTri);
+                    if (data.NgayBatDau) showError("errorNgayBatDau", data.NgayBatDau);
+                    if (data.NgayKetThuc) showError("errorNgayKetThuc", data.NgayKetThuc);
+                    return;
+                }
+
+                if (response.status === 409 && data.message) {
+                    showError("errorMaKM", data.message);
+                    return;
+                }
+
+                alert(data.message || "Không thể thêm Khuyến Mãi. Vui lòng thử lại!");
+                return;
+            }
+
+            location.reload();
+        });
+
+        // --- Lắng nghe sự kiện mở modal Sửa ---
+        document.querySelectorAll(".btn-edit").forEach(btn => {
+            btn.addEventListener("click", () => {
+                EditIdKhuyenMai.value = btn.dataset.id;
+                EditMaKM.value = btn.dataset.makm;
+                EditMoTaKhuyenMai.value = btn.dataset.mota || '';
+                EditLoaiGiam.value = btn.dataset.loaigiam;
+                EditApDungVoi.value = btn.dataset.apdungvoi;
+                EditGiaTri.value = btn.dataset.giatri;
+                EditNgayBatDau.value = btn.dataset.batdau;
+                EditNgayKetThuc.value = btn.dataset.ketthuc;
+                EditTrangThaiKM.value = btn.dataset.trangthai;
+
+                new bootstrap.Modal(editModal).show();
+            });
+        });
+
+        // --- Cập nhật Khuyến Mãi ---
+        document.getElementById("editForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const id = EditIdKhuyenMai.value;
+            const km = {
+                IdKhuyenMai: parseInt(id),
+                MaKM: EditMaKM.value.trim(),
+                MoTaKhuyenMai: EditMoTaKhuyenMai.value.trim() || null,
+                LoaiGiam: EditLoaiGiam.value,
+                ApDungVoi: EditApDungVoi.value,
+                GiaTri: parseFloat(EditGiaTri.value) || 0,
+                NgayBatDau: EditNgayBatDau.value,
+                NgayKetThuc: EditNgayKetThuc.value,
+                TrangThaiKM: EditTrangThaiKM.value
+            };
+
+            // Reset errors
+            document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
+
+            const response = await fetch('/KhuyenMai/Edit/' + id, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(km)
+            });
+
+            let data = {};
+            try { data = await response.json(); } catch { }
+
+            if (!response.ok) {
+                if (response.status === 400 && typeof data === "object") {
+                    if (data.MaKM) showError("errorEditMaKM", data.MaKM);
+                    if (data.LoaiGiam) showError("errorEditLoaiGiam", data.LoaiGiam);
+                    if (data.GiaTri) showError("errorEditGiaTri", data.GiaTri);
+                    if (data.NgayBatDau) showError("errorEditNgayBatDau", data.NgayBatDau);
+                    if (data.NgayKetThuc) showError("errorEditNgayKetThuc", data.NgayKetThuc);
+                    return;
+                }
+
+                if (response.status === 409 && data.message) {
+                    showError("errorEditMaKM", data.message);
+                    return;
+                }
+
+                alert(data.message || "Không thể cập nhật Khuyến Mãi. Vui lòng thử lại!");
+                return;
+            }
+
+            location.reload();
+        });
+
+        // --- Xóa Khuyến Mãi ---
+        document.querySelectorAll(".btn-delete").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const id = btn.dataset.id;
+                const confirmDelete = confirm("Bạn có chắc chắn muốn xóa Khuyến Mãi ID " + id + " này không?");
+
+                if (confirmDelete) {
+                    const response = await fetch('/KhuyenMai/Delete/' + id, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                    });
+
+                    let data = {};
+                    try { data = await response.json(); } catch { }
+
+                    if (response.ok) {
+                        alert("Xóa Khuyến Mãi thành công!");
+                        location.reload();
+                    } else {
+                        alert(data.message || "Lỗi khi xóa Khuyến Mãi. Vui lòng thử lại!");
+                    }
+                }
+            });
+        });
+
+        // --- Reset form khi đóng modal ---
+        createModal.addEventListener("hidden.bs.modal", () => {
+            createForm.reset();
+            document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
+            document.getElementById('TrangThaiKM').value = "Sắp diễn ra";
+        });
+
+        editModal.addEventListener("hidden.bs.modal", () => {
+            editForm.reset();
+            document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
+        });
+    </script>
+</body>
+</html>

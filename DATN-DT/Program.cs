@@ -33,6 +33,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=QuanLy}/{action=Index}/{id?}");
+    pattern: "{controller=Imei}/{action=Index}/{id?}");
 
 app.Run();
