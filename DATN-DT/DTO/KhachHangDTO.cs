@@ -1,6 +1,6 @@
-﻿namespace DATN_DT.Models
+﻿namespace DATN_DT.DTO
 {
-    public class KhachHang
+    public class KhachHangDTO
     {
         public int IdKhachHang { get; set; }
         public string? HoTenKhachHang { get; set; }
