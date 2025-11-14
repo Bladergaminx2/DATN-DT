@@ -1,4 +1,4 @@
-﻿using DATN_DT.Data;
+using DATN_DT.Data;
 using DATN_DT.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -34,10 +34,6 @@ namespace DATN_DT.Controllers
                                   TrangThaiSP = sp.TrangThaiSP,
                                   VAT = sp.VAT
                               }).ToListAsync();
-
-            return View(list);
-        }
-
         [HttpPost]
         [Consumes("application/json")]
         public async Task<IActionResult> Create([FromBody] SanPham? sp)
@@ -76,7 +72,6 @@ namespace DATN_DT.Controllers
                 sp.TenSanPham = sp.TenSanPham.Trim();
                 sp.MoTa = sp.MoTa?.Trim();
                 sp.TrangThaiSP = sp.TrangThaiSP.Trim();
-
                 sp.GiaNiemYet = sp.GiaGoc * (1 + (sp.VAT ?? 0) / 100);
 
                 _context.SanPhams.Add(sp);
@@ -172,4 +167,5 @@ namespace DATN_DT.Controllers
             }
         }
     }
+}
 }

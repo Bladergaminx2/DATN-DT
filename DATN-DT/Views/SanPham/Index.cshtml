@@ -111,7 +111,6 @@
             border-radius: 4px;
             font-size: 12px;
         }
-
         .form-control::placeholder {
             color: #888 !important;
             opacity: 1 !important;
@@ -524,7 +523,6 @@
             el.textContent = msg;
             el.classList.remove("d-none");
         }
-
         async function loadThuongHieu() {
             try {
                 const response = await fetch('/SanPham/GetThuongHieu');
@@ -706,7 +704,6 @@
                 VAT: parseFloat(EditVAT.value) || 0,
                 TrangThaiSP: EditTrangThaiSP.value
             };
-
             let hasError = false;
 
             if (!sp.MaSanPham) {
