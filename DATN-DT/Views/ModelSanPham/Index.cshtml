@@ -1,0 +1,730 @@
+﻿@model IEnumerable<DATN_DT.Models.ModelSanPham>
+
+@{
+    ViewData["Title"] = "Quản lý Model Sản Phẩm";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <title>Quản lý Model Sản Phẩm</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        body {
+            background-color: #12121d;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .container {
+            margin-top: 50px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #f5f5f5;
+        }
+
+        table {
+            background-color: #1e1e2a;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th {
+            background-color: #2b2b33;
+            color: #fff;
+        }
+
+        td {
+            color: #ddd;
+        }
+
+        .btn-create {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            transition: 0.3s;
+        }
+
+            .btn-create:hover {
+                background-color: #357ab8;
+            }
+
+        .modal-content {
+            background-color: #2b2b33;
+            color: white;
+            border-radius: 10px;
+        }
+
+        .form-control {
+            background-color: #1e1e2a;
+            color: white;
+            border: 1px solid #444;
+        }
+
+            .form-control:focus {
+                border-color: #4a90e2;
+                box-shadow: none;
+            }
+
+        .text-danger {
+            color: #ff4d4d !important;
+        }
+
+        .price-highlight {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .text-muted {
+            color: #6c757d !important;
+            font-style: italic;
+        }
+
+        .search-container {
+            background-color: #1e1e2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .search-input-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Quản Lý Model Sản Phẩm</h2>
+
+        <div class="search-container">
+            <div class="search-header">
+                <h4 class="mb-0">Tìm kiếm model sản phẩm</h4>
+                <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
+                    + Thêm Model Sản Phẩm
+                </button>
+            </div>
+
+            <div class="search-input-group">
+                <input type="text" id="searchInput" class="form-control search-input" placeholder="Tìm theo tên model, màu sắc..." />
+                <button class="btn btn-primary" onclick="performSearch()">
+                    Tìm kiếm
+                </button>
+                <button class="btn btn-secondary" onclick="clearSearch()">
+                    Reset
+                </button>
+            </div>
+        </div>
+
+        <table class="table table-hover text-center align-middle" id="productsTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên Model</th>
+                    <th>Sản Phẩm</th>
+                    <th>Màn Hình</th>
+                    <th>Camera Trước</th>
+                    <th>Camera Sau</th>
+                    <th>Pin</th>
+                    <th>RAM</th>
+                    <th>ROM</th>
+                    <th>Màu</th>
+                    <th>Giá Bán</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="productsTableBody">
+                @foreach (var item in Model)
+                {
+                    <tr data-tenmodel="@item.TenModel" data-mau="@item.Mau" data-sanpham="@(ViewBag.SanPhams != null && item.IdSanPham.HasValue ? ((Dictionary<int, DATN_DT.Models.SanPham>)ViewBag.SanPhams).GetValueOrDefault(item.IdSanPham.Value)?.TenSanPham : "")">
+                        <td>@item.IdModelSanPham</td>
+                        <td>@item.TenModel</td>
+                        <td>
+                            @if (ViewBag.SanPhams != null && item.IdSanPham.HasValue)
+                            {
+                                var sanPham = ((Dictionary<int, DATN_DT.Models.SanPham>)ViewBag.SanPhams).GetValueOrDefault(item.IdSanPham.Value);
+                                if (sanPham != null)
+                                {
+                                    @sanPham.TenSanPham
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Không tìm thấy (ID: @item.IdSanPham)</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">Chưa chọn</span>
+                            }
+                        </td>
+                        <td>
+                            @if (ViewBag.ManHinhs != null && item.IdManHinh.HasValue)
+                            {
+                                var manHinh = ((Dictionary<int, DATN_DT.Models.ManHinh>)ViewBag.ManHinhs).GetValueOrDefault(item.IdManHinh.Value);
+                                if (manHinh != null)
+                                {
+                                    @manHinh.CongNgheManHinh
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Không tìm thấy (ID: @item.IdManHinh)</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">Chưa chọn</span>
+                            }
+                        </td>
+                        <td>
+                            @if (ViewBag.CameraTruocs != null && item.IdCameraTruoc.HasValue)
+                            {
+                                var cameraTruoc = ((Dictionary<int, DATN_DT.Models.CameraTruoc>)ViewBag.CameraTruocs).GetValueOrDefault(item.IdCameraTruoc.Value);
+                                if (cameraTruoc != null)
+                                {
+                                    @cameraTruoc.DoPhanGiaiCamTruoc
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Không tìm thấy (ID: @item.IdCameraTruoc)</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">Chưa chọn</span>
+                            }
+                        </td>
+                        <td>
+                            @if (ViewBag.CameraSaus != null && item.IdCameraSau.HasValue)
+                            {
+                                var cameraSau = ((Dictionary<int, DATN_DT.Models.CameraSau>)ViewBag.CameraSaus).GetValueOrDefault(item.IdCameraSau.Value);
+                                if (cameraSau != null)
+                                {
+                                    @cameraSau.DoPhanGiaiCamSau
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Không tìm thấy (ID: @item.IdCameraSau)</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">Chưa chọn</span>
+                            }
+                        </td>
+                        <td>
+                            @if (ViewBag.Pins != null && item.IdPin.HasValue)
+                            {
+                                var pin = ((Dictionary<int, DATN_DT.Models.Pin>)ViewBag.Pins).GetValueOrDefault(item.IdPin.Value);
+                                if (pin != null)
+                                {
+                                    @pin.DungLuongPin
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Không tìm thấy (ID: @item.IdPin)</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">Chưa chọn</span>
+                            }
+                        </td>
+                        <td>
+                            @if (ViewBag.RAMs != null && item.IdRAM.HasValue)
+                            {
+                                var ram = ((Dictionary<int, DATN_DT.Models.RAM>)ViewBag.RAMs).GetValueOrDefault(item.IdRAM.Value);
+                                if (ram != null)
+                                {
+                                    @ram.DungLuongRAM
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Không tìm thấy (ID: @item.IdRAM)</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">Chưa chọn</span>
+                            }
+                        </td>
+                        <td>
+                            @if (ViewBag.ROMs != null && item.IdROM.HasValue)
+                            {
+                                var rom = ((Dictionary<int, DATN_DT.Models.ROM>)ViewBag.ROMs).GetValueOrDefault(item.IdROM.Value);
+                                if (rom != null)
+                                {
+                                    @rom.DungLuongROM
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Không tìm thấy (ID: @item.IdROM)</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">Chưa chọn</span>
+                            }
+                        </td>
+                        <td>@item.Mau</td>
+                        <td class="price-highlight">@item.GiaBanModel?.ToString("N0") đ</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning btn-edit"
+                                    data-id="@item.IdModelSanPham"
+                                    data-tenmodel="@item.TenModel"
+                                    data-idsanpham="@item.IdSanPham"
+                                    data-idmanhinh="@item.IdManHinh"
+                                    data-idcameratruoc="@item.IdCameraTruoc"
+                                    data-idcamerasau="@item.IdCameraSau"
+                                    data-idpin="@item.IdPin"
+                                    data-idram="@item.IdRAM"
+                                    data-idrom="@item.IdROM"
+                                    data-mau="@item.Mau"
+                                    data-giabanmodel="@item.GiaBanModel">
+                                Sửa
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title">Thêm Model Sản Phẩm</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="createForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Tên Model <span class="text-danger">*</span></label>
+                                    <input type="text" id="TenModel" class="form-control" placeholder="Nhập tên model" />
+                                    <small id="errorTenModel" class="text-danger d-none"></small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Sản Phẩm <span class="text-danger">*</span></label>
+                                    <select id="IdSanPham" class="form-control">
+                                        <option value="">Chọn sản phẩm</option>
+                                    </select>
+                                    <small id="errorIdSanPham" class="text-danger d-none"></small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Màn Hình <span class="text-danger">*</span></label>
+                                    <select id="IdManHinh" class="form-control">
+                                        <option value="">Chọn màn hình</option>
+                                    </select>
+                                    <small id="errorIdManHinh" class="text-danger d-none"></small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Camera Trước <span class="text-danger">*</span></label>
+                                    <select id="IdCameraTruoc" class="form-control">
+                                        <option value="">Chọn camera trước</option>
+                                    </select>
+                                    <small id="errorIdCameraTruoc" class="text-danger d-none"></small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Camera Sau <span class="text-danger">*</span></label>
+                                    <select id="IdCameraSau" class="form-control">
+                                        <option value="">Chọn camera sau</option>
+                                    </select>
+                                    <small id="errorIdCameraSau" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Pin <span class="text-danger">*</span></label>
+                                    <select id="IdPin" class="form-control">
+                                        <option value="">Chọn pin</option>
+                                    </select>
+                                    <small id="errorIdPin" class="text-danger d-none"></small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">RAM <span class="text-danger">*</span></label>
+                                    <select id="IdRAM" class="form-control">
+                                        <option value="">Chọn RAM</option>
+                                    </select>
+                                    <small id="errorIdRAM" class="text-danger d-none"></small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">ROM <span class="text-danger">*</span></label>
+                                    <select id="IdROM" class="form-control">
+                                        <option value="">Chọn ROM</option>
+                                    </select>
+                                    <small id="errorIdROM" class="text-danger d-none"></small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Màu <span class="text-danger">*</span></label>
+                                    <input type="text" id="Mau" class="form-control" placeholder="Nhập màu sắc" />
+                                    <small id="errorMau" class="text-danger d-none"></small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Giá Bán <span class="text-danger">*</span></label>
+                                    <input type="number" id="GiaBanModel" class="form-control" placeholder="Nhập giá bán" min="0" />
+                                    <small id="errorGiaBanModel" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chỉnh sửa Model Sản Phẩm</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editForm">
+                    <input type="hidden" id="EditIdModelSanPham" />
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Tên Model <span class="text-danger">*</span></label>
+                                    <input type="text" id="EditTenModel" class="form-control" />
+                                    <small id="errorEditTenModel" class="text-danger d-none"></small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Sản Phẩm <span class="text-danger">*</span></label>
+                                    <select id="EditIdSanPham" class="form-control"></select>
+                                    <small id="errorEditIdSanPham" class="text-danger d-none"></small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Màn Hình <span class="text-danger">*</span></label>
+                                    <select id="EditIdManHinh" class="form-control"></select>
+                                    <small id="errorEditIdManHinh" class="text-danger d-none"></small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Camera Trước <span class="text-danger">*</span></label>
+                                    <select id="EditIdCameraTruoc" class="form-control"></select>
+                                    <small id="errorEditIdCameraTruoc" class="text-danger d-none"></small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Camera Sau <span class="text-danger">*</span></label>
+                                    <select id="EditIdCameraSau" class="form-control"></select>
+                                    <small id="errorEditIdCameraSau" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Pin <span class="text-danger">*</span></label>
+                                    <select id="EditIdPin" class="form-control"></select>
+                                    <small id="errorEditIdPin" class="text-danger d-none"></small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">RAM <span class="text-danger">*</span></label>
+                                    <select id="EditIdRAM" class="form-control"></select>
+                                    <small id="errorEditIdRAM" class="text-danger d-none"></small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">ROM <span class="text-danger">*</span></label>
+                                    <select id="EditIdROM" class="form-control"></select>
+                                    <small id="errorEditIdROM" class="text-danger d-none"></small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Màu <span class="text-danger">*</span></label>
+                                    <input type="text" id="EditMau" class="form-control" />
+                                    <small id="errorEditMau" class="text-danger d-none"></small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Giá Bán <span class="text-danger">*</span></label>
+                                    <input type="number" id="EditGiaBanModel" class="form-control" min="0" />
+                                    <small id="errorEditGiaBanModel" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-warning">Cập nhật</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        function performSearch() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            const rows = document.querySelectorAll('#productsTableBody tr');
+
+            rows.forEach(row => {
+                const tenModel = row.getAttribute('data-tenmodel').toLowerCase();
+                const mau = row.getAttribute('data-mau').toLowerCase();
+                const sanPham = row.getAttribute('data-sanpham').toLowerCase();
+
+                const matchesSearch = !searchTerm ||
+                    tenModel.includes(searchTerm) ||
+                    mau.includes(searchTerm) ||
+                    sanPham.includes(searchTerm);
+
+                if (matchesSearch) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            performSearch();
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            loadDropdownData();
+            document.getElementById('searchInput').addEventListener('input', function (e) {
+                if (e.target.value.length >= 2 || e.target.value.length === 0) {
+                    performSearch();
+                }
+            });
+        });
+
+        async function loadDropdownData() {
+            try {
+                const responses = await Promise.all([
+                    fetch('/ModelSanPham/GetAllSanPham').then(r => r.json()),
+                    fetch('/ModelSanPham/GetAllManHinh').then(r => r.json()),
+                    fetch('/ModelSanPham/GetAllCameraTruoc').then(r => r.json()),
+                    fetch('/ModelSanPham/GetAllCameraSau').then(r => r.json()),
+                    fetch('/ModelSanPham/GetAllPin').then(r => r.json()),
+                    fetch('/ModelSanPham/GetAllRAM').then(r => r.json()),
+                    fetch('/ModelSanPham/GetAllROM').then(r => r.json())
+                ]);
+
+                const [sanPhamList, manHinhList, cameraTruocList, cameraSauList, pinList, ramList, romList] = responses;
+
+                populateDropdown('IdSanPham', sanPhamList, 'idSanPham', 'tenSanPham');
+                populateDropdown('IdManHinh', manHinhList, 'idManHinh', 'displayText');
+                populateDropdown('IdCameraTruoc', cameraTruocList, 'idCamTruoc', 'displayText');
+                populateDropdown('IdCameraSau', cameraSauList, 'idCameraSau', 'displayText');
+                populateDropdown('IdPin', pinList, 'idPin', 'displayText');
+                populateDropdown('IdRAM', ramList, 'idRAM', 'displayText');
+                populateDropdown('IdROM', romList, 'idROM', 'displayText');
+
+                populateDropdown('EditIdSanPham', sanPhamList, 'idSanPham', 'tenSanPham');
+                populateDropdown('EditIdManHinh', manHinhList, 'idManHinh', 'displayText');
+                populateDropdown('EditIdCameraTruoc', cameraTruocList, 'idCamTruoc', 'displayText');
+                populateDropdown('EditIdCameraSau', cameraSauList, 'idCameraSau', 'displayText');
+                populateDropdown('EditIdPin', pinList, 'idPin', 'displayText');
+                populateDropdown('EditIdRAM', ramList, 'idRAM', 'displayText');
+                populateDropdown('EditIdROM', romList, 'idROM', 'displayText');
+
+            } catch (error) {
+                console.error('Error loading dropdown data:', error);
+                alert('Không thể tải dữ liệu dropdown. Vui lòng thử lại!');
+            }
+        }
+
+        function populateDropdown(selectId, dataList, valueField, textField) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="">Chọn...</option>';
+            dataList.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item[valueField];
+                option.textContent = item[textField];
+                select.appendChild(option);
+            });
+        }
+
+        document.getElementById("createForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const model = {
+                TenModel: TenModel.value.trim(),
+                IdSanPham: parseInt(IdSanPham.value),
+                IdManHinh: parseInt(IdManHinh.value),
+                IdCameraTruoc: parseInt(IdCameraTruoc.value),
+                IdCameraSau: parseInt(IdCameraSau.value),
+                IdPin: parseInt(IdPin.value),
+                IdRAM: parseInt(IdRAM.value),
+                IdROM: parseInt(IdROM.value),
+                Mau: Mau.value.trim(),
+                GiaBanModel: parseFloat(GiaBanModel.value)
+            };
+
+            const response = await fetch('/ModelSanPham/Create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(model)
+            });
+
+            let data = {};
+            try { data = await response.json(); } catch { }
+
+            ["errorTenModel", "errorIdSanPham", "errorIdManHinh", "errorIdCameraTruoc",
+                "errorIdCameraSau", "errorIdPin", "errorIdRAM", "errorIdROM", "errorMau", "errorGiaBanModel"]
+                .forEach(id => document.getElementById(id).classList.add("d-none"));
+
+            if (!response.ok) {
+                if (response.status === 400 && typeof data === "object") {
+                    if (data.TenModel) showError("errorTenModel", data.TenModel);
+                    if (data.IdSanPham) showError("errorIdSanPham", data.IdSanPham);
+                    if (data.IdManHinh) showError("errorIdManHinh", data.IdManHinh);
+                    if (data.IdCameraTruoc) showError("errorIdCameraTruoc", data.IdCameraTruoc);
+                    if (data.IdCameraSau) showError("errorIdCameraSau", data.IdCameraSau);
+                    if (data.IdPin) showError("errorIdPin", data.IdPin);
+                    if (data.IdRAM) showError("errorIdRAM", data.IdRAM);
+                    if (data.IdROM) showError("errorIdROM", data.IdROM);
+                    if (data.Mau) showError("errorMau", data.Mau);
+                    if (data.GiaBanModel) showError("errorGiaBanModel", data.GiaBanModel);
+                    return;
+                }
+
+                if (response.status === 409 && data.message) {
+                    showError("errorTenModel", data.message);
+                    return;
+                }
+
+                alert(data.message || "Không thể thêm Model Sản Phẩm. Vui lòng thử lại!");
+                return;
+            }
+
+            location.reload();
+        });
+
+        document.querySelectorAll(".btn-edit").forEach(btn => {
+            btn.addEventListener("click", () => {
+                EditIdModelSanPham.value = btn.dataset.id;
+                EditTenModel.value = btn.dataset.tenmodel;
+                EditIdSanPham.value = btn.dataset.idsanpham;
+                EditIdManHinh.value = btn.dataset.idmanhinh;
+                EditIdCameraTruoc.value = btn.dataset.idcameratruoc;
+                EditIdCameraSau.value = btn.dataset.idcamerasau;
+                EditIdPin.value = btn.dataset.idpin;
+                EditIdRAM.value = btn.dataset.idram;
+                EditIdROM.value = btn.dataset.idrom;
+                EditMau.value = btn.dataset.mau;
+                EditGiaBanModel.value = btn.dataset.giabanmodel;
+
+                new bootstrap.Modal(editModal).show();
+            });
+        });
+
+        document.getElementById("editForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const id = EditIdModelSanPham.value;
+            const model = {
+                TenModel: EditTenModel.value.trim(),
+                IdSanPham: parseInt(EditIdSanPham.value),
+                IdManHinh: parseInt(EditIdManHinh.value),
+                IdCameraTruoc: parseInt(EditIdCameraTruoc.value),
+                IdCameraSau: parseInt(EditIdCameraSau.value),
+                IdPin: parseInt(EditIdPin.value),
+                IdRAM: parseInt(EditIdRAM.value),
+                IdROM: parseInt(EditIdROM.value),
+                Mau: EditMau.value.trim(),
+                GiaBanModel: parseFloat(EditGiaBanModel.value)
+            };
+
+            ["errorEditTenModel", "errorEditIdSanPham", "errorEditIdManHinh", "errorEditIdCameraTruoc",
+                "errorEditIdCameraSau", "errorEditIdPin", "errorEditIdRAM", "errorEditIdROM", "errorEditMau", "errorEditGiaBanModel"]
+                .forEach(id => document.getElementById(id).classList.add("d-none"));
+
+            const response = await fetch('/ModelSanPham/Edit/' + id, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(model)
+            });
+
+            let data = {};
+            try { data = await response.json(); } catch { }
+
+            if (!response.ok) {
+                if (response.status === 400 && typeof data === "object") {
+                    if (data.TenModel) showError("errorEditTenModel", data.TenModel);
+                    if (data.IdSanPham) showError("errorEditIdSanPham", data.IdSanPham);
+                    if (data.IdManHinh) showError("errorEditIdManHinh", data.IdManHinh);
+                    if (data.IdCameraTruoc) showError("errorEditIdCameraTruoc", data.IdCameraTruoc);
+                    if (data.IdCameraSau) showError("errorEditIdCameraSau", data.IdCameraSau);
+                    if (data.IdPin) showError("errorEditIdPin", data.IdPin);
+                    if (data.IdRAM) showError("errorEditIdRAM", data.IdRAM);
+                    if (data.IdROM) showError("errorEditIdROM", data.IdROM);
+                    if (data.Mau) showError("errorEditMau", data.Mau);
+                    if (data.GiaBanModel) showError("errorEditGiaBanModel", data.GiaBanModel);
+                    return;
+                }
+
+                if (response.status === 409 && data.message) {
+                    showError("errorEditTenModel", data.message);
+                    return;
+                }
+
+                alert(data.message || "Không thể cập nhật Model Sản Phẩm. Vui lòng thử lại!");
+                return;
+            }
+
+            location.reload();
+        });
+
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.classList.remove("d-none");
+        }
+
+        createModal.addEventListener("hidden.bs.modal", () => {
+            createForm.reset();
+            document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
+        });
+
+        editModal.addEventListener("hidden.bs.modal", () => {
+            editForm.reset();
+            document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
+        });
+    </script>
+</body>
+</html>

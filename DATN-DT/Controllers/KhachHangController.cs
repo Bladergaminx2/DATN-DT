@@ -145,7 +145,6 @@ namespace DATN_DT.Controllers
                 existing.DiaChiKhachHang = khachHang.DiaChiKhachHang?.Trim();
                 existing.DiemTichLuy = khachHang.DiemTichLuy;
                 existing.TrangThaiKhachHang = khachHang.TrangThaiKhachHang;
-
                 _context.KhachHangs.Update(existing);
                 await _context.SaveChangesAsync();
 

@@ -1,0 +1,593 @@
+﻿@model IEnumerable<DATN_DT.Models.NhanVien>
+
+@{
+    ViewData["Title"] = "Quản lý Nhân Viên";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <title>Quản lý Nhân Viên</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            /*Thêm JQuery để tiện cho việc lấy dữ liệu Chức vụ*/
+            background-color: #12121d;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .container {
+            margin-top: 50px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #f5f5f5;
+        }
+
+        table {
+            background-color: #1e1e2a;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th {
+            background-color: #2b2b33;
+            color: #fff;
+        }
+
+        td {
+            color: #ddd;
+        }
+
+        .btn-create {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            transition: 0.3s;
+        }
+
+            .btn-create:hover {
+                background-color: #357ab8;
+            }
+
+        .modal-content {
+            background-color: #2b2b33;
+            color: white;
+            border-radius: 10px;
+        }
+
+        .form-control {
+            background-color: #1e1e2a;
+            color: white;
+            border: 1px solid #444;
+        }
+
+            .form-control:focus {
+                border-color: #4a90e2;
+                box-shadow: none;
+            }
+
+        .text-danger {
+            color: #ff4d4d !important;
+        }
+
+        .status-active {
+            color: #28a745;
+            font-weight: bold;
+        }
+        /* Đang làm việc */
+        .status-inactive {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        /* Đã nghỉ */
+        .status-warning {
+            color: #ffc107;
+            font-weight: bold;
+        }
+        /* Nghỉ phép */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Quản Lý Nhân Viên</h2>
+
+        <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
+                + Thêm Nhân Viên
+            </button>
+        </div>
+
+        <table class="table table-hover text-center align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tài Khoản</th>
+                    <th>Họ Tên</th>
+                    <th>Chức Vụ</th>
+                    <th>SĐT</th>
+                    <th>Email</th>
+                    <th>Ngày Vào Làm</th>
+                    <th>Trạng Thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.IdNhanVien</td>
+                        <td>@item.TenTaiKhoanNV</td>
+                        <td class="text-start">@item.HoTenNhanVien</td>
+                        <td>@item.ChucVu?.TenChucVu</td> {{-- Hiển thị tên Chức vụ --}}
+                        <td>@item.SdtNhanVien</td>
+                        <td class="text-start">@item.EmailNhanVien</td>
+                        <td>@item.NgayVaoLam?.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            @{
+                                var statusClass = "status-active";
+                                if (item.TrangThaiNV == 1)
+                                {
+                                    statusClass = "status-inactive";
+                                }
+                                else if (item.TrangThaiNV == 2)
+                                {
+                                    statusClass = "status-warning";
+                                }
+                            }
+                            <span class="@statusClass">
+                                @item.TrangThaiNV
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-warning btn-edit"
+                                    data-id="@item.IdNhanVien"
+                                    data-taikhoan="@item.TenTaiKhoanNV"
+                                    data-hoten="@item.HoTenNhanVien"
+                                    data-chucvu="@item.IdChucVu"
+                                    data-sdt="@item.SdtNhanVien"
+                                    data-email="@item.EmailNhanVien"
+                                    data-diachi="@item.DiaChiNV"
+                                    data-ngayvaolam="@item.NgayVaoLam?.ToString("yyyy-MM-dd")" {{-- Format ngày cho input type="date" --}}
+                                    data-trangthai="@item.TrangThaiNV">
+                                Sửa
+                            </button>
+                            <button class="btn btn-sm btn-danger btn-delete" data-id="@item.IdNhanVien">
+                                Xóa
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title">Thêm Nhân Viên</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="createForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Tài Khoản <span class="text-danger">*</span></label>
+                                    <input type="text" id="TenTaiKhoanNV" class="form-control" placeholder="Tên tài khoản đăng nhập" />
+                                    <small id="errorTenTaiKhoanNV" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Mật khẩu <span class="text-danger">*</span></label>
+                                    <input type="password" id="Password" class="form-control" placeholder="Mật khẩu (nên là mật khẩu tạm thời)" />
+                                    <small id="errorPassword" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Họ Tên <span class="text-danger">*</span></label>
+                                    <input type="text" id="HoTenNhanVien" class="form-control" placeholder="Họ tên nhân viên" />
+                                    <small id="errorHoTenNhanVien" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Chức vụ <span class="text-danger">*</span></label>
+                                    <select id="IdChucVu" class="form-control">
+                                        <option value="">Chọn chức vụ</option>
+                                    </select>
+                                    <small id="errorIdChucVu" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Số Điện Thoại <span class="text-danger">*</span></label>
+                                    <input type="text" id="SdtNhanVien" class="form-control" placeholder="Số điện thoại" />
+                                    <small id="errorSdtNhanVien" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" id="EmailNhanVien" class="form-control" placeholder="Email (tùy chọn)" />
+                                    <small id="errorEmailNhanVien" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Ngày Vào Làm</label>
+                                    <input type="date" id="NgayVaoLam" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                                    <small id="errorNgayVaoLam" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Trạng thái</label>
+                                    <select id="TrangThaiNV" class="form-control">
+                                        <option value="Đang làm việc">Đang làm việc</option>
+                                        <option value="Nghỉ phép">Nghỉ phép</option>
+                                        <option value="Đã nghỉ">Đã nghỉ</option>
+                                    </select>
+                                    <small id="errorTrangThaiNV" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Địa Chỉ</label>
+                            <textarea id="DiaChiNV" class="form-control" placeholder="Nhập địa chỉ" rows="2"></textarea>
+                            <small id="errorDiaChiNV" class="text-danger d-none"></small>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chỉnh sửa Nhân Viên</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editForm">
+                    <input type="hidden" id="EditIdNhanVien" />
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Tài Khoản <span class="text-danger">*</span></label>
+                                    <input type="text" id="EditTenTaiKhoanNV" class="form-control" />
+                                    <small id="errorEditTenTaiKhoanNV" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Đổi Mật khẩu</label>
+                                    <input type="password" id="EditPassword" class="form-control" placeholder="Để trống nếu không muốn đổi mật khẩu" />
+                                    <small id="errorEditPassword" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Họ Tên <span class="text-danger">*</span></label>
+                                    <input type="text" id="EditHoTenNhanVien" class="form-control" />
+                                    <small id="errorEditHoTenNhanVien" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Chức vụ <span class="text-danger">*</span></label>
+                                    <select id="EditIdChucVu" class="form-control">
+                                        <option value="">Chọn chức vụ</option>
+                                    </select>
+                                    <small id="errorEditIdChucVu" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Số Điện Thoại <span class="text-danger">*</span></label>
+                                    <input type="text" id="EditSdtNhanVien" class="form-control" />
+                                    <small id="errorEditSdtNhanVien" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" id="EditEmailNhanVien" class="form-control" />
+                                    <small id="errorEditEmailNhanVien" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Ngày Vào Làm</label>
+                                    <input type="date" id="EditNgayVaoLam" class="form-control" />
+                                    <small id="errorEditNgayVaoLam" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Trạng thái</label>
+                                    <select id="EditTrangThaiNV" class="form-control">
+                                        <option value="Đang làm việc">Đang làm việc</option>
+                                        <option value="Nghỉ phép">Nghỉ phép</option>
+                                        <option value="Đã nghỉ">Đã nghỉ</option>
+                                    </select>
+                                    <small id="errorEditTrangThaiNV" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Địa Chỉ</label>
+                            <textarea id="EditDiaChiNV" class="form-control" rows="2"></textarea>
+                            <small id="errorEditDiaChiNV" class="text-danger d-none"></small>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-warning">Cập nhật</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Hàm hiển thị lỗi ---
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.classList.remove("d-none");
+        }
+
+        // --- Load Chức Vụ ---
+        async function loadChucVus() {
+            try {
+                const response = await fetch('/NhanVien/GetChucVus');
+                const chucVus = await response.json();
+
+                const createSelect = document.getElementById('IdChucVu');
+                const editSelect = document.getElementById('EditIdChucVu');
+
+                // Clear and add default option
+                createSelect.innerHTML = '<option value="">Chọn chức vụ</option>';
+                editSelect.innerHTML = '<option value="">Chọn chức vụ</option>';
+
+                chucVus.forEach(cv => {
+                    const option = `<option value="${cv.idChucVu}">${cv.tenChucVu}</option>`;
+                    createSelect.innerHTML += option;
+                    editSelect.innerHTML += option;
+                });
+            } catch (error) {
+                console.error('Lỗi khi load chức vụ:', error);
+            }
+        }
+
+        // --- Thêm Nhân Viên ---
+        document.getElementById("createForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const nv = {
+                TenTaiKhoanNV: TenTaiKhoanNV.value.trim(),
+                Password: Password.value,
+                HoTenNhanVien: HoTenNhanVien.value.trim(),
+                IdChucVu: parseInt(IdChucVu.value) || 0,
+                SdtNhanVien: SdtNhanVien.value.trim(),
+                EmailNhanVien: EmailNhanVien.value.trim() || null,
+                DiaChiNV: DiaChiNV.value.trim() || null,
+                NgayVaoLam: NgayVaoLam.value,
+                TrangThaiNV: TrangThaiNV.value
+            };
+
+            // Reset errors
+            document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
+
+            const response = await fetch('/NhanVien/Create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(nv)
+            });
+
+            let data = {};
+            try { data = await response.json(); } catch { }
+
+            if (!response.ok) {
+                if (response.status === 400 && typeof data === "object") {
+                    // Lỗi Validation
+                    if (data.TenTaiKhoanNV) showError("errorTenTaiKhoanNV", data.TenTaiKhoanNV);
+                    if (data.Password) showError("errorPassword", data.Password);
+                    if (data.HoTenNhanVien) showError("errorHoTenNhanVien", data.HoTenNhanVien);
+                    if (data.IdChucVu) showError("errorIdChucVu", data.IdChucVu);
+                    if (data.SdtNhanVien) showError("errorSdtNhanVien", data.SdtNhanVien);
+                    return;
+                }
+
+                if (response.status === 409 && data.message) {
+                    // Lỗi Trùng lặp
+                    if (data.message.includes("Tên tài khoản")) {
+                        showError("errorTenTaiKhoanNV", data.message);
+                    } else if (data.message.includes("Số điện thoại")) {
+                        showError("errorSdtNhanVien", data.message);
+                    }
+                    return;
+                }
+
+                alert(data.message || "Không thể thêm Nhân viên. Vui lòng thử lại!");
+                return;
+            }
+
+            location.reload();
+        });
+
+        // --- Lắng nghe sự kiện mở modal Sửa ---
+        document.querySelectorAll(".btn-edit").forEach(btn => {
+            btn.addEventListener("click", () => {
+                EditIdNhanVien.value = btn.dataset.id;
+                EditTenTaiKhoanNV.value = btn.dataset.taikhoan;
+                // Không điền mật khẩu cũ vào form Edit vì lý do bảo mật
+                EditPassword.value = '';
+                EditHoTenNhanVien.value = btn.dataset.hoten;
+                EditIdChucVu.value = btn.dataset.chucvu;
+                EditSdtNhanVien.value = btn.dataset.sdt;
+                EditEmailNhanVien.value = btn.dataset.email || '';
+                EditDiaChiNV.value = btn.dataset.diachi || '';
+                EditNgayVaoLam.value = btn.dataset.ngayvaolam;
+                EditTrangThaiNV.value = btn.dataset.trangthai;
+
+                new bootstrap.Modal(editModal).show();
+            });
+        });
+
+        // --- Cập nhật Nhân Viên ---
+        document.getElementById("editForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const id = EditIdNhanVien.value;
+            const nv = {
+                IdNhanVien: parseInt(id),
+                TenTaiKhoanNV: EditTenTaiKhoanNV.value.trim(),
+                // Chỉ gửi mật khẩu nếu người dùng đã nhập (nếu không, Controller sẽ bỏ qua)
+                Password: EditPassword.value,
+                HoTenNhanVien: EditHoTenNhanVien.value.trim(),
+                IdChucVu: parseInt(EditIdChucVu.value) || 0,
+                SdtNhanVien: EditSdtNhanVien.value.trim(),
+                EmailNhanVien: EditEmailNhanVien.value.trim() || null,
+                DiaChiNV: EditDiaChiNV.value.trim() || null,
+                NgayVaoLam: EditNgayVaoLam.value,
+                TrangThaiNV: EditTrangThaiNV.value
+            };
+
+            // Reset errors
+            document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
+
+            const response = await fetch('/NhanVien/Edit/' + id, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(nv)
+            });
+
+            let data = {};
+            try { data = await response.json(); } catch { }
+
+            if (!response.ok) {
+                if (response.status === 400 && typeof data === "object") {
+                    // Lỗi Validation
+                    if (data.TenTaiKhoanNV) showError("errorEditTenTaiKhoanNV", data.TenTaiKhoanNV);
+                    if (data.HoTenNhanVien) showError("errorEditHoTenNhanVien", data.HoTenNhanVien);
+                    if (data.IdChucVu) showError("errorEditIdChucVu", data.IdChucVu);
+                    if (data.SdtNhanVien) showError("errorEditSdtNhanVien", data.SdtNhanVien);
+                    // Mật khẩu chỉ bị kiểm tra nếu nó không rỗng trong quá trình Edit
+                    if (data.Password) showError("errorEditPassword", data.Password);
+                    return;
+                }
+
+                if (response.status === 409 && data.message) {
+                    // Lỗi Trùng lặp
+                    if (data.message.includes("Tên tài khoản")) {
+                        showError("errorEditTenTaiKhoanNV", data.message);
+                    } else if (data.message.includes("Số điện thoại")) {
+                        showError("errorEditSdtNhanVien", data.message);
+                    }
+                    return;
+                }
+
+                alert(data.message || "Không thể cập nhật Nhân viên. Vui lòng thử lại!");
+                return;
+            }
+
+            location.reload();
+        });
+
+        // --- Xóa Nhân Viên ---
+        document.querySelectorAll(".btn-delete").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const id = btn.dataset.id;
+                const confirmDelete = confirm("Bạn có chắc chắn muốn xóa Nhân viên ID " + id + " này không?");
+
+                if (confirmDelete) {
+                    const response = await fetch('/NhanVien/Delete/' + id, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                    });
+
+                    let data = {};
+                    try { data = await response.json(); } catch { }
+
+                    if (response.ok) {
+                        alert("Xóa Nhân viên thành công!");
+                        location.reload();
+                    } else {
+                        alert(data.message || "Lỗi khi xóa Nhân viên. Vui lòng thử lại!");
+                    }
+                }
+            });
+        });
+
+
+        // --- Khởi tạo ---
+        document.addEventListener('DOMContentLoaded', function() {
+            loadChucVus();
+
+            // Thiết lập giá trị mặc định cho Ngày Vào Làm nếu chưa có (dùng JS để đảm bảo)
+            if (!document.getElementById('NgayVaoLam').value) {
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('NgayVaoLam').value = today;
+            }
+        });
+
+        // --- Reset form khi đóng modal ---
+        createModal.addEventListener("hidden.bs.modal", () => {
+            createForm.reset();
+            document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
+            document.getElementById('TrangThaiNV').value = "Đang làm việc";
+
+            // Reset Ngày vào làm về ngày hiện tại
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('NgayVaoLam').value = today;
+        });
+
+        editModal.addEventListener("hidden.bs.modal", () => {
+            editForm.reset();
+            document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
+        });
+    </script>
+</body>
+</html>

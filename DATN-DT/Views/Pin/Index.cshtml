@@ -1,0 +1,608 @@
+﻿@model IEnumerable<DATN_DT.Models.Pin>
+
+@{
+    ViewData["Title"] = "Quản lý Pin";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <title>Quản lý Pin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        body {
+            background-color: #12121d;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .container {
+            margin-top: 50px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #f5f5f5;
+        }
+
+        table {
+            background-color: #1e1e2a;
+            border-radius: 10px;
+            overflow: hidden;
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        th {
+            background-color: #2b2b33;
+            color: #fff;
+            padding: 12px 8px;
+        }
+
+        td {
+            color: #ddd;
+            padding: 12px 8px;
+            vertical-align: top;
+        }
+
+        .btn-create {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            transition: 0.3s;
+        }
+
+            .btn-create:hover {
+                background-color: #357ab8;
+            }
+
+        .modal-content {
+            background-color: #2b2b33;
+            color: white;
+            border-radius: 10px;
+        }
+
+        .form-control {
+            background-color: #1e1e2a;
+            color: white;
+            border: 1px solid #444;
+        }
+
+            .form-control:focus {
+                border-color: #4a90e2;
+                box-shadow: none;
+            }
+
+        .text-danger {
+            color: #ff4d4d !important;
+        }
+
+        .form-text {
+            font-size: 0.875em;
+            margin-top: 0.25rem;
+        }
+
+
+        .form-control::placeholder {
+            color: #888;
+            opacity: 1;
+        }
+
+        .form-control:focus::placeholder {
+            color: transparent;
+        }
+
+
+        .mota-cell {
+            max-width: 250px;
+            word-wrap: break-word;
+            white-space: normal;
+            line-height: 1.4;
+        }
+
+        .mota-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-height: 4.2em;
+        }
+
+        .col-id {
+            width: 80px;
+        }
+
+        .col-loai {
+            width: 120px;
+        }
+
+        .col-dungluong {
+            width: 120px;
+        }
+
+        .col-congnghe {
+            width: 150px;
+        }
+
+        .col-mota {
+            width: 250px;
+        }
+
+        .col-action {
+            width: 100px;
+            text-align: center;
+        }
+
+
+        .modal-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+
+        .btn-edit-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Quản Lý Pin</h2>
+
+        <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
+                + Thêm Pin
+            </button>
+        </div>
+
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th class="col-id">ID</th>
+                    <th class="col-loai">Loại Pin</th>
+                    <th class="col-dungluong">Dung lượng Pin</th>
+                    <th class="col-congnghe">Công nghệ sạc</th>
+                    <th class="col-mota">Mô tả</th>
+                    <th class="col-action">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                        <tr>
+                            <td>@item.IdPin</td>
+                            <td>@item.LoaiPin</td>
+                            <td>@item.DungLuongPin</td>
+                            <td>@item.CongNgheSac</td>
+                            <td class="mota-cell">
+                                <div class="mota-text" title="@item.MoTaPin">
+                                @item.MoTaPin
+                                </div>
+                            </td>
+                            <td>
+                                <div class="btn-edit-container">
+                                    <button class="btn btn-sm btn-warning btn-edit"
+                                            data-id="@item.IdPin"
+                                            data-loai="@item.LoaiPin"
+                                            data-dungluong="@item.DungLuongPin"
+                                            data-congnghe="@item.CongNgheSac"
+                                            data-mota="@item.MoTaPin">
+                                        Sửa
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Create -->
+    <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title">Thêm Pin</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="createForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Loại Pin <span class="text-danger">*</span></label>
+                            <input type="text" id="LoaiPin" class="form-control" placeholder="VD: Li-ion, Li-Po, Polymer" />
+                            <small id="errorLoaiPin" class="text-danger d-none"></small>
+                            <small class="form-text text-muted">Nhập loại pin (ví dụ: Li-ion, Li-Po)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Dung lượng Pin <span class="text-danger">*</span></label>
+                            <input type="text" id="DungLuongPin" class="form-control" placeholder="VD: 4000, 5000, 6000" />
+                            <small id="errorDungLuongPin" class="text-danger d-none"></small>
+                            <small class="form-text text-muted">Chỉ nhập số, hệ thống sẽ tự động thêm "mAh" (ví dụ: 5000)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Công nghệ sạc <span class="text-danger">*</span></label>
+                            <input type="text" id="CongNgheSac" class="form-control" placeholder="VD: Sạc nhanh 18W, Sạc nhanh 25W, Super Charge" />
+                            <small id="errorCongNgheSac" class="text-danger d-none"></small>
+                            <small class="form-text text-muted">Nhập công nghệ sạc (ví dụ: Sạc nhanh 25W)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mô tả</label>
+                            <textarea id="MoTaPin" class="form-control modal-textarea" placeholder="Nhập mô tả về pin (nếu có)"></textarea>
+                            <small class="form-text text-muted">Mô tả sẽ được hiển thị xuống dòng tự động</small>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit -->
+    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chỉnh sửa Pin</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editForm">
+                    <input type="hidden" id="EditIdPin" />
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Loại Pin <span class="text-danger">*</span></label>
+                            <input type="text" id="EditLoaiPin" class="form-control" placeholder="VD: Li-ion, Li-Po, Polymer" />
+                            <small id="errorEditLoaiPin" class="text-danger d-none"></small>
+                            <small class="form-text text-muted">Nhập loại pin (ví dụ: Li-ion, Li-Po)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Dung lượng Pin <span class="text-danger">*</span></label>
+                            <input type="text" id="EditDungLuongPin" class="form-control" placeholder="VD: 4000, 5000, 6000" />
+                            <small id="errorEditDungLuongPin" class="text-danger d-none"></small>
+                            <small class="form-text text-muted">Chỉ nhập số, hệ thống sẽ tự động thêm "mAh" (ví dụ: 5000)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Công nghệ sạc <span class="text-danger">*</span></label>
+                            <input type="text" id="EditCongNgheSac" class="form-control" placeholder="VD: Sạc nhanh 18W, Sạc nhanh 25W, Super Charge" />
+                            <small id="errorEditCongNgheSac" class="text-danger d-none"></small>
+                            <small class="form-text text-muted">Nhập công nghệ sạc (ví dụ: Sạc nhanh 25W)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mô tả</label>
+                            <textarea id="EditMoTaPin" class="form-control modal-textarea" placeholder="Nhập mô tả về pin (nếu có)"></textarea>
+                            <small class="form-text text-muted">Mô tả sẽ được hiển thị xuống dòng tự động</small>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-warning">Cập nhật</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        function isNumber(input) {
+            return /^\d+$/.test(input);
+        }
+
+
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.classList.remove("d-none");
+        }
+
+
+        function hideError(id) {
+            const el = document.getElementById(id);
+            el.classList.add("d-none");
+        }
+
+        function restoreAllPlaceholders() {
+            const inputs = [
+                { id: 'LoaiPin', placeholder: 'VD: Li-ion, Li-Po, Polymer' },
+                { id: 'DungLuongPin', placeholder: 'VD: 4000, 5000, 6000' },
+                { id: 'CongNgheSac', placeholder: 'VD: Sạc nhanh 18W, Sạc nhanh 25W, Super Charge' },
+                { id: 'MoTaPin', placeholder: 'Nhập mô tả về pin (nếu có)' }
+            ];
+
+            inputs.forEach(input => {
+                const element = document.getElementById(input.id);
+                if (element && element.value === '') {
+                    element.placeholder = input.placeholder;
+                }
+            });
+        }
+
+
+        function restoreAllPlaceholdersEdit() {
+            const inputs = [
+                { id: 'EditLoaiPin', placeholder: 'VD: Li-ion, Li-Po, Polymer' },
+                { id: 'EditDungLuongPin', placeholder: 'VD: 4000, 5000, 6000' },
+                { id: 'EditCongNgheSac', placeholder: 'VD: Sạc nhanh 18W, Sạc nhanh 25W, Super Charge' },
+                { id: 'EditMoTaPin', placeholder: 'Nhập mô tả về pin (nếu có)' }
+            ];
+
+            inputs.forEach(input => {
+                const element = document.getElementById(input.id);
+                if (element && element.value === '') {
+                    element.placeholder = input.placeholder;
+                }
+            });
+        }
+
+        function validateAllInputs() {
+            let isValid = true;
+            const errors = {};
+
+
+            const loaiPinValue = LoaiPin.value.trim();
+            if (!loaiPinValue) {
+                errors.loaiPin = "Phải nhập loại pin!";
+                isValid = false;
+            }
+
+
+            const dungLuongValue = DungLuongPin.value.trim();
+            if (!dungLuongValue) {
+                errors.dungLuongPin = "Phải nhập dung lượng pin!";
+                isValid = false;
+            } else if (!isNumber(dungLuongValue)) {
+                errors.dungLuongPin = "Dung lượng pin chỉ được nhập số!";
+                isValid = false;
+            }
+
+
+            const congNgheValue = CongNgheSac.value.trim();
+            if (!congNgheValue) {
+                errors.congNgheSac = "Phải nhập công nghệ sạc!";
+                isValid = false;
+            }
+
+            return { isValid, errors };
+        }
+
+
+        function validateAllInputsEdit() {
+            let isValid = true;
+            const errors = {};
+
+
+            const loaiPinValue = EditLoaiPin.value.trim();
+            if (!loaiPinValue) {
+                errors.loaiPin = "Phải nhập loại pin!";
+                isValid = false;
+            }
+
+            const dungLuongValue = EditDungLuongPin.value.trim();
+            if (!dungLuongValue) {
+                errors.dungLuongPin = "Phải nhập dung lượng pin!";
+                isValid = false;
+            } else if (!isNumber(dungLuongValue)) {
+                errors.dungLuongPin = "Dung lượng pin chỉ được nhập số!";
+                isValid = false;
+            }
+
+
+            const congNgheValue = EditCongNgheSac.value.trim();
+            if (!congNgheValue) {
+                errors.congNgheSac = "Phải nhập công nghệ sạc!";
+                isValid = false;
+            }
+
+            return { isValid, errors };
+        }
+
+
+        const createModal = document.getElementById('createModal');
+
+        createModal.addEventListener('show.bs.modal', function () {
+            restoreAllPlaceholders();
+
+
+            hideError("errorLoaiPin");
+            hideError("errorDungLuongPin");
+            hideError("errorCongNgheSac");
+        });
+
+
+        createModal.addEventListener('hidden.bs.modal', function () {
+            document.getElementById('createForm').reset();
+            restoreAllPlaceholders();
+
+
+            document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
+        });
+
+        const editModal = document.getElementById('editModal');
+
+        editModal.addEventListener('hidden.bs.modal', function () {
+            restoreAllPlaceholdersEdit();
+
+            document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
+        });
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const inputs = document.querySelectorAll('input[type="text"], textarea');
+
+            inputs.forEach(input => {
+
+                const originalPlaceholder = input.getAttribute('placeholder');
+                input.setAttribute('data-original-placeholder', originalPlaceholder);
+
+                input.addEventListener('focus', function () {
+                    this.setAttribute('placeholder', '');
+                });
+
+                input.addEventListener('blur', function () {
+                    if (this.value === '') {
+                        const original = this.getAttribute('data-original-placeholder') || '';
+                        this.setAttribute('placeholder', original);
+                    }
+                });
+            });
+        });
+
+        // Thêm Pin
+        document.getElementById("createForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            hideError("errorLoaiPin");
+            hideError("errorDungLuongPin");
+            hideError("errorCongNgheSac");
+
+
+            const validation = validateAllInputs();
+            if (!validation.isValid) {                if (validation.errors.loaiPin) showError("errorLoaiPin", validation.errors.loaiPin);
+                if (validation.errors.dungLuongPin) showError("errorDungLuongPin", validation.errors.dungLuongPin);
+                if (validation.errors.congNgheSac) showError("errorCongNgheSac", validation.errors.congNgheSac);
+                return;
+            }
+
+            const pin = {
+                LoaiPin: LoaiPin.value.trim(),
+                DungLuongPin: DungLuongPin.value.trim(), 
+                CongNgheSac: CongNgheSac.value.trim(),
+                MoTaPin: MoTaPin.value.trim()
+            };
+
+            const response = await fetch('/Pin/Create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(pin)
+            });
+
+            let data = {};
+            try { data = await response.json(); } catch { }
+
+            if (!response.ok) {
+                if (response.status === 400 && typeof data === "object") {
+                    if (data.LoaiPin) showError("errorLoaiPin", data.LoaiPin);
+                    if (data.DungLuongPin) showError("errorDungLuongPin", data.DungLuongPin);
+                    if (data.CongNgheSac) showError("errorCongNgheSac", data.CongNgheSac);
+                    return;
+                }
+
+                if (response.status === 409 && data.message) {
+                    showError("errorLoaiPin", data.message);
+                    showError("errorDungLuongPin", data.message);
+                    showError("errorCongNgheSac", data.message);
+                    return;
+                }
+
+                alert(data.message || "Không thể thêm Pin. Vui lòng thử lại!");
+                return;
+            }
+
+            location.reload();
+        });
+
+        // Sửa Pin
+        document.querySelectorAll(".btn-edit").forEach(btn => {
+            btn.addEventListener("click", () => {
+
+                let dungLuongValue = btn.dataset.dungluong;
+                if (dungLuongValue && dungLuongValue.endsWith('mAh')) {
+                    dungLuongValue = dungLuongValue.replace('mAh', '');
+                }
+
+                EditIdPin.value = btn.dataset.id;
+                EditLoaiPin.value = btn.dataset.loai;
+                EditDungLuongPin.value = dungLuongValue;
+                EditCongNgheSac.value = btn.dataset.congnghe;
+                EditMoTaPin.value = btn.dataset.mota || '';
+
+                hideError("errorEditLoaiPin");
+                hideError("errorEditDungLuongPin");
+                hideError("errorEditCongNgheSac");
+
+                new bootstrap.Modal(editModal).show();
+            });
+        });
+
+        // Cập nhật Pin
+        document.getElementById("editForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const id = EditIdPin.value;
+
+
+            hideError("errorEditLoaiPin");
+            hideError("errorEditDungLuongPin");
+            hideError("errorEditCongNgheSac");
+
+            const validation = validateAllInputsEdit();
+            if (!validation.isValid) {
+
+                if (validation.errors.loaiPin) showError("errorEditLoaiPin", validation.errors.loaiPin);
+                if (validation.errors.dungLuongPin) showError("errorEditDungLuongPin", validation.errors.dungLuongPin);
+                if (validation.errors.congNgheSac) showError("errorEditCongNgheSac", validation.errors.congNgheSac);
+                return;
+            }
+
+            const pin = {
+                IdPin: id,
+                LoaiPin: EditLoaiPin.value.trim(),
+                DungLuongPin: EditDungLuongPin.value.trim(), 
+                CongNgheSac: EditCongNgheSac.value.trim(),
+                MoTaPin: EditMoTaPin.value.trim()
+            };
+
+            const response = await fetch('/Pin/Edit/' + id, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(pin)
+            });
+
+            let data = {};
+            try { data = await response.json(); } catch { }
+
+            if (!response.ok) {
+                if (response.status === 400 && typeof data === "object") {
+                    if (data.LoaiPin) showError("errorEditLoaiPin", data.LoaiPin);
+                    if (data.DungLuongPin) showError("errorEditDungLuongPin", data.DungLuongPin);
+                    if (data.CongNgheSac) showError("errorEditCongNgheSac", data.CongNgheSac);
+                    return;
+                }
+
+                if (response.status === 409 && data.message) {
+                    showError("errorEditLoaiPin", data.message);
+                    showError("errorEditDungLuongPin", data.message);
+                    showError("errorEditCongNgheSac", data.message);
+                    return;
+                }
+
+                alert(data.message || "Không thể cập nhật Pin. Vui lòng thử lại!");
+                return;
+            }
+
+            location.reload();
+        });
+    </script>
+</body>
+</html>

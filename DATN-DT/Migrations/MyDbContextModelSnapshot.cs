@@ -604,6 +604,9 @@ namespace DATN_DT.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdSanPham"));
 
+                    b.Property<decimal?>("GiaGoc")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal?>("GiaNiemYet")
                         .HasColumnType("decimal(18,2)");
 

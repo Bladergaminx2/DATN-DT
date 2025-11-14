@@ -7,6 +7,7 @@
         public string? TenSanPham { get; set; }
         public int? IdThuongHieu { get; set; }
         public string? MoTa { get; set; }
+        public decimal? GiaGoc { get; set; }
         public decimal? GiaNiemYet { get; set; }
         public string? TrangThaiSP { get; set; }
         public decimal? VAT { get; set; }

@@ -1,0 +1,480 @@
+﻿@model IEnumerable<DATN_DT.Models.KhachHang>
+
+@{
+    ViewData["Title"] = "Quản lý Khách Hàng";
+    Layout = null; 
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <title>Quản lý Khách Hàng</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        body {
+            background-color: #12121d;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .container {
+            margin-top: 50px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #f5f5f5;
+        }
+
+        table {
+            background-color: #1e1e2a;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th {
+            background-color: #2b2b33;
+            color: #fff;
+        }
+
+        td {
+            color: #ddd;
+        }
+
+        .btn-create {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            transition: 0.3s;
+        }
+
+            .btn-create:hover {
+                background-color: #357ab8;
+            }
+
+        .modal-content {
+            background-color: #2b2b33;
+            color: white;
+            border-radius: 10px;
+        }
+
+        .form-control {
+            background-color: #1e1e2a;
+            color: white;
+            border: 1px solid #444;
+        }
+
+            .form-control:focus {
+                border-color: #4a90e2;
+                box-shadow: none;
+            }
+
+        .text-danger {
+            color: #ff4d4d !important;
+        }
+
+        /* Các class trạng thái được giữ lại và áp dụng cho TrangThaiKhachHang */
+        .status-active {
+            color: #28a745;
+            font-weight: bold;
+        }
+        /* Ví dụ: Hoạt động */
+        .status-inactive {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        /* Ví dụ: Ngừng hoạt động */
+        .status-warning {
+            color: #ffc107;
+            font-weight: bold;
+        }
+        /* Ví dụ: Khóa tạm thời */
+
+        .diem-tich-luy {
+            font-weight: bold;
+            color: #ffc107; /* Màu vàng cho điểm tích lũy */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Quản Lý Khách Hàng</h2>
+
+        <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
+                + Thêm Khách Hàng
+            </button>
+        </div>
+
+        <table class="table table-hover text-center align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Họ Tên</th>
+                    <th>SĐT</th>
+                    <th>Email</th>
+                    <th>Địa Chỉ</th>
+                    <th>Điểm Tích Lũy</th>
+                    <th>Trạng Thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.IdKhachHang</td>
+                        <td class="text-start">@item.HoTenKhachHang</td>
+                        <td>@item.SdtKhachHang</td>
+                        <td class="text-start">@item.EmailKhachHang</td>
+                        <td class="text-start">@item.DiaChiKhachHang</td>
+                        <td><span class="diem-tich-luy">@item.DiemTichLuy?.ToString("N0")</span></td>
+                        <td>
+                            @{
+                                var statusClass = "status-active";
+                                if (item.TrangThaiKhachHang == 1)
+                                {
+                                    statusClass = "status-inactive";
+                                }
+                                else if (item.TrangThaiKhachHang == 2)
+                                {
+                                    statusClass = "status-warning";
+                                }
+                            }
+                            <span class="@statusClass">
+                                @item.TrangThaiKhachHang
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-warning btn-edit"
+                                    data-id="@item.IdKhachHang"
+                                    data-hoten="@item.HoTenKhachHang"
+                                    data-sdt="@item.SdtKhachHang"
+                                    data-email="@item.EmailKhachHang"
+                                    data-diachi="@item.DiaChiKhachHang"
+                                    data-diem="@item.DiemTichLuy"
+                                    data-trangthai="@item.TrangThaiKhachHang">
+                                Sửa
+                            </button>
+                            <button class="btn btn-sm btn-danger btn-delete" data-id="@item.IdKhachHang">
+                                Xóa
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title">Thêm Khách Hàng</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="createForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Họ Tên Khách Hàng <span class="text-danger">*</span></label>
+                                    <input type="text" id="HoTenKhachHang" class="form-control" placeholder="Nhập họ tên khách hàng" />
+                                    <small id="errorHoTenKhachHang" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Số Điện Thoại <span class="text-danger">*</span></label>
+                                    <input type="text" id="SdtKhachHang" class="form-control" placeholder="Nhập số điện thoại" />
+                                    <small id="errorSdtKhachHang" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" id="EmailKhachHang" class="form-control" placeholder="Nhập email (tùy chọn)" />
+                                    <small id="errorEmailKhachHang" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Điểm Tích Lũy</label>
+                                    <input type="number" id="DiemTichLuy" class="form-control" placeholder="0" min="0" value="0" />
+                                    <small id="errorDiemTichLuy" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Địa Chỉ</label>
+                            <textarea id="DiaChiKhachHang" class="form-control" placeholder="Nhập địa chỉ" rows="2"></textarea>
+                            <small id="errorDiaChiKhachHang" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Trạng thái</label>
+                            <select id="TrangThaiKhachHang" class="form-control">
+                                <option value="Hoạt động">Hoạt động</option>
+                                <option value="Ngừng hoạt động">Ngừng hoạt động</option>
+                                <option value="Khóa tạm thời">Khóa tạm thời</option>
+                            </select>
+                            <small id="errorTrangThaiKhachHang" class="text-danger d-none"></small>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chỉnh sửa Khách Hàng</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editForm">
+                    <input type="hidden" id="EditIdKhachHang" />
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Họ Tên Khách Hàng <span class="text-danger">*</span></label>
+                                    <input type="text" id="EditHoTenKhachHang" class="form-control" />
+                                    <small id="errorEditHoTenKhachHang" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Số Điện Thoại <span class="text-danger">*</span></label>
+                                    <input type="text" id="EditSdtKhachHang" class="form-control" />
+                                    <small id="errorEditSdtKhachHang" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" id="EditEmailKhachHang" class="form-control" />
+                                    <small id="errorEditEmailKhachHang" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Điểm Tích Lũy</label>
+                                    <input type="number" id="EditDiemTichLuy" class="form-control" min="0" />
+                                    <small id="errorEditDiemTichLuy" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Địa Chỉ</label>
+                            <textarea id="EditDiaChiKhachHang" class="form-control" rows="2"></textarea>
+                            <small id="errorEditDiaChiKhachHang" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Trạng thái</label>
+                            <select id="EditTrangThaiKhachHang" class="form-control">
+                                <option value="Hoạt động">Hoạt động</option>
+                                <option value="Ngừng hoạt động">Ngừng hoạt động</option>
+                                <option value="Khóa tạm thời">Khóa tạm thời</option>
+                            </select>
+                            <small id="errorEditTrangThaiKhachHang" class="text-danger d-none"></small>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-warning">Cập nhật</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.classList.remove("d-none");
+        }
+
+        // --- Thêm Khách Hàng ---
+        document.getElementById("createForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const kh = {
+                HoTenKhachHang: HoTenKhachHang.value.trim(),
+                SdtKhachHang: SdtKhachHang.value.trim(),
+                EmailKhachHang: EmailKhachHang.value.trim() || null,
+                DiaChiKhachHang: DiaChiKhachHang.value.trim() || null,
+                DiemTichLuy: parseInt(DiemTichLuy.value) || 0,
+                TrangThaiKhachHang: TrangThaiKhachHang.value
+            };
+
+            const response = await fetch('/KhachHang/Create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(kh)
+            });
+
+            let data = {};
+            try { data = await response.json(); } catch { }
+
+            // Reset errors
+            ["errorHoTenKhachHang", "errorSdtKhachHang", "errorEmailKhachHang", "errorTrangThaiKhachHang"]
+                .forEach(id => document.getElementById(id).classList.add("d-none"));
+
+            if (!response.ok) {
+                if (response.status === 400 && typeof data === "object") {
+                    // Lỗi Validation
+                    if (data.HoTenKhachHang) showError("errorHoTenKhachHang", data.HoTenKhachHang);
+                    if (data.SdtKhachHang) showError("errorSdtKhachHang", data.SdtKhachHang);
+                    if (data.EmailKhachHang) showError("errorEmailKhachHang", data.EmailKhachHang);
+                    return;
+                }
+
+                if (response.status === 409 && data.message) {
+                    // Lỗi Trùng lặp (Conflict)
+                    if (data.message.includes("Số điện thoại")) {
+                        showError("errorSdtKhachHang", data.message);
+                    } else if (data.message.includes("Email")) {
+                        showError("errorEmailKhachHang", data.message);
+                    }
+                    return;
+                }
+
+                alert(data.message || "Không thể thêm Khách Hàng. Vui lòng thử lại!");
+                return;
+            }
+
+            location.reload();
+        });
+
+        // --- Lắng nghe sự kiện mở modal Sửa ---
+        document.querySelectorAll(".btn-edit").forEach(btn => {
+            btn.addEventListener("click", () => {
+                EditIdKhachHang.value = btn.dataset.id;
+                EditHoTenKhachHang.value = btn.dataset.hoten;
+                EditSdtKhachHang.value = btn.dataset.sdt;
+                EditEmailKhachHang.value = btn.dataset.email || '';
+                EditDiaChiKhachHang.value = btn.dataset.diachi || '';
+                EditDiemTichLuy.value = btn.dataset.diem;
+                EditTrangThaiKhachHang.value = btn.dataset.trangthai;
+
+                new bootstrap.Modal(editModal).show();
+            });
+        });
+
+        // --- Cập nhật Khách Hàng ---
+        document.getElementById("editForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const id = EditIdKhachHang.value;
+            const kh = {
+                IdKhachHang: parseInt(id),
+                HoTenKhachHang: EditHoTenKhachHang.value.trim(),
+                SdtKhachHang: EditSdtKhachHang.value.trim(),
+                EmailKhachHang: EditEmailKhachHang.value.trim() || null,
+                DiaChiKhachHang: EditDiaChiKhachHang.value.trim() || null,
+                DiemTichLuy: parseInt(EditDiemTichLuy.value) || 0,
+                TrangThaiKhachHang: EditTrangThaiKhachHang.value
+            };
+
+            // Reset errors
+            ["errorEditHoTenKhachHang", "errorEditSdtKhachHang", "errorEditEmailKhachHang", "errorEditTrangThaiKhachHang"]
+                .forEach(id => document.getElementById(id).classList.add("d-none"));
+
+            const response = await fetch('/KhachHang/Edit/' + id, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(kh)
+            });
+
+            let data = {};
+            try { data = await response.json(); } catch { }
+
+            if (!response.ok) {
+                if (response.status === 400 && typeof data === "object") {
+                    // Lỗi Validation
+                    if (data.HoTenKhachHang) showError("errorEditHoTenKhachHang", data.HoTenKhachHang);
+                    if (data.SdtKhachHang) showError("errorEditSdtKhachHang", data.SdtKhachHang);
+                    if (data.EmailKhachHang) showError("errorEditEmailKhachHang", data.EmailKhachHang);
+                    return;
+                }
+
+                if (response.status === 409 && data.message) {
+                    // Lỗi Trùng lặp (Conflict)
+                    if (data.message.includes("Số điện thoại")) {
+                        showError("errorEditSdtKhachHang", data.message);
+                    } else if (data.message.includes("Email")) {
+                        showError("errorEditEmailKhachHang", data.message);
+                    }
+                    return;
+                }
+
+                alert(data.message || "Không thể cập nhật Khách Hàng. Vui lòng thử lại!");
+                return;
+            }
+
+            location.reload();
+        });
+
+        // --- Xóa Khách Hàng ---
+        document.querySelectorAll(".btn-delete").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const id = btn.dataset.id;
+                const confirmDelete = confirm("Bạn có chắc chắn muốn xóa Khách hàng ID " + id + " này không?");
+
+                if (confirmDelete) {
+                    const response = await fetch('/KhachHang/Delete/' + id, {
+                        method: 'POST', // Hoặc DELETE nếu bạn cấu hình route là DELETE
+                        headers: { 'Content-Type': 'application/json' },
+                    });
+
+                    let data = {};
+                    try { data = await response.json(); } catch { }
+
+                    if (response.ok) {
+                        alert("Xóa Khách hàng thành công!");
+                        location.reload();
+                    } else {
+                        alert(data.message || "Lỗi khi xóa Khách hàng. Vui lòng thử lại!");
+                    }
+                }
+            });
+        });
+
+        // --- Reset form khi đóng modal ---
+        createModal.addEventListener("hidden.bs.modal", () => {
+            createForm.reset();
+            document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
+            document.getElementById('TrangThaiKhachHang').value = "Hoạt động"; // Đảm bảo reset trạng thái
+            document.getElementById('DiemTichLuy').value = "0"; // Đảm bảo reset điểm
+        });
+
+        editModal.addEventListener("hidden.bs.modal", () => {
+            editForm.reset();
+            document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
+        });
+    </script>
+</body>
+</html>

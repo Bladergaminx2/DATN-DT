@@ -54,6 +54,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=QuanLy}/{action=Index}/{id?}");
+    pattern: "{controller=ModelSanPham}/{action=Index}/{id?}");
 
 app.Run();

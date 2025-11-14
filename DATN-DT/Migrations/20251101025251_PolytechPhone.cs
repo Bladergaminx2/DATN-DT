@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DATN_DT.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class PolytechPhone : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -268,6 +268,7 @@ namespace DATN_DT.Migrations
                     TenSanPham = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IdThuongHieu = table.Column<int>(type: "int", nullable: true),
                     MoTa = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    GiaGoc = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     GiaNiemYet = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     TrangThaiSP = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     VAT = table.Column<decimal>(type: "decimal(18,2)", nullable: true),

@@ -1,0 +1,536 @@
+﻿@model IEnumerable<DATN_DT.Models.Imei>
+
+@{
+    ViewData["Title"] = "Quản lý IMEI";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <title>Quản lý IMEI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        body {
+            background-color: #12121d;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .container {
+            margin-top: 50px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #f5f5f5;
+        }
+
+        table {
+            background-color: #1e1e2a;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th {
+            background-color: #2b2b33;
+            color: #fff;
+        }
+
+        td {
+            color: #ddd;
+        }
+
+        .btn-create {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            transition: 0.3s;
+        }
+
+            .btn-create:hover {
+                background-color: #357ab8;
+            }
+
+        .modal-content {
+            background-color: #2b2b33;
+            color: white;
+            border-radius: 10px;
+        }
+
+        .form-control {
+            background-color: #1e1e2a;
+            color: white;
+            border: 1px solid #444;
+        }
+
+            .form-control:focus {
+                border-color: #4a90e2;
+                box-shadow: none;
+            }
+
+        .text-danger {
+            color: #ff4d4d !important;
+        }
+
+        .text-muted {
+            color: #6c757d !important;
+            font-style: italic;
+        }
+
+        .status-available {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .status-sold {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .status-returned {
+            color: #ffc107;
+            font-weight: bold;
+        }
+
+        .status-warranty {
+            color: #17a2b8;
+            font-weight: bold;
+        }
+
+        .imei-code {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+
+        .search-box {
+            background-color: #1e1e2a;
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 8px 15px;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+            .search-box:focus {
+                border-color: #4a90e2;
+                outline: none;
+            }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Quản Lý IMEI</h2>
+
+        <div class="d-flex justify-content-between mb-3">
+            <input type="text" id="searchImei" class="search-box" placeholder="🔍 Tìm kiếm theo mã IMEI..." style="width: 300px;">
+            <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
+                + Thêm IMEI
+            </button>
+        </div>
+
+        <table class="table table-hover text-center align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Mã IMEI</th>
+                    <th>Model Sản Phẩm</th>
+                    <th>Mô Tả</th>
+                    <th>Trạng Thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="imeiTableBody">
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.IdImei</td>
+                        <td class="imei-code">@item.MaImei</td>
+                        <td>
+                            @if (ViewBag.ModelSanPhams != null && item.IdModelSanPham.HasValue)
+                            {
+                                var modelSanPham = ((Dictionary<int, DATN_DT.Models.ModelSanPham>)ViewBag.ModelSanPhams).GetValueOrDefault(item.IdModelSanPham.Value);
+                                if (modelSanPham != null)
+                                {
+                                    @modelSanPham.TenModel
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Không tìm thấy (ID: @item.IdModelSanPham)</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">Chưa chọn</span>
+                            }
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(item.MoTa))
+                            {
+                                <span title="@item.MoTa">
+                                    @(item.MoTa.Length > 30 ? item.MoTa.Substring(0, 30) + "..." : item.MoTa)
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Không có mô tả</span>
+                            }
+                        </td>
+                        <td>
+                            @{
+                                var statusClass = "status-available";
+                                var statusText = item.TrangThai;
+
+                                switch (item.TrangThai?.ToLower())
+                                {
+                                    case "còn hàng":
+                                        statusClass = "status-available";
+                                        break;
+                                    case "đã bán":
+                                        statusClass = "status-sold";
+                                        break;
+                                    case "đã trả hàng":
+                                        statusClass = "status-returned";
+                                        break;
+                                    case "bảo hành":
+                                        statusClass = "status-warranty";
+                                        break;
+                                    default:
+                                        statusClass = "text-muted";
+                                        break;
+                                }
+                            }
+                            <span class="@statusClass">@statusText</span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-sm btn-warning btn-edit"
+                                        data-id="@item.IdImei"
+                                        data-maimei="@item.MaImei"
+                                        data-idmodelsanpham="@item.IdModelSanPham"
+                                        data-mota="@item.MoTa"
+                                        data-trangthai="@item.TrangThai">
+                                    Sửa
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- form Create -->
+    <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title">Thêm IMEI</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="createForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Mã IMEI <span class="text-danger">*</span></label>
+                            <input type="text" id="MaImei" class="form-control" placeholder="Nhập mã IMEI (15 chữ số)" maxlength="15" />
+                            <small id="errorMaImei" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Model Sản Phẩm <span class="text-danger">*</span></label>
+                            <select id="IdModelSanPham" class="form-control">
+                                <option value="">Chọn model sản phẩm</option>
+                            </select>
+                            <small id="errorIdModelSanPham" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mô Tả</label>
+                            <textarea id="MoTa" class="form-control" placeholder="Nhập mô tả (nếu có)" rows="3"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Trạng Thái <span class="text-danger">*</span></label>
+                            <select id="TrangThai" class="form-control">
+                                <option value="">Chọn trạng thái</option>
+                                <option value="Còn hàng">Còn hàng</option>
+                                <option value="Đã bán">Đã bán</option>
+                                <option value="Đã trả hàng">Đã trả hàng</option>
+                                <option value="Bảo hành">Bảo hành</option>
+                            </select>
+                            <small id="errorTrangThai" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <small>
+                                <strong>Lưu ý:</strong> Khi thêm IMEI có trạng thái "Còn hàng", tồn kho sẽ được tự động cập nhật.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- foam Edit -->
+    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chỉnh sửa IMEI</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editForm">
+                    <input type="hidden" id="EditIdImei" />
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Mã IMEI <span class="text-danger">*</span></label>
+                            <input type="text" id="EditMaImei" class="form-control" maxlength="15" />
+                            <small id="errorEditMaImei" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Model Sản Phẩm <span class="text-danger">*</span></label>
+                            <select id="EditIdModelSanPham" class="form-control">
+                                <option value="">Chọn model sản phẩm</option>
+                            </select>
+                            <small id="errorEditIdModelSanPham" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mô Tả</label>
+                            <textarea id="EditMoTa" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Trạng Thái <span class="text-danger">*</span></label>
+                            <select id="EditTrangThai" class="form-control">
+                                <option value="">Chọn trạng thái</option>
+                                <option value="Còn hàng">Còn hàng</option>
+                                <option value="Đã bán">Đã bán</option>
+                                <option value="Đã trả hàng">Đã trả hàng</option>
+                                <option value="Bảo hành">Bảo hành</option>
+                            </select>
+                            <small id="errorEditTrangThai" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <small>
+                                <strong>Lưu ý:</strong> Thay đổi trạng thái hoặc model sản phẩm sẽ ảnh hưởng đến tồn kho.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-warning">Cập nhật</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        //Data
+        async function loadDropdownData() {
+            try {
+                const modelSanPhamList = await fetch('/Imei/GetAllModelSanPham').then(r => r.json());
+
+                
+                populateDropdown('IdModelSanPham', modelSanPhamList, 'idModelSanPham', 'displayText');
+                populateDropdown('EditIdModelSanPham', modelSanPhamList, 'idModelSanPham', 'displayText');
+
+            } catch (error) {
+                console.error('Error loading dropdown data:', error);
+                alert('Không thể tải dữ liệu dropdown. Vui lòng thử lại!');
+            }
+        }
+
+        function populateDropdown(selectId, dataList, valueField, textField) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="">Chọn...</option>';
+            dataList.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item[valueField];
+                option.textContent = item[textField];
+                select.appendChild(option);
+            });
+        }
+
+        
+        document.getElementById('searchImei').addEventListener('input', function (e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#imeiTableBody tr');
+
+            rows.forEach(row => {
+                const imeiCode = row.cells[1].textContent.toLowerCase();
+                if (imeiCode.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+
+        // Theme
+        document.getElementById("createForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const imei = {
+                MaImei: MaImei.value.trim(),
+                IdModelSanPham: parseInt(IdModelSanPham.value),
+                MoTa: MoTa.value.trim(),
+                TrangThai: TrangThai.value
+            };
+
+            const response = await fetch('/Imei/Create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(imei)
+            });
+
+            let data = {};
+            try { data = await response.json(); } catch { }
+
+            
+            ["errorMaImei", "errorIdModelSanPham", "errorTrangThai"]
+                .forEach(id => document.getElementById(id).classList.add("d-none"));
+
+            if (!response.ok) {
+                if (response.status === 400 && typeof data === "object") {
+                    if (data.MaImei) showError("errorMaImei", data.MaImei);
+                    if (data.IdModelSanPham) showError("errorIdModelSanPham", data.IdModelSanPham);
+                    if (data.TrangThai) showError("errorTrangThai", data.TrangThai);
+                    return;
+                }
+
+                if (response.status === 409 && data.message) {
+                    showError("errorMaImei", data.message);
+                    return;
+                }
+
+                alert(data.message || "Không thể thêm IMEI. Vui lòng thử lại!");
+                return;
+            }
+
+            location.reload();
+        });
+
+       
+        document.querySelectorAll(".btn-edit").forEach(btn => {
+            btn.addEventListener("click", () => {
+                EditIdImei.value = btn.dataset.id;
+                EditMaImei.value = btn.dataset.maimei;
+                EditIdModelSanPham.value = btn.dataset.idmodelsanpham;
+                EditMoTa.value = btn.dataset.mota || '';
+                EditTrangThai.value = btn.dataset.trangthai;
+
+                new bootstrap.Modal(editModal).show();
+            });
+        });
+
+        // update meii
+        document.getElementById("editForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const id = EditIdImei.value;
+            const imei = {
+                MaImei: EditMaImei.value.trim(),
+                IdModelSanPham: parseInt(EditIdModelSanPham.value),
+                MoTa: EditMoTa.value.trim(),
+                TrangThai: EditTrangThai.value
+            };
+
+          
+            ["errorEditMaImei", "errorEditIdModelSanPham", "errorEditTrangThai"]
+                .forEach(id => document.getElementById(id).classList.add("d-none"));
+
+            const response = await fetch('/Imei/Edit/' + id, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(imei)
+            });
+
+            let data = {};
+            try { data = await response.json(); } catch { }
+
+            if (!response.ok) {
+                if (response.status === 400 && typeof data === "object") {
+                    if (data.MaImei) showError("errorEditMaImei", data.MaImei);
+                    if (data.IdModelSanPham) showError("errorEditIdModelSanPham", data.IdModelSanPham);
+                    if (data.TrangThai) showError("errorEditTrangThai", data.TrangThai);
+                    return;
+                }
+
+                if (response.status === 409 && data.message) {
+                    showError("errorEditMaImei", data.message);
+                    return;
+                }
+
+                alert(data.message || "Không thể cập nhật IMEI. Vui lòng thử lại!");
+                return;
+            }
+
+            location.reload();
+        });
+
+        // val imei
+        function validateImeiFormat(imei) {
+
+            const imeiRegex = /^\d{15}$/;
+            return imeiRegex.test(imei);
+        }
+        document.getElementById('MaImei').addEventListener('blur', function() {
+            const imei = this.value.trim();
+            if (imei && !validateImeiFormat(imei)) {
+                showError('errorMaImei', 'Mã IMEI phải có đúng 15 chữ số');
+            }
+        });
+
+        document.getElementById('EditMaImei').addEventListener('blur', function() {
+            const imei = this.value.trim();
+            if (imei && !validateImeiFormat(imei)) {
+                showError('errorEditMaImei', 'Mã IMEI phải có đúng 15 chữ số');
+            }
+        });
+
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.classList.remove("d-none");
+        }
+
+        // Reset form 
+        createModal.addEventListener("hidden.bs.modal", () => {
+            createForm.reset();
+            document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
+        });
+
+        editModal.addEventListener("hidden.bs.modal", () => {
+            editForm.reset();
+            document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
+        });
+
+       
+        document.addEventListener('DOMContentLoaded', loadDropdownData);
+    </script>
+</body>
+</html>

@@ -1,0 +1,443 @@
+﻿@model IEnumerable<DATN_DT.Models.CameraSau>
+
+@{
+    ViewData["Title"] = "Quản lý Camera Sau";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <title>Quản lý Camera Sau</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        body {
+            background-color: #12121d;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .container {
+            margin-top: 50px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #f5f5f5;
+        }
+
+        table {
+            background-color: #1e1e2a;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th {
+            background-color: #2b2b33;
+            color: #fff;
+        }
+
+        td {
+            color: #ddd;
+        }
+
+        .btn-create {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            transition: 0.3s;
+        }
+
+            .btn-create:hover {
+                background-color: #357ab8;
+            }
+
+        .modal-content {
+            background-color: #2b2b33;
+            color: white;
+            border-radius: 10px;
+        }
+
+        .form-control {
+            background-color: #1e1e2a;
+            color: white;
+            border: 1px solid #444;
+        }
+
+            .form-control:focus {
+                border-color: #4a90e2;
+                box-shadow: none;
+            }
+
+        .text-danger {
+            color: #ff4d4d !important;
+        }
+
+        .description-cell {
+            white-space: pre-line;
+            word-wrap: break-word;
+            max-width: 200px;
+            line-height: 1.5;
+        }
+
+        .btn-edit-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .form-control::placeholder {
+            color: #888;
+            opacity: 1;
+        }
+
+        .form-control:focus::placeholder {
+            color: transparent;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Quản Lý Camera Sau</h2>
+
+        <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
+                + Thêm Camera Sau
+            </button>
+        </div>
+
+        <table class="table table-hover text-center align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Độ phân giải</th>
+                    <th>Số lượng ống kính</th>
+                    <th>Tính năng</th>
+                    <th>Quay video</th>
+                    <th>Mô tả</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.IdCameraSau</td>
+                        <td>@item.DoPhanGiaiCamSau</td>
+                        <td>@item.SoLuongOngKinh</td>
+                        <td>@item.TinhNangCamSau</td>
+                        <td>@item.QuayVideoCamSau</td>
+                        <td class="description-cell">@item.MoTaCamSau</td>
+                        <td>
+                            <div class="btn-edit-container">
+                                <button class="btn btn-sm btn-warning btn-edit"
+                                        data-id="@item.IdCameraSau"
+                                        data-dophangiai="@item.DoPhanGiaiCamSau"
+                                        data-ongkinh="@item.SoLuongOngKinh"
+                                        data-tinhnang="@item.TinhNangCamSau"
+                                        data-quayvideo="@item.QuayVideoCamSau"
+                                        data-mota="@item.MoTaCamSau">
+                                    Sửa
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Form create -->
+    <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title">Thêm Camera Sau</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="createForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Độ phân giải <span class="text-danger">*</span></label>
+                            <input type="text" id="DoPhanGiaiCamSau" class="form-control" placeholder="Ví dụ: 12MP, 48MP + 12MP" />
+                            <small id="errorDoPhanGiaiCamSau" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Số lượng ống kính <span class="text-danger">*</span></label>
+                            <input type="text" id="SoLuongOngKinh" class="form-control" placeholder="Ví dụ: 2, 3, 4" />
+                            <small id="errorSoLuongOngKinh" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tính năng <span class="text-danger">*</span></label>
+                            <input type="text" id="TinhNangCamSau" class="form-control" placeholder="Ví dụ: Chụp đêm, Zoom quang học, Xóa phông" />
+                            <small id="errorTinhNangCamSau" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Quay video <span class="text-danger">*</span></label>
+                            <input type="text" id="QuayVideoCamSau" class="form-control" placeholder="Ví dụ: 4K@60fps, 1080p@30fps" />
+                            <small id="errorQuayVideoCamSau" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mô tả</label>
+                            <textarea id="MoTaCamSau" class="form-control" rows="3" placeholder="Nhập mô tả"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form edit -->
+    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chỉnh sửa Camera Sau</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editForm">
+                    <input type="hidden" id="EditIdCameraSau" />
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Độ phân giải <span class="text-danger">*</span></label>
+                            <input type="text" id="EditDoPhanGiaiCamSau" class="form-control" placeholder="Ví dụ: 12MP, 48MP + 12MP" />
+                            <small id="errorEditDoPhanGiaiCamSau" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Số lượng ống kính <span class="text-danger">*</span></label>
+                            <input type="text" id="EditSoLuongOngKinh" class="form-control" placeholder="Ví dụ: 2, 3, 4" />
+                            <small id="errorEditSoLuongOngKinh" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tính năng <span class="text-danger">*</span></label>
+                            <input type="text" id="EditTinhNangCamSau" class="form-control" placeholder="Ví dụ: Chụp đêm, Zoom quang học, Xóa phông" />
+                            <small id="errorEditTinhNangCamSau" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Quay video <span class="text-danger">*</span></label>
+                            <input type="text" id="EditQuayVideoCamSau" class="form-control" placeholder="Ví dụ: 4K@60fps, 1080p@30fps" />
+                            <small id="errorEditQuayVideoCamSau" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mô tả</label>
+                            <textarea id="EditMoTaCamSau" class="form-control" rows="3" placeholder="Nhập mô tả"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-warning">Cập nhật</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.classList.remove("d-none");
+        }
+
+        function hideAllErrors(errorIds) {
+            errorIds.forEach(id => document.getElementById(id).classList.add("d-none"));
+        }
+
+        function validateSoLuongOngKinh(value) {
+            if (!value || value.trim() === '') {
+                return "Số lượng ống kính là bắt buộc";
+            }
+            
+            const numValue = parseInt(value);
+            if (isNaN(numValue)) {
+                return "Số lượng ống kính phải là số";
+            }
+            
+            if (numValue < 1 || numValue > 10) {
+                return "Số lượng ống kính phải từ 1 đến 10";
+            }
+            
+            if (!Number.isInteger(parseFloat(value))) {
+                return "Số lượng ống kính phải là số nguyên";
+            }
+            
+            return null;
+        }
+
+        function validateCameraForm(formData, isEdit = false) {
+            const errors = {};
+            
+            if (!formData.DoPhanGiaiCamSau || formData.DoPhanGiaiCamSau.trim() === '') {
+                errors.DoPhanGiaiCamSau = "Độ phân giải là bắt buộc";
+            }
+            
+            const ongKinhError = validateSoLuongOngKinh(formData.SoLuongOngKinh);
+            if (ongKinhError) {
+                errors.SoLuongOngKinh = ongKinhError;
+            }
+            
+            if (!formData.TinhNangCamSau || formData.TinhNangCamSau.trim() === '') {
+                errors.TinhNangCamSau = "Tính năng là bắt buộc";
+            }
+            
+            if (!formData.QuayVideoCamSau || formData.QuayVideoCamSau.trim() === '') {
+                errors.QuayVideoCamSau = "Quay video là bắt buộc";
+            }
+            
+            return Object.keys(errors).length === 0 ? null : errors;
+        }
+
+        // Thêm Camera Sau
+        document.getElementById("createForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const cam = {
+                DoPhanGiaiCamSau: DoPhanGiaiCamSau.value.trim(),
+                SoLuongOngKinh: SoLuongOngKinh.value.trim(),
+                TinhNangCamSau: TinhNangCamSau.value.trim(),
+                QuayVideoCamSau: QuayVideoCamSau.value.trim(),
+                MoTaCamSau: MoTaCamSau.value.trim()
+            };
+
+            const errorIds = ["errorDoPhanGiaiCamSau", "errorSoLuongOngKinh", "errorTinhNangCamSau", "errorQuayVideoCamSau"];
+            hideAllErrors(errorIds);
+
+            const validationErrors = validateCameraForm(cam);
+            if (validationErrors) {
+                Object.keys(validationErrors).forEach(field => {
+                    showError(`error${field}`, validationErrors[field]);
+                });
+                return;
+            }
+
+            const response = await fetch('/CameraSau/Create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cam)
+            });
+
+            let data = {};
+            try { data = await response.json(); } catch { }
+
+            if (!response.ok) {
+                if (response.status === 400 && typeof data === "object") {
+                    if (data.DoPhanGiaiCamSau) showError("errorDoPhanGiaiCamSau", data.DoPhanGiaiCamSau);
+                    if (data.SoLuongOngKinh) showError("errorSoLuongOngKinh", data.SoLuongOngKinh);
+                    if (data.TinhNangCamSau) showError("errorTinhNangCamSau", data.TinhNangCamSau);
+                    if (data.QuayVideoCamSau) showError("errorQuayVideoCamSau", data.QuayVideoCamSau);
+                    return;
+                }
+
+                if (response.status === 409 && data.message) {
+                    errorIds.forEach(id => showError(id, data.message));
+                    return;
+                }
+
+                alert(data.message || "Không thể thêm Camera Sau. Vui lòng thử lại!");
+                return;
+            }
+
+            location.reload();
+        });
+
+        document.querySelectorAll(".btn-edit").forEach(btn => {
+            btn.addEventListener("click", () => {
+                EditIdCameraSau.value = btn.dataset.id;
+                EditDoPhanGiaiCamSau.value = btn.dataset.dophangiai;
+                EditSoLuongOngKinh.value = btn.dataset.ongkinh;
+                EditTinhNangCamSau.value = btn.dataset.tinhnang;
+                EditQuayVideoCamSau.value = btn.dataset.quayvideo;
+                EditMoTaCamSau.value = btn.dataset.mota;
+                new bootstrap.Modal(editModal).show();
+            });
+        });
+
+        // Cập nhật Camera Sau
+        document.getElementById("editForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const id = EditIdCameraSau.value;
+            const cam = {
+                IdCameraSau: id,
+                DoPhanGiaiCamSau: EditDoPhanGiaiCamSau.value.trim(),
+                SoLuongOngKinh: EditSoLuongOngKinh.value.trim(),
+                TinhNangCamSau: EditTinhNangCamSau.value.trim(),
+                QuayVideoCamSau: EditQuayVideoCamSau.value.trim(),
+                MoTaCamSau: EditMoTaCamSau.value.trim()
+            };
+
+            const errorIds = ["errorEditDoPhanGiaiCamSau", "errorEditSoLuongOngKinh", "errorEditTinhNangCamSau", "errorEditQuayVideoCamSau"];
+            hideAllErrors(errorIds);
+
+            const validationErrors = validateCameraForm(cam, true);
+            if (validationErrors) {
+                Object.keys(validationErrors).forEach(field => {
+                    showError(`errorEdit${field}`, validationErrors[field]);
+                });
+                return;
+            }
+
+            const response = await fetch('/CameraSau/Edit/' + id, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cam)
+            });
+
+            let data = {};
+            try { data = await response.json(); } catch { }
+
+            if (!response.ok) {
+                if (response.status === 400 && typeof data === "object") {
+                    if (data.DoPhanGiaiCamSau) showError("errorEditDoPhanGiaiCamSau", data.DoPhanGiaiCamSau);
+                    if (data.SoLuongOngKinh) showError("errorEditSoLuongOngKinh", data.SoLuongOngKinh);
+                    if (data.TinhNangCamSau) showError("errorEditTinhNangCamSau", data.TinhNangCamSau);
+                    if (data.QuayVideoCamSau) showError("errorEditQuayVideoCamSau", data.QuayVideoCamSau);
+                    return;
+                }
+
+                if (response.status === 409 && data.message) {
+                    errorIds.forEach(id => showError(id, data.message));
+                    return;
+                }
+
+                alert(data.message || "Không thể cập nhật Camera Sau. Vui lòng thử lại!");
+                return;
+            }
+
+            location.reload();
+        });
+
+        // Reset form khi đóng modal
+        createModal.addEventListener("hidden.bs.modal", () => {
+            createForm.reset();
+            document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
+        });
+
+        editModal.addEventListener("hidden.bs.modal", () => {
+            editForm.reset();
+            document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
+        });
+    </script>
+</body>
+</html>
