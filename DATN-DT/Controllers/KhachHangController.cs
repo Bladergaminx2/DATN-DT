@@ -1,5 +1,5 @@
 ﻿using DATN_DT.Data;
-using DATN_DT.Models; 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 
 namespace DATN_DT.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class KhachHangController : Controller
     {
         private readonly MyDbContext _context;
@@ -18,6 +20,8 @@ namespace DATN_DT.Controllers
         }
 
         // --- Index: Lấy danh sách Khách hàng ---
+        [Authorize(Roles = "KhachHang")]
+        [HttpGet("profile")]
         public async Task<IActionResult> Index()
         {
             var khachHangs = await _context.KhachHangs.ToListAsync();
@@ -75,7 +79,7 @@ namespace DATN_DT.Controllers
                 khachHang.EmailKhachHang = khachHang.EmailKhachHang?.Trim();
                 khachHang.DiaChiKhachHang = khachHang.DiaChiKhachHang?.Trim();
                 khachHang.DiemTichLuy ??= 0;
-                khachHang.TrangThaiKhachHang ??= "Hoạt động";
+                khachHang.TrangThaiKhachHang ??= 1;
 
                 _context.KhachHangs.Add(khachHang);
                 await _context.SaveChangesAsync();
@@ -139,8 +143,7 @@ namespace DATN_DT.Controllers
                 existing.EmailKhachHang = khachHang.EmailKhachHang?.Trim();
                 existing.DiaChiKhachHang = khachHang.DiaChiKhachHang?.Trim();
                 existing.DiemTichLuy = khachHang.DiemTichLuy;
-                existing.TrangThaiKhachHang = khachHang.TrangThaiKhachHang?.Trim();
-
+                existing.TrangThaiKhachHang = khachHang.TrangThaiKhachHang;
                 _context.KhachHangs.Update(existing);
                 await _context.SaveChangesAsync();
 

@@ -1,5 +1,6 @@
 ﻿using DATN_DT.Data;
 using DATN_DT.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -9,6 +10,8 @@ using System.Threading.Tasks;
 
 namespace DATN_DT.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class NhanVienController : Controller
     {
         private readonly MyDbContext _context;
@@ -19,6 +22,8 @@ namespace DATN_DT.Controllers
         }
 
         // --- Index: Lấy danh sách Nhân viên ---
+        [Authorize(Roles = "NhanVien")]
+        [HttpGet("get-all")]
         public async Task<IActionResult> Index()
         {
             // Eager loading ChucVu để hiển thị tên chức vụ trong View
@@ -57,7 +62,7 @@ namespace DATN_DT.Controllers
 
             // Ngày vào làm mặc định là hôm nay nếu không có
             nhanVien.NgayVaoLam ??= DateTime.Now;
-            nhanVien.TrangThaiNV ??= "Đang làm việc";
+            nhanVien.TrangThaiNV ??= 1; //Mặc định là đang làm việc
 
 
             if (errors.Count > 0)
@@ -86,7 +91,7 @@ namespace DATN_DT.Controllers
                 nhanVien.SdtNhanVien = nhanVien.SdtNhanVien.Trim();
                 nhanVien.EmailNhanVien = nhanVien.EmailNhanVien?.Trim();
                 nhanVien.DiaChiNV = nhanVien.DiaChiNV?.Trim();
-                nhanVien.TrangThaiNV = nhanVien.TrangThaiNV.Trim();
+                nhanVien.TrangThaiNV = nhanVien.TrangThaiNV;
 
                 _context.NhanViens.Add(nhanVien);
                 await _context.SaveChangesAsync();
@@ -159,7 +164,7 @@ namespace DATN_DT.Controllers
                 existing.EmailNhanVien = nhanVien.EmailNhanVien?.Trim();
                 existing.DiaChiNV = nhanVien.DiaChiNV?.Trim();
                 existing.NgayVaoLam = nhanVien.NgayVaoLam;
-                existing.TrangThaiNV = nhanVien.TrangThaiNV?.Trim();
+                existing.TrangThaiNV = nhanVien.TrangThaiNV;
 
                 _context.NhanViens.Update(existing);
                 await _context.SaveChangesAsync();

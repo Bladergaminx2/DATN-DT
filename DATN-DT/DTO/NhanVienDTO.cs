@@ -1,6 +1,6 @@
-﻿namespace DATN_DT.Models
+﻿namespace DATN_DT.DTO
 {
-    public class NhanVien
+    public class NhanVienDTO
     {
         public int IdNhanVien { get; set; }
         public string? TenTaiKhoanNV { get; set; }
@@ -12,10 +12,5 @@
         public string? DiaChiNV { get; set; }
         public DateTime? NgayVaoLam { get; set; }
         public int? TrangThaiNV { get; set; }
-
-
-
-        // Navigation property
-        public ChucVu? ChucVu { get; set; }
     }
 }

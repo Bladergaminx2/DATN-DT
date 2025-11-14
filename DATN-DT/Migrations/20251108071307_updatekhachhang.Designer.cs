@@ -4,6 +4,7 @@ using DATN_DT.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DATN_DT.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    partial class MyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251108071307_updatekhachhang")]
+    partial class updatekhachhang
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -318,8 +321,8 @@ namespace DATN_DT.Migrations
                     b.Property<string>("SdtKhachHang")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("TrangThaiKhachHang")
-                        .HasColumnType("int");
+                    b.Property<string>("TrangThaiKhachHang")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("IdKhachHang");
 
@@ -603,9 +606,6 @@ namespace DATN_DT.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdSanPham"));
-
-                    b.Property<decimal?>("GiaGoc")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal?>("GiaNiemYet")
                         .HasColumnType("decimal(18,2)");
