@@ -137,11 +137,11 @@
                         <td>
                             @{
                                 var statusClass = "status-active";
-                                if (item.TrangThaiKhachHang == "Ngừng hoạt động")
+                                if (item.TrangThaiKhachHang == 1)
                                 {
                                     statusClass = "status-inactive";
                                 }
-                                else if (item.TrangThaiKhachHang == "Khóa tạm thời")
+                                else if (item.TrangThaiKhachHang == 2)
                                 {
                                     statusClass = "status-warning";
                                 }

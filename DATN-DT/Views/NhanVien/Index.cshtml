@@ -135,11 +135,11 @@
                         <td>
                             @{
                                 var statusClass = "status-active";
-                                if (item.TrangThaiNV == "Đã nghỉ")
+                                if (item.TrangThaiNV == 1)
                                 {
                                     statusClass = "status-inactive";
                                 }
-                                else if (item.TrangThaiNV == "Nghỉ phép")
+                                else if (item.TrangThaiNV == 2)
                                 {
                                     statusClass = "status-warning";
                                 }
