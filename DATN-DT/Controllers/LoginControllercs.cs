@@ -16,144 +16,200 @@ namespace DATN_DT.Controllers
             _con = context;
         }
 
+        [HttpGet]
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult Register()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult NhanVien()
+        {
+            return View();
+        }
+
         // ======= Đăng ký =======
         [HttpPost]
         public async Task<IActionResult> Register([FromBody] RegisterForm model)
         {
-            if (await _con.KhachHangs.AnyAsync(u => u.EmailKhachHang == model.EmailKhachHang))
+            try
             {
-                return BadRequest(new { Success = false, Message = "Email đã được đăng ký." });
+                // Kiểm tra model validation
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new { Success = false, Message = "Dữ liệu không hợp lệ." });
+                }
+
+                // Kiểm tra email đã tồn tại - SỬA LỖI Ở ĐÂY
+                var existingUser = await _con.KhachHangs
+                    .FirstOrDefaultAsync(u => u.EmailKhachHang == model.EmailKhachHang);
+
+                if (existingUser != null)
+                {
+                    return BadRequest(new { Success = false, Message = "Email đã được đăng ký." });
+                }
+
+                var passwordHash = HashPassword(model.Password!);
+
+                var user = new KhachHang
+                {
+                    HoTenKhachHang = model.HoTenKhachHang,
+                    EmailKhachHang = model.EmailKhachHang,
+                    Password = passwordHash,
+                    SdtKhachHang = model.SdtKhachHang,
+                    DiaChiKhachHang = model.DiaChiKhachHang,
+                    DiemTichLuy = 0,
+                    TrangThaiKhachHang = 0
+                };
+
+                _con.KhachHangs.Add(user);
+                await _con.SaveChangesAsync();
+
+                return Ok(new { Success = true, Message = "Đăng ký thành công!" });
             }
-
-            var passwordHash = HashPassword(model.Password!);
-
-            var user = new KhachHang
+            catch (Exception ex)
             {
-                HoTenKhachHang = model.HoTenKhachHang,
-                EmailKhachHang = model.EmailKhachHang,
-                Password = passwordHash,
-                SdtKhachHang = model.SdtKhachHang,
-                DiaChiKhachHang = model.DiaChiKhachHang,
-                DiemTichLuy = 0,
-                TrangThaiKhachHang = 0
-            };
-
-            _con.KhachHangs.Add(user);
-            await _con.SaveChangesAsync();
-
-            return Ok(new { Success = true, Message = "Đăng ký thành công!" });
+                return StatusCode(500, new { Success = false, Message = "Lỗi server: " + ex.Message });
+            }
         }
 
         // ======= Đăng nhập =======
         [HttpPost]
         public async Task<IActionResult> Login([FromBody] LoginForm model)
         {
-            if (model == null)
+            try
             {
-                return BadRequest(new { Success = false, Message = "Dữ liệu không hợp lệ." });
-            }
-            var user = await _con.KhachHangs
-                .FirstOrDefaultAsync(u => u.EmailKhachHang == model.EmailKhachHang);
-
-            if (user == null || !VerifyPassword(model.Password!, user.Password!))
-            {
-                return BadRequest(new { Success = false, Message = "Email hoặc mật khẩu không chính xác." });
-            }
-
-            if (user.TrangThaiKhachHang == 1)
-            {
-                return BadRequest(new { Success = false, Message = "Tài khoản đã bị khóa." });
-            }
-
-            return Ok(new
-            {
-                Success = true,
-                Message = "Đăng nhập thành công!",
-                Data = new
+                if (model == null)
                 {
-                    user.HoTenKhachHang,
-                    user.EmailKhachHang,
-                    user.SdtKhachHang,
-                    user.DiaChiKhachHang,
-                    user.DiemTichLuy
+                    return BadRequest(new { Success = false, Message = "Dữ liệu không hợp lệ." });
                 }
-            });
+
+                var user = await _con.KhachHangs
+                    .FirstOrDefaultAsync(u => u.EmailKhachHang == model.EmailKhachHang);
+
+                if (user == null || !VerifyPassword(model.Password!, user.Password!))
+                {
+                    return BadRequest(new { Success = false, Message = "Email hoặc mật khẩu không chính xác." });
+                }
+
+                if (user.TrangThaiKhachHang == 1)
+                {
+                    return BadRequest(new { Success = false, Message = "Tài khoản đã bị khóa." });
+                }
+
+                return Ok(new
+                {
+                    Success = true,
+                    Message = "Đăng nhập thành công!",
+                    Data = new
+                    {
+                        user.HoTenKhachHang,
+                        user.EmailKhachHang,
+                        user.SdtKhachHang,
+                        user.DiaChiKhachHang,
+                        user.DiemTichLuy
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Success = false, Message = "Lỗi server: " + ex.Message });
+            }
         }
 
         // ========== ĐĂNG KÝ NHÂN VIÊN ==========
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterNhanVienForm model)
+        [HttpPost("registernhanvien")]
+        public async Task<IActionResult> RegisterNhanVien([FromBody] RegisterNhanVienForm model)
         {
-            if (string.IsNullOrEmpty(model.TenTaiKhoanNV) || string.IsNullOrEmpty(model.Password))
+            try
             {
-                return BadRequest(new { Success = false, Message = "Tên tài khoản và mật khẩu không được để trống." });
+                if (string.IsNullOrEmpty(model.TenTaiKhoanNV) || string.IsNullOrEmpty(model.Password))
+                {
+                    return BadRequest(new { Success = false, Message = "Tên tài khoản và mật khẩu không được để trống." });
+                }
+
+                var existed = await _con.NhanViens
+                    .FirstOrDefaultAsync(nv => nv.TenTaiKhoanNV == model.TenTaiKhoanNV);
+
+                if (existed != null)
+                {
+                    return BadRequest(new { Success = false, Message = "Tên tài khoản đã tồn tại." });
+                }
+
+                var newNhanVien = new NhanVien
+                {
+                    TenTaiKhoanNV = model.TenTaiKhoanNV,
+                    Password = HashPassword(model.Password),
+                    HoTenNhanVien = model.HoTenNhanVien,
+                    IdChucVu = model.IdChucVu,
+                    SdtNhanVien = model.SdtNhanVien,
+                    EmailNhanVien = model.EmailNhanVien,
+                    DiaChiNV = model.DiaChiNV,
+                    NgayVaoLam = model.NgayVaoLam ?? DateTime.Now,
+                    TrangThaiNV = 1
+                };
+
+                _con.NhanViens.Add(newNhanVien);
+                await _con.SaveChangesAsync();
+
+                return Ok(new { Success = true, Message = "Đăng ký nhân viên thành công." });
             }
-
-            var existed = await _con.NhanViens
-                .FirstOrDefaultAsync(nv => nv.TenTaiKhoanNV == model.TenTaiKhoanNV);
-
-            if (existed != null)
+            catch (Exception ex)
             {
-                return BadRequest(new { Success = false, Message = "Tên tài khoản đã tồn tại." });
+                return StatusCode(500, new { Success = false, Message = "Lỗi server: " + ex.Message });
             }
-
-            var newNhanVien = new NhanVien
-            {
-                TenTaiKhoanNV = model.TenTaiKhoanNV,
-                Password = HashPassword(model.Password),
-                HoTenNhanVien = model.HoTenNhanVien,
-                IdChucVu = model.IdChucVu,
-                SdtNhanVien = model.SdtNhanVien,
-                EmailNhanVien = model.EmailNhanVien,
-                DiaChiNV = model.DiaChiNV,
-                NgayVaoLam = model.NgayVaoLam ?? DateTime.Now,
-                TrangThaiNV = 1 // Mặc định trạng thái là "Đang làm việc"
-            };
-
-            _con.NhanViens.Add(newNhanVien);
-            await _con.SaveChangesAsync();
-
-            return Ok(new { Success = true, Message = "Đăng ký nhân viên thành công." });
         }
 
         // ========== ĐĂNG NHẬP NHÂN VIÊN ==========
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginNhanVienForm model)
+        [HttpPost("loginnhanvien")]
+        public async Task<IActionResult> LoginNhanVien([FromBody] LoginNhanVienForm model)
         {
-            if (string.IsNullOrEmpty(model.TenTaiKhoanNV) || string.IsNullOrEmpty(model.Password))
+            try
             {
-                return BadRequest(new { Success = false, Message = "Tên tài khoản hoặc mật khẩu không được để trống." });
-            }
-
-            var nv = await _con.NhanViens
-                .FirstOrDefaultAsync(u => u.TenTaiKhoanNV == model.TenTaiKhoanNV);
-
-            if (nv == null || !VerifyPassword(model.Password, nv.Password))
-            {
-                return BadRequest(new { Success = false, Message = "Tên tài khoản hoặc mật khẩu không đúng." });
-            }
-
-            if (nv.TrangThaiNV == 0)
-            {
-                return BadRequest(new { Success = false, Message = "Tài khoản đã bị khóa." });
-            }
-
-            return Ok(new
-            {
-                Success = true,
-                Message = "Đăng nhập thành công.",
-                Data = new
+                if (string.IsNullOrEmpty(model.TenTaiKhoanNV) || string.IsNullOrEmpty(model.Password))
                 {
-                    nv.IdNhanVien,
-                    nv.HoTenNhanVien,
-                    nv.EmailNhanVien,
-                    nv.SdtNhanVien,
-                    nv.IdChucVu,
-                    nv.TrangThaiNV
+                    return BadRequest(new { Success = false, Message = "Tên tài khoản hoặc mật khẩu không được để trống." });
                 }
-            });
-        }
 
+                var nv = await _con.NhanViens
+                    .FirstOrDefaultAsync(u => u.TenTaiKhoanNV == model.TenTaiKhoanNV);
+
+                if (nv == null || !VerifyPassword(model.Password, nv.Password))
+                {
+                    return BadRequest(new { Success = false, Message = "Tên tài khoản hoặc mật khẩu không đúng." });
+                }
+
+                if (nv.TrangThaiNV == 0)
+                {
+                    return BadRequest(new { Success = false, Message = "Tài khoản đã bị khóa." });
+                }
+
+                return Ok(new
+                {
+                    Success = true,
+                    Message = "Đăng nhập thành công.",
+                    Data = new
+                    {
+                        nv.IdNhanVien,
+                        nv.HoTenNhanVien,
+                        nv.EmailNhanVien,
+                        nv.SdtNhanVien,
+                        nv.IdChucVu,
+                        nv.TrangThaiNV
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Success = false, Message = "Lỗi server: " + ex.Message });
+            }
+        }
 
         // ======= Hàm băm mật khẩu =======
         private string HashPassword(string password)

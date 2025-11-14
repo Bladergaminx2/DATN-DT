@@ -17,6 +17,8 @@ namespace DATN_DT.Controllers
             _context = context;
         }
 
+
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
             var list = await (from sp in _context.SanPhams
@@ -34,6 +36,9 @@ namespace DATN_DT.Controllers
                                   TrangThaiSP = sp.TrangThaiSP,
                                   VAT = sp.VAT
                               }).ToListAsync();
+            return View(list);
+        }
+
         [HttpPost]
         [Consumes("application/json")]
         public async Task<IActionResult> Create([FromBody] SanPham? sp)
@@ -153,7 +158,8 @@ namespace DATN_DT.Controllers
             {
                 var thuongHieus = await _context.ThuongHieus
                     .Where(th => th.TrangThaiThuongHieu == "Còn hoạt động")
-                    .Select(th => new {
+                    .Select(th => new
+                    {
                         IdThuongHieu = th.IdThuongHieu,
                         TenThuongHieu = th.TenThuongHieu
                     })
@@ -167,5 +173,4 @@ namespace DATN_DT.Controllers
             }
         }
     }
-}
 }

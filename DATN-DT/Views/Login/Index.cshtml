@@ -1,0 +1,95 @@
+﻿@model DATN_DT.Form.LoginForm
+@{
+    ViewData["Title"] = "Đăng Nhập";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="auth-container">
+    <div class="auth-card">
+        <h2 class="text-center mb-4">Đăng Nhập</h2>
+        
+        <form id="loginForm">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            
+            <div class="form-group">
+                <label asp-for="EmailKhachHang" class="form-label">Email</label>
+                <input asp-for="EmailKhachHang" class="form-control" />
+                <span asp-validation-for="EmailKhachHang" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Password" class="form-label">Mật khẩu</label>
+                <input asp-for="Password" type="password" class="form-control" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary btn-block" id="loginBtn">
+                    Đăng Nhập
+                </button>
+            </div>
+        </form>
+
+        <div id="loginMessage" class="mt-3"></div>
+
+        <div class="text-center mt-3">
+            <p>Chưa có tài khoản? <a href="/Login/Register" class="text-primary">Đăng ký ngay</a></p>
+            <p>Nhân viên? <a href="/Login/NhanVien" class="text-primary">Đăng nhập tại đây</a></p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#loginForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                if (!$('#loginForm').valid()) return;
+                
+                var btn = $('#loginBtn');
+                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status"></span> Đang xử lý...');
+                
+                var formData = {
+                    EmailKhachHang: $('#EmailKhachHang').val(),
+                    Password: $('#Password').val()
+                };
+                
+                console.log('Sending login data:', formData); // Debug log
+                
+                $.ajax({
+                    url: '/Login/Login',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function(response) {
+                        console.log('Login response:', response); // Debug log
+                        if (response.success) {
+                            $('#loginMessage').html('<div class="alert alert-success">' + response.message + '</div>');
+                            // Lưu thông tin user và chuyển hướng
+                            localStorage.setItem('user', JSON.stringify(response.data));
+                            localStorage.setItem('isAuthenticated', 'true');
+                            setTimeout(() => {
+                                window.location.href = '/';
+                            }, 1000);
+                        } else {
+                            $('#loginMessage').html('<div class="alert alert-danger">' + response.message + '</div>');
+                        }
+                    },
+                    error: function(xhr) {
+                        console.log('Login error:', xhr); // Debug log
+                        try {
+                            var response = JSON.parse(xhr.responseText);
+                            $('#loginMessage').html('<div class="alert alert-danger">' + response.message + '</div>');
+                        } catch (e) {
+                            $('#loginMessage').html('<div class="alert alert-danger">Có lỗi xảy ra khi kết nối đến server</div>');
+                        }
+                    },
+                    complete: function() {
+                        btn.prop('disabled', false).html('Đăng Nhập');
+                    }
+                });
+            });
+        });
+    </script>
+}
