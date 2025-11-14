@@ -78,6 +78,37 @@
         .text-danger {
             color: #ff4d4d !important;
         }
+
+        .form-text {
+            font-size: 0.875em;
+            margin-top: 0.25rem;
+        }
+
+
+        .form-control::placeholder {
+            color: #888;
+            opacity: 1;
+        }
+
+        .form-control:focus::placeholder {
+            color: transparent;
+        }
+
+
+        .description-cell {
+            white-space: pre-line;
+            word-wrap: break-word;
+            max-width: 300px;
+            line-height: 1.5;
+        }
+
+
+        .btn-edit-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
     </style>
 </head>
 <body>
@@ -105,14 +136,16 @@
                     <tr>
                         <td>@item.IdRAM</td>
                         <td>@item.DungLuongRAM</td>
-                        <td>@item.MoTaRAM</td>
+                        <td class="description-cell">@item.MoTaRAM</td>
                         <td>
-                            <button class="btn btn-sm btn-warning btn-edit"
-                                    data-id="@item.IdRAM"
-                                    data-dungluong="@item.DungLuongRAM"
-                                    data-mota="@item.MoTaRAM">
-                                Sửa
-                            </button>
+                            <div class="btn-edit-container">
+                                <button class="btn btn-sm btn-warning btn-edit"
+                                        data-id="@item.IdRAM"
+                                        data-dungluong="@item.DungLuongRAM"
+                                        data-mota="@item.MoTaRAM">
+                                    Sửa
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 }
@@ -132,13 +165,15 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Dung lượng RAM <span class="text-danger">*</span></label>
-                            <input type="text" id="DungLuongRAM" class="form-control" placeholder="Nhập dung lượng RAM" />
+                            <input type="text" id="DungLuongRAM" class="form-control"
+                                   placeholder="VD: 4GB, 8GB, 16GB, 32GB, 64GB" />
                             <small id="errorDungLuongRAM" class="text-danger d-none"></small>
+                            <small class="form-text text-muted">Nhập dung lượng RAM theo định dạng: số + GB (ví dụ: 8GB, 16GB) - Lưu ý: GB phải viết hoa</small>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Mô tả</label>
-                            <textarea id="MoTaRAM" class="form-control" rows="3" placeholder="Nhập mô tả (nếu có)"></textarea>
+                            <textarea id="MoTaRAM" class="form-control" rows="3" placeholder="Nhập mô tả về RAM (nếu có)"></textarea>
                         </div>
                     </div>
 
@@ -151,7 +186,7 @@
         </div>
     </div>
 
-    <!--Edit -->
+    <!-- Edit -->
     <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content p-3">
@@ -164,13 +199,15 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Dung lượng RAM <span class="text-danger">*</span></label>
-                            <input type="text" id="EditDungLuongRAM" class="form-control" />
+                            <input type="text" id="EditDungLuongRAM" class="form-control"
+                                   placeholder="VD: 4GB, 8GB, 16GB, 32GB, 64GB" />
                             <small id="errorEditDungLuongRAM" class="text-danger d-none"></small>
+                            <small class="form-text text-muted">Nhập dung lượng RAM theo định dạng: số + GB (ví dụ: 8GB, 16GB) - Lưu ý: GB phải viết hoa</small>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Mô tả</label>
-                            <textarea id="EditMoTaRAM" class="form-control" rows="3"></textarea>
+                            <textarea id="EditMoTaRAM" class="form-control" rows="3" placeholder="Nhập mô tả về RAM (nếu có)"></textarea>
                         </div>
                     </div>
 
@@ -184,12 +221,82 @@
     </div>
 
     <script>
-        // Theeem
+
+        function isValidRAMFormat(input) {
+            const pattern = /^\d+GB$/;
+            return pattern.test(input.trim());
+        }
+
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.classList.remove("d-none");
+        }
+
+        function hideError(id) {
+            const el = document.getElementById(id);
+            el.classList.add("d-none");
+        }
+
+
+        const createModal = document.getElementById('createModal');
+
+
+        createModal.addEventListener('show.bs.modal', function () {
+            document.getElementById('DungLuongRAM').placeholder = "VD: 4GB, 8GB, 16GB, 32GB, 64GB";
+            document.getElementById('MoTaRAM').placeholder = "Nhập mô tả về RAM (nếu có)";
+            hideError("errorDungLuongRAM");
+        });
+
+
+        createModal.addEventListener('hidden.bs.modal', function () {
+            document.getElementById('createForm').reset();
+            document.getElementById('DungLuongRAM').placeholder = "VD: 4GB, 8GB, 16GB, 32GB, 64GB";
+            document.getElementById('MoTaRAM').placeholder = "Nhập mô tả về RAM (nếu có)";
+            hideError("errorDungLuongRAM");
+        });
+
+
+        const editModal = document.getElementById('editModal');
+
+
+        editModal.addEventListener('hidden.bs.modal', function () {
+            document.getElementById('EditDungLuongRAM').placeholder = "VD: 4GB, 8GB, 16GB, 32GB, 64GB";
+            document.getElementById('EditMoTaRAM').placeholder = "Nhập mô tả về RAM (nếu có)";
+            hideError("errorEditDungLuongRAM");
+        });
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const inputs = document.querySelectorAll('input[type="text"], textarea');
+
+            inputs.forEach(input => {
+                input.addEventListener('focus', function () {
+                    this.setAttribute('data-placeholder', this.getAttribute('placeholder'));
+                    this.setAttribute('placeholder', '');
+                });
+
+                input.addEventListener('blur', function () {
+                    if (this.value === '') {
+                        this.setAttribute('placeholder', this.getAttribute('data-placeholder') || '');
+                    }
+                });
+            });
+        });
+
+        // Thêm RAM
         document.getElementById("createForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
+            const dungLuongValue = DungLuongRAM.value.trim();
+
+            if (!isValidRAMFormat(dungLuongValue)) {
+                showError("errorDungLuongRAM", "Định dạng không hợp lệ! Vui lòng nhập theo định dạng: số + GB (ví dụ: 8GB, 16GB) - Lưu ý: GB phải viết hoa");
+                return;
+            }
+
             const ram = {
-                DungLuongRAM: DungLuongRAM.value.trim(),
+                DungLuongRAM: dungLuongValue,
                 MoTaRAM: MoTaRAM.value.trim()
             };
 
@@ -201,8 +308,6 @@
 
             let data = {};
             try { data = await response.json(); } catch { }
-
-            document.getElementById("errorDungLuongRAM").classList.add("d-none");
 
             if (!response.ok) {
                 if (response.status === 400 && typeof data === "object") {
@@ -222,28 +327,33 @@
             location.reload();
         });
 
-   
+        // Sửa RAM
         document.querySelectorAll(".btn-edit").forEach(btn => {
             btn.addEventListener("click", () => {
                 EditIdRAM.value = btn.dataset.id;
                 EditDungLuongRAM.value = btn.dataset.dungluong;
                 EditMoTaRAM.value = btn.dataset.mota;
+                hideError("errorEditDungLuongRAM");
                 new bootstrap.Modal(editModal).show();
             });
         });
 
-        // Update
+        // Cập nhật RAM
         document.getElementById("editForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
             const id = EditIdRAM.value;
+            const dungLuongValue = EditDungLuongRAM.value.trim();
+            if (!isValidRAMFormat(dungLuongValue)) {
+                showError("errorEditDungLuongRAM", "Định dạng không hợp lệ! Vui lòng nhập theo định dạng: số + GB (ví dụ: 8GB, 16GB) - Lưu ý: GB phải viết hoa");
+                return;
+            }
+
             const ram = {
                 IdRAM: id,
-                DungLuongRAM: EditDungLuongRAM.value.trim(),
+                DungLuongRAM: dungLuongValue,
                 MoTaRAM: EditMoTaRAM.value.trim()
             };
-
-            document.getElementById("errorEditDungLuongRAM").classList.add("d-none");
 
             const response = await fetch('/RAM/Edit/' + id, {
                 method: 'POST',
@@ -270,23 +380,6 @@
             }
 
             location.reload();
-        });
-
-        function showError(id, msg) {
-            const el = document.getElementById(id);
-            el.textContent = msg;
-            el.classList.remove("d-none");
-        }
-
-        // Reset form 
-        createModal.addEventListener("hidden.bs.modal", () => {
-            createForm.reset();
-            document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
-        });
-
-        editModal.addEventListener("hidden.bs.modal", () => {
-            editForm.reset();
-            document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
         });
     </script>
 </body>

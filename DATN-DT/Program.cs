@@ -33,6 +33,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Imei}/{action=Index}/{id?}");
+    pattern: "{controller=ModelSanPham}/{action=Index}/{id?}");
 
 app.Run();

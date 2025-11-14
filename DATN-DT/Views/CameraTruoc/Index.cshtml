@@ -54,9 +54,9 @@
             transition: 0.3s;
         }
 
-        .btn-create:hover {
-            background-color: #357ab8;
-        }
+            .btn-create:hover {
+                background-color: #357ab8;
+            }
 
         .modal-content {
             background-color: #2b2b33;
@@ -70,13 +70,36 @@
             border: 1px solid #444;
         }
 
-        .form-control:focus {
-            border-color: #4a90e2;
-            box-shadow: none;
-        }
+            .form-control:focus {
+                border-color: #4a90e2;
+                box-shadow: none;
+            }
 
         .text-danger {
             color: #ff4d4d !important;
+        }
+
+        .description-cell {
+            white-space: pre-line;
+            word-wrap: break-word;
+            max-width: 200px;
+            line-height: 1.5;
+        }
+
+        .btn-edit-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .form-control::placeholder {
+            color: #888;
+            opacity: 1;
+        }
+
+        .form-control:focus::placeholder {
+            color: transparent;
         }
     </style>
 </head>
@@ -109,16 +132,18 @@
                         <td>@item.DoPhanGiaiCamTruoc</td>
                         <td>@item.TinhNangCamTruoc</td>
                         <td>@item.QuayVideoCamTruoc</td>
-                        <td>@item.MoTaCamTruoc</td>
+                        <td class="description-cell">@item.MoTaCamTruoc</td>
                         <td>
-                            <button class="btn btn-sm btn-warning btn-edit"
-                                    data-id="@item.IdCamTruoc"
-                                    data-dophangiai="@item.DoPhanGiaiCamTruoc"
-                                    data-tinhnang="@item.TinhNangCamTruoc"
-                                    data-quayvideo="@item.QuayVideoCamTruoc"
-                                    data-mota="@item.MoTaCamTruoc">
-                                Sửa
-                            </button>
+                            <div class="btn-edit-container">
+                                <button class="btn btn-sm btn-warning btn-edit"
+                                        data-id="@item.IdCamTruoc"
+                                        data-dophangiai="@item.DoPhanGiaiCamTruoc"
+                                        data-tinhnang="@item.TinhNangCamTruoc"
+                                        data-quayvideo="@item.QuayVideoCamTruoc"
+                                        data-mota="@item.MoTaCamTruoc">
+                                    Sửa
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 }
@@ -126,7 +151,7 @@
         </table>
     </div>
 
-    <!-- From Create -->
+    <!-- Form Create -->
     <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content p-3">
@@ -138,25 +163,25 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Độ phân giải <span class="text-danger">*</span></label>
-                            <input type="text" id="DoPhanGiaiCamTruoc" class="form-control" placeholder="Nhập độ phân giải" />
+                            <input type="text" id="DoPhanGiaiCamTruoc" class="form-control" placeholder="Ví dụ: 12MP, 32MP" />
                             <small id="errorDoPhanGiaiCamTruoc" class="text-danger d-none"></small>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Tính năng <span class="text-danger">*</span></label>
-                            <input type="text" id="TinhNangCamTruoc" class="form-control" placeholder="Nhập tính năng" />
+                            <input type="text" id="TinhNangCamTruoc" class="form-control" placeholder="Ví dụ: Selfie góc rộng, Xóa phông, Quay video HD" />
                             <small id="errorTinhNangCamTruoc" class="text-danger d-none"></small>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Quay video <span class="text-danger">*</span></label>
-                            <input type="text" id="QuayVideoCamTruoc" class="form-control" placeholder="Nhập khả năng quay video" />
+                            <input type="text" id="QuayVideoCamTruoc" class="form-control" placeholder="Ví dụ: 1080p@30fps, 4K@30fps" />
                             <small id="errorQuayVideoCamTruoc" class="text-danger d-none"></small>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Mô tả</label>
-                            <textarea id="MoTaCamTruoc" class="form-control" rows="3" placeholder="Nhập mô tả (nếu có)"></textarea>
+                            <textarea id="MoTaCamTruoc" class="form-control" rows="3" placeholder="Nhập mô tả"></textarea>
                         </div>
                     </div>
 
@@ -169,7 +194,7 @@
         </div>
     </div>
 
-    <!-- Morf Edit -->
+    <!-- Form Edit -->
     <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content p-3">
@@ -182,25 +207,25 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Độ phân giải <span class="text-danger">*</span></label>
-                            <input type="text" id="EditDoPhanGiaiCamTruoc" class="form-control" />
+                            <input type="text" id="EditDoPhanGiaiCamTruoc" class="form-control" placeholder="Ví dụ: 12MP, 32MP" />
                             <small id="errorEditDoPhanGiaiCamTruoc" class="text-danger d-none"></small>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Tính năng <span class="text-danger">*</span></label>
-                            <input type="text" id="EditTinhNangCamTruoc" class="form-control" />
+                            <input type="text" id="EditTinhNangCamTruoc" class="form-control" placeholder="Ví dụ: Selfie góc rộng, Xóa phông, Quay video HD" />
                             <small id="errorEditTinhNangCamTruoc" class="text-danger d-none"></small>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Quay video <span class="text-danger">*</span></label>
-                            <input type="text" id="EditQuayVideoCamTruoc" class="form-control" />
+                            <input type="text" id="EditQuayVideoCamTruoc" class="form-control" placeholder="Ví dụ: 1080p@30fps, 4K@30fps" />
                             <small id="errorEditQuayVideoCamTruoc" class="text-danger d-none"></small>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Mô tả</label>
-                            <textarea id="EditMoTaCamTruoc" class="form-control" rows="3"></textarea>
+                            <textarea id="EditMoTaCamTruoc" class="form-control" rows="3" placeholder="Nhập mô tả"></textarea>
                         </div>
                     </div>
 
@@ -214,7 +239,35 @@
     </div>
 
     <script>
-        // add
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.classList.remove("d-none");
+        }
+
+        function hideAllErrors(errorIds) {
+            errorIds.forEach(id => document.getElementById(id).classList.add("d-none"));
+        }
+
+        function validateCameraForm(formData) {
+            const errors = {};
+
+            if (!formData.DoPhanGiaiCamTruoc || formData.DoPhanGiaiCamTruoc.trim() === '') {
+                errors.DoPhanGiaiCamTruoc = "Độ phân giải là bắt buộc";
+            }
+
+            if (!formData.TinhNangCamTruoc || formData.TinhNangCamTruoc.trim() === '') {
+                errors.TinhNangCamTruoc = "Tính năng là bắt buộc";
+            }
+
+            if (!formData.QuayVideoCamTruoc || formData.QuayVideoCamTruoc.trim() === '') {
+                errors.QuayVideoCamTruoc = "Quay video là bắt buộc";
+            }
+
+            return Object.keys(errors).length === 0 ? null : errors;
+        }
+
+        // Thêm Camera Trước
         document.getElementById("createForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
@@ -225,6 +278,17 @@
                 MoTaCamTruoc: MoTaCamTruoc.value.trim()
             };
 
+            const errorIds = ["errorDoPhanGiaiCamTruoc", "errorTinhNangCamTruoc", "errorQuayVideoCamTruoc"];
+            hideAllErrors(errorIds);
+
+            const validationErrors = validateCameraForm(cam);
+            if (validationErrors) {
+                Object.keys(validationErrors).forEach(field => {
+                    showError(`error${field}`, validationErrors[field]);
+                });
+                return;
+            }
+
             const response = await fetch('/CameraTruoc/Create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -233,9 +297,6 @@
 
             let data = {};
             try { data = await response.json(); } catch { }
-
-            ["errorDoPhanGiaiCamTruoc", "errorTinhNangCamTruoc", "errorQuayVideoCamTruoc"]
-                .forEach(id => document.getElementById(id).classList.add("d-none"));
 
             if (!response.ok) {
                 if (response.status === 400 && typeof data === "object") {
@@ -246,8 +307,7 @@
                 }
 
                 if (response.status === 409 && data.message) {
-                    ["errorDoPhanGiaiCamTruoc", "errorTinhNangCamTruoc", "errorQuayVideoCamTruoc"]
-                        .forEach(id => showError(id, data.message));
+                    errorIds.forEach(id => showError(id, data.message));
                     return;
                 }
 
@@ -258,7 +318,7 @@
             location.reload();
         });
 
-        
+
         document.querySelectorAll(".btn-edit").forEach(btn => {
             btn.addEventListener("click", () => {
                 EditIdCamTruoc.value = btn.dataset.id;
@@ -270,7 +330,7 @@
             });
         });
 
-        // CapNhat
+        // Cập nhật Camera Trước
         document.getElementById("editForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
@@ -283,8 +343,17 @@
                 MoTaCamTruoc: EditMoTaCamTruoc.value.trim()
             };
 
-            ["errorEditDoPhanGiaiCamTruoc", "errorEditTinhNangCamTruoc", "errorEditQuayVideoCamTruoc"]
-                .forEach(id => document.getElementById(id).classList.add("d-none"));
+            // Validate client-side
+            const errorIds = ["errorEditDoPhanGiaiCamTruoc", "errorEditTinhNangCamTruoc", "errorEditQuayVideoCamTruoc"];
+            hideAllErrors(errorIds);
+
+            const validationErrors = validateCameraForm(cam);
+            if (validationErrors) {
+                Object.keys(validationErrors).forEach(field => {
+                    showError(`errorEdit${field}`, validationErrors[field]);
+                });
+                return;
+            }
 
             const response = await fetch('/CameraTruoc/Edit/' + id, {
                 method: 'POST',
@@ -304,8 +373,7 @@
                 }
 
                 if (response.status === 409 && data.message) {
-                    ["errorEditDoPhanGiaiCamTruoc", "errorEditTinhNangCamTruoc", "errorEditQuayVideoCamTruoc"]
-                        .forEach(id => showError(id, data.message));
+                    errorIds.forEach(id => showError(id, data.message));
                     return;
                 }
 
@@ -316,13 +384,7 @@
             location.reload();
         });
 
-        function showError(id, msg) {
-            const el = document.getElementById(id);
-            el.textContent = msg;
-            el.classList.remove("d-none");
-        }
-
-        // Reset form 
+        // Reset form khi đóng modal
         createModal.addEventListener("hidden.bs.modal", () => {
             createForm.reset();
             document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
