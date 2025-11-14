@@ -54,9 +54,9 @@
             transition: 0.3s;
         }
 
-        .btn-create:hover {
-            background-color: #357ab8;
-        }
+            .btn-create:hover {
+                background-color: #357ab8;
+            }
 
         .modal-content {
             background-color: #2b2b33;
@@ -70,13 +70,18 @@
             border: 1px solid #444;
         }
 
-        .form-control:focus {
-            border-color: #4a90e2;
-            box-shadow: none;
-        }
+            .form-control:focus {
+                border-color: #4a90e2;
+                box-shadow: none;
+            }
 
         .text-danger {
             color: #ff4d4d !important;
+        }
+
+        .form-text {
+            font-size: 0.875em;
+            margin-top: 0.25rem;
         }
 
         .status-active {
@@ -92,6 +97,16 @@
         .status-error {
             color: #ffc107;
             font-weight: bold;
+        }
+
+        /* Style cho placeholder */
+        .form-control::placeholder {
+            color: #888;
+            opacity: 1;
+        }
+
+        .form-control:focus::placeholder {
+            color: transparent;
         }
     </style>
 </head>
@@ -150,7 +165,7 @@
         </table>
     </div>
 
-    <!-- game mode 2 -->
+    <!-- Create Modal -->
     <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content p-3">
@@ -162,8 +177,9 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Tên thương hiệu <span class="text-danger">*</span></label>
-                            <input type="text" id="TenThuongHieu" class="form-control" placeholder="Nhập tên thương hiệu" />
+                            <input type="text" id="TenThuongHieu" class="form-control" placeholder="VD: Samsung, Apple, Xiaomi, Oppo" />
                             <small id="errorTenThuongHieu" class="text-danger d-none"></small>
+                            <small class="form-text text-muted">Nhập tên thương hiệu (ví dụ: Samsung, Apple)</small>
                         </div>
 
                         <div class="mb-3">
@@ -175,6 +191,7 @@
                                 <option value="Lỗi">Lỗi</option>
                             </select>
                             <small id="errorTrangThaiThuongHieu" class="text-danger d-none"></small>
+                            <small class="form-text text-muted">Chọn trạng thái hoạt động của thương hiệu</small>
                         </div>
                     </div>
 
@@ -187,7 +204,7 @@
         </div>
     </div>
 
-    <!-- editor -->
+    <!-- Edit Modal -->
     <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content p-3">
@@ -200,8 +217,9 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Tên thương hiệu <span class="text-danger">*</span></label>
-                            <input type="text" id="EditTenThuongHieu" class="form-control" />
+                            <input type="text" id="EditTenThuongHieu" class="form-control" placeholder="VD: Samsung, Apple, Xiaomi, Oppo" />
                             <small id="errorEditTenThuongHieu" class="text-danger d-none"></small>
+                            <small class="form-text text-muted">Nhập tên thương hiệu (ví dụ: Samsung, Apple)</small>
                         </div>
 
                         <div class="mb-3">
@@ -212,6 +230,7 @@
                                 <option value="Lỗi">Lỗi</option>
                             </select>
                             <small id="errorEditTrangThaiThuongHieu" class="text-danger d-none"></small>
+                            <small class="form-text text-muted">Chọn trạng thái hoạt động của thương hiệu</small>
                         </div>
                     </div>
 
@@ -225,9 +244,135 @@
     </div>
 
     <script>
-        // them
+        // Hàm hiển thị lỗi
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.classList.remove("d-none");
+        }
+
+        // Hàm ẩn lỗi
+        function hideError(id) {
+            const el = document.getElementById(id);
+            el.classList.add("d-none");
+        }
+
+        // Hàm kiểm tra tất cả input bắt buộc cho Create
+        function validateAllInputs() {
+            let isValid = true;
+            const errors = {};
+
+            // Kiểm tra Tên thương hiệu
+            const tenThuongHieuValue = TenThuongHieu.value.trim();
+            if (!tenThuongHieuValue) {
+                errors.tenThuongHieu = "Phải điền tên thương hiệu!";
+                isValid = false;
+            }
+
+            // Kiểm tra Trạng thái
+            const trangThaiValue = TrangThaiThuongHieu.value;
+            if (!trangThaiValue) {
+                errors.trangThai = "Phải chọn trạng thái!";
+                isValid = false;
+            }
+
+            return { isValid, errors };
+        }
+
+        // Hàm kiểm tra tất cả input bắt buộc cho Edit
+        function validateAllInputsEdit() {
+            let isValid = true;
+            const errors = {};
+
+            // Kiểm tra Tên thương hiệu
+            const tenThuongHieuValue = EditTenThuongHieu.value.trim();
+            if (!tenThuongHieuValue) {
+                errors.tenThuongHieu = "Phải điền tên thương hiệu!";
+                isValid = false;
+            }
+
+            // Kiểm tra Trạng thái
+            const trangThaiValue = EditTrangThaiThuongHieu.value;
+            if (!trangThaiValue) {
+                errors.trangThai = "Phải chọn trạng thái!";
+                isValid = false;
+            }
+
+            return { isValid, errors };
+        }
+
+        // Xử lý placeholder cho Create Modal
+        const createModal = document.getElementById('createModal');
+
+        // Khi modal create được hiển thị
+        createModal.addEventListener('show.bs.modal', function () {
+            // Đảm bảo placeholder hiển thị
+            document.getElementById('TenThuongHieu').placeholder = "VD: Samsung, Apple, Xiaomi, Oppo";
+            document.getElementById('TrangThaiThuongHieu').value = "";
+
+            // Ẩn tất cả lỗi
+            hideError("errorTenThuongHieu");
+            hideError("errorTrangThaiThuongHieu");
+        });
+
+        // Khi modal create bị ẩn (khi đóng)
+        createModal.addEventListener('hidden.bs.modal', function () {
+            // Reset form và đảm bảo placeholder hiển thị lại
+            document.getElementById('createForm').reset();
+            document.getElementById('TenThuongHieu').placeholder = "VD: Samsung, Apple, Xiaomi, Oppo";
+
+            // Ẩn tất cả lỗi
+            document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
+        });
+
+        // Xử lý placeholder cho Edit Modal
+        const editModal = document.getElementById('editModal');
+
+        // Khi modal edit bị ẩn
+        editModal.addEventListener('hidden.bs.modal', function () {
+            // Reset placeholder cho edit modal
+            document.getElementById('EditTenThuongHieu').placeholder = "VD: Samsung, Apple, Xiaomi, Oppo";
+
+            // Ẩn tất cả lỗi
+            document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
+        });
+
+        // Xử lý focus cho các input
+        document.addEventListener('DOMContentLoaded', function () {
+            const inputs = document.querySelectorAll('input[type="text"]');
+
+            inputs.forEach(input => {
+                // Khi focus vào input, placeholder sẽ biến mất
+                input.addEventListener('focus', function () {
+                    this.setAttribute('data-placeholder', this.getAttribute('placeholder'));
+                    this.setAttribute('placeholder', '');
+                });
+
+                // Khi rời khỏi input, nếu không có giá trị thì hiển thị lại placeholder
+                input.addEventListener('blur', function () {
+                    if (this.value === '') {
+                        this.setAttribute('placeholder', this.getAttribute('data-placeholder') || '');
+                    }
+                });
+            });
+        });
+
+        // Thêm Thương Hiệu
         document.getElementById("createForm").addEventListener("submit", async (e) => {
             e.preventDefault();
+
+            // Ẩn tất cả lỗi cũ
+            hideError("errorTenThuongHieu");
+            hideError("errorTrangThaiThuongHieu");
+
+            // Kiểm tra tất cả input
+            const validation = validateAllInputs();
+            if (!validation.isValid) {
+                // Hiển thị tất cả lỗi
+                if (validation.errors.tenThuongHieu) showError("errorTenThuongHieu", validation.errors.tenThuongHieu);
+                if (validation.errors.trangThai) showError("errorTrangThaiThuongHieu", validation.errors.trangThai);
+                return;
+            }
 
             const th = {
                 TenThuongHieu: TenThuongHieu.value.trim(),
@@ -242,9 +387,6 @@
 
             let data = {};
             try { data = await response.json(); } catch { }
-
-            ["errorTenThuongHieu", "errorTrangThaiThuongHieu"]
-                .forEach(id => document.getElementById(id).classList.add("d-none"));
 
             if (!response.ok) {
                 if (response.status === 400 && typeof data === "object") {
@@ -265,29 +407,45 @@
             location.reload();
         });
 
-       
+        // Sửa Thương Hiệu
         document.querySelectorAll(".btn-edit").forEach(btn => {
             btn.addEventListener("click", () => {
                 EditIdThuongHieu.value = btn.dataset.id;
                 EditTenThuongHieu.value = btn.dataset.ten;
                 EditTrangThaiThuongHieu.value = btn.dataset.trangthai;
+
+                // Ẩn tất cả lỗi
+                hideError("errorEditTenThuongHieu");
+                hideError("errorEditTrangThaiThuongHieu");
+
                 new bootstrap.Modal(editModal).show();
             });
         });
 
-        // edit brand
+        // Cập nhật Thương Hiệu
         document.getElementById("editForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
             const id = EditIdThuongHieu.value;
+
+            // Ẩn tất cả lỗi cũ
+            hideError("errorEditTenThuongHieu");
+            hideError("errorEditTrangThaiThuongHieu");
+
+            // Kiểm tra tất cả input
+            const validation = validateAllInputsEdit();
+            if (!validation.isValid) {
+                // Hiển thị tất cả lỗi
+                if (validation.errors.tenThuongHieu) showError("errorEditTenThuongHieu", validation.errors.tenThuongHieu);
+                if (validation.errors.trangThai) showError("errorEditTrangThaiThuongHieu", validation.errors.trangThai);
+                return;
+            }
+
             const th = {
                 IdThuongHieu: id,
                 TenThuongHieu: EditTenThuongHieu.value.trim(),
                 TrangThaiThuongHieu: EditTrangThaiThuongHieu.value
             };
-
-            ["errorEditTenThuongHieu", "errorEditTrangThaiThuongHieu"]
-                .forEach(id => document.getElementById(id).classList.add("d-none"));
 
             const response = await fetch('/ThuongHieu/Edit/' + id, {
                 method: 'POST',
@@ -315,23 +473,6 @@
             }
 
             location.reload();
-        });
-
-        function showError(id, msg) {
-            const el = document.getElementById(id);
-            el.textContent = msg;
-            el.classList.remove("d-none");
-        }
-
-        // Reset form khi đóng modal
-        createModal.addEventListener("hidden.bs.modal", () => {
-            createForm.reset();
-            document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
-        });
-
-        editModal.addEventListener("hidden.bs.modal", () => {
-            editForm.reset();
-            document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
         });
     </script>
 </body>

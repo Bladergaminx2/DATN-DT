@@ -88,19 +88,57 @@
             color: #6c757d !important;
             font-style: italic;
         }
+
+        .search-container {
+            background-color: #1e1e2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .search-input-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Quản Lý Model Sản Phẩm</h2>
 
-        <div class="d-flex justify-content-end mb-3">
-            <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
-                + Thêm Model Sản Phẩm
-            </button>
+        <div class="search-container">
+            <div class="search-header">
+                <h4 class="mb-0">Tìm kiếm model sản phẩm</h4>
+                <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
+                    + Thêm Model Sản Phẩm
+                </button>
+            </div>
+
+            <div class="search-input-group">
+                <input type="text" id="searchInput" class="form-control search-input" placeholder="Tìm theo tên model, màu sắc..." />
+                <button class="btn btn-primary" onclick="performSearch()">
+                    Tìm kiếm
+                </button>
+                <button class="btn btn-secondary" onclick="clearSearch()">
+                    Reset
+                </button>
+            </div>
         </div>
 
-        <table class="table table-hover text-center align-middle">
+        <table class="table table-hover text-center align-middle" id="productsTable">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -117,10 +155,10 @@
                     <th>Hành động</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="productsTableBody">
                 @foreach (var item in Model)
                 {
-                    <tr>
+                    <tr data-tenmodel="@item.TenModel" data-mau="@item.Mau" data-sanpham="@(ViewBag.SanPhams != null && item.IdSanPham.HasValue ? ((Dictionary<int, DATN_DT.Models.SanPham>)ViewBag.SanPhams).GetValueOrDefault(item.IdSanPham.Value)?.TenSanPham : "")">
                         <td>@item.IdModelSanPham</td>
                         <td>@item.TenModel</td>
                         <td>
@@ -273,7 +311,6 @@
         </table>
     </div>
 
-    <!-- atecre-->
     <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content p-3">
@@ -373,7 +410,6 @@
         </div>
     </div>
 
-    <!-- dite-->
     <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content p-3">
@@ -460,7 +496,42 @@
         </div>
     </div>
     <script>
-     
+        function performSearch() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            const rows = document.querySelectorAll('#productsTableBody tr');
+
+            rows.forEach(row => {
+                const tenModel = row.getAttribute('data-tenmodel').toLowerCase();
+                const mau = row.getAttribute('data-mau').toLowerCase();
+                const sanPham = row.getAttribute('data-sanpham').toLowerCase();
+
+                const matchesSearch = !searchTerm ||
+                    tenModel.includes(searchTerm) ||
+                    mau.includes(searchTerm) ||
+                    sanPham.includes(searchTerm);
+
+                if (matchesSearch) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            performSearch();
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            loadDropdownData();
+            document.getElementById('searchInput').addEventListener('input', function (e) {
+                if (e.target.value.length >= 2 || e.target.value.length === 0) {
+                    performSearch();
+                }
+            });
+        });
+
         async function loadDropdownData() {
             try {
                 const responses = await Promise.all([
@@ -475,7 +546,6 @@
 
                 const [sanPhamList, manHinhList, cameraTruocList, cameraSauList, pinList, ramList, romList] = responses;
 
-                
                 populateDropdown('IdSanPham', sanPhamList, 'idSanPham', 'tenSanPham');
                 populateDropdown('IdManHinh', manHinhList, 'idManHinh', 'displayText');
                 populateDropdown('IdCameraTruoc', cameraTruocList, 'idCamTruoc', 'displayText');
@@ -484,7 +554,6 @@
                 populateDropdown('IdRAM', ramList, 'idRAM', 'displayText');
                 populateDropdown('IdROM', romList, 'idROM', 'displayText');
 
-  
                 populateDropdown('EditIdSanPham', sanPhamList, 'idSanPham', 'tenSanPham');
                 populateDropdown('EditIdManHinh', manHinhList, 'idManHinh', 'displayText');
                 populateDropdown('EditIdCameraTruoc', cameraTruocList, 'idCamTruoc', 'displayText');
@@ -510,7 +579,6 @@
             });
         }
 
-        // them
         document.getElementById("createForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
@@ -536,9 +604,8 @@
             let data = {};
             try { data = await response.json(); } catch { }
 
-       
-            ["errorTenModel", "errorIdSanPham", "errorIdManHinh", "errorIdCameraTruoc", 
-             "errorIdCameraSau", "errorIdPin", "errorIdRAM", "errorIdROM", "errorMau", "errorGiaBanModel"]
+            ["errorTenModel", "errorIdSanPham", "errorIdManHinh", "errorIdCameraTruoc",
+                "errorIdCameraSau", "errorIdPin", "errorIdRAM", "errorIdROM", "errorMau", "errorGiaBanModel"]
                 .forEach(id => document.getElementById(id).classList.add("d-none"));
 
             if (!response.ok) {
@@ -568,7 +635,6 @@
             location.reload();
         });
 
- 
         document.querySelectorAll(".btn-edit").forEach(btn => {
             btn.addEventListener("click", () => {
                 EditIdModelSanPham.value = btn.dataset.id;
@@ -582,12 +648,11 @@
                 EditIdROM.value = btn.dataset.idrom;
                 EditMau.value = btn.dataset.mau;
                 EditGiaBanModel.value = btn.dataset.giabanmodel;
-                
+
                 new bootstrap.Modal(editModal).show();
             });
         });
 
-        // cap nhat
         document.getElementById("editForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
@@ -605,9 +670,8 @@
                 GiaBanModel: parseFloat(EditGiaBanModel.value)
             };
 
-      
-            ["errorEditTenModel", "errorEditIdSanPham", "errorEditIdManHinh", "errorEditIdCameraTruoc", 
-             "errorEditIdCameraSau", "errorEditIdPin", "errorEditIdRAM", "errorEditIdROM", "errorEditMau", "errorEditGiaBanModel"]
+            ["errorEditTenModel", "errorEditIdSanPham", "errorEditIdManHinh", "errorEditIdCameraTruoc",
+                "errorEditIdCameraSau", "errorEditIdPin", "errorEditIdRAM", "errorEditIdROM", "errorEditMau", "errorEditGiaBanModel"]
                 .forEach(id => document.getElementById(id).classList.add("d-none"));
 
             const response = await fetch('/ModelSanPham/Edit/' + id, {
@@ -652,7 +716,6 @@
             el.classList.remove("d-none");
         }
 
-        // Reset form 
         createModal.addEventListener("hidden.bs.modal", () => {
             createForm.reset();
             document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
@@ -662,9 +725,6 @@
             editForm.reset();
             document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
         });
-
-       
-        document.addEventListener('DOMContentLoaded', loadDropdownData);
     </script>
 </body>
 </html>

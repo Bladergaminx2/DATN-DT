@@ -1,5 +1,4 @@
 ﻿@model IEnumerable<DATN_DT.Models.ROM>
-
 @{
     ViewData["Title"] = "Quản lý ROM";
     Layout = null;
@@ -78,6 +77,37 @@
         .text-danger {
             color: #ff4d4d !important;
         }
+
+        .form-text {
+            font-size: 0.875em;
+            margin-top: 0.25rem;
+        }
+
+
+        .form-control::placeholder {
+            color: #888;
+            opacity: 1;
+        }
+
+        .form-control:focus::placeholder {
+            color: transparent;
+        }
+
+
+        .description-cell {
+            white-space: pre-line;
+            word-wrap: break-word;
+            max-width: 300px;
+            line-height: 1.5;
+        }
+
+
+        .btn-edit-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
     </style>
 </head>
 <body>
@@ -105,14 +135,16 @@
                     <tr>
                         <td>@item.IdROM</td>
                         <td>@item.DungLuongROM</td>
-                        <td>@item.MoTaROM</td>
+                        <td class="description-cell">@item.MoTaROM</td>
                         <td>
-                            <button class="btn btn-sm btn-warning btn-edit"
-                                    data-id="@item.IdROM"
-                                    data-dungluong="@item.DungLuongROM"
-                                    data-mota="@item.MoTaROM">
-                                Sửa
-                            </button>
+                            <div class="btn-edit-container">
+                                <button class="btn btn-sm btn-warning btn-edit"
+                                        data-id="@item.IdROM"
+                                        data-dungluong="@item.DungLuongROM"
+                                        data-mota="@item.MoTaROM">
+                                    Sửa
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 }
@@ -132,13 +164,15 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Dung lượng ROM <span class="text-danger">*</span></label>
-                            <input type="text" id="DungLuongROM" class="form-control" placeholder="Nhập dung lượng ROM" />
+                            <input type="text" id="DungLuongROM" class="form-control"
+                                   placeholder="VD: 32GB, 64GB, 128GB, 256GB, 512GB, 1TB" />
                             <small id="errorDungLuongROM" class="text-danger d-none"></small>
+                            <small class="form-text text-muted">Nhập dung lượng ROM theo định dạng: số + GB/TB (ví dụ: 128GB, 1TB) - Lưu ý: GB/TB phải viết hoa</small>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Mô tả</label>
-                            <textarea id="MoTaROM" class="form-control" rows="3" placeholder="Nhập mô tả (nếu có)"></textarea>
+                            <textarea id="MoTaROM" class="form-control" rows="3" placeholder="Nhập mô tả về ROM (nếu có)"></textarea>
                         </div>
                     </div>
 
@@ -164,13 +198,15 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Dung lượng ROM <span class="text-danger">*</span></label>
-                            <input type="text" id="EditDungLuongROM" class="form-control" />
+                            <input type="text" id="EditDungLuongROM" class="form-control"
+                                   placeholder="VD: 32GB, 64GB, 128GB, 256GB, 512GB, 1TB" />
                             <small id="errorEditDungLuongROM" class="text-danger d-none"></small>
+                            <small class="form-text text-muted">Nhập dung lượng ROM theo định dạng: số + GB/TB (ví dụ: 128GB, 1TB) - Lưu ý: GB/TB phải viết hoa</small>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Mô tả</label>
-                            <textarea id="EditMoTaROM" class="form-control" rows="3"></textarea>
+                            <textarea id="EditMoTaROM" class="form-control" rows="3" placeholder="Nhập mô tả về ROM (nếu có)"></textarea>
                         </div>
                     </div>
 
@@ -184,12 +220,82 @@
     </div>
 
     <script>
-        //add
+
+        function isValidROMFormat(input) {
+            const pattern = /^\d+(GB|TB)$/;
+            return pattern.test(input.trim());
+        }
+
+
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.classList.remove("d-none");
+        }
+
+        function hideError(id) {
+            const el = document.getElementById(id);
+            el.classList.add("d-none");
+        }
+
+        const createModal = document.getElementById('createModal');
+
+
+        createModal.addEventListener('show.bs.modal', function () {
+
+            document.getElementById('DungLuongROM').placeholder = "VD: 32GB, 64GB, 128GB, 256GB, 512GB, 1TB";
+            document.getElementById('MoTaROM').placeholder = "Nhập mô tả về ROM (nếu có)";
+            hideError("errorDungLuongROM");
+        });
+
+        createModal.addEventListener('hidden.bs.modal', function () {
+            document.getElementById('createForm').reset();
+            document.getElementById('DungLuongROM').placeholder = "VD: 32GB, 64GB, 128GB, 256GB, 512GB, 1TB";
+            document.getElementById('MoTaROM').placeholder = "Nhập mô tả về ROM (nếu có)";
+            hideError("errorDungLuongROM");
+        });
+
+   
+        const editModal = document.getElementById('editModal');
+
+
+        editModal.addEventListener('hidden.bs.modal', function () {
+            document.getElementById('EditDungLuongROM').placeholder = "VD: 32GB, 64GB, 128GB, 256GB, 512GB, 1TB";
+            document.getElementById('EditMoTaROM').placeholder = "Nhập mô tả về ROM (nếu có)";
+            hideError("errorEditDungLuongROM");
+        });
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const inputs = document.querySelectorAll('input[type="text"], textarea');
+
+            inputs.forEach(input => {
+                input.addEventListener('focus', function () {
+                    this.setAttribute('data-placeholder', this.getAttribute('placeholder'));
+                    this.setAttribute('placeholder', '');
+                });
+
+                input.addEventListener('blur', function () {
+                    if (this.value === '') {
+                        this.setAttribute('placeholder', this.getAttribute('data-placeholder') || '');
+                    }
+                });
+            });
+        });
+
+        // Thêm ROM
         document.getElementById("createForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
+            const dungLuongValue = DungLuongROM.value.trim();
+
+            if (!isValidROMFormat(dungLuongValue)) {
+                showError("errorDungLuongROM", "Định dạng không hợp lệ! Vui lòng nhập theo định dạng: số + GB/TB (ví dụ: 128GB, 1TB) - Lưu ý: GB/TB phải viết hoa");
+                return;
+            }
+
             const rom = {
-                DungLuongROM: DungLuongROM.value.trim(),
+                DungLuongROM: dungLuongValue,
                 MoTaROM: MoTaROM.value.trim()
             };
 
@@ -201,8 +307,6 @@
 
             let data = {};
             try { data = await response.json(); } catch { }
-
-            document.getElementById("errorDungLuongROM").classList.add("d-none");
 
             if (!response.ok) {
                 if (response.status === 400 && typeof data === "object") {
@@ -222,28 +326,34 @@
             location.reload();
         });
 
-    
+        // Sửa ROM
         document.querySelectorAll(".btn-edit").forEach(btn => {
             btn.addEventListener("click", () => {
                 EditIdROM.value = btn.dataset.id;
                 EditDungLuongROM.value = btn.dataset.dungluong;
                 EditMoTaROM.value = btn.dataset.mota;
+                hideError("errorEditDungLuongROM");
                 new bootstrap.Modal(editModal).show();
             });
         });
 
-        // update
+        // Cập nhật ROM
         document.getElementById("editForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
             const id = EditIdROM.value;
+            const dungLuongValue = EditDungLuongROM.value.trim();
+
+            if (!isValidROMFormat(dungLuongValue)) {
+                showError("errorEditDungLuongROM", "Định dạng không hợp lệ! Vui lòng nhập theo định dạng: số + GB/TB (ví dụ: 128GB, 1TB) - Lưu ý: GB/TB phải viết hoa");
+                return;
+            }
+
             const rom = {
                 IdROM: id,
-                DungLuongROM: EditDungLuongROM.value.trim(),
+                DungLuongROM: dungLuongValue,
                 MoTaROM: EditMoTaROM.value.trim()
             };
-
-            document.getElementById("errorEditDungLuongROM").classList.add("d-none");
 
             const response = await fetch('/ROM/Edit/' + id, {
                 method: 'POST',
@@ -270,23 +380,6 @@
             }
 
             location.reload();
-        });
-
-        function showError(id, msg) {
-            const el = document.getElementById(id);
-            el.textContent = msg;
-            el.classList.remove("d-none");
-        }
-
-        // Reset
-        createModal.addEventListener("hidden.bs.modal", () => {
-            createForm.reset();
-            document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
-        });
-
-        editModal.addEventListener("hidden.bs.modal", () => {
-            editForm.reset();
-            document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
         });
     </script>
 </body>

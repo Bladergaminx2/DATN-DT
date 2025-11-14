@@ -78,6 +78,30 @@
         .text-danger {
             color: #ff4d4d !important;
         }
+
+        .description-cell {
+            white-space: pre-line;
+            word-wrap: break-word;
+            max-width: 200px;
+            line-height: 1.5;
+        }
+
+        .btn-edit-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+
+        .form-control::placeholder {
+            color: #888;
+            opacity: 1;
+        }
+
+        .form-control:focus::placeholder {
+            color: transparent;
+        }
     </style>
 </head>
 <body>
@@ -111,17 +135,19 @@
                         <td>@item.KichThuoc</td>
                         <td>@item.DoPhanGiai</td>
                         <td>@item.TinhNangMan</td>
-                        <td>@item.MoTaMan</td>
+                        <td class="description-cell">@item.MoTaMan</td>
                         <td>
-                            <button class="btn btn-sm btn-warning btn-edit"
-                                    data-id="@item.IdManHinh"
-                                    data-congnghe="@item.CongNgheManHinh"
-                                    data-kichthuoc="@item.KichThuoc"
-                                    data-dophangiai="@item.DoPhanGiai"
-                                    data-tinhnang="@item.TinhNangMan"
-                                    data-mota="@item.MoTaMan">
-                                Sửa
-                            </button>
+                            <div class="btn-edit-container">
+                                <button class="btn btn-sm btn-warning btn-edit"
+                                        data-id="@item.IdManHinh"
+                                        data-congnghe="@item.CongNgheManHinh"
+                                        data-kichthuoc="@item.KichThuoc"
+                                        data-dophangiai="@item.DoPhanGiai"
+                                        data-tinhnang="@item.TinhNangMan"
+                                        data-mota="@item.MoTaMan">
+                                    Sửa
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 }
@@ -141,31 +167,31 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Công nghệ màn hình <span class="text-danger">*</span></label>
-                            <input type="text" id="CongNgheManHinh" class="form-control" placeholder="Nhập công nghệ màn hình" />
+                            <input type="text" id="CongNgheManHinh" class="form-control" placeholder="Công nghệ màn hình" />
                             <small id="errorCongNgheManHinh" class="text-danger d-none"></small>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Kích thước <span class="text-danger">*</span></label>
-                            <input type="text" id="KichThuoc" class="form-control" placeholder="Nhập kích thước màn hình" />
+                            <input type="text" id="KichThuoc" class="form-control" placeholder="Kích thước" />
                             <small id="errorKichThuoc" class="text-danger d-none"></small>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Độ phân giải <span class="text-danger">*</span></label>
-                            <input type="text" id="DoPhanGiai" class="form-control" placeholder="Nhập độ phân giải" />
+                            <input type="text" id="DoPhanGiai" class="form-control" placeholder="Độ phân giải" />
                             <small id="errorDoPhanGiai" class="text-danger d-none"></small>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Tính năng màn hình <span class="text-danger">*</span></label>
-                            <input type="text" id="TinhNangMan" class="form-control" placeholder="Nhập tính năng màn hình" />
+                            <input type="text" id="TinhNangMan" class="form-control" placeholder="Tính năng màn hình" />
                             <small id="errorTinhNangMan" class="text-danger d-none"></small>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Mô tả</label>
-                            <textarea id="MoTaMan" class="form-control" rows="3" placeholder="Nhập mô tả (nếu có)"></textarea>
+                            <textarea id="MoTaMan" class="form-control" rows="3" placeholder="Mô tả"></textarea>
                         </div>
                     </div>
 
@@ -191,31 +217,31 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Công nghệ màn hình <span class="text-danger">*</span></label>
-                            <input type="text" id="EditCongNgheManHinh" class="form-control" />
+                            <input type="text" id="EditCongNgheManHinh" class="form-control" placeholder="Công nghệ màn hình" />
                             <small id="errorEditCongNgheManHinh" class="text-danger d-none"></small>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Kích thước <span class="text-danger">*</span></label>
-                            <input type="text" id="EditKichThuoc" class="form-control" />
+                            <input type="text" id="EditKichThuoc" class="form-control" placeholder="Kích thước" />
                             <small id="errorEditKichThuoc" class="text-danger d-none"></small>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Độ phân giải <span class="text-danger">*</span></label>
-                            <input type="text" id="EditDoPhanGiai" class="form-control" />
+                            <input type="text" id="EditDoPhanGiai" class="form-control" placeholder="Độ phân giải" />
                             <small id="errorEditDoPhanGiai" class="text-danger d-none"></small>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Tính năng màn hình <span class="text-danger">*</span></label>
-                            <input type="text" id="EditTinhNangMan" class="form-control" />
+                            <input type="text" id="EditTinhNangMan" class="form-control" placeholder="Tính năng màn hình" />
                             <small id="errorEditTinhNangMan" class="text-danger d-none"></small>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Mô tả</label>
-                            <textarea id="EditMoTaMan" class="form-control" rows="3"></textarea>
+                            <textarea id="EditMoTaMan" class="form-control" rows="3" placeholder="Mô tả"></textarea>
                         </div>
                     </div>
 
@@ -229,7 +255,6 @@
     </div>
 
     <script>
-        // addict
         document.getElementById("createForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
@@ -275,7 +300,7 @@
             location.reload();
         });
 
-       
+
         document.querySelectorAll(".btn-edit").forEach(btn => {
             btn.addEventListener("click", () => {
                 EditIdManHinh.value = btn.dataset.id;
@@ -288,7 +313,6 @@
             });
         });
 
-        // upstate
         document.getElementById("editForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
@@ -342,7 +366,6 @@
             el.classList.remove("d-none");
         }
 
-        // Reset form khi đóng modal
         createModal.addEventListener("hidden.bs.modal", () => {
             createForm.reset();
             document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));

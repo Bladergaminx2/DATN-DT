@@ -54,9 +54,9 @@
             transition: 0.3s;
         }
 
-        .btn-create:hover {
-            background-color: #357ab8;
-        }
+            .btn-create:hover {
+                background-color: #357ab8;
+            }
 
         .modal-content {
             background-color: #2b2b33;
@@ -70,10 +70,10 @@
             border: 1px solid #444;
         }
 
-        .form-control:focus {
-            border-color: #4a90e2;
-            box-shadow: none;
-        }
+            .form-control:focus {
+                border-color: #4a90e2;
+                box-shadow: none;
+            }
 
         .text-danger {
             color: #ff4d4d !important;
@@ -111,19 +111,97 @@
             border-radius: 4px;
             font-size: 12px;
         }
+
+        .form-control::placeholder {
+            color: #888 !important;
+            opacity: 1 !important;
+        }
+
+        .form-control:focus::placeholder {
+            color: #666 !important;
+        }
+
+        .btn-action-group {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+
+        .btn-mota {
+            background-color: #6f42c1;
+            color: white;
+            border: none;
+        }
+
+            .btn-mota:hover {
+                background-color: #5a32a3;
+                color: white;
+            }
+
+        .mota-content {
+            white-space: pre-line;
+            word-wrap: break-word;
+            max-width: 400px;
+            line-height: 1.5;
+        }
+
+        .search-container {
+            background-color: #1e1e2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .search-input-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Quản Lý Sản Phẩm</h2>
 
-        <div class="d-flex justify-content-end mb-3">
-            <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
-                + Thêm Sản Phẩm
-            </button>
+        <div class="search-container">
+            <div class="search-header">
+                <h4 class="mb-0">Tìm kiếm sản phẩm</h4>
+                <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
+                    + Thêm Sản Phẩm
+                </button>
+            </div>
+            
+            <div class="search-input-group">
+                <input type="text" id="searchInput" class="form-control search-input" placeholder="Tìm theo mã, tên sản phẩm, thương hiệu..." />
+                <select id="searchStatus" class="form-control" style="width: 200px;">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="Còn hàng">Còn hàng</option>
+                    <option value="Hết hàng">Hết hàng</option>
+                    <option value="Đang nhập hàng">Đang nhập hàng</option>
+                    <option value="Ngừng kinh doanh">Ngừng kinh doanh</option>
+                </select>
+                <button class="btn btn-primary" onclick="performSearch()">
+                    Tìm kiếm
+                </button>
+                <button class="btn btn-secondary" onclick="clearSearch()">
+                    Reset
+                </button>
+            </div>
         </div>
 
-        <table class="table table-hover text-center align-middle">
+        <table class="table table-hover text-center align-middle" id="productsTable">
             <thead>
                 <tr>
                     <th>Mã SP</th>
@@ -136,10 +214,10 @@
                     <th>Hành động</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="productsTableBody">
                 @foreach (var item in Model)
                 {
-                    <tr>
+                    <tr data-ma="@item.MaSanPham" data-ten="@item.TenSanPham" data-thuonghieu="@item.ThuongHieu?.TenThuongHieu" data-trangthai="@item.TrangThaiSP">
                         <td>@item.MaSanPham</td>
                         <td>@item.TenSanPham</td>
                         <td>@item.ThuongHieu?.TenThuongHieu</td>
@@ -167,17 +245,24 @@
                             </span>
                         </td>
                         <td>
-                            <button class="btn btn-sm btn-warning btn-edit"
-                                    data-id="@item.IdSanPham"
-                                    data-ma="@item.MaSanPham"
-                                    data-ten="@item.TenSanPham"
-                                    data-thuonghieu="@item.IdThuongHieu"
-                                    data-mota="@item.MoTa"
-                                    data-giagoc="@item.GiaGoc"
-                                    data-vat="@item.VAT"
-                                    data-trangthai="@item.TrangThaiSP">
-                                Sửa
-                            </button>
+                            <div class="btn-action-group">
+                                <button class="btn btn-sm btn-mota btn-mota-detail"
+                                        data-mota="@item.MoTa"
+                                        data-ten="@item.TenSanPham">
+                                    Mô tả
+                                </button>
+                                <button class="btn btn-sm btn-warning btn-edit"
+                                        data-id="@item.IdSanPham"
+                                        data-ma="@item.MaSanPham"
+                                        data-ten="@item.TenSanPham"
+                                        data-thuonghieu="@item.IdThuongHieu"
+                                        data-mota="@item.MoTa"
+                                        data-giagoc="@item.GiaGoc"
+                                        data-vat="@item.VAT"
+                                        data-trangthai="@item.TrangThaiSP">
+                                    Sửa
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 }
@@ -185,7 +270,6 @@
         </table>
     </div>
 
-    <!-- Create -->
     <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content p-3">
@@ -199,15 +283,15 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Mã sản phẩm <span class="text-danger">*</span></label>
-                                    <input type="text" id="MaSanPham" class="form-control" placeholder="Nhập mã sản phẩm" />
-                                    <small id="errorMaSanPham" class="text-danger d-none"></small>
+                                    <input type="text" id="MaSanPham" class="form-control" placeholder="VD: IP15PM128" />
+                                    <small id="errorMaSanPham" class="text-danger d-none">Phải nhập mã sản phẩm!</small>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Tên sản phẩm <span class="text-danger">*</span></label>
-                                    <input type="text" id="TenSanPham" class="form-control" placeholder="Nhập tên sản phẩm" />
-                                    <small id="errorTenSanPham" class="text-danger d-none"></small>
+                                    <input type="text" id="TenSanPham" class="form-control" placeholder="VD: iPhone 15 Pro Max 128GB" />
+                                    <small id="errorTenSanPham" class="text-danger d-none">Phải nhập tên sản phẩm!</small>
                                 </div>
                             </div>
                         </div>
@@ -219,7 +303,7 @@
                                     <select id="IdThuongHieu" class="form-control">
                                         <option value="">Chọn thương hiệu</option>
                                     </select>
-                                    <small id="errorIdThuongHieu" class="text-danger d-none"></small>
+                                    <small id="errorIdThuongHieu" class="text-danger d-none">Phải chọn thương hiệu!</small>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -232,7 +316,7 @@
                                         <option value="Đang nhập hàng">Đang nhập hàng</option>
                                         <option value="Ngừng kinh doanh">Ngừng kinh doanh</option>
                                     </select>
-                                    <small id="errorTrangThaiSP" class="text-danger d-none"></small>
+                                    <small id="errorTrangThaiSP" class="text-danger d-none">Phải chọn trạng thái sản phẩm!</small>
                                 </div>
                             </div>
                         </div>
@@ -241,28 +325,26 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Giá gốc <span class="text-danger">*</span></label>
-                                    <input type="number" id="GiaGoc" class="form-control" placeholder="Nhập giá gốc" min="0" />
-                                    <small id="errorGiaGoc" class="text-danger d-none"></small>
+                                    <input type="number" id="GiaGoc" class="form-control" placeholder="VD: 25000000" min="0" />
+                                    <small id="errorGiaGoc" class="text-danger d-none">Giá gốc phải lớn hơn 0!</small>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">VAT (%)</label>
-                                    <input type="number" id="VAT" class="form-control" placeholder="Nhập VAT" min="0" max="100" value="10" />
-                                    <small id="errorVAT" class="text-danger d-none"></small>
+                                    <input type="number" id="VAT" class="form-control" placeholder="VD: 10" min="0" max="100" />
                                 </div>
                             </div>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Mô tả</label>
-                            <textarea id="MoTa" class="form-control" placeholder="Nhập mô tả sản phẩm" rows="3"></textarea>
-                            <small id="errorMoTa" class="text-danger d-none"></small>
+                            <textarea id="MoTa" class="form-control" placeholder="Nhập mô tả chi tiết về sản phẩm..." rows="3"></textarea>
                         </div>
 
                         <div class="mb-3">
                             <div class="alert alert-info">
-                                <strong>Giá niêm yết sẽ được tính tự động:</strong> 
+                                <strong>Giá niêm yết sẽ được tính tự động:</strong>
                                 <span id="giaNiemYetPreview">0 ₫</span>
                             </div>
                         </div>
@@ -277,7 +359,6 @@
         </div>
     </div>
 
-    <!-- Edit -->
     <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content p-3">
@@ -292,15 +373,15 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Mã sản phẩm <span class="text-danger">*</span></label>
-                                    <input type="text" id="EditMaSanPham" class="form-control" />
-                                    <small id="errorEditMaSanPham" class="text-danger d-none"></small>
+                                    <input type="text" id="EditMaSanPham" class="form-control" placeholder="VD: IP15PM128" />
+                                    <small id="errorEditMaSanPham" class="text-danger d-none">Phải nhập mã sản phẩm!</small>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Tên sản phẩm <span class="text-danger">*</span></label>
-                                    <input type="text" id="EditTenSanPham" class="form-control" />
-                                    <small id="errorEditTenSanPham" class="text-danger d-none"></small>
+                                    <input type="text" id="EditTenSanPham" class="form-control" placeholder="VD: iPhone 15 Pro Max 128GB" />
+                                    <small id="errorEditTenSanPham" class="text-danger d-none">Phải nhập tên sản phẩm!</small>
                                 </div>
                             </div>
                         </div>
@@ -312,7 +393,7 @@
                                     <select id="EditIdThuongHieu" class="form-control">
                                         <option value="">Chọn thương hiệu</option>
                                     </select>
-                                    <small id="errorEditIdThuongHieu" class="text-danger d-none"></small>
+                                    <small id="errorEditIdThuongHieu" class="text-danger d-none">Phải chọn thương hiệu!</small>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -324,7 +405,7 @@
                                         <option value="Đang nhập hàng">Đang nhập hàng</option>
                                         <option value="Ngừng kinh doanh">Ngừng kinh doanh</option>
                                     </select>
-                                    <small id="errorEditTrangThaiSP" class="text-danger d-none"></small>
+                                    <small id="errorEditTrangThaiSP" class="text-danger d-none">Phải chọn trạng thái sản phẩm!</small>
                                 </div>
                             </div>
                         </div>
@@ -333,28 +414,26 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Giá gốc <span class="text-danger">*</span></label>
-                                    <input type="number" id="EditGiaGoc" class="form-control" min="0" />
-                                    <small id="errorEditGiaGoc" class="text-danger d-none"></small>
+                                    <input type="number" id="EditGiaGoc" class="form-control" placeholder="VD: 25000000" min="0" />
+                                    <small id="errorEditGiaGoc" class="text-danger d-none">Giá gốc phải lớn hơn 0!</small>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">VAT (%)</label>
-                                    <input type="number" id="EditVAT" class="form-control" min="0" max="100" />
-                                    <small id="errorEditVAT" class="text-danger d-none"></small>
+                                    <input type="number" id="EditVAT" class="form-control" placeholder="VD: 10" min="0" max="100" />
                                 </div>
                             </div>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Mô tả</label>
-                            <textarea id="EditMoTa" class="form-control" rows="3"></textarea>
-                            <small id="errorEditMoTa" class="text-danger d-none"></small>
+                            <textarea id="EditMoTa" class="form-control" placeholder="Nhập mô tả chi tiết về sản phẩm..." rows="3"></textarea>
                         </div>
 
                         <div class="mb-3">
                             <div class="alert alert-info">
-                                <strong>Giá niêm yết sẽ được tính tự động:</strong> 
+                                <strong>Giá niêm yết sẽ được tính tự động:</strong>
                                 <span id="editGiaNiemYetPreview">0 ₫</span>
                             </div>
                         </div>
@@ -369,8 +448,83 @@
         </div>
     </div>
 
+    <div class="modal fade" id="motaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="motaModalTitle">Mô tả sản phẩm</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mota-content" id="motaContent"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-      
+        document.addEventListener('DOMContentLoaded', function () {
+            loadThuongHieu();
+            setupPriceCalculation();
+            updateCreatePrice();
+            updateEditPrice();
+
+            document.getElementById('searchInput').addEventListener('input', function(e) {
+                if (e.target.value.length >= 2 || e.target.value.length === 0) {
+                    performSearch();
+                }
+            });
+
+            document.getElementById('searchStatus').addEventListener('change', performSearch);
+        });
+
+        function performSearch() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            const statusFilter = document.getElementById('searchStatus').value;
+            const rows = document.querySelectorAll('#productsTableBody tr');
+
+            rows.forEach(row => {
+                const maSP = row.getAttribute('data-ma').toLowerCase();
+                const tenSP = row.getAttribute('data-ten').toLowerCase();
+                const thuongHieu = row.getAttribute('data-thuonghieu').toLowerCase();
+                const trangThai = row.getAttribute('data-trangthai');
+
+                const matchesSearch = !searchTerm || 
+                    maSP.includes(searchTerm) || 
+                    tenSP.includes(searchTerm) || 
+                    thuongHieu.includes(searchTerm);
+                
+                const matchesStatus = !statusFilter || trangThai === statusFilter;
+
+                if (matchesSearch && matchesStatus) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchStatus').value = '';
+            performSearch();
+        }
+
+        function hideAllErrors() {
+            document.querySelectorAll('small.text-danger').forEach(el => {
+                el.classList.add("d-none");
+            });
+        }
+
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.classList.remove("d-none");
+        }
+
         async function loadThuongHieu() {
             try {
                 const response = await fetch('/SanPham/GetThuongHieu');
@@ -391,21 +545,18 @@
             }
         }
 
-     
         function tinhGiaNiemYet(giaGoc, vat) {
-            return giaGoc * (1 + (vat || 0) / 100);
+            const vatValue = vat || 0;
+            return giaGoc * (1 + vatValue / 100);
         }
 
         function formatCurrency(amount) {
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
         }
 
-   
         function setupPriceCalculation() {
-         
             document.getElementById('GiaGoc').addEventListener('input', updateCreatePrice);
             document.getElementById('VAT').addEventListener('input', updateCreatePrice);
-            
             document.getElementById('EditGiaGoc').addEventListener('input', updateEditPrice);
             document.getElementById('EditVAT').addEventListener('input', updateEditPrice);
         }
@@ -424,9 +575,27 @@
             document.getElementById('editGiaNiemYetPreview').textContent = formatCurrency(giaNiemYet);
         }
 
-        // them
+        function showMotaModal(tenSanPham, moTa) {
+            const modalTitle = document.getElementById('motaModalTitle');
+            const motaContent = document.getElementById('motaContent');
+
+            modalTitle.textContent = `Mô tả: ${tenSanPham}`;
+
+            if (moTa && moTa.trim() !== '') {
+                motaContent.textContent = moTa;
+                motaContent.classList.remove('text-muted');
+            } else {
+                motaContent.textContent = 'Sản phẩm này chưa có mô tả.';
+                motaContent.classList.add('text-muted');
+            }
+
+            const motaModal = new bootstrap.Modal(document.getElementById('motaModal'));
+            motaModal.show();
+        }
+
         document.getElementById("createForm").addEventListener("submit", async (e) => {
             e.preventDefault();
+            hideAllErrors();
 
             const sp = {
                 MaSanPham: MaSanPham.value.trim(),
@@ -438,6 +607,31 @@
                 TrangThaiSP: TrangThaiSP.value
             };
 
+            let hasError = false;
+
+            if (!sp.MaSanPham) {
+                showError("errorMaSanPham", "Phải nhập mã sản phẩm!");
+                hasError = true;
+            }
+            if (!sp.TenSanPham) {
+                showError("errorTenSanPham", "Phải nhập tên sản phẩm!");
+                hasError = true;
+            }
+            if (!sp.IdThuongHieu || sp.IdThuongHieu === 0) {
+                showError("errorIdThuongHieu", "Phải chọn thương hiệu!");
+                hasError = true;
+            }
+            if (!sp.GiaGoc || sp.GiaGoc <= 0) {
+                showError("errorGiaGoc", "Giá gốc phải lớn hơn 0!");
+                hasError = true;
+            }
+            if (!sp.TrangThaiSP) {
+                showError("errorTrangThaiSP", "Phải chọn trạng thái sản phẩm!");
+                hasError = true;
+            }
+
+            if (hasError) return;
+
             const response = await fetch('/SanPham/Create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -446,10 +640,6 @@
 
             let data = {};
             try { data = await response.json(); } catch { }
-
-          
-            ["errorMaSanPham", "errorTenSanPham", "errorIdThuongHieu", "errorGiaGoc", "errorTrangThaiSP"]
-                .forEach(id => document.getElementById(id).classList.add("d-none"));
 
             if (!response.ok) {
                 if (response.status === 400 && typeof data === "object") {
@@ -477,7 +667,6 @@
             location.reload();
         });
 
-     
         document.querySelectorAll(".btn-edit").forEach(btn => {
             btn.addEventListener("click", () => {
                 EditIdSanPham.value = btn.dataset.id;
@@ -486,19 +675,25 @@
                 EditIdThuongHieu.value = btn.dataset.thuonghieu;
                 EditMoTa.value = btn.dataset.mota || '';
                 EditGiaGoc.value = btn.dataset.giagoc;
-                EditVAT.value = btn.dataset.vat || '0';
+                EditVAT.value = btn.dataset.vat || '';
                 EditTrangThaiSP.value = btn.dataset.trangthai;
 
-       
                 updateEditPrice();
-
                 new bootstrap.Modal(editModal).show();
             });
         });
 
-        // edit
+        document.querySelectorAll(".btn-mota-detail").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const tenSanPham = btn.dataset.ten;
+                const moTa = btn.dataset.mota;
+                showMotaModal(tenSanPham, moTa);
+            });
+        });
+
         document.getElementById("editForm").addEventListener("submit", async (e) => {
             e.preventDefault();
+            hideAllErrors();
 
             const id = EditIdSanPham.value;
             const sp = {
@@ -512,9 +707,30 @@
                 TrangThaiSP: EditTrangThaiSP.value
             };
 
-        
-            ["errorEditMaSanPham", "errorEditTenSanPham", "errorEditIdThuongHieu", "errorEditGiaGoc", "errorEditTrangThaiSP"]
-                .forEach(id => document.getElementById(id).classList.add("d-none"));
+            let hasError = false;
+
+            if (!sp.MaSanPham) {
+                showError("errorEditMaSanPham", "Phải nhập mã sản phẩm!");
+                hasError = true;
+            }
+            if (!sp.TenSanPham) {
+                showError("errorEditTenSanPham", "Phải nhập tên sản phẩm!");
+                hasError = true;
+            }
+            if (!sp.IdThuongHieu || sp.IdThuongHieu === 0) {
+                showError("errorEditIdThuongHieu", "Phải chọn thương hiệu!");
+                hasError = true;
+            }
+            if (!sp.GiaGoc || sp.GiaGoc <= 0) {
+                showError("errorEditGiaGoc", "Giá gốc phải lớn hơn 0!");
+                hasError = true;
+            }
+            if (!sp.TrangThaiSP) {
+                showError("errorEditTrangThaiSP", "Phải chọn trạng thái sản phẩm!");
+                hasError = true;
+            }
+
+            if (hasError) return;
 
             const response = await fetch('/SanPham/Edit/' + id, {
                 method: 'POST',
@@ -551,28 +767,15 @@
             location.reload();
         });
 
-        function showError(id, msg) {
-            const el = document.getElementById(id);
-            el.textContent = msg;
-            el.classList.remove("d-none");
-      
-        document.addEventListener('DOMContentLoaded', function() {
-            loadThuongHieu();
-            setupPriceCalculation();
-            updateCreatePrice();
-            updateEditPrice();
-        });
-
-        // Reset form 
         createModal.addEventListener("hidden.bs.modal", () => {
             createForm.reset();
-            document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
+            hideAllErrors();
             updateCreatePrice();
         });
 
         editModal.addEventListener("hidden.bs.modal", () => {
             editForm.reset();
-            document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
+            hideAllErrors();
             updateEditPrice();
         });
     </script>

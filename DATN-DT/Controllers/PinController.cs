@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace DATN_DT.Controllers
 {
@@ -30,7 +31,6 @@ namespace DATN_DT.Controllers
         {
             var errors = new Dictionary<string, string>();
 
-      
             if (string.IsNullOrWhiteSpace(pin?.LoaiPin))
                 errors["LoaiPin"] = "Phải nhập loại pin!";
             if (string.IsNullOrWhiteSpace(pin?.DungLuongPin))
@@ -41,6 +41,20 @@ namespace DATN_DT.Controllers
             if (errors.Count > 0)
                 return BadRequest(errors);
 
+            // Validate dung lượng pin chỉ chứa số
+            if (!string.IsNullOrWhiteSpace(pin?.DungLuongPin))
+            {
+                // Kiểm tra nếu chỉ chứa số
+                if (!Regex.IsMatch(pin.DungLuongPin.Trim(), @"^\d+$"))
+                {
+                    errors["DungLuongPin"] = "Dung lượng pin chỉ được nhập số!";
+                    return BadRequest(errors);
+                }
+
+                // Tự động thêm "mAh" vào sau số
+                pin.DungLuongPin = pin.DungLuongPin.Trim() + "mAh";
+            }
+
             // Check trùng
             bool exists = await _context.Pins.AnyAsync(p =>
                 p.LoaiPin!.Trim().ToLower() == pin!.LoaiPin!.Trim().ToLower() &&
@@ -49,6 +63,7 @@ namespace DATN_DT.Controllers
             );
             if (exists)
                 return Conflict(new { message = "Pin đã tồn tại!" });
+
             try
             {
                 pin.LoaiPin = pin.LoaiPin.Trim();
@@ -84,6 +99,20 @@ namespace DATN_DT.Controllers
 
             if (errors.Count > 0)
                 return BadRequest(errors);
+
+            // Validate dung lượng pin chỉ chứa số
+            if (!string.IsNullOrWhiteSpace(pin?.DungLuongPin))
+            {
+                // Kiểm tra nếu chỉ chứa số
+                if (!Regex.IsMatch(pin.DungLuongPin.Trim(), @"^\d+$"))
+                {
+                    errors["DungLuongPin"] = "Dung lượng pin chỉ được nhập số!";
+                    return BadRequest(errors);
+                }
+
+                // Tự động thêm "mAh" vào sau số
+                pin.DungLuongPin = pin.DungLuongPin.Trim() + "mAh";
+            }
 
             var existing = await _context.Pins.FindAsync(id);
             if (existing == null)
