@@ -8,7 +8,7 @@
     <div class="auth-card">
         <h2 class="text-center mb-4">Đăng Nhập Nhân Viên</h2>
         
-        <form asp-action="LoginNhanVien" method="post" id="nhanVienForm">
+        <form id="nhanVienForm">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             
             <div class="form-group">
@@ -43,10 +43,10 @@
         $(document).ready(function() {
             $('#nhanVienForm').on('submit', function(e) {
                 e.preventDefault();
-                
+
                 var btn = $('#loginBtn');
                 btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status"></span> Đang xử lý...');
-                
+
                 $.ajax({
                     url: '/Login/LoginNhanVien',
                     type: 'POST',
@@ -58,19 +58,21 @@
                     success: function(response) {
                         if (response.success) {
                             $('#loginMessage').html('<div class="alert alert-success">' + response.message + '</div>');
-                            // Lưu thông tin nhân viên và chuyển hướng
+
+                            localStorage.setItem('role', response.role);
                             localStorage.setItem('nhanvien', JSON.stringify(response.data));
                             localStorage.setItem('isNhanVien', 'true');
+
                             setTimeout(() => {
-                                window.location.href = '/Admin';
+                                window.location.href = '/';
                             }, 1000);
                         } else {
                             $('#loginMessage').html('<div class="alert alert-danger">' + response.message + '</div>');
                         }
                     },
                     error: function(xhr) {
-                        var response = JSON.parse(xhr.responseText);
-                        $('#loginMessage').html('<div class="alert alert-danger">' + response.message + '</div>');
+                        let response = xhr.responseJSON;
+                        $('#loginMessage').html('<div class="alert alert-danger">' + (response?.message || 'Lỗi server') + '</div>');
                     },
                     complete: function() {
                         btn.prop('disabled', false).html('Đăng Nhập');

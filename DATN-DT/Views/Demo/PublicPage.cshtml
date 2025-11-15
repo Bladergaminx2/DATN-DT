@@ -1,0 +1,41 @@
+﻿@{
+    ViewData["Title"] = "Public Page";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2>Trang công khai</h2>
+    <p>Bất cứ ai cũng có thể truy cập mà không cần login.</p>
+
+    <div class="mb-3">
+        <input type="text" id="inputDataPublic" placeholder="Nhập dữ liệu..." class="form-control w-50">
+    </div>
+    <div class="mb-3">
+        <button id="btnSendPublic" class="btn btn-primary">Gửi dữ liệu</button>
+    </div>
+
+    <div id="resultPublic" class="mt-2"></div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $("#btnSendPublic").click(function() {
+                const data = $("#inputDataPublic").val();
+
+                $.ajax({
+                    url: '/Demo/NoRoleAciton', // nếu bạn muốn public action thì tạo NoRoleAciton
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(res) {
+                        $("#resultPublic").html('<div class="alert alert-success">' + res.message + '</div>');
+                    },
+                    error: function(err) {
+                        $("#resultPublic").html('<div class="alert alert-danger">Có lỗi xảy ra.</div>');
+                    }
+                });
+            });
+        });
+    </script>
+}

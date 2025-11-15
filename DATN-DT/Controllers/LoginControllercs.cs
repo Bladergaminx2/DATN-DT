@@ -1,19 +1,26 @@
 ﻿using DATN_DT.Data;
 using DATN_DT.Form;
 using DATN_DT.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace DATN_DT.Controllers
 {
+    [AllowAnonymous]
     public class LoginController : Controller
     {
         private readonly MyDbContext _con;
-        public LoginController(MyDbContext context)
+        private readonly string _jwtKey;
+        public LoginController(MyDbContext context, IConfiguration config)
         {
             _con = context;
+            _jwtKey = config["Jwt:Key"];
         }
 
         [HttpGet]
@@ -85,35 +92,35 @@ namespace DATN_DT.Controllers
         {
             try
             {
-                if (model == null)
+                var kh = await _con.KhachHangs.FirstOrDefaultAsync(x => x.EmailKhachHang == model.EmailKhachHang);
+                if (kh == null || !VerifyPassword(model.Password, kh.Password))
+                    return BadRequest(new { Success = false, Message = "Sai tài khoản hoặc mật khẩu" });
+
+                if (kh.TrangThaiKhachHang == 1)
+                    return BadRequest(new { Success = false, Message = "Tài khoản bị khóa" });
+
+                var token = GenerateJwtToken(kh.EmailKhachHang, "KhachHang");
+
+                // Lưu token vào cookie HttpOnly
+                Response.Cookies.Append("jwt", token, new CookieOptions
                 {
-                    return BadRequest(new { Success = false, Message = "Dữ liệu không hợp lệ." });
-                }
+                    HttpOnly = true,  // Không truy cập bằng JS
+                    Secure = true,    // HTTPS mới gửi cookie
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTimeOffset.Now.AddHours(3)
+                });
 
-                var user = await _con.KhachHangs
-                    .FirstOrDefaultAsync(u => u.EmailKhachHang == model.EmailKhachHang);
-
-                if (user == null || !VerifyPassword(model.Password!, user.Password!))
-                {
-                    return BadRequest(new { Success = false, Message = "Email hoặc mật khẩu không chính xác." });
-                }
-
-                if (user.TrangThaiKhachHang == 1)
-                {
-                    return BadRequest(new { Success = false, Message = "Tài khoản đã bị khóa." });
-                }
-
+                // Trả về dữ liệu user và role để client hiển thị
                 return Ok(new
                 {
                     Success = true,
-                    Message = "Đăng nhập thành công!",
+                    Message = "Đăng nhập thành công",
+                    Role = "KHACHHANG",
                     Data = new
                     {
-                        user.HoTenKhachHang,
-                        user.EmailKhachHang,
-                        user.SdtKhachHang,
-                        user.DiaChiKhachHang,
-                        user.DiemTichLuy
+                        kh.HoTenKhachHang,
+                        kh.EmailKhachHang,
+                        kh.SdtKhachHang
                     }
                 });
             }
@@ -124,7 +131,7 @@ namespace DATN_DT.Controllers
         }
 
         // ========== ĐĂNG KÝ NHÂN VIÊN ==========
-        [HttpPost("registernhanvien")]
+        [HttpPost]
         public async Task<IActionResult> RegisterNhanVien([FromBody] RegisterNhanVienForm model)
         {
             try
@@ -167,41 +174,52 @@ namespace DATN_DT.Controllers
         }
 
         // ========== ĐĂNG NHẬP NHÂN VIÊN ==========
-        [HttpPost("loginnhanvien")]
+        [HttpPost]
         public async Task<IActionResult> LoginNhanVien([FromBody] LoginNhanVienForm model)
         {
             try
             {
-                if (string.IsNullOrEmpty(model.TenTaiKhoanNV) || string.IsNullOrEmpty(model.Password))
-                {
-                    return BadRequest(new { Success = false, Message = "Tên tài khoản hoặc mật khẩu không được để trống." });
-                }
-
-                var nv = await _con.NhanViens
-                    .FirstOrDefaultAsync(u => u.TenTaiKhoanNV == model.TenTaiKhoanNV);
-
+                var nv = await _con.NhanViens.FirstOrDefaultAsync(x => x.TenTaiKhoanNV == model.TenTaiKhoanNV);
                 if (nv == null || !VerifyPassword(model.Password, nv.Password))
-                {
-                    return BadRequest(new { Success = false, Message = "Tên tài khoản hoặc mật khẩu không đúng." });
-                }
+                    return BadRequest(new { Success = false, Message = "Sai tài khoản hoặc mật khẩu" });
 
                 if (nv.TrangThaiNV == 0)
+                    return BadRequest(new { Success = false, Message = "Tài khoản bị khóa" });
+
+                // Lấy role từ bảng ChucVu
+                var role = await _con.ChucVus
+                                     .Where(c => c.IdChucVu == nv.IdChucVu)
+                                     .Select(c => c.TenChucVuVietHoa)
+                                     .FirstOrDefaultAsync();
+
+                if (string.IsNullOrEmpty(role))
                 {
-                    return BadRequest(new { Success = false, Message = "Tài khoản đã bị khóa." });
+                    var cv = await _con.ChucVus.FirstOrDefaultAsync(c => c.IdChucVu == nv.IdChucVu);
+                    role = cv?.TenChucVu?.ToUpper().Replace(" ", "") ?? "NHANVIEN";
                 }
+
+                // Tạo JWT token
+                var token = GenerateJwtToken(nv.TenTaiKhoanNV, role);
+
+                // Lưu token vào cookie HttpOnly
+                Response.Cookies.Append("jwt", token, new CookieOptions
+                {
+                    HttpOnly = true,  // Không truy cập bằng JS
+                    Secure = true,    // HTTPS mới gửi cookie
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTimeOffset.Now.AddHours(3)
+                });
 
                 return Ok(new
                 {
                     Success = true,
-                    Message = "Đăng nhập thành công.",
+                    Message = "Đăng nhập thành công",
+                    Role = role,
                     Data = new
                     {
-                        nv.IdNhanVien,
                         nv.HoTenNhanVien,
                         nv.EmailNhanVien,
-                        nv.SdtNhanVien,
-                        nv.IdChucVu,
-                        nv.TrangThaiNV
+                        nv.IdChucVu
                     }
                 });
             }
@@ -211,21 +229,55 @@ namespace DATN_DT.Controllers
             }
         }
 
-        // ======= Hàm băm mật khẩu =======
-        private string HashPassword(string password)
+
+        [HttpPost]
+        public IActionResult Logout()
         {
-            using (var sha = SHA256.Create())
+            // Xoá cookie JWT
+            Response.Cookies.Delete("jwt");
+
+            // Có thể redirect về trang login hoặc trang công khai
+            return Json(new
             {
-                var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return Convert.ToBase64String(bytes);
-            }
+                success = true,
+                message = "Đăng xuất thành công",
+                redirectUrl = Url.Action("Index", "Login")
+            });
         }
 
-        // ======= Hàm kiểm tra mật khẩu =======
-        private bool VerifyPassword(string password, string storedHash)
+
+        // ========== Sinh JWT Token ==========
+        private string GenerateJwtToken(string username, string role)
         {
-            var hashOfInput = HashPassword(password);
-            return hashOfInput == storedHash;
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtKey));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.Name, username),
+                new Claim(ClaimTypes.Role, role)   // luôn là chữ in hoa
+            };
+
+            var token = new JwtSecurityToken(
+                claims: claims,
+                expires: DateTime.Now.AddHours(3),
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        // ========== Hàm mã hóa / kiểm tra mật khẩu ==========
+        private string HashPassword(string password)
+        {
+            using var sha = SHA256.Create();
+            var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
+            return Convert.ToBase64String(bytes);
+        }
+
+        private bool VerifyPassword(string password, string hash)
+        {
+            return HashPassword(password) == hash;
         }
     }
 }

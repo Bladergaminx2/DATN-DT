@@ -69,6 +69,7 @@
                             // Lưu thông tin user và chuyển hướng
                             localStorage.setItem('user', JSON.stringify(response.data));
                             localStorage.setItem('isAuthenticated', 'true');
+                            localStorage.setItem('role', response.role.toUpperCase());
                             setTimeout(() => {
                                 window.location.href = '/';
                             }, 1000);
