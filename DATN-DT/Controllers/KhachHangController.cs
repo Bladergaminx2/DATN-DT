@@ -75,8 +75,9 @@ namespace DATN_DT.Controllers
                     HoTenKhachHang = khachHang.HoTenKhachHang!.Trim(),
                     SdtKhachHang = khachHang.SdtKhachHang!.Trim(),
                     EmailKhachHang = khachHang.EmailKhachHang?.Trim(),
-                    DiaChiKhachHang = khachHang.DiaChiKhachHang?.Trim(),
                     DiemTichLuy = 0,
+                    // Sử dụng ảnh mặc định từ thư mục www
+                    DefaultImage = "/images/hARUdummiepfpcyr.png", // Đường dẫn ảnh mặc định
                     TrangThaiKhachHang = 1,
                 };
 
@@ -136,12 +137,12 @@ namespace DATN_DT.Controllers
 
             try
             {
-                // Cập nhật thông tin
+                // Cập nhật thông tin (không thay đổi ảnh đại diện)
                 existing.HoTenKhachHang = khachHang.HoTenKhachHang!.Trim();
                 existing.SdtKhachHang = khachHang.SdtKhachHang!.Trim();
                 existing.EmailKhachHang = khachHang.EmailKhachHang?.Trim();
-                existing.DiaChiKhachHang = khachHang.DiaChiKhachHang?.Trim();
                 existing.TrangThaiKhachHang = khachHang.TrangThaiKhachHang;
+                // Giữ nguyên DefaultImage hiện tại, không cập nhật
 
                 _context.KhachHangs.Update(existing);
                 await _context.SaveChangesAsync();

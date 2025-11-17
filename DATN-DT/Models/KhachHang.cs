@@ -7,8 +7,8 @@
         public string? Password { get; set; }
         public string? SdtKhachHang { get; set; }
         public string? EmailKhachHang { get; set; }
-        public string? DiaChiKhachHang { get; set; }
         public int? DiemTichLuy { get; set; }
+        public string? DefaultImage { get; set; }
         public int TrangThaiKhachHang { get; set; }
     }
 }

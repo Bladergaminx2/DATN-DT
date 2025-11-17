@@ -70,7 +70,6 @@ namespace DATN_DT.Controllers
                     EmailKhachHang = model.EmailKhachHang,
                     Password = passwordHash,
                     SdtKhachHang = model.SdtKhachHang,
-                    DiaChiKhachHang = model.DiaChiKhachHang,
                     DiemTichLuy = 0,
                     TrangThaiKhachHang = 1
                 };
@@ -99,7 +98,7 @@ namespace DATN_DT.Controllers
                 if (kh.TrangThaiKhachHang == 0)
                     return BadRequest(new { Success = false, Message = "Tài khoản bị khóa" });
 
-                var token = GenerateJwtToken(kh.EmailKhachHang, "KhachHang");
+                var token = GenerateJwtToken(kh.EmailKhachHang, "KhachHang", kh.IdKhachHang);
 
                 // Lưu token vào cookie HttpOnly
                 Response.Cookies.Append("jwt", token, new CookieOptions
@@ -199,7 +198,7 @@ namespace DATN_DT.Controllers
                 }
 
                 // Tạo JWT token
-                var token = GenerateJwtToken(nv.TenTaiKhoanNV, role);
+                var token = GenerateJwtToken(nv.TenTaiKhoanNV, role, nv.IdNhanVien);
 
                 // Lưu token vào cookie HttpOnly
                 Response.Cookies.Append("jwt", token, new CookieOptions
@@ -247,13 +246,14 @@ namespace DATN_DT.Controllers
 
 
         // ========== Sinh JWT Token ==========
-        private string GenerateJwtToken(string username, string role)
+        private string GenerateJwtToken(string username, string role, int idkhachhang)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
             {
+                new Claim("IdKhachHang", idkhachhang.ToString()),
                 new Claim(ClaimTypes.Name, username),
                 new Claim(ClaimTypes.Role, role)   // luôn là chữ in hoa
             };

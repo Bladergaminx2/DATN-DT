@@ -13,7 +13,7 @@
         public int? IdROM { get; set; }
         public string? Mau { get; set; }
         public decimal? GiaBanModel { get; set; }
-
+        public int TrangThai { get; set; } = 1; // 1: Active, 0: Inactive
 
 
         // Navigation properties

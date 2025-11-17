@@ -1,0 +1,377 @@
+﻿@{
+    ViewData["Title"] = "Thông tin cá nhân";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* CSS giữ nguyên */
+    .profile-section {
+        margin-bottom: 2rem;
+    }
+
+    .card {
+        border: none;
+        border-radius: 12px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+    .card-title {
+        font-size: 1.1rem;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .card {
+        animation: fadeIn 0.5s ease-out forwards;
+    }
+
+    .profile-card {
+        position: sticky;
+        top: 20px;
+    }
+
+    .nav-link {
+        padding: 10px 15px;
+        transition: all 0.2s;
+    }
+
+        .nav-link:hover {
+            background-color: #f8f9fa;
+        }
+
+        .nav-link.active {
+            background-color: #0d6efd;
+            color: white !important;
+        }
+
+    .profile-section {
+        background-color: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        padding: 2rem;
+    }
+
+    .avatar-container {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        margin: 0 auto;
+    }
+
+    .avatar-edit-btn {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #0d6efd;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: 2px solid white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+    }
+
+        .avatar-edit-btn:hover {
+            background-color: #0056b3;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 8px;
+        padding: 10px 15px;
+    }
+
+    @@media (max-width: 768px) {
+        .profile-card {
+            position: static;
+            margin-bottom: 20px;
+        }
+
+        .avatar-container {
+            margin-bottom: 20px;
+        }
+    }
+
+    .diem-tich-luy {
+        font-weight: bold;
+        color: #ffc107;
+        background-color: rgba(255, 193, 7, 0.1);
+        padding: 6px 12px;
+        border-radius: 20px;
+        display: inline-block;
+        min-width: 80px;
+    }
+
+    .status-active {
+        color: #28a745;
+        font-weight: bold;
+        background-color: rgba(40, 167, 69, 0.1);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+    }
+
+    .status-inactive {
+        color: #dc3545;
+        font-weight: bold;
+        background-color: rgba(220, 53, 69, 0.1);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+    }
+
+    .status-warning {
+        color: #ffc107;
+        font-weight: bold;
+        background-color: rgba(255, 193, 7, 0.1);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+    }
+
+    .cropper-container {
+        max-height: 60vh;
+        overflow: hidden;
+    }
+
+    #cropperImage {
+        display: block;
+        max-width: 100%;
+        max-height: 100%;
+    }
+</style>
+
+<div class="container-fluid py-4 bg-light" id="userProfileApp">
+    <div class="row g-4">
+        <!-- Sidebar Profile -->
+        <div class="col-lg-3">
+            <div class="profile-card p-4 rounded-4 bg-white shadow-sm">
+                <div class="text-center mb-4">
+                    <img id="avatarImage" src=null
+                         class="rounded-circle object-fit-cover border border-3 border-white shadow" width="100"
+                         height="100" alt="Profile" onerror="this.src='null'">
+                    <h5 id="userName" class="mt-3 mb-1 fw-semibold">Đang tải...</h5>
+                </div>
+
+                <nav class="nav flex-column gap-2">
+                    <a class="nav-link rounded-3 active">
+                        <i class="bi bi-person me-2"></i> Hồ sơ
+                    </a>
+                    <a class="nav-link rounded-3" href="#!diachi">
+                        <i class="bi bi-geo-alt me-2"></i> Địa chỉ
+                    </a>
+                    <a class="nav-link rounded-3" href="#!donhangcuaban">
+                        <i class="bi bi-bag me-2"></i> Đơn hàng của bạn
+                    </a>
+                    <a class="nav-link rounded-3" href="#!voucher">
+                        <i class="bi bi-ticket-perforated me-2"></i> Voucher
+                    </a>
+                    <a class="nav-link rounded-3" href="#!doimatkhau">
+                        <i class="bi bi-shield-lock me-2"></i> Đổi mật khẩu
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <div class="profile-section">
+                <h4 class="fw-bold mb-4">Hồ sơ của tôi</h4>
+
+                <div class="row">
+                    <!-- Avatar Section -->
+                    <div class="col-md-4 text-center mb-4 mb-md-0">
+                        <div class="avatar-container">
+                            <img id="previewImage" src=null
+                                 class="rounded-circle object-fit-cover w-100 h-100" onerror="this.src='null'">
+                            <div class="avatar-edit-btn" id="btnSelectImage" title="Đổi ảnh đại diện">
+                                <!-- Lựa chọn 6: Image icon -->
+                                <i class="bi bi-image-fill"></i>
+                            </div>
+                            <input type="file" id="imageInput" accept="image/png, image/jpeg" class="d-none">
+                        </div>
+                        <p class="text-muted mt-2 small">Hình ảnh chỉ lưu tối đa 10MB, định dạng PNG hoặc JPEG.</p>
+                    </div>
+
+                    <!-- Form Section -->
+                    <div class="col-md-8">
+                        <form id="profileForm">
+                            @Html.AntiForgeryToken()
+                            <div class="mb-4">
+                                <label for="hoTenKhachHang" class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="hoTenKhachHang" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="emailKhachHang" class="form-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="emailKhachHang" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="sdtKhachHang" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="sdtKhachHang" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="diaChiKhachHang" class="form-label">Địa chỉ</label>
+                                <textarea class="form-control" id="diaChiKhachHang" rows="3" placeholder="Nhập địa chỉ của bạn..."></textarea>
+                            </div>
+
+                            <button type="button" class="btn btn-primary px-4 py-2" id="btnSave">
+                                <i class="bi bi-save me-2"></i>Lưu thay đổi
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thông tin bổ sung -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">
+                                <i class="bi bi-star-fill me-2"></i>Điểm tích lũy
+                            </h5>
+                            <div class="text-center py-3">
+                                <div class="diem-tich-luy display-6">
+                                    <i class="fas fa-star me-2"></i><span id="diemTichLuy">0</span>
+                                </div>
+                                <p class="text-muted mt-2 mb-0">Tổng điểm tích lũy hiện có</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">
+                                <i class="bi bi-info-circle me-2"></i>Thông tin tài khoản
+                            </h5>
+                            <div class="py-3">
+                                <div class="mb-3">
+                                    <strong>Trạng thái:</strong>
+                                    <span class="float-end" id="trangThai"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <strong>Ngày tham gia:</strong>
+                                    <span class="float-end text-muted" id="ngayThamGia"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Cắt Ảnh -->
+<div class="modal fade" id="cropModal" tabindex="-1" aria-labelledby="cropModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Chỉnh sửa ảnh đại diện</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="cropper-container">
+                    <img id="cropperImage" class="w-100">
+                </div>
+                <div class="mt-3">
+                    <small class="text-muted">Kéo và zoom để điều chỉnh ảnh theo ý muốn</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-success" id="btnCropConfirm">
+                    <i class="bi bi-check-circle me-2"></i>Xác nhận ảnh
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Xác nhận Upload Ảnh -->
+<div class="modal fade" id="confirmUploadModal" tabindex="-1" aria-labelledby="confirmUploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận thay đổi ảnh đại diện</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn thay đổi ảnh đại diện không?</p>
+                <div class="text-center mb-3">
+                    <img id="confirmPreviewImage" src="" class="rounded-circle" width="100" height="100" style="object-fit: cover;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="btnConfirmUpload">
+                    <i class="bi bi-check-circle me-2"></i>Xác nhận thay đổi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Xác nhận Cập nhật Thông tin -->
+<div class="modal fade" id="confirmUpdateModal" tabindex="-1" aria-labelledby="confirmUpdateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận thay đổi thông tin</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn cập nhật thông tin cá nhân không?</p>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <small>Thông tin sau khi cập nhật sẽ được thay đổi ngay lập tức.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="btnConfirmUpdate">
+                    <i class="bi bi-check-circle me-2"></i>Xác nhận cập nhật
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/userprofile.js"></script>
+}
