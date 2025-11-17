@@ -1,22 +1,15 @@
-﻿using DATN_DT.Data;
+﻿using DATN_DT.CustomAttribute;
+using DATN_DT.Data;
+using DATN_DT.Form;
 using DATN_DT.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using System.Threading.Tasks;
-using System;
-using System.Collections.Generic;
+using System.Security.Claims;
 
 namespace DATN_DT.Controllers
 {
-    // DTO đơn giản cho việc thêm sản phẩm vào giỏ hàng
-    public class GioHangItemAdd
-    {
-        public int IdKhachHang { get; set; }
-        public int IdModelSanPham { get; set; }
-        public int SoLuong { get; set; }
-    }
-
+    [Route("GioHang")]
+    [AuthorizeRoleFromToken("KHACHHANG")]
     public class GioHangController : Controller
     {
         private readonly MyDbContext _context;
@@ -26,111 +19,219 @@ namespace DATN_DT.Controllers
             _context = context;
         }
 
-        // --- 1. View & Header: Lấy danh sách Giỏ Hàng (URL: /GioHang/Index) ---
-        public async Task<IActionResult> Index()
+        // GET: GioHang/Cart - Hiển thị trang giỏ hàng
+        [HttpGet("Cart")]
+        public IActionResult Cart()
         {
-            var gioHangs = await _context.GioHangs
-                .Include(gh => gh.KhachHang)
-                .Include(gh => gh.GioHangChiTiets!)
-                    .ThenInclude(ghct => ghct.ModelSanPham)
-                .ToListAsync();
-
-            return View(gioHangs);
+            return View();
         }
 
-        // --- 2. API: Thêm/Cập nhật sản phẩm vào Giỏ Hàng (URL: /GioHang/AddItem) ---
-        [HttpPost]
-        public async Task<IActionResult> AddItem([FromBody] GioHangItemAdd item)
+        // API: Lấy thông tin giỏ hàng theo khách hàng
+        [HttpGet("GetGioHangByKhachHang")]
+        public async Task<IActionResult> GetGioHangByKhachHang()
         {
-            if (item == null || item.IdKhachHang == 0 || item.IdModelSanPham == 0 || item.SoLuong <= 0)
-                return BadRequest(new { message = "Dữ liệu không hợp lệ!" });
-
-            // Tìm hoặc Tạo Giỏ Hàng "Hoạt động"
-            var gioHang = await _context.GioHangs
-                .Include(gh => gh.GioHangChiTiets)
-                .FirstOrDefaultAsync(gh => gh.IdKhachHang == item.IdKhachHang);
-
-            if (gioHang == null)
-            {
-                gioHang = new GioHang
-                {
-                    IdKhachHang = item.IdKhachHang
-                };
-                _context.GioHangs.Add(gioHang);
-                await _context.SaveChangesAsync();
-            }
-
-            // Lấy giá bán
-            var modelSanPham = await _context.ModelSanPhams.FindAsync(item.IdModelSanPham);
-            if (modelSanPham == null || modelSanPham.GiaBanModel == null)
-                return NotFound(new { message = "Không tìm thấy hoặc không có giá cho Model Sản Phẩm này." });
-
-            var donGia = modelSanPham.GiaBanModel.Value;
-            var chiTiet = gioHang.GioHangChiTiets?.FirstOrDefault(ct => ct.IdModelSanPham == item.IdModelSanPham);
-
-            if (chiTiet != null)
-            {
-                chiTiet.SoLuong = (chiTiet.SoLuong ?? 0) + item.SoLuong;
-                //chiTiet.DonGia = donGia;
-                //chiTiet.ThanhTien = chiTiet.SoLuong * donGia;
-            }
-            else
-            {
-                chiTiet = new GioHangChiTiet
-                {
-                    IdGioHang = gioHang.IdGioHang,
-                    IdModelSanPham = item.IdModelSanPham,
-                    SoLuong = item.SoLuong,
-                    //DonGia = donGia,
-                    //ThanhTien = item.SoLuong * donGia
-                };
-                _context.GioHangChiTiets.Add(chiTiet);
-            }
-
             try
             {
-                await _context.SaveChangesAsync();
-                return Ok(new { message = "Cập nhật giỏ hàng thành công!", gioHangId = gioHang.IdGioHang });
+                // Lấy ID khách hàng từ token (nếu có) hoặc từ session
+                var khachHangId = GetCurrentKhachHangId();
+
+                if (khachHangId == null)
+                {
+                    return Unauthorized(new
+                    {
+                        Success = false,
+                        Message = "Vui lòng đăng nhập để xem giỏ hàng"
+                    });
+                }
+
+                var gioHang = await _context.GioHangs
+                    .Include(gh => gh.KhachHang)
+                    .Include(gh => gh.GioHangChiTiets!)
+                        .ThenInclude(ghct => ghct.ModelSanPham)
+                            .ThenInclude(msp => msp.SanPham)
+                                .ThenInclude(sp => sp.ThuongHieu)
+                    .Include(gh => gh.GioHangChiTiets!)
+                        .ThenInclude(ghct => ghct.ModelSanPham)
+                            .ThenInclude(msp => msp.RAM)
+                    .Include(gh => gh.GioHangChiTiets!)
+                        .ThenInclude(ghct => ghct.ModelSanPham)
+                            .ThenInclude(msp => msp.ROM)
+                    .Include(gh => gh.GioHangChiTiets!)
+                        .ThenInclude(ghct => ghct.ModelSanPham)
+                            .ThenInclude(msp => msp.Pin)
+                    .Include(gh => gh.GioHangChiTiets!)
+                        .ThenInclude(ghct => ghct.ModelSanPham)
+                            .ThenInclude(msp => msp.ManHinh)
+                    .Include(gh => gh.GioHangChiTiets!)
+                        .ThenInclude(ghct => ghct.ModelSanPham)
+                            .ThenInclude(msp => msp.CameraTruoc)
+                    .Include(gh => gh.GioHangChiTiets!)
+                        .ThenInclude(ghct => ghct.ModelSanPham)
+                            .ThenInclude(msp => msp.CameraSau)
+                    .Include(gh => gh.GioHangChiTiets!)
+                        .ThenInclude(ghct => ghct.ModelSanPham)
+                            .ThenInclude(msp => msp.AnhSanPhams)
+                    .FirstOrDefaultAsync(gh => gh.IdKhachHang == khachHangId);
+
+                if (gioHang == null)
+                {
+                    return Ok(new
+                    {
+                        Success = true,
+                        Data = new
+                        {
+                            IdGioHang = 0,
+                            IdKhachHang = khachHangId,
+                            KhachHang = new { },
+                            GioHangChiTiets = new List<object>(),
+                            TongTien = 0
+                        },
+                        Message = "Giỏ hàng trống"
+                    });
+                }
+
+                // Format dữ liệu trả về
+                var result = new
+                {
+                    Success = true,
+                    Data = new
+                    {
+                        IdGioHang = gioHang.IdGioHang,
+                        IdKhachHang = gioHang.IdKhachHang,
+                        KhachHang = new
+                        {
+                            gioHang.KhachHang.IdKhachHang,
+                            gioHang.KhachHang.HoTenKhachHang,
+                            gioHang.KhachHang.EmailKhachHang,
+                            gioHang.KhachHang.SdtKhachHang
+                        },
+                        GioHangChiTiets = gioHang.GioHangChiTiets?.Select(ghct => new
+                        {
+                            IdGioHangChiTiet = ghct.IdGioHangChiTiet,
+                            IdGioHang = ghct.IdGioHang,
+                            IdModelSanPham = ghct.IdModelSanPham,
+                            SoLuong = ghct.SoLuong,
+                            ModelSanPham = new
+                            {
+                                IdModelSanPham = ghct.ModelSanPham.IdModelSanPham,
+                                TenModel = ghct.ModelSanPham.TenModel,
+                                Mau = ghct.ModelSanPham.Mau,
+                                GiaBanModel = ghct.ModelSanPham.GiaBanModel,
+                                SanPham = new
+                                {
+                                    IdSanPham = ghct.ModelSanPham.SanPham?.IdSanPham,
+                                    TenSanPham = ghct.ModelSanPham.SanPham?.TenSanPham,
+                                    ThuongHieu = new
+                                    {
+                                        TenThuongHieu = ghct.ModelSanPham.SanPham?.ThuongHieu?.TenThuongHieu
+                                    }
+                                },
+                                RAM = new
+                                {
+                                    DungLuongRAM = ghct.ModelSanPham.RAM?.DungLuongRAM
+                                },
+                                ROM = new
+                                {
+                                    DungLuongROM = ghct.ModelSanPham.ROM?.DungLuongROM
+                                },
+                                Pin = new
+                                {
+                                    DungLuongPin = ghct.ModelSanPham.Pin?.DungLuongPin
+                                },
+                                ManHinh = new
+                                {
+                                    KichThuoc = ghct.ModelSanPham.ManHinh?.KichThuoc,
+                                    DoPhanGiai = ghct.ModelSanPham.ManHinh?.DoPhanGiai
+                                },
+                                CameraTruoc = new
+                                {
+                                    DoPhanGiaiCamTruoc = ghct.ModelSanPham.CameraTruoc?.DoPhanGiaiCamTruoc
+                                },
+                                CameraSau = new
+                                {
+                                    DoPhanGiaiCamSau = ghct.ModelSanPham.CameraSau?.DoPhanGiaiCamSau
+                                },
+                                AnhSanPhams = ghct.ModelSanPham.AnhSanPhams?.Select(a => new
+                                {
+                                    IdAnh = a.IdAnh,
+                                    DuongDan = a.DuongDan
+                                }).ToList()
+                            },
+                            ThanhTien = ghct.SoLuong * ghct.ModelSanPham.GiaBanModel
+                        }).ToList(),
+                        TongTien = gioHang.GioHangChiTiets?.Sum(ghct => ghct.SoLuong * ghct.ModelSanPham.GiaBanModel) ?? 0
+                    }
+                };
+
+                return Ok(result);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Lỗi khi lưu giỏ hàng: " + ex.Message });
+                return StatusCode(500, new
+                {
+                    Success = false,
+                    Message = "Lỗi server: " + ex.Message
+                });
             }
         }
 
-        // --- 3. API: Xóa một mục Chi Tiết Giỏ Hàng (URL: /GioHang/RemoveItem/{id}) ---
-        [HttpPost]
-        [Route("GioHang/RemoveItem/{idGioHangChiTiet}")]
-        public async Task<IActionResult> RemoveItem(int idGioHangChiTiet)
+        // API: Cập nhật số lượng sản phẩm
+        [HttpPost("UpdateQuantity")]
+        public async Task<IActionResult> UpdateQuantity([FromBody] UpdateQuantityModel model)
         {
-            var chiTiet = await _context.GioHangChiTiets.FindAsync(idGioHangChiTiet);
-            if (chiTiet == null)
-                return NotFound(new { message = "Không tìm thấy mục chi tiết cần xóa." });
+            try
+            {
+                var cartItem = await _context.GioHangChiTiets
+                    .FirstOrDefaultAsync(x => x.IdGioHangChiTiet == model.CartItemId);
 
-            _context.GioHangChiTiets.Remove(chiTiet);
-            await _context.SaveChangesAsync();
+                if (cartItem == null)
+                    return NotFound(new { Success = false, Message = "Không tìm thấy sản phẩm trong giỏ hàng" });
 
-            return Ok(new { message = "Đã xóa sản phẩm khỏi giỏ hàng." });
+                cartItem.SoLuong = model.Quantity;
+                await _context.SaveChangesAsync();
+
+                return Ok(new { Success = true, Message = "Đã cập nhật số lượng" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Success = false, Message = "Lỗi server: " + ex.Message });
+            }
         }
 
-        // --- 4. API Hỗ Trợ: Lấy danh sách Khách Hàng (URL: /GioHang/GetKhachHangs) ---
-        [HttpGet]
-        public async Task<IActionResult> GetKhachHangs()
+        // API: Xóa sản phẩm khỏi giỏ hàng
+        [HttpDelete("DeleteCartItem")]
+        public async Task<IActionResult> DeleteCartItem(int id)
         {
-            var list = await _context.KhachHangs
-                .Select(kh => new { kh.IdKhachHang, DisplayText = kh.HoTenKhachHang + " (" + kh.SdtKhachHang + ")" })
-                .ToListAsync();
-            return Ok(list);
+            try
+            {
+                var cartItem = await _context.GioHangChiTiets
+                    .FirstOrDefaultAsync(x => x.IdGioHangChiTiet == id);
+
+                if (cartItem == null)
+                    return NotFound(new { Success = false, Message = "Không tìm thấy sản phẩm" });
+
+                _context.GioHangChiTiets.Remove(cartItem);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { Success = true, Message = "Đã xóa sản phẩm khỏi giỏ hàng" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Success = false, Message = "Lỗi server: " + ex.Message });
+            }
         }
 
-        // --- 5. API Hỗ Trợ: Lấy danh sách Model Sản Phẩm (URL: /GioHang/GetModelSanPhams) ---
-        [HttpGet]
-        public async Task<IActionResult> GetModelSanPhams()
+        // Helper: Lấy ID khách hàng hiện tại
+        private int? GetCurrentKhachHangId()
         {
-            var list = await _context.ModelSanPhams
-                .Select(m => new { m.IdModelSanPham, DisplayText = m.TenModel + " - " + m.GiaBanModel!.Value.ToString("N0") + " ₫" })
-                .ToListAsync();
-            return Ok(list);
+            // Lấy từ token JWT
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (int.TryParse(userId, out int id))
+                return id;
+
+            // Hoặc lấy từ session (tuỳ vào implementation của bạn)
+            var sessionId = HttpContext.Session.GetInt32("KhachHangId");
+            return sessionId;
         }
     }
 }

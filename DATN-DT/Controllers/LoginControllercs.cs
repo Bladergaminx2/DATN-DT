@@ -72,7 +72,7 @@ namespace DATN_DT.Controllers
                     SdtKhachHang = model.SdtKhachHang,
                     DiaChiKhachHang = model.DiaChiKhachHang,
                     DiemTichLuy = 0,
-                    TrangThaiKhachHang = 0
+                    TrangThaiKhachHang = 1
                 };
 
                 _con.KhachHangs.Add(user);
@@ -96,7 +96,7 @@ namespace DATN_DT.Controllers
                 if (kh == null || !VerifyPassword(model.Password, kh.Password))
                     return BadRequest(new { Success = false, Message = "Sai tài khoản hoặc mật khẩu" });
 
-                if (kh.TrangThaiKhachHang == 1)
+                if (kh.TrangThaiKhachHang == 0)
                     return BadRequest(new { Success = false, Message = "Tài khoản bị khóa" });
 
                 var token = GenerateJwtToken(kh.EmailKhachHang, "KhachHang");
