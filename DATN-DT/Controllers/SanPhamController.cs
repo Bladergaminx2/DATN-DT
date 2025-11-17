@@ -1,7 +1,10 @@
-﻿using DATN_DT.Data;
+using DATN_DT.Data;
 using DATN_DT.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace DATN_DT.Controllers
 {
@@ -15,9 +18,9 @@ namespace DATN_DT.Controllers
         }
 
 
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
-
             var list = await (from sp in _context.SanPhams
                               join th in _context.ThuongHieus on sp.IdThuongHieu equals th.IdThuongHieu
                               select new SanPham
@@ -33,25 +36,14 @@ namespace DATN_DT.Controllers
                                   TrangThaiSP = sp.TrangThaiSP,
                                   VAT = sp.VAT
                               }).ToListAsync();
-
-            if (list == null || !list.Any())
-            {
-                Console.WriteLine("Không có dữ liệu sản phẩm nào được lấy ra!");
-            }
-            else
-            {
-                Console.WriteLine($"Lấy được {list.Count} sản phẩm.");
-            }
-
             return View(list);
         }
 
-
         [HttpPost]
+        [Consumes("application/json")]
         public async Task<IActionResult> Create([FromBody] SanPham? sp)
         {
             var errors = new Dictionary<string, string>();
-
 
             if (string.IsNullOrWhiteSpace(sp?.MaSanPham))
                 errors["MaSanPham"] = "Phải nhập mã sản phẩm!";
@@ -67,13 +59,11 @@ namespace DATN_DT.Controllers
             if (errors.Count > 0)
                 return BadRequest(errors);
 
-
             bool maExists = await _context.SanPhams.AnyAsync(s =>
                 s.MaSanPham!.Trim().ToLower() == sp!.MaSanPham!.Trim().ToLower()
             );
             if (maExists)
                 return Conflict(new { message = "Mã sản phẩm đã tồn tại!" });
-
 
             bool tenExists = await _context.SanPhams.AnyAsync(s =>
                 s.TenSanPham!.Trim().ToLower() == sp!.TenSanPham!.Trim().ToLower()
@@ -87,8 +77,6 @@ namespace DATN_DT.Controllers
                 sp.TenSanPham = sp.TenSanPham.Trim();
                 sp.MoTa = sp.MoTa?.Trim();
                 sp.TrangThaiSP = sp.TrangThaiSP.Trim();
-
-
                 sp.GiaNiemYet = sp.GiaGoc * (1 + (sp.VAT ?? 0) / 100);
 
                 _context.SanPhams.Add(sp);
@@ -102,14 +90,13 @@ namespace DATN_DT.Controllers
             }
         }
 
-        // edd
         [HttpPost]
         [Route("SanPham/Edit/{id}")]
+        [Consumes("application/json")]
         public async Task<IActionResult> Edit(int id, [FromBody] SanPham? sp)
         {
             var errors = new Dictionary<string, string>();
 
-            // Validate input
             if (string.IsNullOrWhiteSpace(sp?.MaSanPham))
                 errors["MaSanPham"] = "Phải nhập mã sản phẩm!";
             if (string.IsNullOrWhiteSpace(sp?.TenSanPham))
@@ -128,7 +115,6 @@ namespace DATN_DT.Controllers
             if (existing == null)
                 return NotFound(new { message = "Không tìm thấy sản phẩm!" });
 
-            // Check trùng mã sản phẩm 
             bool maExists = await _context.SanPhams.AnyAsync(s =>
                 s.MaSanPham!.Trim().ToLower() == sp!.MaSanPham!.Trim().ToLower() &&
                 s.IdSanPham != id
@@ -136,7 +122,6 @@ namespace DATN_DT.Controllers
             if (maExists)
                 return Conflict(new { message = "Mã sản phẩm đã tồn tại!" });
 
-            // Check trùng tên sản phẩm 
             bool tenExists = await _context.SanPhams.AnyAsync(s =>
                 s.TenSanPham!.Trim().ToLower() == sp!.TenSanPham!.Trim().ToLower() &&
                 s.IdSanPham != id
@@ -151,7 +136,6 @@ namespace DATN_DT.Controllers
                 existing.IdThuongHieu = sp.IdThuongHieu;
                 existing.MoTa = sp.MoTa?.Trim();
                 existing.GiaGoc = sp.GiaGoc;
-                // Tính toán giá niêm yết tự động
                 existing.GiaNiemYet = sp.GiaGoc * (1 + (sp.VAT ?? 0) / 100);
                 existing.TrangThaiSP = sp.TrangThaiSP.Trim();
                 existing.VAT = sp.VAT;
@@ -167,15 +151,26 @@ namespace DATN_DT.Controllers
             }
         }
 
-
         [HttpGet]
         public async Task<IActionResult> GetThuongHieu()
         {
-            var thuongHieus = await _context.ThuongHieus
-                .Where(th => th.TrangThaiThuongHieu == "Còn hoạt động")
-                .Select(th => new { th.IdThuongHieu, th.TenThuongHieu })
-                .ToListAsync();
-            return Ok(thuongHieus);
+            try
+            {
+                var thuongHieus = await _context.ThuongHieus
+                    .Where(th => th.TrangThaiThuongHieu == "Còn hoạt động")
+                    .Select(th => new
+                    {
+                        IdThuongHieu = th.IdThuongHieu,
+                        TenThuongHieu = th.TenThuongHieu
+                    })
+                    .ToListAsync();
+
+                return Ok(thuongHieus);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi load thương hiệu: " + ex.Message });
+            }
         }
     }
 }

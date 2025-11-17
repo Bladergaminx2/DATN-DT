@@ -80,7 +80,7 @@ namespace DATN_DT.Controllers
                 khachHang.EmailKhachHang = khachHang.EmailKhachHang?.Trim();
                 khachHang.DiaChiKhachHang = khachHang.DiaChiKhachHang?.Trim();
                 khachHang.DiemTichLuy ??= 0;
-                khachHang.TrangThaiKhachHang ??= 1;
+                khachHang.TrangThaiKhachHang = 1;
 
                 _context.KhachHangs.Add(khachHang);
                 await _context.SaveChangesAsync();

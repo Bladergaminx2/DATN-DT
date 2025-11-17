@@ -4,5 +4,6 @@
     {
         public int IdChucVu { get; set; }
         public string? TenChucVu { get; set; }
+        public string? TenChucVuVietHoa { get; set; }
     }
 }

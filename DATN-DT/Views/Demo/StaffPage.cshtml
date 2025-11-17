@@ -1,0 +1,41 @@
+﻿@{
+    ViewData["Title"] = "Staff Page";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2>Trang dành cho Nhân viên</h2>
+    <p>Chỉ người dùng với role <strong>ADMIN</strong> mới xem được.</p>
+
+    <div class="mb-3">
+        <input type="text" id="inputDataStaff" placeholder="Nhập dữ liệu..." class="form-control w-50">
+    </div>
+    <div class="mb-3">
+        <button id="btnSendStaff" class="btn btn-primary">Gửi dữ liệu</button>
+    </div>
+
+    <div id="resultStaff" class="mt-2"></div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $("#btnSendStaff").click(function() {
+                const data = $("#inputDataStaff").val();
+
+                $.ajax({
+                    url: '/Demo/StaffDoSomething',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(res) {
+                        $("#resultStaff").html('<div class="alert alert-success">' + res.message + '</div>');
+                    },
+                    error: function(err) {
+                        $("#resultStaff").html('<div class="alert alert-danger">Bạn không có quyền hoặc token không hợp lệ.</div>');
+                    }
+                });
+            });
+        });
+    </script>
+}

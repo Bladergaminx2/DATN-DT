@@ -4,6 +4,7 @@ using DATN_DT.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DATN_DT.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    partial class MyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251115035026_capnhatchucvu")]
+    partial class capnhatchucvu
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -36,9 +39,12 @@ namespace DATN_DT.Migrations
                     b.Property<int?>("IdModelSanPham")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ModelSanPhamIdModelSanPham")
+                        .HasColumnType("int");
+
                     b.HasKey("IdAnh");
 
-                    b.HasIndex("IdModelSanPham");
+                    b.HasIndex("ModelSanPhamIdModelSanPham");
 
                     b.ToTable("AnhSanPhams");
                 });
@@ -63,6 +69,12 @@ namespace DATN_DT.Migrations
                     b.Property<int?>("IdNhanVien")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ImeiIdImei")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("KhachHangIdKhachHang")
+                        .HasColumnType("int");
+
                     b.Property<string>("MoTaLoi")
                         .HasColumnType("nvarchar(max)");
 
@@ -72,6 +84,9 @@ namespace DATN_DT.Migrations
                     b.Property<DateTime?>("NgayTra")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("NhanVienIdNhanVien")
+                        .HasColumnType("int");
+
                     b.Property<string>("TrangThai")
                         .HasColumnType("nvarchar(max)");
 
@@ -80,11 +95,11 @@ namespace DATN_DT.Migrations
 
                     b.HasKey("IdBaoHanh");
 
-                    b.HasIndex("IdImei");
+                    b.HasIndex("ImeiIdImei");
 
-                    b.HasIndex("IdKhachHang");
+                    b.HasIndex("KhachHangIdKhachHang");
 
-                    b.HasIndex("IdNhanVien");
+                    b.HasIndex("NhanVienIdNhanVien");
 
                     b.ToTable("BaoHanhs");
                 });
@@ -178,6 +193,9 @@ namespace DATN_DT.Migrations
                     b.Property<int?>("IdKhachHang")
                         .HasColumnType("int");
 
+                    b.Property<int?>("KhachHangIdKhachHang")
+                        .HasColumnType("int");
+
                     b.Property<string>("MaDon")
                         .HasColumnType("nvarchar(max)");
 
@@ -195,7 +213,7 @@ namespace DATN_DT.Migrations
 
                     b.HasKey("IdDonHang");
 
-                    b.HasIndex("IdKhachHang");
+                    b.HasIndex("KhachHangIdKhachHang");
 
                     b.ToTable("DonHangs");
                 });
@@ -211,6 +229,9 @@ namespace DATN_DT.Migrations
                     b.Property<decimal?>("DonGia")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int?>("DonHangIdDonHang")
+                        .HasColumnType("int");
+
                     b.Property<int?>("IdDonHang")
                         .HasColumnType("int");
 
@@ -218,6 +239,12 @@ namespace DATN_DT.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("IdModelSanPham")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("KhuyenMaiIdKhuyenMai")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ModelSanPhamIdModelSanPham")
                         .HasColumnType("int");
 
                     b.Property<int?>("SoLuong")
@@ -228,11 +255,11 @@ namespace DATN_DT.Migrations
 
                     b.HasKey("IdDonHangChiTiet");
 
-                    b.HasIndex("IdDonHang");
+                    b.HasIndex("DonHangIdDonHang");
 
-                    b.HasIndex("IdKhuyenMai");
+                    b.HasIndex("KhuyenMaiIdKhuyenMai");
 
-                    b.HasIndex("IdModelSanPham");
+                    b.HasIndex("ModelSanPhamIdModelSanPham");
 
                     b.ToTable("DonHangChiTiets");
                 });
@@ -248,9 +275,18 @@ namespace DATN_DT.Migrations
                     b.Property<int?>("IdKhachHang")
                         .HasColumnType("int");
 
+                    b.Property<int?>("KhachHangIdKhachHang")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("NgayTaoGio")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TrangThaiGio")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("IdGioHang");
 
-                    b.HasIndex("IdKhachHang");
+                    b.HasIndex("KhachHangIdKhachHang");
 
                     b.ToTable("GioHangs");
                 });
@@ -263,20 +299,32 @@ namespace DATN_DT.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdGioHangChiTiet"));
 
+                    b.Property<decimal?>("DonGia")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("GioHangIdGioHang")
+                        .HasColumnType("int");
+
                     b.Property<int?>("IdGioHang")
                         .HasColumnType("int");
 
                     b.Property<int?>("IdModelSanPham")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ModelSanPhamIdModelSanPham")
+                        .HasColumnType("int");
+
                     b.Property<int?>("SoLuong")
                         .HasColumnType("int");
 
+                    b.Property<decimal?>("ThanhTien")
+                        .HasColumnType("decimal(18,2)");
+
                     b.HasKey("IdGioHangChiTiet");
 
-                    b.HasIndex("IdGioHang");
+                    b.HasIndex("GioHangIdGioHang");
 
-                    b.HasIndex("IdModelSanPham");
+                    b.HasIndex("ModelSanPhamIdModelSanPham");
 
                     b.ToTable("GioHangChiTiets");
                 });
@@ -298,8 +346,17 @@ namespace DATN_DT.Migrations
                     b.Property<int?>("IdNhanVien")
                         .HasColumnType("int");
 
+                    b.Property<int?>("KhachHangIdKhachHang")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("KhuyenMaiIdKhuyenMai")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("NgayLapHoaDon")
                         .HasColumnType("datetime2");
+
+                    b.Property<int?>("NhanVienIdNhanVien")
+                        .HasColumnType("int");
 
                     b.Property<decimal?>("TongTien")
                         .HasColumnType("decimal(18,2)");
@@ -309,11 +366,11 @@ namespace DATN_DT.Migrations
 
                     b.HasKey("IdHoaDon");
 
-                    b.HasIndex("IdKhachHang");
+                    b.HasIndex("KhachHangIdKhachHang");
 
-                    b.HasIndex("IdKhuyenMai");
+                    b.HasIndex("KhuyenMaiIdKhuyenMai");
 
-                    b.HasIndex("IdNhanVien");
+                    b.HasIndex("NhanVienIdNhanVien");
 
                     b.ToTable("HoaDons");
                 });
@@ -329,6 +386,9 @@ namespace DATN_DT.Migrations
                     b.Property<decimal?>("DonGia")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int?>("HoaDonIdHoaDon")
+                        .HasColumnType("int");
+
                     b.Property<int?>("IdHoaDon")
                         .HasColumnType("int");
 
@@ -336,6 +396,12 @@ namespace DATN_DT.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("IdModelSanPham")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ImeiIdImei")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ModelSanPhamIdModelSanPham")
                         .HasColumnType("int");
 
                     b.Property<int?>("SoLuong")
@@ -346,11 +412,11 @@ namespace DATN_DT.Migrations
 
                     b.HasKey("IdHoaDonChiTiet");
 
-                    b.HasIndex("IdHoaDon");
+                    b.HasIndex("HoaDonIdHoaDon");
 
-                    b.HasIndex("IdImei");
+                    b.HasIndex("ImeiIdImei");
 
-                    b.HasIndex("IdModelSanPham");
+                    b.HasIndex("ModelSanPhamIdModelSanPham");
 
                     b.ToTable("HoaDonChiTiets");
                 });
@@ -372,12 +438,15 @@ namespace DATN_DT.Migrations
                     b.Property<string>("MoTa")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("ModelSanPhamIdModelSanPham")
+                        .HasColumnType("int");
+
                     b.Property<string>("TrangThai")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("IdImei");
 
-                    b.HasIndex("IdModelSanPham");
+                    b.HasIndex("ModelSanPhamIdModelSanPham");
 
                     b.ToTable("Imeis");
                 });
@@ -408,7 +477,7 @@ namespace DATN_DT.Migrations
                     b.Property<string>("SdtKhachHang")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("TrangThaiKhachHang")
+                    b.Property<int?>("TrangThaiKhachHang")
                         .HasColumnType("int");
 
                     b.HasKey("IdKhachHang");
@@ -508,6 +577,12 @@ namespace DATN_DT.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdModelSanPham"));
 
+                    b.Property<int?>("CameraSauIdCameraSau")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CameraTruocIdCamTruoc")
+                        .HasColumnType("int");
+
                     b.Property<decimal?>("GiaBanModel")
                         .HasColumnType("decimal(18,2)");
 
@@ -532,27 +607,42 @@ namespace DATN_DT.Migrations
                     b.Property<int?>("IdSanPham")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ManHinhIdManHinh")
+                        .HasColumnType("int");
+
                     b.Property<string>("Mau")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("PinIdPin")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RAMIdRAM")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ROMIdROM")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SanPhamIdSanPham")
+                        .HasColumnType("int");
 
                     b.Property<string>("TenModel")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("IdModelSanPham");
 
-                    b.HasIndex("IdCameraSau");
+                    b.HasIndex("CameraSauIdCameraSau");
 
-                    b.HasIndex("IdCameraTruoc");
+                    b.HasIndex("CameraTruocIdCamTruoc");
 
-                    b.HasIndex("IdManHinh");
+                    b.HasIndex("ManHinhIdManHinh");
 
-                    b.HasIndex("IdPin");
+                    b.HasIndex("PinIdPin");
 
-                    b.HasIndex("IdRAM");
+                    b.HasIndex("RAMIdRAM");
 
-                    b.HasIndex("IdROM");
+                    b.HasIndex("ROMIdROM");
 
-                    b.HasIndex("IdSanPham");
+                    b.HasIndex("SanPhamIdSanPham");
 
                     b.ToTable("ModelSanPhams");
                 });
@@ -564,6 +654,9 @@ namespace DATN_DT.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdNhanVien"));
+
+                    b.Property<int?>("ChucVuIdChucVu")
+                        .HasColumnType("int");
 
                     b.Property<string>("DiaChiNV")
                         .HasColumnType("nvarchar(max)");
@@ -594,7 +687,7 @@ namespace DATN_DT.Migrations
 
                     b.HasKey("IdNhanVien");
 
-                    b.HasIndex("IdChucVu");
+                    b.HasIndex("ChucVuIdChucVu");
 
                     b.ToTable("NhanViens");
                 });
@@ -688,6 +781,9 @@ namespace DATN_DT.Migrations
                     b.Property<string>("TenSanPham")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("ThuongHieuIdThuongHieu")
+                        .HasColumnType("int");
+
                     b.Property<string>("TrangThaiSP")
                         .HasColumnType("nvarchar(max)");
 
@@ -696,7 +792,7 @@ namespace DATN_DT.Migrations
 
                     b.HasKey("IdSanPham");
 
-                    b.HasIndex("IdThuongHieu");
+                    b.HasIndex("ThuongHieuIdThuongHieu");
 
                     b.ToTable("SanPhams");
                 });
@@ -712,6 +808,9 @@ namespace DATN_DT.Migrations
                     b.Property<string>("HinhThuc")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("HoaDonIdHoaDon")
+                        .HasColumnType("int");
+
                     b.Property<int?>("IdHoaDon")
                         .HasColumnType("int");
 
@@ -723,7 +822,7 @@ namespace DATN_DT.Migrations
 
                     b.HasKey("IdThanhToan");
 
-                    b.HasIndex("IdHoaDon");
+                    b.HasIndex("HoaDonIdHoaDon");
 
                     b.ToTable("ThanhToans");
                 });
@@ -761,14 +860,20 @@ namespace DATN_DT.Migrations
                     b.Property<int?>("IdModelSanPham")
                         .HasColumnType("int");
 
+                    b.Property<int?>("KhoIdKho")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ModelSanPhamIdModelSanPham")
+                        .HasColumnType("int");
+
                     b.Property<int?>("SoLuong")
                         .HasColumnType("int");
 
                     b.HasKey("IdTonKho");
 
-                    b.HasIndex("IdKho");
+                    b.HasIndex("KhoIdKho");
 
-                    b.HasIndex("IdModelSanPham");
+                    b.HasIndex("ModelSanPhamIdModelSanPham");
 
                     b.ToTable("TonKhos");
                 });
@@ -776,9 +881,8 @@ namespace DATN_DT.Migrations
             modelBuilder.Entity("DATN_DT.Models.AnhSanPham", b =>
                 {
                     b.HasOne("DATN_DT.Models.ModelSanPham", "ModelSanPham")
-                        .WithMany("AnhSanPhams")
-                        .HasForeignKey("IdModelSanPham")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .WithMany()
+                        .HasForeignKey("ModelSanPhamIdModelSanPham");
 
                     b.Navigation("ModelSanPham");
                 });
@@ -787,18 +891,15 @@ namespace DATN_DT.Migrations
                 {
                     b.HasOne("DATN_DT.Models.Imei", "Imei")
                         .WithMany()
-                        .HasForeignKey("IdImei")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("ImeiIdImei");
 
                     b.HasOne("DATN_DT.Models.KhachHang", "KhachHang")
                         .WithMany()
-                        .HasForeignKey("IdKhachHang")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("KhachHangIdKhachHang");
 
                     b.HasOne("DATN_DT.Models.NhanVien", "NhanVien")
                         .WithMany()
-                        .HasForeignKey("IdNhanVien")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("NhanVienIdNhanVien");
 
                     b.Navigation("Imei");
 
@@ -811,8 +912,7 @@ namespace DATN_DT.Migrations
                 {
                     b.HasOne("DATN_DT.Models.KhachHang", "KhachHang")
                         .WithMany()
-                        .HasForeignKey("IdKhachHang")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("KhachHangIdKhachHang");
 
                     b.Navigation("KhachHang");
                 });
@@ -821,18 +921,15 @@ namespace DATN_DT.Migrations
                 {
                     b.HasOne("DATN_DT.Models.DonHang", "DonHang")
                         .WithMany("DonHangChiTiets")
-                        .HasForeignKey("IdDonHang")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("DonHangIdDonHang");
 
                     b.HasOne("DATN_DT.Models.KhuyenMai", "KhuyenMai")
                         .WithMany()
-                        .HasForeignKey("IdKhuyenMai")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("KhuyenMaiIdKhuyenMai");
 
                     b.HasOne("DATN_DT.Models.ModelSanPham", "ModelSanPham")
                         .WithMany()
-                        .HasForeignKey("IdModelSanPham")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("ModelSanPhamIdModelSanPham");
 
                     b.Navigation("DonHang");
 
@@ -845,8 +942,7 @@ namespace DATN_DT.Migrations
                 {
                     b.HasOne("DATN_DT.Models.KhachHang", "KhachHang")
                         .WithMany()
-                        .HasForeignKey("IdKhachHang")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("KhachHangIdKhachHang");
 
                     b.Navigation("KhachHang");
                 });
@@ -855,13 +951,11 @@ namespace DATN_DT.Migrations
                 {
                     b.HasOne("DATN_DT.Models.GioHang", "GioHang")
                         .WithMany("GioHangChiTiets")
-                        .HasForeignKey("IdGioHang")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("GioHangIdGioHang");
 
                     b.HasOne("DATN_DT.Models.ModelSanPham", "ModelSanPham")
                         .WithMany()
-                        .HasForeignKey("IdModelSanPham")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("ModelSanPhamIdModelSanPham");
 
                     b.Navigation("GioHang");
 
@@ -872,18 +966,15 @@ namespace DATN_DT.Migrations
                 {
                     b.HasOne("DATN_DT.Models.KhachHang", "KhachHang")
                         .WithMany()
-                        .HasForeignKey("IdKhachHang")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("KhachHangIdKhachHang");
 
                     b.HasOne("DATN_DT.Models.KhuyenMai", "KhuyenMai")
                         .WithMany()
-                        .HasForeignKey("IdKhuyenMai")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("KhuyenMaiIdKhuyenMai");
 
                     b.HasOne("DATN_DT.Models.NhanVien", "NhanVien")
                         .WithMany()
-                        .HasForeignKey("IdNhanVien")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("NhanVienIdNhanVien");
 
                     b.Navigation("KhachHang");
 
@@ -896,18 +987,15 @@ namespace DATN_DT.Migrations
                 {
                     b.HasOne("DATN_DT.Models.HoaDon", "HoaDon")
                         .WithMany("HoaDonChiTiets")
-                        .HasForeignKey("IdHoaDon")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("HoaDonIdHoaDon");
 
                     b.HasOne("DATN_DT.Models.Imei", "Imei")
                         .WithMany()
-                        .HasForeignKey("IdImei")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("ImeiIdImei");
 
                     b.HasOne("DATN_DT.Models.ModelSanPham", "ModelSanPham")
                         .WithMany()
-                        .HasForeignKey("IdModelSanPham")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("ModelSanPhamIdModelSanPham");
 
                     b.Navigation("HoaDon");
 
@@ -919,9 +1007,8 @@ namespace DATN_DT.Migrations
             modelBuilder.Entity("DATN_DT.Models.Imei", b =>
                 {
                     b.HasOne("DATN_DT.Models.ModelSanPham", "ModelSanPham")
-                        .WithMany("Imeis")
-                        .HasForeignKey("IdModelSanPham")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .WithMany()
+                        .HasForeignKey("ModelSanPhamIdModelSanPham");
 
                     b.Navigation("ModelSanPham");
                 });
@@ -930,38 +1017,31 @@ namespace DATN_DT.Migrations
                 {
                     b.HasOne("DATN_DT.Models.CameraSau", "CameraSau")
                         .WithMany()
-                        .HasForeignKey("IdCameraSau")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("CameraSauIdCameraSau");
 
                     b.HasOne("DATN_DT.Models.CameraTruoc", "CameraTruoc")
                         .WithMany()
-                        .HasForeignKey("IdCameraTruoc")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("CameraTruocIdCamTruoc");
 
                     b.HasOne("DATN_DT.Models.ManHinh", "ManHinh")
                         .WithMany()
-                        .HasForeignKey("IdManHinh")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("ManHinhIdManHinh");
 
                     b.HasOne("DATN_DT.Models.Pin", "Pin")
                         .WithMany()
-                        .HasForeignKey("IdPin")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("PinIdPin");
 
                     b.HasOne("DATN_DT.Models.RAM", "RAM")
                         .WithMany()
-                        .HasForeignKey("IdRAM")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("RAMIdRAM");
 
                     b.HasOne("DATN_DT.Models.ROM", "ROM")
                         .WithMany()
-                        .HasForeignKey("IdROM")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("ROMIdROM");
 
                     b.HasOne("DATN_DT.Models.SanPham", "SanPham")
-                        .WithMany("ModelSanPhams")
-                        .HasForeignKey("IdSanPham")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .WithMany()
+                        .HasForeignKey("SanPhamIdSanPham");
 
                     b.Navigation("CameraSau");
 
@@ -982,8 +1062,7 @@ namespace DATN_DT.Migrations
                 {
                     b.HasOne("DATN_DT.Models.ChucVu", "ChucVu")
                         .WithMany()
-                        .HasForeignKey("IdChucVu")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("ChucVuIdChucVu");
 
                     b.Navigation("ChucVu");
                 });
@@ -992,8 +1071,7 @@ namespace DATN_DT.Migrations
                 {
                     b.HasOne("DATN_DT.Models.ThuongHieu", "ThuongHieu")
                         .WithMany()
-                        .HasForeignKey("IdThuongHieu")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("ThuongHieuIdThuongHieu");
 
                     b.Navigation("ThuongHieu");
                 });
@@ -1002,8 +1080,7 @@ namespace DATN_DT.Migrations
                 {
                     b.HasOne("DATN_DT.Models.HoaDon", "HoaDon")
                         .WithMany()
-                        .HasForeignKey("IdHoaDon")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("HoaDonIdHoaDon");
 
                     b.Navigation("HoaDon");
                 });
@@ -1012,13 +1089,11 @@ namespace DATN_DT.Migrations
                 {
                     b.HasOne("DATN_DT.Models.Kho", "Kho")
                         .WithMany()
-                        .HasForeignKey("IdKho")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("KhoIdKho");
 
                     b.HasOne("DATN_DT.Models.ModelSanPham", "ModelSanPham")
                         .WithMany()
-                        .HasForeignKey("IdModelSanPham")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("ModelSanPhamIdModelSanPham");
 
                     b.Navigation("Kho");
 
@@ -1038,18 +1113,6 @@ namespace DATN_DT.Migrations
             modelBuilder.Entity("DATN_DT.Models.HoaDon", b =>
                 {
                     b.Navigation("HoaDonChiTiets");
-                });
-
-            modelBuilder.Entity("DATN_DT.Models.ModelSanPham", b =>
-                {
-                    b.Navigation("AnhSanPhams");
-
-                    b.Navigation("Imeis");
-                });
-
-            modelBuilder.Entity("DATN_DT.Models.SanPham", b =>
-                {
-                    b.Navigation("ModelSanPhams");
                 });
 #pragma warning restore 612, 618
         }

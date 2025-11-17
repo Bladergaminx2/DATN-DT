@@ -1,0 +1,41 @@
+﻿@{
+    ViewData["Title"] = "Multi Role Page";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2>Trang dành cho Khách hàng hoặc Nhân viên</h2>
+    <p>Bất kỳ người dùng với role <strong>KHACHHANG</strong> hoặc <strong>NHANVIEN</strong> đều có thể truy cập.</p>
+
+    <div class="mb-3">
+        <input type="text" id="inputDataMulti" placeholder="Nhập dữ liệu..." class="form-control w-50">
+    </div>
+    <div class="mb-3">
+        <button id="btnSendMulti" class="btn btn-primary">Gửi dữ liệu</button>
+    </div>
+
+    <div id="resultMulti" class="mt-2"></div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $("#btnSendMulti").click(function() {
+                const data = $("#inputDataMulti").val();
+
+                $.ajax({
+                    url: '/Demo/MultiRoleDoSomething',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(res) {
+                        $("#resultMulti").html('<div class="alert alert-success">' + res.message + '</div>');
+                    },
+                    error: function(err) {
+                        $("#resultMulti").html('<div class="alert alert-danger">Bạn không có quyền hoặc token không hợp lệ.</div>');
+                    }
+                });
+            });
+        });
+    </script>
+}

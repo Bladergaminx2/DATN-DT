@@ -1,0 +1,41 @@
+﻿@{
+    ViewData["Title"] = "Customer Page";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2>Trang dành cho Khách hàng</h2>
+    <p>Chỉ người dùng với role <strong>KHACHHANG</strong> mới xem được.</p>
+
+    <div class="mb-3">
+        <input type="text" id="inputDataCustomer" placeholder="Nhập dữ liệu..." class="form-control w-50">
+    </div>
+    <div class="mb-3">
+        <button id="btnSendCustomer" class="btn btn-primary">Gửi dữ liệu</button>
+    </div>
+
+    <div id="resultCustomer" class="mt-2"></div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $("#btnSendCustomer").click(function() {
+                const data = $("#inputDataCustomer").val();
+
+                $.ajax({
+                    url: '/Demo/CustomerDoSomething',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(res) {
+                        $("#resultCustomer").html('<div class="alert alert-success">' + res.message + '</div>');
+                    },
+                    error: function(err) {
+                        $("#resultCustomer").html('<div class="alert alert-danger">Bạn không có quyền hoặc token không hợp lệ.</div>');
+                    }
+                });
+            });
+        });
+    </script>
+}
