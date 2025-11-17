@@ -20,9 +20,9 @@ namespace DATN_DT.Repos
             throw new NotImplementedException();
         }
 
-        public Task<ModelSanPham?> GetModelSanPhamById(int id)
+        public async Task<ModelSanPham?> GetModelSanPhamById(int id)
         {
-            throw new NotImplementedException();
+            return await
         }
 
         public Task SaveChanges()
