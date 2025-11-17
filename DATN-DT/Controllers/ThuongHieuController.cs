@@ -1,107 +1,117 @@
-﻿using DATN_DT.Data;
+﻿using DATN_DT.IServices;
 using DATN_DT.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Net.Http.Json;
 
 namespace DATN_DT.Controllers
 {
     public class ThuongHieuController : Controller
     {
-        private readonly MyDbContext _context;
+        private readonly IThuongHieuService _thuongHieuService;
+        private readonly HttpClient _httpClient;
 
-        public ThuongHieuController(MyDbContext context)
+        public ThuongHieuController(IThuongHieuService thuongHieuService, IHttpClientFactory httpClientFactory)
         {
-            _context = context;
+            _thuongHieuService = thuongHieuService;
+            _httpClient = httpClientFactory.CreateClient();
         }
 
-        // index
+        // ----------------------------
+        // GET: danh sách thương hiệu
+        // ----------------------------
         public async Task<IActionResult> Index()
         {
-            var list = await _context.ThuongHieus.ToListAsync();
+            var list = await _thuongHieuService.GetAllThuongHieus();
             return View(list);
         }
 
-        //cream ate
+        // ----------------------------
+        // POST: tạo thương hiệu
+        // ----------------------------
         [HttpPost]
         [Consumes("application/json")]
         public async Task<IActionResult> Create([FromBody] ThuongHieu? th)
         {
-            var errors = new Dictionary<string, string>();
+            if (th == null)
+                return BadRequest(new { message = "Dữ liệu thương hiệu không hợp lệ!" });
 
-            if (string.IsNullOrWhiteSpace(th?.TenThuongHieu))
+            // Validation
+            var errors = new Dictionary<string, string>();
+            if (string.IsNullOrWhiteSpace(th.TenThuongHieu))
                 errors["TenThuongHieu"] = "Phải nhập tên thương hiệu!";
-            if (string.IsNullOrWhiteSpace(th?.TrangThaiThuongHieu))
+            if (string.IsNullOrWhiteSpace(th.TrangThaiThuongHieu))
                 errors["TrangThaiThuongHieu"] = "Phải nhập trạng thái thương hiệu!";
 
             if (errors.Count > 0)
                 return BadRequest(errors);
 
-            // Check trùng
-            bool exists = await _context.ThuongHieus.AnyAsync(t =>
-                t.TenThuongHieu!.Trim().ToLower() == th!.TenThuongHieu!.Trim().ToLower()
-            );
-            if (exists)
-                return Conflict(new { message = "Thương hiệu đã tồn tại!" });
-
             try
             {
-                th.TenThuongHieu = th.TenThuongHieu.Trim();
-                th.TrangThaiThuongHieu = th.TrangThaiThuongHieu.Trim();
-
-                _context.ThuongHieus.Add(th);
-                await _context.SaveChangesAsync();
-
+                // Gọi service
+                await _thuongHieuService.CreateThuongHieu(th);
                 return Ok(new { message = "Thêm thương hiệu thành công!" });
             }
-            catch
+            catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Lỗi khi thêm thương hiệu. Vui lòng thử lại!" });
+                return StatusCode(500, new { message = "Lỗi khi thêm thương hiệu: " + ex.Message });
             }
         }
 
-        // Tide
+        // ----------------------------
+        // POST: cập nhật thương hiệu
+        // ----------------------------
         [HttpPost]
         [Route("ThuongHieu/Edit/{id}")]
         [Consumes("application/json")]
         public async Task<IActionResult> Edit(int id, [FromBody] ThuongHieu? th)
         {
-            var errors = new Dictionary<string, string>();
+            if (th == null)
+                return BadRequest(new { message = "Dữ liệu thương hiệu không hợp lệ!" });
 
-            if (string.IsNullOrWhiteSpace(th?.TenThuongHieu))
+            // Validation
+            var errors = new Dictionary<string, string>();
+            if (string.IsNullOrWhiteSpace(th.TenThuongHieu))
                 errors["TenThuongHieu"] = "Phải nhập tên thương hiệu!";
-            if (string.IsNullOrWhiteSpace(th?.TrangThaiThuongHieu))
+            if (string.IsNullOrWhiteSpace(th.TrangThaiThuongHieu))
                 errors["TrangThaiThuongHieu"] = "Phải nhập trạng thái thương hiệu!";
 
             if (errors.Count > 0)
                 return BadRequest(errors);
 
-            var existing = await _context.ThuongHieus.FindAsync(id);
-            if (existing == null)
-                return NotFound(new { message = "Không tìm thấy thương hiệu!" });
-
-            // Check trùng 
-            bool exists = await _context.ThuongHieus.AnyAsync(t =>
-                t.TenThuongHieu!.Trim().ToLower() == th!.TenThuongHieu!.Trim().ToLower() &&
-                t.IdThuongHieu != id
-            );
-            if (exists)
-                return Conflict(new { message = "Thương hiệu đã tồn tại!" });
-
             try
             {
-                existing.TenThuongHieu = th.TenThuongHieu.Trim();
-                existing.TrangThaiThuongHieu = th.TrangThaiThuongHieu.Trim();
+                // Gán Id để service biết bản ghi nào update
+                th.IdThuongHieu = id;
 
-                _context.ThuongHieus.Update(existing);
-                await _context.SaveChangesAsync();
+                // Gọi service
+                await _thuongHieuService.UpdateThuongHieu(id);
 
                 return Ok(new { message = "Cập nhật thương hiệu thành công!" });
             }
-            catch
+            catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Lỗi khi cập nhật thương hiệu. Vui lòng thử lại!" });
+                return StatusCode(500, new { message = "Lỗi khi cập nhật thương hiệu: " + ex.Message });
+            }
+        }
+
+        // ----------------------------
+        // GET: lấy thương hiệu theo API HttpClient (nếu cần)
+        // ----------------------------
+        [HttpGet]
+        public async Task<IActionResult> GetThuongHieusFromApi()
+        {
+            try
+            {
+                // Ví dụ gọi API ngoài
+                var thuongHieus = await _httpClient.GetFromJsonAsync<List<ThuongHieu>>("https://localhost:7150/api/ThuongHieus");
+                return Ok(thuongHieus);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi gọi API: " + ex.Message });
             }
         }
     }

@@ -1,38 +1,49 @@
-﻿using DATN_DT.IRepos;
+﻿using DATN_DT.Data;
+using DATN_DT.IRepos;
 using DATN_DT.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace DATN_DT.Repos
 {
     public class ModelSanPhamRepo : IModelSanPhamRepo
     {
-        public Task Create(ModelSanPham modelSanPham)
+        private readonly MyDbContext _context;
+        public ModelSanPhamRepo(MyDbContext context)
         {
-            throw new NotImplementedException();
+            _context = context;
+        }
+        public async Task Create(ModelSanPham modelSanPham)
+        {
+            if (await GetModelSanPhamById(modelSanPham.IdModelSanPham) != null) throw new ArgumentException("This product already exists!!");
+            await _context.ModelSanPhams.AddAsync(modelSanPham);
         }
 
-        public Task Delete(int id)
+        public async Task Delete(int id)
         {
-            throw new NotImplementedException();
+            var modelSanPham = await GetModelSanPhamById(id);
+            if (modelSanPham == null) throw new KeyNotFoundException("Not found this product!!");
+            _context.ModelSanPhams.Remove(modelSanPham);
         }
 
-        public Task<List<ModelSanPham>> GetAllModelSanPhams()
+        public async Task<List<ModelSanPham>> GetAllModelSanPhams()
         {
-            throw new NotImplementedException();
+            return await _context.ModelSanPhams.ToListAsync();
         }
 
         public async Task<ModelSanPham?> GetModelSanPhamById(int id)
         {
-            return await
+            return await _context.ModelSanPhams.FindAsync(id);
         }
 
-        public Task SaveChanges()
+        public async Task SaveChanges()
         {
-            throw new NotImplementedException();
+            await _context.SaveChangesAsync();
         }
 
-        public Task Update(ModelSanPham modelSanPham)
+        public async Task Update(ModelSanPham modelSanPham)
         {
-            throw new NotImplementedException();
+            if (await GetModelSanPhamById(modelSanPham.IdModelSanPham) == null) throw new KeyNotFoundException("Not found this product!!");
+            _context.Entry(modelSanPham).State = EntityState.Modified;
         }
     }
 }
