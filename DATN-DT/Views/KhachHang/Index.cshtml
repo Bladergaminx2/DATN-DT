@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "Quản lý Khách Hàng";
-    Layout = null; 
+    Layout = null;
 }
 
 <!DOCTYPE html>
@@ -136,19 +136,30 @@
                         <td><span class="diem-tich-luy">@item.DiemTichLuy?.ToString("N0")</span></td>
                         <td>
                             @{
-                                var statusClass = "status-active";
-                                if (item.TrangThaiKhachHang == 1)
+                                string statusName = "";
+                                string statusClass = "";
+
+                                switch (item.TrangThaiKhachHang)
                                 {
-                                    statusClass = "status-inactive";
-                                }
-                                else if (item.TrangThaiKhachHang == 2)
-                                {
-                                    statusClass = "status-warning";
+                                    case 0:
+                                        statusName = "Ngừng hoạt động";
+                                        statusClass = "status-inactive";
+                                        break;
+                                    case 1:
+                                        statusName = "Hoạt động";
+                                        statusClass = "status-active";
+                                        break;
+                                    case 2:
+                                        statusName = "Khóa tạm thời";
+                                        statusClass = "status-warning";
+                                        break;
+                                    default:
+                                        statusName = "Không xác định";
+                                        statusClass = "status-warning";
+                                        break;
                                 }
                             }
-                            <span class="@statusClass">
-                                @item.TrangThaiKhachHang
-                            </span>
+                            <span class="@statusClass">@statusName</span>
                         </td>
                         <td>
                             <button class="btn btn-sm btn-warning btn-edit"
@@ -204,13 +215,6 @@
                                     <small id="errorEmailKhachHang" class="text-danger d-none"></small>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Điểm Tích Lũy</label>
-                                    <input type="number" id="DiemTichLuy" class="form-control" placeholder="0" min="0" value="0" />
-                                    <small id="errorDiemTichLuy" class="text-danger d-none"></small>
-                                </div>
-                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -222,9 +226,9 @@
                         <div class="mb-3">
                             <label class="form-label">Trạng thái</label>
                             <select id="TrangThaiKhachHang" class="form-control">
-                                <option value="Hoạt động">Hoạt động</option>
-                                <option value="Ngừng hoạt động">Ngừng hoạt động</option>
-                                <option value="Khóa tạm thời">Khóa tạm thời</option>
+                                <option value="1">Hoạt động</option>
+                                <option value="0">Ngừng hoạt động</option>
+                                <option value="2">Khóa tạm thời</option>
                             </select>
                             <small id="errorTrangThaiKhachHang" class="text-danger d-none"></small>
                         </div>
@@ -274,13 +278,6 @@
                                     <small id="errorEditEmailKhachHang" class="text-danger d-none"></small>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Điểm Tích Lũy</label>
-                                    <input type="number" id="EditDiemTichLuy" class="form-control" min="0" />
-                                    <small id="errorEditDiemTichLuy" class="text-danger d-none"></small>
-                                </div>
-                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -292,9 +289,9 @@
                         <div class="mb-3">
                             <label class="form-label">Trạng thái</label>
                             <select id="EditTrangThaiKhachHang" class="form-control">
-                                <option value="Hoạt động">Hoạt động</option>
-                                <option value="Ngừng hoạt động">Ngừng hoạt động</option>
-                                <option value="Khóa tạm thời">Khóa tạm thời</option>
+                                <option value="1">Hoạt động</option>
+                                <option value="0">Ngừng hoạt động</option>
+                                <option value="2">Khóa tạm thời</option>
                             </select>
                             <small id="errorEditTrangThaiKhachHang" class="text-danger d-none"></small>
                         </div>
@@ -326,7 +323,6 @@
                 SdtKhachHang: SdtKhachHang.value.trim(),
                 EmailKhachHang: EmailKhachHang.value.trim() || null,
                 DiaChiKhachHang: DiaChiKhachHang.value.trim() || null,
-                DiemTichLuy: parseInt(DiemTichLuy.value) || 0,
                 TrangThaiKhachHang: TrangThaiKhachHang.value
             };
 
@@ -377,7 +373,6 @@
                 EditSdtKhachHang.value = btn.dataset.sdt;
                 EditEmailKhachHang.value = btn.dataset.email || '';
                 EditDiaChiKhachHang.value = btn.dataset.diachi || '';
-                EditDiemTichLuy.value = btn.dataset.diem;
                 EditTrangThaiKhachHang.value = btn.dataset.trangthai;
 
                 new bootstrap.Modal(editModal).show();
@@ -395,7 +390,6 @@
                 SdtKhachHang: EditSdtKhachHang.value.trim(),
                 EmailKhachHang: EditEmailKhachHang.value.trim() || null,
                 DiaChiKhachHang: EditDiaChiKhachHang.value.trim() || null,
-                DiemTichLuy: parseInt(EditDiemTichLuy.value) || 0,
                 TrangThaiKhachHang: EditTrangThaiKhachHang.value
             };
 

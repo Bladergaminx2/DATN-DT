@@ -54,7 +54,7 @@ namespace DATN_DT.Controllers
             {
                 gioHang = new GioHang
                 {
-                    IdKhachHang = item.IdKhachHang,
+                    IdKhachHang = item.IdKhachHang
                 };
                 _context.GioHangs.Add(gioHang);
                 await _context.SaveChangesAsync();
@@ -71,6 +71,8 @@ namespace DATN_DT.Controllers
             if (chiTiet != null)
             {
                 chiTiet.SoLuong = (chiTiet.SoLuong ?? 0) + item.SoLuong;
+                //chiTiet.DonGia = donGia;
+                //chiTiet.ThanhTien = chiTiet.SoLuong * donGia;
             }
             else
             {
@@ -79,6 +81,8 @@ namespace DATN_DT.Controllers
                     IdGioHang = gioHang.IdGioHang,
                     IdModelSanPham = item.IdModelSanPham,
                     SoLuong = item.SoLuong,
+                    //DonGia = donGia,
+                    //ThanhTien = item.SoLuong * donGia
                 };
                 _context.GioHangChiTiets.Add(chiTiet);
             }
