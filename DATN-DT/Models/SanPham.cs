@@ -16,5 +16,6 @@
 
         // Navigation property
         public ThuongHieu? ThuongHieu { get; set; }
+        public ICollection<ModelSanPham>? ModelSanPhams { get; set; }
     }
 }

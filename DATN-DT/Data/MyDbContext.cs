@@ -9,7 +9,6 @@ namespace DATN_DT.Data
         {
         }
 
-
         public DbSet<Kho> Khos { get; set; }
         public DbSet<ChucVu> ChucVus { get; set; }
         public DbSet<ThuongHieu> ThuongHieus { get; set; }
@@ -36,11 +35,9 @@ namespace DATN_DT.Data
         public DbSet<DonHangChiTiet> DonHangChiTiets { get; set; }
         public DbSet<ThanhToan> ThanhToans { get; set; }
 
-
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-
+            // Primary Keys
             modelBuilder.Entity<Kho>().HasKey(e => e.IdKho);
             modelBuilder.Entity<ChucVu>().HasKey(e => e.IdChucVu);
             modelBuilder.Entity<ThuongHieu>().HasKey(e => e.IdThuongHieu);
@@ -67,7 +64,216 @@ namespace DATN_DT.Data
             modelBuilder.Entity<DonHangChiTiet>().HasKey(e => e.IdDonHangChiTiet);
             modelBuilder.Entity<ThanhToan>().HasKey(e => e.IdThanhToan);
 
+            // === QUAN HỆ CHÍNH ===
 
+            // SanPham -> ThuongHieu
+            modelBuilder.Entity<SanPham>()
+                .HasOne(s => s.ThuongHieu)
+                .WithMany()
+                .HasForeignKey(s => s.IdThuongHieu)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // SanPham -> ModelSanPham (1-n)
+            modelBuilder.Entity<SanPham>()
+                .HasMany(s => s.ModelSanPhams)
+                .WithOne(m => m.SanPham)
+                .HasForeignKey(m => m.IdSanPham)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ModelSanPham -> các component
+            modelBuilder.Entity<ModelSanPham>()
+                .HasOne(m => m.ManHinh)
+                .WithMany()
+                .HasForeignKey(m => m.IdManHinh)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ModelSanPham>()
+                .HasOne(m => m.CameraTruoc)
+                .WithMany()
+                .HasForeignKey(m => m.IdCameraTruoc)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ModelSanPham>()
+                .HasOne(m => m.CameraSau)
+                .WithMany()
+                .HasForeignKey(m => m.IdCameraSau)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ModelSanPham>()
+                .HasOne(m => m.Pin)
+                .WithMany()
+                .HasForeignKey(m => m.IdPin)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ModelSanPham>()
+                .HasOne(m => m.RAM)
+                .WithMany()
+                .HasForeignKey(m => m.IdRAM)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ModelSanPham>()
+                .HasOne(m => m.ROM)
+                .WithMany()
+                .HasForeignKey(m => m.IdROM)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ModelSanPham -> AnhSanPham (1-n)
+            modelBuilder.Entity<ModelSanPham>()
+                .HasMany(m => m.AnhSanPhams)
+                .WithOne(a => a.ModelSanPham)
+                .HasForeignKey(a => a.IdModelSanPham)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ModelSanPham -> Imei (1-n)
+            modelBuilder.Entity<ModelSanPham>()
+                .HasMany(m => m.Imeis)
+                .WithOne(i => i.ModelSanPham)
+                .HasForeignKey(i => i.IdModelSanPham)
+.OnDelete(DeleteBehavior.Restrict);
+
+            // NhanVien -> ChucVu
+            modelBuilder.Entity<NhanVien>()
+                .HasOne(n => n.ChucVu)
+                .WithMany()
+                .HasForeignKey(n => n.IdChucVu)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // TonKho relationships
+            modelBuilder.Entity<TonKho>()
+                .HasOne(t => t.ModelSanPham)
+                .WithMany()
+                .HasForeignKey(t => t.IdModelSanPham)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<TonKho>()
+                .HasOne(t => t.Kho)
+                .WithMany()
+                .HasForeignKey(t => t.IdKho)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // AnhSanPham -> ModelSanPham
+            modelBuilder.Entity<AnhSanPham>()
+                .HasOne(a => a.ModelSanPham)
+                .WithMany(m => m.AnhSanPhams)
+                .HasForeignKey(a => a.IdModelSanPham)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // BaoHanh relationships
+            modelBuilder.Entity<BaoHanh>()
+                .HasOne(b => b.Imei)
+                .WithMany()
+                .HasForeignKey(b => b.IdImei)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<BaoHanh>()
+                .HasOne(b => b.KhachHang)
+                .WithMany()
+                .HasForeignKey(b => b.IdKhachHang)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<BaoHanh>()
+                .HasOne(b => b.NhanVien)
+                .WithMany()
+                .HasForeignKey(b => b.IdNhanVien)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // DonHang -> KhachHang
+            modelBuilder.Entity<DonHang>()
+                .HasOne(d => d.KhachHang)
+                .WithMany()
+                .HasForeignKey(d => d.IdKhachHang)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // DonHangChiTiet relationships
+            modelBuilder.Entity<DonHangChiTiet>()
+                .HasOne(d => d.DonHang)
+                .WithMany(d => d.DonHangChiTiets)
+                .HasForeignKey(d => d.IdDonHang)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<DonHangChiTiet>()
+                .HasOne(d => d.ModelSanPham)
+                .WithMany()
+                .HasForeignKey(d => d.IdModelSanPham)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<DonHangChiTiet>()
+                .HasOne(d => d.KhuyenMai)
+                .WithMany()
+                .HasForeignKey(d => d.IdKhuyenMai)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // GioHang -> KhachHang
+            modelBuilder.Entity<GioHang>()
+                .HasOne(g => g.KhachHang)
+                .WithMany()
+                .HasForeignKey(g => g.IdKhachHang)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // GioHangChiTiet relationships
+            modelBuilder.Entity<GioHangChiTiet>()
+                            .HasOne(g => g.GioHang)
+                            .WithMany(g => g.GioHangChiTiets)
+                            .HasForeignKey(g => g.IdGioHang)
+                            .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<GioHangChiTiet>()
+                .HasOne(g => g.ModelSanPham)
+                .WithMany()
+                .HasForeignKey(g => g.IdModelSanPham)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // HoaDon relationships
+            modelBuilder.Entity<HoaDon>()
+                .HasOne(h => h.KhachHang)
+                .WithMany()
+                .HasForeignKey(h => h.IdKhachHang)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<HoaDon>()
+                .HasOne(h => h.NhanVien)
+                .WithMany()
+                .HasForeignKey(h => h.IdNhanVien)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<HoaDon>()
+                .HasOne(h => h.KhuyenMai)
+                .WithMany()
+                .HasForeignKey(h => h.IdKhuyenMai)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // HoaDonChiTiet relationships
+            modelBuilder.Entity<HoaDonChiTiet>()
+                .HasOne(h => h.HoaDon)
+                .WithMany(h => h.HoaDonChiTiets)
+                .HasForeignKey(h => h.IdHoaDon)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<HoaDonChiTiet>()
+                .HasOne(h => h.ModelSanPham)
+                .WithMany()
+                .HasForeignKey(h => h.IdModelSanPham)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<HoaDonChiTiet>()
+                .HasOne(h => h.Imei)
+                .WithMany()
+                .HasForeignKey(h => h.IdImei)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Imei -> ModelSanPham
+            modelBuilder.Entity<Imei>()
+                .HasOne(i => i.ModelSanPham)
+                .WithMany(m => m.Imeis)
+                .HasForeignKey(i => i.IdModelSanPham)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ThanhToan -> HoaDon
+            modelBuilder.Entity<ThanhToan>()
+                .HasOne(t => t.HoaDon)
+                .WithMany()
+                .HasForeignKey(t => t.IdHoaDon)
+                .OnDelete(DeleteBehavior.Restrict);
 
             base.OnModelCreating(modelBuilder);
         }

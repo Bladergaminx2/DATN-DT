@@ -8,9 +8,6 @@
         public int? IdGioHang { get; set; }
         public int? IdModelSanPham { get; set; }
         public int? SoLuong { get; set; }
-        public decimal? DonGia { get; set; }
-        public decimal? ThanhTien { get; set; }
-
 
 
         // Navigation properties

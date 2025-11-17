@@ -24,5 +24,7 @@
         public Pin? Pin { get; set; }
         public RAM? RAM { get; set; }
         public ROM? ROM { get; set; }
+        public ICollection<AnhSanPham>? AnhSanPhams { get; set; }
+        public ICollection<Imei>? Imeis { get; set; }
     }
 }

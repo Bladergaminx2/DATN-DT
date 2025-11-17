@@ -33,7 +33,6 @@ namespace DATN_DT.Controllers
                 .Include(gh => gh.KhachHang)
                 .Include(gh => gh.GioHangChiTiets!)
                     .ThenInclude(ghct => ghct.ModelSanPham)
-                .OrderByDescending(gh => gh.NgayTaoGio)
                 .ToListAsync();
 
             return View(gioHangs);
@@ -49,22 +48,16 @@ namespace DATN_DT.Controllers
             // Tìm hoặc Tạo Giỏ Hàng "Hoạt động"
             var gioHang = await _context.GioHangs
                 .Include(gh => gh.GioHangChiTiets)
-                .FirstOrDefaultAsync(gh => gh.IdKhachHang == item.IdKhachHang && gh.TrangThaiGio == "Hoạt động");
+                .FirstOrDefaultAsync(gh => gh.IdKhachHang == item.IdKhachHang);
 
             if (gioHang == null)
             {
                 gioHang = new GioHang
                 {
                     IdKhachHang = item.IdKhachHang,
-                    NgayTaoGio = DateTime.Now,
-                    TrangThaiGio = "Hoạt động"
                 };
                 _context.GioHangs.Add(gioHang);
                 await _context.SaveChangesAsync();
-            }
-            else
-            {
-                gioHang.NgayTaoGio = DateTime.Now;
             }
 
             // Lấy giá bán
@@ -78,8 +71,6 @@ namespace DATN_DT.Controllers
             if (chiTiet != null)
             {
                 chiTiet.SoLuong = (chiTiet.SoLuong ?? 0) + item.SoLuong;
-                chiTiet.DonGia = donGia;
-                chiTiet.ThanhTien = chiTiet.SoLuong * donGia;
             }
             else
             {
@@ -88,8 +79,6 @@ namespace DATN_DT.Controllers
                     IdGioHang = gioHang.IdGioHang,
                     IdModelSanPham = item.IdModelSanPham,
                     SoLuong = item.SoLuong,
-                    DonGia = donGia,
-                    ThanhTien = item.SoLuong * donGia
                 };
                 _context.GioHangChiTiets.Add(chiTiet);
             }

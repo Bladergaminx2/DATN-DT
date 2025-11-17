@@ -9,6 +9,6 @@
         public string? EmailKhachHang { get; set; }
         public string? DiaChiKhachHang { get; set; }
         public int? DiemTichLuy { get; set; }
-        public int? TrangThaiKhachHang { get; set; }
+        public int TrangThaiKhachHang { get; set; }
     }
 }
