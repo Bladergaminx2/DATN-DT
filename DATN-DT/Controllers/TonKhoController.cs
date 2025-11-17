@@ -1,196 +1,146 @@
-﻿using DATN_DT.Data;
+﻿using DATN_DT.IServices;
 using DATN_DT.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace DATN_DT.Controllers
 {
     public class TonKhoController : Controller
     {
-        private readonly MyDbContext _context;
+        private readonly ITonKhoService _tonKhoService;
+        private readonly HttpClient _httpClient;
 
-        public TonKhoController(MyDbContext context)
+        public TonKhoController(ITonKhoService tonKhoService, IHttpClientFactory httpClientFactory)
         {
-            _context = context;
+            _tonKhoService = tonKhoService;
+            _httpClient = httpClientFactory.CreateClient();
         }
 
-        // INDEX 
+        // ----------------------------
+        // GET: Danh sách tồn kho
+        // ----------------------------
         public async Task<IActionResult> Index()
         {
-            var tonKhos = await _context.TonKhos.ToListAsync();
-            var modelSanPhams = await _context.ModelSanPhams.ToDictionaryAsync(x => x.IdModelSanPham);
-            var khos = await _context.Khos.ToDictionaryAsync(x => x.IdKho);
-
-            ViewBag.ModelSanPhams = modelSanPhams;
-            ViewBag.Khos = khos;
-
+            var tonKhos = await _tonKhoService.GetAllTonKhos();
             return View(tonKhos);
         }
 
-        // CREATE 
+        // ----------------------------
+        // POST: Tạo tồn kho
+        // ----------------------------
         [HttpPost]
         [Consumes("application/json")]
         public async Task<IActionResult> Create([FromBody] TonKho? tonKho)
         {
-            var errors = new Dictionary<string, string>();
+            if (tonKho == null)
+                return BadRequest(new { message = "Dữ liệu tồn kho không hợp lệ!" });
 
-            if (tonKho?.IdModelSanPham == null || tonKho.IdModelSanPham == 0)
+            var errors = new Dictionary<string, string>();
+            if (tonKho.IdModelSanPham == 0)
                 errors["IdModelSanPham"] = "Phải chọn model sản phẩm!";
-            if (tonKho?.IdKho == null || tonKho.IdKho == 0)
+            if (tonKho.IdKho == 0)
                 errors["IdKho"] = "Phải chọn kho!";
 
             if (errors.Count > 0)
                 return BadRequest(errors);
 
-            // Check trùng 
-            bool exists = await _context.TonKhos.AnyAsync(t =>
-                t.IdModelSanPham == tonKho!.IdModelSanPham &&
-                t.IdKho == tonKho.IdKho
-            );
-            if (exists)
-                return Conflict(new { message = "Tồn kho cho model sản phẩm này đã tồn tại trong kho!" });
-
             try
             {
-               
-                var soLuongConHang = await _context.Imeis
-                    .CountAsync(i => i.IdModelSanPham == tonKho.IdModelSanPham && i.TrangThai == "Còn hàng");
-
-                tonKho.SoLuong = soLuongConHang;
-
-                _context.TonKhos.Add(tonKho);
-                await _context.SaveChangesAsync();
-
+                // Gọi service (không gán var vì Update/Create trả về Task void)
+                await _tonKhoService.Create(tonKho);
                 return Ok(new { message = "Thêm tồn kho thành công!" });
             }
-            catch
+            catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Lỗi khi thêm tồn kho. Vui lòng thử lại!" });
+                return StatusCode(500, new { message = "Lỗi khi thêm tồn kho: " + ex.Message });
             }
         }
 
-        // EDIT
+        // ----------------------------
+        // POST: Cập nhật tồn kho
+        // ----------------------------
         [HttpPost]
         [Route("TonKho/Edit/{id}")]
         [Consumes("application/json")]
         public async Task<IActionResult> Edit(int id, [FromBody] TonKho? tonKho)
         {
-            var errors = new Dictionary<string, string>();
+            if (tonKho == null)
+                return BadRequest(new { message = "Dữ liệu tồn kho không hợp lệ!" });
 
-            if (tonKho?.IdModelSanPham == null || tonKho.IdModelSanPham == 0)
+            var errors = new Dictionary<string, string>();
+            if (tonKho.IdModelSanPham == 0)
                 errors["IdModelSanPham"] = "Phải chọn model sản phẩm!";
-            if (tonKho?.IdKho == null || tonKho.IdKho == 0)
+            if (tonKho.IdKho == 0)
                 errors["IdKho"] = "Phải chọn kho!";
 
             if (errors.Count > 0)
                 return BadRequest(errors);
 
-            var existing = await _context.TonKhos.FindAsync(id);
-            if (existing == null)
-                return NotFound(new { message = "Không tìm thấy tồn kho!" });
-
-            // Check trùng 
-            bool exists = await _context.TonKhos.AnyAsync(t =>
-                t.IdModelSanPham == tonKho!.IdModelSanPham &&
-                t.IdKho == tonKho.IdKho &&
-                t.IdTonKho != id
-            );
-            if (exists)
-                return Conflict(new { message = "Tồn kho cho model sản phẩm này đã tồn tại trong kho!" });
-
             try
             {
-                existing.IdModelSanPham = tonKho.IdModelSanPham;
-                existing.IdKho = tonKho.IdKho;
-               
-
-                _context.TonKhos.Update(existing);
-                await _context.SaveChangesAsync();
-
+                tonKho.IdTonKho = id; // đảm bảo Id đúng
+                await _tonKhoService.Update(tonKho); // ✅ gọi service, không gán var
                 return Ok(new { message = "Cập nhật tồn kho thành công!" });
-            }
-            catch
-            {
-                return StatusCode(500, new { message = "Lỗi khi cập nhật tồn kho. Vui lòng thử lại!" });
-            }
-        }
-
-     
-        [HttpPost]
-        [Route("TonKho/SyncInventory")]
-        public async Task<IActionResult> SyncInventory()
-        {
-            try
-            {
-              
-                var models = await _context.ModelSanPhams.ToListAsync();
-                var khoMacDinh = await _context.Khos.FirstOrDefaultAsync();
-
-                if (khoMacDinh == null)
-                {
-                    return BadRequest(new { message = "Không tìm thấy kho mặc định!" });
-                }
-
-                foreach (var model in models)
-                {
-                   
-                    var soLuongConHang = await _context.Imeis
-                        .CountAsync(i => i.IdModelSanPham == model.IdModelSanPham && i.TrangThai == "Còn hàng");
-
-                    var tonKhos = await _context.TonKhos
-                        .Where(t => t.IdModelSanPham == model.IdModelSanPham)
-                        .ToListAsync();
-
-                    if (tonKhos.Any())
-                    {
-                       
-                        foreach (var tonKho in tonKhos)
-                        {
-                            tonKho.SoLuong = soLuongConHang;
-                        }
-                    }
-                    else
-                    {
-                   
-                        var newTonKho = new TonKho
-                        {
-                            IdModelSanPham = model.IdModelSanPham,
-                            IdKho = khoMacDinh.IdKho,
-                            SoLuong = soLuongConHang
-                        };
-                        _context.TonKhos.Add(newTonKho);
-                    }
-                }
-
-                await _context.SaveChangesAsync();
-                return Ok(new { message = "Đồng bộ tồn kho thành công! Số lượng đã được cập nhật theo IMEI có trạng thái 'Còn hàng'." });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = $"Lỗi khi đồng bộ tồn kho: {ex.Message}" });
+                return StatusCode(500, new { message = "Lỗi khi cập nhật tồn kho: " + ex.Message });
             }
         }
 
-       
-        [HttpGet]
-        public async Task<IActionResult> GetAllModelSanPham()
-        {
-            var list = await _context.ModelSanPhams
-                .Select(m => new { m.IdModelSanPham, DisplayText = m.TenModel })
-                .ToListAsync();
-            return Ok(list);
-        }
+        // ----------------------------
+        // POST: Đồng bộ tồn kho từ IMEI
+        // ----------------------------
+        //[HttpPost]
+        //[Route("TonKho/SyncInventory")]
+        //public async Task<IActionResult> SyncInventory()
+        //{
+        //    try
+        //    {
+        //        // Gọi service để xử lý đồng bộ
+        //        await _tonKhoService.SyncInventory(); // Service thực hiện logic sync
+        //        return Ok(new { message = "Đồng bộ tồn kho thành công!" });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, new { message = "Lỗi khi đồng bộ tồn kho: " + ex.Message });
+        //    }
+        //}
 
-        [HttpGet]
-        public async Task<IActionResult> GetAllKho()
-        {
-            var list = await _context.Khos
-                .Select(k => new { k.IdKho, DisplayText = k.TenKho })
-                .ToListAsync();
-            return Ok(list);
-        }
+        // ----------------------------
+        // GET: Danh sách ModelSanPham
+        // ----------------------------
+        //[HttpGet]
+        //public async Task<IActionResult> GetAllModelSanPham()
+        //{
+        //    try
+        //    {
+        //        var list = await _tonKhoService.GetAllModelSanPhams(); // Service trả về List<ModelSanPham>
+        //        return Ok(list);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, new { message = "Lỗi khi lấy danh sách model: " + ex.Message });
+        //    }
+        //}
+
+        // ----------------------------
+        // GET: Danh sách Kho
+        // ----------------------------
+        //[HttpGet]
+        //public async Task<IActionResult> GetAllKho()
+        //{
+        //    try
+        //    {
+        //        var list = await _tonKhoService.GetAllKhos(); // Service trả về List<Kho>
+        //        return Ok(list);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, new { message = "Lỗi khi lấy danh sách kho: " + ex.Message });
+        //    }
+        //}
     }
 }
