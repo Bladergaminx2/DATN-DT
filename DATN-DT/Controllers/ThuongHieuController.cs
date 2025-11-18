@@ -8,6 +8,8 @@ using System.Net.Http.Json;
 
 namespace DATN_DT.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class ThuongHieuController : Controller
     {
         private readonly IThuongHieuService _thuongHieuService;

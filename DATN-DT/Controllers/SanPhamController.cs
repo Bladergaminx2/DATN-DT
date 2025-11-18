@@ -7,6 +7,8 @@ using System.Net.Http.Json;
 
 namespace DATN_DT.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class SanPhamController : Controller
     {
         private readonly ISanPhamService _sanPhamService;
@@ -53,8 +55,7 @@ namespace DATN_DT.Controllers
         // ----------------------------
         // POST: Update sản phẩm
         // ----------------------------
-        [HttpPost]
-        [Route("SanPham/Edit/{id}")]
+        [HttpPut("{id}")]
         [Consumes("application/json")]
         public async Task<IActionResult> Edit(int id, [FromBody] SanPham? sp)
         {
@@ -87,7 +88,7 @@ namespace DATN_DT.Controllers
         // ----------------------------
         // GET: Load thương hiệu (call API qua HttpClient)
         // ----------------------------
-        [HttpGet]
+        [HttpGet("GetThuongHieu")]
         public async Task<IActionResult> GetThuongHieu()
         {
             try

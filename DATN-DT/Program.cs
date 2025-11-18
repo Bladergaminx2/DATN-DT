@@ -1,9 +1,11 @@
 ﻿using DATN_DT.Data;
 using DATN_DT.IRepos;
 using DATN_DT.IServices;
+using DATN_DT.Models;
 using DATN_DT.Repos;
 using DATN_DT.Services;
-using DATN_DT.Models;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -16,6 +18,12 @@ var configuration = builder.Configuration;
 // JWT Key
 // ----------------------
 var key = Encoding.UTF8.GetBytes(configuration["Jwt:Key"]);
+
+
+
+builder.Services.AddHttpClient("ServerApi")
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://localhost:7150" ?? ""));
+                
 
 // ----------------------
 // Add services to DI

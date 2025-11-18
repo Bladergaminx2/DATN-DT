@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DATN_DT.Controllers
 {
+    [Route("api/[controller]")]
     public class ManHinhController : Controller
     {
         private readonly IManHinhService _manHinhService;

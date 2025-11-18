@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 
 namespace DATN_DT.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class TonKhoController : Controller
     {
         private readonly ITonKhoService _tonKhoService;
