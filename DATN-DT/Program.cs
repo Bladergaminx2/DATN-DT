@@ -1,14 +1,20 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using DATN_DT.Data;
+using DATN_DT.IRepos;
+using DATN_DT.IServices;
+using DATN_DT.Models;
+using DATN_DT.Repos;
+using DATN_DT.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Microsoft.EntityFrameworkCore;
-using DATN_DT.Models;
-using DATN_DT.Data;
+using System.Text.Json.Serialization;
 
 
 var builder = WebApplication.CreateBuilder(args);
 var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
 
+builder.Services.AddHttpClient(); // ← Add this line
 // Add services to the container.
 builder.Services.AddControllersWithViews(options =>
 {
@@ -20,7 +26,25 @@ builder.Services.AddControllersWithViews(options =>
 builder.Services.AddDbContext<MyDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Thêm các dịch vụ vào DI container
+builder.Services.AddControllers().AddJsonOptions(opt =>
+{
+    opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 
+});
+builder.Services.AddScoped<ISanPhamService, SanPhamService>();
+builder.Services.AddScoped<ISanPhamRepo, SanPhamRepo>();
+builder.Services.AddScoped<IRAMRepo, RAMRepo>();
+builder.Services.AddScoped<IRAMService, RAMService>();
+builder.Services.AddScoped<IROMRepo, ROMRepo>();
+builder.Services.AddScoped<IROMService, ROMService>();
+builder.Services.AddScoped<IManHinhRepo, ManHinhRepo>();
+builder.Services.AddScoped<IManHinhService, ManHinhService>();
+builder.Services.AddScoped<IThuongHieuRepo, ThuongHieuRepo>();
+builder.Services.AddScoped<IThuongHieuService, ThuongHieuService>();
+builder.Services.AddScoped<ITonKhoRepo, TonKhoRepo>();
+builder.Services.AddScoped<ITonKhoService, TonKhoService>();
+builder.Services.AddScoped<IKhoService, KhoService>();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -77,53 +101,53 @@ app.UseRouting();
 app.UseAuthentication();  // 🔐 thêm dòng này
 app.UseAuthorization();
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<MyDbContext>();
+//using (var scope = app.Services.CreateScope())
+//{
+//    var db = scope.ServiceProvider.GetRequiredService<MyDbContext>();
 
-    // ========== 1. TẠO ROLE ADMIN ==========
-    var roleAdmin = db.ChucVus.FirstOrDefault(r => r.TenChucVuVietHoa == "ADMIN");
+//    // ========== 1. TẠO ROLE ADMIN ==========
+//    var roleAdmin = db.ChucVus.FirstOrDefault(r => r.TenChucVuVietHoa == "ADMIN");
 
-    if (roleAdmin == null)
-    {
-        roleAdmin = new ChucVu
-        {
-            TenChucVu = "Admin",
-            TenChucVuVietHoa = "ADMIN"
-        };
-        db.ChucVus.Add(roleAdmin);
-        db.SaveChanges();
-    }
+//    if (roleAdmin == null)
+//    {
+//        roleAdmin = new ChucVu
+//        {
+//            TenChucVu = "Admin",
+//            TenChucVuVietHoa = "ADMIN"
+//        };
+//        db.ChucVus.Add(roleAdmin);
+//        db.SaveChanges();
+//    }
 
-    // ========== 2. TẠO TÀI KHOẢN ADMIN ==========
-    var admin = db.NhanViens.FirstOrDefault(nv => nv.TenTaiKhoanNV == "admin");
+//    // ========== 2. TẠO TÀI KHOẢN ADMIN ==========
+//    var admin = db.NhanViens.FirstOrDefault(nv => nv.TenTaiKhoanNV == "admin");
 
-    if (admin == null)
-    {
-        string password = "admin123";  // mật khẩu mặc định (nên đổi sau)
-        string hashedPassword;
+//    if (admin == null)
+//    {
+//        string password = "admin123";  // mật khẩu mặc định (nên đổi sau)
+//        string hashedPassword;
 
-        // hash SHA256
-        using (var sha = System.Security.Cryptography.SHA256.Create())
-        {
-            var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
-            hashedPassword = Convert.ToBase64String(bytes);
-        }
+//        // hash SHA256
+//        using (var sha = System.Security.Cryptography.SHA256.Create())
+//        {
+//            var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
+//            hashedPassword = Convert.ToBase64String(bytes);
+//        }
 
-        admin = new NhanVien
-        {
-            TenTaiKhoanNV = "admin",
-            Password = hashedPassword,
-            HoTenNhanVien = "Tài khoản quản trị",
-            IdChucVu = roleAdmin.IdChucVu,
-            TrangThaiNV = 1,
-            NgayVaoLam = DateTime.Now
-        };
+//        admin = new NhanVien
+//        {
+//            TenTaiKhoanNV = "admin",
+//            Password = hashedPassword,
+//            HoTenNhanVien = "Tài khoản quản trị",
+//            IdChucVu = roleAdmin.IdChucVu,
+//            TrangThaiNV = 1,
+//            NgayVaoLam = DateTime.Now
+//        };
 
-        db.NhanViens.Add(admin);
-        db.SaveChanges();
-    }
-}
+//        db.NhanViens.Add(admin);
+//        db.SaveChanges();
+//    }
+//}
 
 app.MapControllerRoute(
     name: "login",

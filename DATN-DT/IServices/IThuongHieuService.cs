@@ -8,6 +8,6 @@ namespace DATN_DT.IServices
         Task DeleteThuongHieu(int id);
         Task<List<ThuongHieu>> GetAllThuongHieus();
         Task<ThuongHieu?> GetThuongHieuById(int id);
-        Task UpdateThuongHieu(int id);
+        Task UpdateThuongHieu(ThuongHieu thuongHieu);
     }
 }

@@ -27,6 +27,21 @@ namespace DATN_DT.Controllers
             return View(tonKhos);
         }
 
+        // API endpoints cho dropdown
+        [HttpGet("api/ModelSanPham")]
+        public async Task<IActionResult> GetModelSanPhams()
+        {
+            var models = await _tonKhoService.GetModelSanPhams();
+            return Ok(models);
+        }
+
+        [HttpGet("api/Kho")]
+        public async Task<IActionResult> GetKhos()
+        {
+            var khos = await _tonKhoService.GetKhos();
+            return Ok(khos);
+        }
+
         // ----------------------------
         // POST: Tạo tồn kho
         // ----------------------------
@@ -38,17 +53,26 @@ namespace DATN_DT.Controllers
                 return BadRequest(new { message = "Dữ liệu tồn kho không hợp lệ!" });
 
             var errors = new Dictionary<string, string>();
+
             if (tonKho.IdModelSanPham == 0)
                 errors["IdModelSanPham"] = "Phải chọn model sản phẩm!";
             if (tonKho.IdKho == 0)
                 errors["IdKho"] = "Phải chọn kho!";
+            if (tonKho.SoLuong < 0)
+                errors["SoLuong"] = "Số lượng không được âm!";
+            if (tonKho.SoLuong == 0)
+                errors["SoLuong"] = "Số lượng phải lớn hơn 0!";
 
             if (errors.Count > 0)
                 return BadRequest(errors);
 
             try
             {
-                // Gọi service (không gán var vì Update/Create trả về Task void)
+                // Kiểm tra trùng (cùng model và cùng kho)
+                var isDuplicate = await _tonKhoService.CheckDuplicate(tonKho.IdModelSanPham, tonKho.IdKho, 0);
+                if (isDuplicate)
+                    return Conflict(new { message = "Đã tồn tại bản ghi tồn kho cho model sản phẩm và kho này!" });
+
                 await _tonKhoService.Create(tonKho);
                 return Ok(new { message = "Thêm tồn kho thành công!" });
             }
@@ -62,7 +86,6 @@ namespace DATN_DT.Controllers
         // POST: Cập nhật tồn kho
         // ----------------------------
         [HttpPost]
-        [Route("TonKho/Edit/{id}")]
         [Consumes("application/json")]
         public async Task<IActionResult> Edit(int id, [FromBody] TonKho? tonKho)
         {
@@ -70,18 +93,28 @@ namespace DATN_DT.Controllers
                 return BadRequest(new { message = "Dữ liệu tồn kho không hợp lệ!" });
 
             var errors = new Dictionary<string, string>();
+
             if (tonKho.IdModelSanPham == 0)
                 errors["IdModelSanPham"] = "Phải chọn model sản phẩm!";
             if (tonKho.IdKho == 0)
                 errors["IdKho"] = "Phải chọn kho!";
+            if (tonKho.SoLuong < 0)
+                errors["SoLuong"] = "Số lượng không được âm!";
+            if (tonKho.SoLuong == 0)
+                errors["SoLuong"] = "Số lượng phải lớn hơn 0!";
 
             if (errors.Count > 0)
                 return BadRequest(errors);
 
             try
             {
-                tonKho.IdTonKho = id; // đảm bảo Id đúng
-                await _tonKhoService.Update(tonKho); // ✅ gọi service, không gán var
+                // Kiểm tra trùng (cùng model và cùng kho, trừ bản ghi hiện tại)
+                var isDuplicate = await _tonKhoService.CheckDuplicate(tonKho.IdModelSanPham, tonKho.IdKho, id);
+                if (isDuplicate)
+                    return Conflict(new { message = "Đã tồn tại bản ghi tồn kho cho model sản phẩm và kho này!" });
+
+                tonKho.IdTonKho = id;
+                await _tonKhoService.Update(tonKho);
                 return Ok(new { message = "Cập nhật tồn kho thành công!" });
             }
             catch (Exception ex)
@@ -91,56 +124,20 @@ namespace DATN_DT.Controllers
         }
 
         // ----------------------------
-        // POST: Đồng bộ tồn kho từ IMEI
+        // DELETE: Xóa tồn kho
         // ----------------------------
-        //[HttpPost]
-        //[Route("TonKho/SyncInventory")]
-        //public async Task<IActionResult> SyncInventory()
-        //{
-        //    try
-        //    {
-        //        // Gọi service để xử lý đồng bộ
-        //        await _tonKhoService.SyncInventory(); // Service thực hiện logic sync
-        //        return Ok(new { message = "Đồng bộ tồn kho thành công!" });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, new { message = "Lỗi khi đồng bộ tồn kho: " + ex.Message });
-        //    }
-        //}
-
-        // ----------------------------
-        // GET: Danh sách ModelSanPham
-        // ----------------------------
-        //[HttpGet]
-        //public async Task<IActionResult> GetAllModelSanPham()
-        //{
-        //    try
-        //    {
-        //        var list = await _tonKhoService.GetAllModelSanPhams(); // Service trả về List<ModelSanPham>
-        //        return Ok(list);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, new { message = "Lỗi khi lấy danh sách model: " + ex.Message });
-        //    }
-        //}
-
-        // ----------------------------
-        // GET: Danh sách Kho
-        // ----------------------------
-        //[HttpGet]
-        //public async Task<IActionResult> GetAllKho()
-        //{
-        //    try
-        //    {
-        //        var list = await _tonKhoService.GetAllKhos(); // Service trả về List<Kho>
-        //        return Ok(list);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, new { message = "Lỗi khi lấy danh sách kho: " + ex.Message });
-        //    }
-        //}
+        [HttpDelete]
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                await _tonKhoService.Delete(id);
+                return Ok(new { message = "Xóa tồn kho thành công!" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi xóa tồn kho: " + ex.Message });
+            }
+        }
     }
 }

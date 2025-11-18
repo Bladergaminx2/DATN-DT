@@ -8,7 +8,6 @@ namespace DATN_DT.IRepos
         Task Delete(int id);
         Task<RAM?> GetRAMById(int id);
         Task<List<RAM>> GetAllRAMs();
-        Task SaveChanges();
         Task Update(RAM ram);
     }
 }

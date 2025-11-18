@@ -8,7 +8,9 @@ namespace DATN_DT.IRepos
         Task Delete(int id);
         Task<TonKho?> GetTonKhoById(int id);
         Task<List<TonKho>> GetAllTonKhos();
-        Task SaveChanges();
+        Task<List<ModelSanPham>> GetModelSanPhams();
+        Task<bool> CheckDuplicate(int? idModelSanPham, int? idKho, int excludeId);
+        Task<List<Kho>> GetKhos();
         Task Update(TonKho tonKho);
     }
 }

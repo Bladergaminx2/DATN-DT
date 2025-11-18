@@ -9,7 +9,6 @@ namespace DATN_DT.IRepos
         Task Delete(int id);
         Task<ManHinh> GetManHinhById(int id);
         Task<List<ManHinh>> GetAllManHinhs();
-        Task SaveChanges();
         Task Update(ManHinh manhinh);
     }
 }

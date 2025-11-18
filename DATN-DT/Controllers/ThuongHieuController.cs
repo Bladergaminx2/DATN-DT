@@ -84,10 +84,11 @@ namespace DATN_DT.Controllers
             try
             {
                 // Gán Id để service biết bản ghi nào update
-                th.IdThuongHieu = id;
-
+                var data = await _thuongHieuService.GetThuongHieuById(id);
+                data.TenThuongHieu = th.TenThuongHieu;
+                data.TrangThaiThuongHieu = th.TrangThaiThuongHieu;
                 // Gọi service
-                await _thuongHieuService.UpdateThuongHieu(id);
+                await _thuongHieuService.UpdateThuongHieu(data);
 
                 return Ok(new { message = "Cập nhật thương hiệu thành công!" });
             }
@@ -95,6 +96,14 @@ namespace DATN_DT.Controllers
             {
                 return StatusCode(500, new { message = "Lỗi khi cập nhật thương hiệu: " + ex.Message });
             }
+        }
+
+        // ===== TEST HTTPCLIENT =====
+        [HttpDelete]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await _thuongHieuService.DeleteThuongHieu(id);
+            return Ok(new { message = "Xoá RAM thành công!" });
         }
 
         // ----------------------------

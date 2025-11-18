@@ -16,6 +16,7 @@ namespace DATN_DT.Repos
         {
             if (await GetROMById(rom.IdROM) != null) throw new ArgumentException($"ROM {rom.IdROM} already exists");
             await _context.ROMs.AddAsync(rom);
+            _context.SaveChanges();
         }
 
         public async Task Delete(int id)
@@ -23,6 +24,7 @@ namespace DATN_DT.Repos
             var rom = await GetROMById(id);
             if (rom == null) throw new KeyNotFoundException("Not found ROM to delete");
             _context.ROMs.Remove(rom);
+            _context.SaveChanges();
         }
 
         public async Task<List<ROM>> GetAllROMs()
@@ -42,8 +44,8 @@ namespace DATN_DT.Repos
 
         public async Task Update(ROM rom)
         {
-            if (await GetROMById(rom.IdROM) == null) throw new KeyNotFoundException("Not found ROM to update");
-            _context.Entry(rom).State = EntityState.Modified;
+            _context.ROMs.Update(rom);
+            _context.SaveChanges();
         }
     }
 }

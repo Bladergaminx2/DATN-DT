@@ -1,18 +1,17 @@
 ﻿using DATN_DT.IServices;
 using DATN_DT.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 
 namespace DATN_DT.Controllers
 {
     public class ManHinhController : Controller
     {
         private readonly IManHinhService _manHinhService;
-        private readonly HttpClient _httpClient;
 
-        public ManHinhController(IManHinhService manHinhService, HttpClient httpClient)
+        public ManHinhController(IManHinhService manHinhService)
         {
             _manHinhService = manHinhService;
-            _httpClient = httpClient;
         }
 
         // ============================
@@ -35,7 +34,7 @@ namespace DATN_DT.Controllers
             if (errors.Count > 0)
                 return BadRequest(errors);
 
-            // Check trùng bằng cách lấy tất cả từ service
+            // Check trùng
             var all = await _manHinhService.GetAllManHinhs();
             bool exists = all.Any(m =>
                 m.CongNgheManHinh!.Trim().ToLower() == mh!.CongNgheManHinh!.Trim().ToLower() &&
@@ -47,18 +46,21 @@ namespace DATN_DT.Controllers
             if (exists)
                 return Conflict(new { message = "Màn hình đã tồn tại!" });
 
+            // Chuẩn hóa dữ liệu trước khi lưu
+            mh!.CongNgheManHinh = mh.CongNgheManHinh.Trim();
+            mh.KichThuoc = mh.KichThuoc.Trim();
+            mh.DoPhanGiai = mh.DoPhanGiai.Trim();
+            mh.TinhNangMan = mh.TinhNangMan.Trim();
+            mh.MoTaMan = mh.MoTaMan?.Trim();
 
-            await _manHinhService.Create(mh!);
+            await _manHinhService.Create(mh);
             return Ok(new { message = "Thêm màn hình thành công!" });
         }
 
-
-
         // ============================
-        // POST: Edit
+        // PUT: Edit
         // ============================
-        [HttpPost]
-        [Route("ManHinh/Edit/{id}")]
+        [HttpPut]
         [Consumes("application/json")]
         public async Task<IActionResult> Edit(int id, [FromBody] ManHinh? mh)
         {
@@ -83,27 +85,29 @@ namespace DATN_DT.Controllers
             if (exists)
                 return Conflict(new { message = "Màn hình đã tồn tại!" });
 
+            // Cập nhật dữ liệu
+            existing.CongNgheManHinh = mh.CongNgheManHinh.Trim();
+            existing.KichThuoc = mh.KichThuoc.Trim();
+            existing.DoPhanGiai = mh.DoPhanGiai.Trim();
+            existing.TinhNangMan = mh.TinhNangMan.Trim();
+            existing.MoTaMan = mh.MoTaMan?.Trim();
 
-            mh!.IdManHinh = id;
-            await _manHinhService.Update(mh);
-
+            await _manHinhService.Update(existing);
             return Ok(new { message = "Cập nhật màn hình thành công!" });
         }
 
-
         // ============================
-        // GET API call via HttpClient
+        // DELETE: Delete
         // ============================
-        [HttpGet]
-        public async Task<IActionResult> CallExternalApi()
+        [HttpDelete]
+        public async Task<IActionResult> Delete(int id)
         {
-            var response = await _httpClient.GetAsync("https://api.example.com/data");
+            var existing = await _manHinhService.GetManHinhById(id);
+            if (existing == null)
+                return NotFound(new { message = "Không tìm thấy màn hình!" });
 
-            if (!response.IsSuccessStatusCode)
-                return StatusCode((int)response.StatusCode, "Lỗi gọi API ngoài");
-
-            var data = await response.Content.ReadAsStringAsync();
-            return Ok(data);
+            await _manHinhService.Delete(id);
+            return Ok(new { message = "Xóa màn hình thành công!" });
         }
 
         // ============================

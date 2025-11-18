@@ -1,40 +1,54 @@
-﻿using DATN_DT.IServices;
+﻿using DATN_DT.IRepos;
+using DATN_DT.IServices;
 using DATN_DT.Models;
+using DATN_DT.Repos;
+using Microsoft.EntityFrameworkCore;
 
 namespace DATN_DT.Services
 {
     public class TonKhoService : ITonKhoService
     {
-        private readonly HttpClient _httpClient;
-        public TonKhoService(HttpClient httpClient)
+        private readonly ITonKhoRepo _tonKhoRepo;
+        public TonKhoService(ITonKhoRepo tonKhoRepo)
         {
-            _httpClient = httpClient;
+            _tonKhoRepo = tonKhoRepo;
         }
         public async Task Create(TonKho tonKho)
         {
-            await _httpClient.PostAsJsonAsync<TonKho>("https://localhost:7150/api/TonKho", tonKho);
+            await _tonKhoRepo.Create(tonKho);
         }
 
         public async Task Delete(int id)
         {
-            await _httpClient.DeleteAsync($"https://localhost:7150/api/TonKho/{id}");
+            await _tonKhoRepo.Delete(id);
         }
 
-        public Task<List<TonKho>> GetAllTonKhos()
+        public async Task<List<TonKho>> GetAllTonKhos()
         {
-            var response =  _httpClient.GetFromJsonAsync<List<TonKho>>("https://localhost:7150/api/TonKho");
-            return response;
+           return await _tonKhoRepo.GetAllTonKhos();
         }
 
-        public Task<TonKho?> GetTonKhoById(int id)
+        public async Task<List<Kho>> GetKhos()
         {
-            var response =  _httpClient.GetFromJsonAsync<TonKho>($"https://localhost:7150/api/TonKho/{id}");
-            return response;
+            return await _tonKhoRepo.GetKhos();
+        }
+        public async Task<List<ModelSanPham>> GetModelSanPhams()
+        {
+            return await _tonKhoRepo.GetModelSanPhams();
+        }
+        public async Task<bool> CheckDuplicate(int? idModelSanPham, int? idKho, int excludeId)
+        {
+            return await _tonKhoRepo.CheckDuplicate(idModelSanPham, idKho, excludeId);
+        }
+
+        public async Task<TonKho?> GetTonKhoById(int id)
+        {
+            return await _tonKhoRepo.GetTonKhoById(id);
         }
 
         public async Task Update(TonKho tonKho)
         {
-            await _httpClient.PutAsJsonAsync<TonKho>($"https://localhost:7150/api/TonKho/{tonKho.IdTonKho}", tonKho);
+            await _tonKhoRepo.Update(tonKho);
         }
     }
 }

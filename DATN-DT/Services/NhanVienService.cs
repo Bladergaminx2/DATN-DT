@@ -1,40 +1,41 @@
-﻿using DATN_DT.IServices;
+﻿using DATN_DT.IRepos;
+using DATN_DT.IServices;
 using DATN_DT.Models;
 
 namespace DATN_DT.Services
 {
     public class NhanVienService : INhanVienService
     {
-        private readonly HttpClient _httpClient;
-        public NhanVienService(HttpClient httpClient)
+        private readonly INhanVienRepo _INhanVienRepo;
+        public NhanVienService(INhanVienRepo nhanVienRepo)
         {
-            _httpClient = httpClient;
+            _INhanVienRepo = nhanVienRepo;
         }
         public async Task Create(NhanVien nhanvien)
         {
-            await _httpClient.PostAsJsonAsync<NhanVien>("https://localhost:7150/api/NhanVien", nhanvien);
+            await _INhanVienRepo.Create(nhanvien);
         }
 
         public async Task Delete(int id)
         {
-            await _httpClient.DeleteAsync($"https://localhost:7150/api/NhanVien/{id}");
+            await _INhanVienRepo.Delete(id);
         }
 
         public Task<List<NhanVien>> GetAllNhanViens()
         {
-            var response =  _httpClient.GetFromJsonAsync<List<NhanVien>>("https://localhost:7150/api/NhanVien");
+            var response =  _INhanVienRepo.GetAllNhanViens();
             return response;
         }
 
         public Task<NhanVien?> GetNhanVienById(int id)
         {
-            var response =  _httpClient.GetFromJsonAsync<NhanVien>($"https://localhost:7150/api/NhanVien/{id}");
+            var response =  _INhanVienRepo.GetNhanVienById(id);
             return response;
         }
 
         public async Task Update(NhanVien nhanvien)
         {
-            await _httpClient.PutAsJsonAsync<NhanVien>($"https://localhost:7150/api/NhanVien/{nhanvien.IdNhanVien}", nhanvien);
+            await _INhanVienRepo.Update(nhanvien);
         }
     }
 }

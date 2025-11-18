@@ -5,8 +5,6 @@ using System.Collections.Generic;
 
 namespace DATN_DT.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
     public class RAMController : Controller
     {
         private readonly IRAMService _ramService;
@@ -19,15 +17,15 @@ namespace DATN_DT.Controllers
         }
 
         // ===== GET ALL =====
-        [HttpGet("list")]
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
             var rams = await _ramService.GetAllRAMs();
-            return Ok(rams);
+            return View(rams);
         }
 
         // ===== CREATE =====
-        [HttpPost("create")]
+        [HttpPost]
         [Consumes("application/json")]
         public async Task<IActionResult> Create([FromBody] RAM? ram)
         {
@@ -59,7 +57,7 @@ namespace DATN_DT.Controllers
         }
 
         // ===== EDIT =====
-        [HttpPut("edit/{id}")]
+        [HttpPut]
         [Consumes("application/json")]
         public async Task<IActionResult> Edit(int id, [FromBody] RAM? ram)
         {
@@ -95,11 +93,11 @@ namespace DATN_DT.Controllers
         }
 
         // ===== TEST HTTPCLIENT =====
-        [HttpGet("external-test")]
-        public async Task<IActionResult> TestHttpClient()
+        [HttpDelete]
+        public async Task<IActionResult> Delete(int id)
         {
-            var json = await _httpClient.GetStringAsync("https://api.github.com/");
-            return Ok(new { data = json });
+            await _ramService.Delete(id);
+            return Ok(new { message = "Xoá RAM thành công!" });
         }
     }
 }

@@ -99,20 +99,27 @@
             font-weight: bold;
         }
 
-        /* Style cho placeholder */
-        .form-control::placeholder {
-            color: #888;
-            opacity: 1;
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
         }
 
-        .form-control:focus::placeholder {
-            color: transparent;
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Quản Lý Thương Hiệu</h2>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
 
         <div class="d-flex justify-content-end mb-3">
             <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
@@ -152,12 +159,19 @@
                             </span>
                         </td>
                         <td>
-                            <button class="btn btn-sm btn-warning btn-edit"
-                                    data-id="@item.IdThuongHieu"
-                                    data-ten="@item.TenThuongHieu"
-                                    data-trangthai="@item.TrangThaiThuongHieu">
-                                Sửa
-                            </button>
+                            <div class="action-buttons">
+                                <button class="btn btn-sm btn-warning btn-edit"
+                                        data-id="@item.IdThuongHieu"
+                                        data-ten="@item.TenThuongHieu"
+                                        data-trangthai="@item.TrangThaiThuongHieu">
+                                    Sửa
+                                </button>
+                                <button class="btn btn-sm btn-danger btn-delete"
+                                        data-id="@item.IdThuongHieu"
+                                        data-ten="@item.TenThuongHieu">
+                                    Xóa
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 }
@@ -244,235 +258,199 @@
     </div>
 
     <script>
-        // Hàm hiển thị lỗi
-        function showError(id, msg) {
-            const el = document.getElementById(id);
-            el.textContent = msg;
-            el.classList.remove("d-none");
+        // Hiển thị thông báo
+        function showAlert(message, type = 'success') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+            `;
+            alertContainer.appendChild(alert);
+
+            setTimeout(() => {
+                if (alert.parentElement) {
+                    alert.remove();
+                }
+            }, 3000);
         }
 
-        // Hàm ẩn lỗi
-        function hideError(id) {
-            const el = document.getElementById(id);
-            el.classList.add("d-none");
+        // Hiển thị lỗi
+        function showError(fieldId, message) {
+            const errorElement = document.getElementById(fieldId);
+            errorElement.textContent = message;
+            errorElement.classList.remove('d-none');
         }
 
-        // Hàm kiểm tra tất cả input bắt buộc cho Create
-        function validateAllInputs() {
-            let isValid = true;
-            const errors = {};
-
-            // Kiểm tra Tên thương hiệu
-            const tenThuongHieuValue = TenThuongHieu.value.trim();
-            if (!tenThuongHieuValue) {
-                errors.tenThuongHieu = "Phải điền tên thương hiệu!";
-                isValid = false;
-            }
-
-            // Kiểm tra Trạng thái
-            const trangThaiValue = TrangThaiThuongHieu.value;
-            if (!trangThaiValue) {
-                errors.trangThai = "Phải chọn trạng thái!";
-                isValid = false;
-            }
-
-            return { isValid, errors };
+        // Ẩn lỗi
+        function hideError(fieldId) {
+            const errorElement = document.getElementById(fieldId);
+            errorElement.classList.add('d-none');
         }
 
-        // Hàm kiểm tra tất cả input bắt buộc cho Edit
-        function validateAllInputsEdit() {
-            let isValid = true;
-            const errors = {};
-
-            // Kiểm tra Tên thương hiệu
-            const tenThuongHieuValue = EditTenThuongHieu.value.trim();
-            if (!tenThuongHieuValue) {
-                errors.tenThuongHieu = "Phải điền tên thương hiệu!";
-                isValid = false;
-            }
-
-            // Kiểm tra Trạng thái
-            const trangThaiValue = EditTrangThaiThuongHieu.value;
-            if (!trangThaiValue) {
-                errors.trangThai = "Phải chọn trạng thái!";
-                isValid = false;
-            }
-
-            return { isValid, errors };
+        // Ẩn tất cả lỗi
+        function hideAllErrors() {
+            document.querySelectorAll('.text-danger').forEach(el => {
+                el.classList.add('d-none');
+            });
         }
 
-        // Xử lý placeholder cho Create Modal
-        const createModal = document.getElementById('createModal');
+        // Mở modal edit và điền dữ liệu
+        document.querySelectorAll(".btn-edit").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const id = btn.dataset.id;
+                const ten = btn.dataset.ten;
+                const trangthai = btn.dataset.trangthai;
 
-        // Khi modal create được hiển thị
-        createModal.addEventListener('show.bs.modal', function () {
-            // Đảm bảo placeholder hiển thị
-            document.getElementById('TenThuongHieu').placeholder = "VD: Samsung, Apple, Xiaomi, Oppo";
-            document.getElementById('TrangThaiThuongHieu').value = "";
+                document.getElementById("EditIdThuongHieu").value = id;
+                document.getElementById("EditTenThuongHieu").value = ten;
+                document.getElementById("EditTrangThaiThuongHieu").value = trangthai;
 
-            // Ẩn tất cả lỗi
-            hideError("errorTenThuongHieu");
-            hideError("errorTrangThaiThuongHieu");
-        });
-
-        // Khi modal create bị ẩn (khi đóng)
-        createModal.addEventListener('hidden.bs.modal', function () {
-            // Reset form và đảm bảo placeholder hiển thị lại
-            document.getElementById('createForm').reset();
-            document.getElementById('TenThuongHieu').placeholder = "VD: Samsung, Apple, Xiaomi, Oppo";
-
-            // Ẩn tất cả lỗi
-            document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
-        });
-
-        // Xử lý placeholder cho Edit Modal
-        const editModal = document.getElementById('editModal');
-
-        // Khi modal edit bị ẩn
-        editModal.addEventListener('hidden.bs.modal', function () {
-            // Reset placeholder cho edit modal
-            document.getElementById('EditTenThuongHieu').placeholder = "VD: Samsung, Apple, Xiaomi, Oppo";
-
-            // Ẩn tất cả lỗi
-            document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
-        });
-
-        // Xử lý focus cho các input
-        document.addEventListener('DOMContentLoaded', function () {
-            const inputs = document.querySelectorAll('input[type="text"]');
-
-            inputs.forEach(input => {
-                // Khi focus vào input, placeholder sẽ biến mất
-                input.addEventListener('focus', function () {
-                    this.setAttribute('data-placeholder', this.getAttribute('placeholder'));
-                    this.setAttribute('placeholder', '');
-                });
-
-                // Khi rời khỏi input, nếu không có giá trị thì hiển thị lại placeholder
-                input.addEventListener('blur', function () {
-                    if (this.value === '') {
-                        this.setAttribute('placeholder', this.getAttribute('data-placeholder') || '');
-                    }
-                });
+                hideAllErrors();
+                new bootstrap.Modal(document.getElementById('editModal')).show();
             });
         });
 
-        // Thêm Thương Hiệu
+        // Xử lý xóa thương hiệu
+        document.querySelectorAll(".btn-delete").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const id = btn.dataset.id;
+                const ten = btn.dataset.ten;
+
+                if (confirm(`Bạn có chắc chắn muốn xóa thương hiệu "${ten}"?`)) {
+                    try {
+                        const response = await fetch(`/ThuongHieu/Delete?id=${id}`, {
+                            method: 'DELETE'
+                        });
+
+                        if (response.ok) {
+                            const result = await response.json();
+                            showAlert(result.message, 'success');
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            const error = await response.json();
+                            showAlert(error.message || 'Lỗi khi xóa thương hiệu', 'danger');
+                        }
+                    } catch (error) {
+                        showAlert('Lỗi kết nối: ' + error.message, 'danger');
+                    }
+                }
+            });
+        });
+
+        // Xử lý thêm thương hiệu
         document.getElementById("createForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
-            // Ẩn tất cả lỗi cũ
-            hideError("errorTenThuongHieu");
-            hideError("errorTrangThaiThuongHieu");
-
-            // Kiểm tra tất cả input
-            const validation = validateAllInputs();
-            if (!validation.isValid) {
-                // Hiển thị tất cả lỗi
-                if (validation.errors.tenThuongHieu) showError("errorTenThuongHieu", validation.errors.tenThuongHieu);
-                if (validation.errors.trangThai) showError("errorTrangThaiThuongHieu", validation.errors.trangThai);
-                return;
-            }
-
-            const th = {
-                TenThuongHieu: TenThuongHieu.value.trim(),
-                TrangThaiThuongHieu: TrangThaiThuongHieu.value
+            const thData = {
+                TenThuongHieu: document.getElementById("TenThuongHieu").value.trim(),
+                TrangThaiThuongHieu: document.getElementById("TrangThaiThuongHieu").value
             };
 
-            const response = await fetch('/ThuongHieu/Create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(th)
-            });
-
-            let data = {};
-            try { data = await response.json(); } catch { }
-
-            if (!response.ok) {
-                if (response.status === 400 && typeof data === "object") {
-                    if (data.TenThuongHieu) showError("errorTenThuongHieu", data.TenThuongHieu);
-                    if (data.TrangThaiThuongHieu) showError("errorTrangThaiThuongHieu", data.TrangThaiThuongHieu);
-                    return;
-                }
-
-                if (response.status === 409 && data.message) {
-                    showError("errorTenThuongHieu", data.message);
-                    return;
-                }
-
-                alert(data.message || "Không thể thêm Thương Hiệu. Vui lòng thử lại!");
+            // Kiểm tra validation cơ bản
+            if (!thData.TenThuongHieu) {
+                showError("errorTenThuongHieu", "Phải nhập tên thương hiệu!");
+                return;
+            }
+            if (!thData.TrangThaiThuongHieu) {
+                showError("errorTrangThaiThuongHieu", "Phải chọn trạng thái!");
                 return;
             }
 
-            location.reload();
+            hideAllErrors();
+
+            try {
+                const response = await fetch('/ThuongHieu/Create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(thData)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showAlert(result.message, 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('createModal')).hide();
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    const error = await response.json();
+
+                    if (response.status === 400 && typeof error === 'object') {
+                        // Lỗi validation
+                        if (error.TenThuongHieu) showError('errorTenThuongHieu', error.TenThuongHieu);
+                        if (error.TrangThaiThuongHieu) showError('errorTrangThaiThuongHieu', error.TrangThaiThuongHieu);
+                    } else {
+                        showAlert(error.message || 'Lỗi khi thêm thương hiệu', 'danger');
+                    }
+                }
+            } catch (error) {
+                showAlert('Lỗi kết nối: ' + error.message, 'danger');
+            }
         });
 
-        // Sửa Thương Hiệu
-        document.querySelectorAll(".btn-edit").forEach(btn => {
-            btn.addEventListener("click", () => {
-                EditIdThuongHieu.value = btn.dataset.id;
-                EditTenThuongHieu.value = btn.dataset.ten;
-                EditTrangThaiThuongHieu.value = btn.dataset.trangthai;
-
-                // Ẩn tất cả lỗi
-                hideError("errorEditTenThuongHieu");
-                hideError("errorEditTrangThaiThuongHieu");
-
-                new bootstrap.Modal(editModal).show();
-            });
-        });
-
-        // Cập nhật Thương Hiệu
+        // Xử lý sửa thương hiệu
         document.getElementById("editForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
-            const id = EditIdThuongHieu.value;
-
-            // Ẩn tất cả lỗi cũ
-            hideError("errorEditTenThuongHieu");
-            hideError("errorEditTrangThaiThuongHieu");
-
-            // Kiểm tra tất cả input
-            const validation = validateAllInputsEdit();
-            if (!validation.isValid) {
-                // Hiển thị tất cả lỗi
-                if (validation.errors.tenThuongHieu) showError("errorEditTenThuongHieu", validation.errors.tenThuongHieu);
-                if (validation.errors.trangThai) showError("errorEditTrangThaiThuongHieu", validation.errors.trangThai);
-                return;
-            }
-
-            const th = {
-                IdThuongHieu: id,
-                TenThuongHieu: EditTenThuongHieu.value.trim(),
-                TrangThaiThuongHieu: EditTrangThaiThuongHieu.value
+            const id = document.getElementById("EditIdThuongHieu").value;
+            const thData = {
+                TenThuongHieu: document.getElementById("EditTenThuongHieu").value.trim(),
+                TrangThaiThuongHieu: document.getElementById("EditTrangThaiThuongHieu").value
             };
 
-            const response = await fetch('/ThuongHieu/Edit/' + id, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(th)
-            });
-
-            let data = {};
-            try { data = await response.json(); } catch { }
-
-            if (!response.ok) {
-                if (response.status === 400 && typeof data === "object") {
-                    if (data.TenThuongHieu) showError("errorEditTenThuongHieu", data.TenThuongHieu);
-                    if (data.TrangThaiThuongHieu) showError("errorEditTrangThaiThuongHieu", data.TrangThaiThuongHieu);
-                    return;
-                }
-
-                if (response.status === 409 && data.message) {
-                    showError("errorEditTenThuongHieu", data.message);
-                    return;
-                }
-
-                alert(data.message || "Không thể cập nhật Thương Hiệu. Vui lòng thử lại!");
+            // Kiểm tra validation cơ bản
+            if (!thData.TenThuongHieu) {
+                showError("errorEditTenThuongHieu", "Phải nhập tên thương hiệu!");
+                return;
+            }
+            if (!thData.TrangThaiThuongHieu) {
+                showError("errorEditTrangThaiThuongHieu", "Phải chọn trạng thái!");
                 return;
             }
 
-            location.reload();
+            hideAllErrors();
+
+            try {
+                const response = await fetch(`/ThuongHieu/Edit/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(thData)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showAlert(result.message, 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    const error = await response.json();
+
+                    if (response.status === 400 && typeof error === 'object') {
+                        // Lỗi validation
+                        if (error.TenThuongHieu) showError('errorEditTenThuongHieu', error.TenThuongHieu);
+                        if (error.TrangThaiThuongHieu) showError('errorEditTrangThaiThuongHieu', error.TrangThaiThuongHieu);
+                    } else {
+                        showAlert(error.message || 'Lỗi khi cập nhật thương hiệu', 'danger');
+                    }
+                }
+            } catch (error) {
+                showAlert('Lỗi kết nối: ' + error.message, 'danger');
+            }
+        });
+
+        // Reset form và ẩn lỗi khi modal đóng
+        document.getElementById('createModal').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('createForm').reset();
+            hideAllErrors();
+        });
+
+        document.getElementById('editModal').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('editForm').reset();
+            hideAllErrors();
         });
     </script>
 </body>

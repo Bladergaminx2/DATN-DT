@@ -8,7 +8,6 @@ namespace DATN_DT.IRepos
         Task Delete(int id);
         Task<ThuongHieu?> GetThuongHieuById(int id);
         Task<List<ThuongHieu>> GetAllThuongHieus();
-        Task SaveChanges();
         Task Update(ThuongHieu thuongHieu);
     }
 }
