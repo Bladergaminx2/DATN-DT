@@ -1,27 +1,66 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using DATN_DT.Data;
+using DATN_DT.IRepos;
+using DATN_DT.IServices;
+using DATN_DT.Repos;
+using DATN_DT.Services;
+using DATN_DT.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Microsoft.EntityFrameworkCore;
-using DATN_DT.Models;
-using DATN_DT.Data;
-
 
 var builder = WebApplication.CreateBuilder(args);
-var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
+var configuration = builder.Configuration;
 
-// Add services to the container.
+// ----------------------
+// JWT Key
+// ----------------------
+var key = Encoding.UTF8.GetBytes(configuration["Jwt:Key"]);
+
+// ----------------------
+// Add services to DI
+// ----------------------
 builder.Services.AddControllersWithViews(options =>
 {
-    // Gắn filter toàn cục
     options.Filters.Add(typeof(DATN_DT.CustomAttribute.AuthorizeRoleFromTokenGlobalFilter));
 });
 
-
+// DbContext
 builder.Services.AddDbContext<MyDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
+// IHttpContextAccessor
+builder.Services.AddHttpContextAccessor();
 
+// ----------------------
+// Repos & Services
+// ----------------------
+// Scoped: dùng DbContext → nên Scoped
+builder.Services.AddScoped<ISanPhamRepo, SanPhamRepo>();
+builder.Services.AddScoped<ISanPhamService, SanPhamService>();
+builder.Services.AddScoped<IThuongHieuRepo, ThuongHieuRepo>();
+builder.Services.AddScoped<IThuongHieuService, ThuongHieuService>();
+builder.Services.AddScoped<ITonKhoRepo, TonKhoRepo>();
+builder.Services.AddScoped<ITonKhoService, TonKhoService>();
+builder.Services.AddScoped<IModelSanPhamRepo, ModelSanPhamRepo>();
+builder.Services.AddScoped<IModelSanPhamService, ModelSanPhamService>();
+builder.Services.AddScoped<IManHinhRepo, ManHinhRepo>();
+builder.Services.AddScoped<IManHinhService, ManHinhService>();
+builder.Services.AddScoped<INhanVienRepo, NhanVienRepo>();
+builder.Services.AddScoped<INhanVienService, NhanVienService>();
+builder.Services.AddScoped<IRAMRepo, RAMRepo>();
+builder.Services.AddScoped<IRAMService, RAMService>();
+builder.Services.AddScoped<IPinRepo, PinRepo>();
+builder.Services.AddScoped<IPinService, PinService>();
+builder.Services.AddScoped<IROMRepo, ROMRepo>();
+builder.Services.AddScoped<IROMService, ROMService>();
 
+// HttpClient cho service gọi API
+builder.Services.AddHttpClient();
+
+// ----------------------
+// JWT Authentication
+// ----------------------
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -38,52 +77,46 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(key)
     };
 
-    // Đọc token từ cookie "jwt"
+    // Lấy token từ cookie "jwt"
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
         {
             var token = context.HttpContext.Request.Cookies["jwt"];
             if (!string.IsNullOrEmpty(token))
-            {
                 context.Token = token;
-            }
             return Task.CompletedTask;
         }
     };
 });
 
-// Các service khác...
-builder.Services.AddControllersWithViews();
-
-// Đăng ký IHttpContextAccessor
-builder.Services.AddHttpContextAccessor();
-
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// ----------------------
+// Middleware
+// ----------------------
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 
-app.UseAuthentication();  // 🔐 thêm dòng này
+app.UseAuthentication();
 app.UseAuthorization();
 
+// ----------------------
+// Seed Role & Admin
+// ----------------------
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<MyDbContext>();
 
-    // ========== 1. TẠO ROLE ADMIN ==========
-    var roleAdmin = db.ChucVus.FirstOrDefault(r => r.TenChucVuVietHoa == "ADMIN");
-
+    // Tạo role ADMIN nếu chưa có
+    var roleAdmin = await db.ChucVus.FirstOrDefaultAsync(r => r.TenChucVuVietHoa == "ADMIN");
     if (roleAdmin == null)
     {
         roleAdmin = new ChucVu
@@ -92,18 +125,15 @@ using (var scope = app.Services.CreateScope())
             TenChucVuVietHoa = "ADMIN"
         };
         db.ChucVus.Add(roleAdmin);
-        db.SaveChanges();
+        await db.SaveChangesAsync();
     }
 
-    // ========== 2. TẠO TÀI KHOẢN ADMIN ==========
-    var admin = db.NhanViens.FirstOrDefault(nv => nv.TenTaiKhoanNV == "admin");
-
+    // Tạo tài khoản admin nếu chưa có
+    var admin = await db.NhanViens.FirstOrDefaultAsync(nv => nv.TenTaiKhoanNV == "admin");
     if (admin == null)
     {
-        string password = "admin123";  // mật khẩu mặc định (nên đổi sau)
+        string password = "admin123"; // mật khẩu mặc định
         string hashedPassword;
-
-        // hash SHA256
         using (var sha = System.Security.Cryptography.SHA256.Create())
         {
             var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
@@ -121,13 +151,15 @@ using (var scope = app.Services.CreateScope())
         };
 
         db.NhanViens.Add(admin);
-        db.SaveChanges();
+        await db.SaveChangesAsync();
     }
 }
 
+// ----------------------
+// Routing
+// ----------------------
 app.MapControllerRoute(
-    name: "login",
-    pattern: "{controller=Login}/{action=Index}");
-
+    name: "default",
+    pattern: "{controller=Login}/{action=Index}/{id?}");
 
 app.Run();
