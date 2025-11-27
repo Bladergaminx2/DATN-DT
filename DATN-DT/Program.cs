@@ -47,6 +47,8 @@ builder.Services.AddScoped<ITonKhoService, TonKhoService>();
 builder.Services.AddScoped<IKhoService, KhoService>();
 builder.Services.AddScoped<INhanVienRepo, NhanVienRepo>();
 builder.Services.AddScoped<INhanVienService, NhanVienService>();
+builder.Services.AddScoped<IPinRepo, PinRepo>();
+builder.Services.AddScoped<IPinService, PinService>();
 
 builder.Services.AddAuthentication(options =>
 {
