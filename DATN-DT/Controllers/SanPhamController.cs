@@ -2,9 +2,9 @@ using DATN_DT.IServices;
 using DATN_DT.Models;
 using DATN_DT.Data;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Net.Http.Json;
 
 namespace DATN_DT.Controllers
 {
