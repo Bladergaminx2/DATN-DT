@@ -10,5 +10,7 @@
         public int? DiemTichLuy { get; set; }
         public string? DefaultImage { get; set; }
         public int TrangThaiKhachHang { get; set; }
+        public virtual ICollection<DiaChi> Diachi { get; set; }
+
     }
 }

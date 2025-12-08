@@ -34,6 +34,7 @@ namespace DATN_DT.Data
         public DbSet<DonHang> DonHangs { get; set; }
         public DbSet<DonHangChiTiet> DonHangChiTiets { get; set; }
         public DbSet<ThanhToan> ThanhToans { get; set; }
+        public DbSet<DiaChi> diachis { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -274,6 +275,12 @@ namespace DATN_DT.Data
                 .WithMany()
                 .HasForeignKey(t => t.IdHoaDon)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<KhachHang>()
+         .HasMany(k => k.Diachi)
+         .WithOne(d => d.KhachHang)
+         .HasForeignKey(d => d.IdKhachHang)
+         .OnDelete(DeleteBehavior.Cascade);
 
             base.OnModelCreating(modelBuilder);
         }

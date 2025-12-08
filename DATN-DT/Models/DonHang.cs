@@ -12,7 +12,7 @@
         public string? TrangThaiHoaDon { get; set; }
         public string? GhiChu { get; set; }
         public string? PhuongThucThanhToan { get; set; }
-        public string? TrangThaiDH { get; set; }
+        public int? TrangThaiDH { get; set; }
 
 
 

@@ -5,25 +5,27 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 
 namespace DATN_DT.Controllers
 {
     public class ModelSanPhamController : Controller
     {
         private readonly MyDbContext _context;
+        private readonly IWebHostEnvironment _environment;
 
-        public ModelSanPhamController(MyDbContext context)
+        public ModelSanPhamController(MyDbContext context, IWebHostEnvironment environment)
         {
             _context = context;
+            _environment = environment;
         }
 
-        // dex
+        // Hiển thị danh sách model sản phẩm
         public async Task<IActionResult> Index()
         {
-           
             var modelSanPhams = await _context.ModelSanPhams.ToListAsync();
 
-           
             var sanPhams = await _context.SanPhams.ToDictionaryAsync(x => x.IdSanPham);
             var manHinhs = await _context.ManHinhs.ToDictionaryAsync(x => x.IdManHinh);
             var cameraTruocs = await _context.CameraTruocs.ToDictionaryAsync(x => x.IdCamTruoc);
@@ -32,7 +34,12 @@ namespace DATN_DT.Controllers
             var rams = await _context.RAMs.ToDictionaryAsync(x => x.IdRAM);
             var roms = await _context.ROMs.ToDictionaryAsync(x => x.IdROM);
 
-            
+            // Lấy danh sách ảnh cho từng model
+            var anhSanPhams = await _context.AnhSanPhams
+                .Where(a => a.IdModelSanPham.HasValue)
+                .GroupBy(a => a.IdModelSanPham)
+                .ToDictionaryAsync(g => g.Key.Value, g => g.ToList());
+
             ViewBag.SanPhams = sanPhams;
             ViewBag.ManHinhs = manHinhs;
             ViewBag.CameraTruocs = cameraTruocs;
@@ -40,11 +47,12 @@ namespace DATN_DT.Controllers
             ViewBag.Pins = pins;
             ViewBag.RAMs = rams;
             ViewBag.ROMs = roms;
+            ViewBag.AnhSanPhams = anhSanPhams;
 
             return View(modelSanPhams);
         }
 
-        // crate
+        // Tạo model sản phẩm mới
         [HttpPost]
         [Consumes("application/json")]
         public async Task<IActionResult> Create([FromBody] ModelSanPham? model)
@@ -92,7 +100,7 @@ namespace DATN_DT.Controllers
                 _context.ModelSanPhams.Add(model);
                 await _context.SaveChangesAsync();
 
-                return Ok(new { message = "Thêm model sản phẩm thành công!" });
+                return Ok(new { message = "Thêm model sản phẩm thành công!", id = model.IdModelSanPham });
             }
             catch
             {
@@ -100,7 +108,7 @@ namespace DATN_DT.Controllers
             }
         }
 
-        // edit
+        // Sửa model sản phẩm
         [HttpPost]
         [Route("ModelSanPham/Edit/{id}")]
         [Consumes("application/json")]
@@ -136,7 +144,7 @@ namespace DATN_DT.Controllers
             if (existing == null)
                 return NotFound(new { message = "Không tìm thấy model sản phẩm!" });
 
-            // Check clone
+            // Check trùng
             bool exists = await _context.ModelSanPhams.AnyAsync(m =>
                 m.TenModel!.Trim().ToLower() == model!.TenModel!.Trim().ToLower() &&
                 m.Mau!.Trim().ToLower() == model.Mau!.Trim().ToLower() &&
@@ -170,7 +178,148 @@ namespace DATN_DT.Controllers
             }
         }
 
-        
+        // ========== QUẢN LÝ ẢNH SẢN PHẨM ==========
+
+        // Upload ảnh cho model sản phẩm
+        [HttpPost]
+        public async Task<IActionResult> UploadImage(int idModelSanPham, IFormFile file)
+        {
+            try
+            {
+                if (file == null || file.Length == 0)
+                    return BadRequest(new { message = "Vui lòng chọn file ảnh!" });
+
+                // Kiểm tra model sản phẩm tồn tại
+                var modelSanPham = await _context.ModelSanPhams.FindAsync(idModelSanPham);
+                if (modelSanPham == null)
+                    return NotFound(new { message = "Không tìm thấy model sản phẩm!" });
+
+                // Kiểm tra định dạng file
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+                var fileExtension = Path.GetExtension(file.FileName).ToLower();
+                if (!allowedExtensions.Contains(fileExtension))
+                    return BadRequest(new { message = "Chỉ chấp nhận file ảnh (jpg, jpeg, png, gif, webp)!" });
+
+                // Kiểm tra kích thước file (tối đa 5MB)
+                if (file.Length > 5 * 1024 * 1024)
+                    return BadRequest(new { message = "Kích thước file không được vượt quá 5MB!" });
+
+                // Tạo thư mục lưu trữ nếu chưa tồn tại
+                var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "model-images");
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                // Tạo tên file unique
+                var fileName = $"{Guid.NewGuid()}{fileExtension}";
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                // Lưu file
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                // Tạo đường dẫn tương đối để lưu trong database
+                var relativePath = $"/uploads/model-images/{fileName}";
+
+                // Lưu thông tin ảnh vào database
+                var anhSanPham = new AnhSanPham
+                {
+                    IdModelSanPham = idModelSanPham,
+                    DuongDan = relativePath
+                };
+
+                _context.AnhSanPhams.Add(anhSanPham);
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    message = "Upload ảnh thành công!",
+                    id = anhSanPham.IdAnh,
+                    duongDan = relativePath
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Lỗi khi upload ảnh: {ex.Message}" });
+            }
+        }
+
+        // Xóa ảnh
+        [HttpPost]
+        public async Task<IActionResult> DeleteImage(int idAnh)
+        {
+            try
+            {
+                var anhSanPham = await _context.AnhSanPhams.FindAsync(idAnh);
+                if (anhSanPham == null)
+                    return NotFound(new { message = "Không tìm thấy ảnh!" });
+
+                // Xóa file vật lý
+                if (!string.IsNullOrEmpty(anhSanPham.DuongDan))
+                {
+                    var filePath = Path.Combine(_environment.WebRootPath, anhSanPham.DuongDan.TrimStart('/'));
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        System.IO.File.Delete(filePath);
+                    }
+                }
+
+                // Xóa record trong database
+                _context.AnhSanPhams.Remove(anhSanPham);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Xóa ảnh thành công!" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Lỗi khi xóa ảnh: {ex.Message}" });
+            }
+        }
+
+        // Lấy danh sách ảnh theo model sản phẩm
+        [HttpGet]
+        public async Task<IActionResult> GetImagesByModel(int idModelSanPham)
+        {
+            try
+            {
+                var images = await _context.AnhSanPhams
+                    .Where(a => a.IdModelSanPham == idModelSanPham)
+                    .OrderBy(a => a.IdAnh)
+                    .Select(a => new
+                    {
+                        idAnh = a.IdAnh,
+                        duongDan = a.DuongDan,
+                        tenFile = Path.GetFileName(a.DuongDan)
+                    })
+                    .ToListAsync();
+
+                return Ok(images);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Lỗi khi lấy danh sách ảnh: {ex.Message}" });
+            }
+        }
+
+        // Đặt ảnh làm ảnh đại diện (nếu cần)
+        [HttpPost]
+        public async Task<IActionResult> SetDefaultImage(int idModelSanPham, int idAnh)
+        {
+            try
+            {
+                // Logic để đặt ảnh đại diện
+                // Có thể thêm trường IsDefault trong bảng AnhSanPham nếu cần
+                return Ok(new { message = "Đặt ảnh đại diện thành công!" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Lỗi khi đặt ảnh đại diện: {ex.Message}" });
+            }
+        }
+
+        // ========== CÁC API LẤY DANH SÁCH CHO DROPDOWN ==========
+
         [HttpGet]
         public async Task<IActionResult> GetAllSanPham()
         {

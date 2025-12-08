@@ -161,6 +161,50 @@ namespace DATN_DT.Migrations
                     b.ToTable("ChucVus");
                 });
 
+            modelBuilder.Entity("DATN_DT.Models.DiaChi", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Diachicuthe")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("IdKhachHang")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Phuongxa")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Quanhuyen")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Tennguoinhan")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Thanhpho")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("sdtnguoinhan")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("trangthai")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdKhachHang");
+
+                    b.ToTable("diachis");
+                });
+
             modelBuilder.Entity("DATN_DT.Models.DonHang", b =>
                 {
                     b.Property<int>("IdDonHang")
@@ -187,8 +231,8 @@ namespace DATN_DT.Migrations
                     b.Property<string>("PhuongThucThanhToan")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("TrangThaiDH")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("TrangThaiDH")
+                        .HasColumnType("int");
 
                     b.Property<string>("TrangThaiHoaDon")
                         .HasColumnType("nvarchar(max)");
@@ -810,6 +854,17 @@ namespace DATN_DT.Migrations
                     b.Navigation("NhanVien");
                 });
 
+            modelBuilder.Entity("DATN_DT.Models.DiaChi", b =>
+                {
+                    b.HasOne("DATN_DT.Models.KhachHang", "KhachHang")
+                        .WithMany("Diachi")
+                        .HasForeignKey("IdKhachHang")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("KhachHang");
+                });
+
             modelBuilder.Entity("DATN_DT.Models.DonHang", b =>
                 {
                     b.HasOne("DATN_DT.Models.KhachHang", "KhachHang")
@@ -1041,6 +1096,11 @@ namespace DATN_DT.Migrations
             modelBuilder.Entity("DATN_DT.Models.HoaDon", b =>
                 {
                     b.Navigation("HoaDonChiTiets");
+                });
+
+            modelBuilder.Entity("DATN_DT.Models.KhachHang", b =>
+                {
+                    b.Navigation("Diachi");
                 });
 
             modelBuilder.Entity("DATN_DT.Models.ModelSanPham", b =>

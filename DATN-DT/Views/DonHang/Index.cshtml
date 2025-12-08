@@ -131,7 +131,7 @@
         @foreach (var donHang in Model)
         {
             var totalAmount = donHang.DonHangChiTiets?.Sum(dhct => dhct.ThanhTien) ?? 0;
-            var dhStatusClass = donHang.TrangThaiDH switch { "Đã giao" => "status-success", "Đã hủy" => "status-danger", "Chờ xử lý" => "status-pending", _ => "status-info" };
+            var dhStatusClass = donHang.TrangThaiDH switch { 1 => "status-success", 2 => "status-danger", 3 => "status-pending", _ => "status-info" };
 
             <div class="card">
                 <div class="card-header d-flex justify-content-between">

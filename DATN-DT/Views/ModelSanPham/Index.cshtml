@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Quản lý Model Sản Phẩm";
+
     Layout = null;
 }
 
@@ -12,6 +13,7 @@
     <title>Quản lý Model Sản Phẩm</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
     <style>
         body {
@@ -113,6 +115,106 @@
             flex: 1;
             min-width: 250px;
         }
+
+        /* Style cho phần quản lý ảnh */
+        .image-gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .image-item {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #444;
+            transition: all 0.3s ease;
+        }
+
+            .image-item:hover {
+                border-color: #4a90e2;
+                transform: scale(1.05);
+            }
+
+            .image-item img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+        .image-actions {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            display: none;
+        }
+
+        .image-item:hover .image-actions {
+            display: block;
+        }
+
+        .btn-image-delete {
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .upload-area {
+            border: 2px dashed #4a90e2;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            background: rgba(74, 144, 226, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+            .upload-area:hover {
+                background: rgba(74, 144, 226, 0.2);
+            }
+
+            .upload-area i {
+                font-size: 48px;
+                color: #4a90e2;
+                margin-bottom: 10px;
+            }
+
+        .btn-manage-images {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 12px;
+            transition: 0.3s;
+        }
+
+            .btn-manage-images:hover {
+                background: #138496;
+            }
+
+        .image-preview-container {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .no-images {
+            text-align: center;
+            color: #6c757d;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
@@ -152,137 +254,206 @@
                     <th>ROM</th>
                     <th>Màu</th>
                     <th>Giá Bán</th>
+                    <th>Ảnh</th>
                     <th>Hành động</th>
                 </tr>
             </thead>
             <tbody id="productsTableBody">
                 @foreach (var item in Model)
+
                 {
+                    var anhSanPhams = ViewBag.AnhSanPhams != null ?
+                    ((Dictionary<int, List<DATN_DT.Models.AnhSanPham>>)ViewBag.AnhSanPhams).GetValueOrDefault(item.IdModelSanPham) :
+                    null;
+
                     <tr data-tenmodel="@item.TenModel" data-mau="@item.Mau" data-sanpham="@(ViewBag.SanPhams != null && item.IdSanPham.HasValue ? ((Dictionary<int, DATN_DT.Models.SanPham>)ViewBag.SanPhams).GetValueOrDefault(item.IdSanPham.Value)?.TenSanPham : "")">
                         <td>@item.IdModelSanPham</td>
                         <td>@item.TenModel</td>
                         <td>
                             @if (ViewBag.SanPhams != null && item.IdSanPham.HasValue)
+
                             {
+
                                 var sanPham = ((Dictionary<int, DATN_DT.Models.SanPham>)ViewBag.SanPhams).GetValueOrDefault(item.IdSanPham.Value);
+
                                 if (sanPham != null)
+
                                 {
                                     @sanPham.TenSanPham
                                 }
+
                                 else
+
                                 {
                                     <span class="text-muted">Không tìm thấy (ID: @item.IdSanPham)</span>
                                 }
+
                             }
+
                             else
+
                             {
                                 <span class="text-muted">Chưa chọn</span>
                             }
                         </td>
                         <td>
                             @if (ViewBag.ManHinhs != null && item.IdManHinh.HasValue)
+
                             {
+
                                 var manHinh = ((Dictionary<int, DATN_DT.Models.ManHinh>)ViewBag.ManHinhs).GetValueOrDefault(item.IdManHinh.Value);
+
                                 if (manHinh != null)
+
                                 {
                                     @manHinh.CongNgheManHinh
                                 }
+
                                 else
+
                                 {
                                     <span class="text-muted">Không tìm thấy (ID: @item.IdManHinh)</span>
                                 }
+
                             }
+
                             else
+
                             {
                                 <span class="text-muted">Chưa chọn</span>
                             }
                         </td>
                         <td>
                             @if (ViewBag.CameraTruocs != null && item.IdCameraTruoc.HasValue)
+
                             {
+
                                 var cameraTruoc = ((Dictionary<int, DATN_DT.Models.CameraTruoc>)ViewBag.CameraTruocs).GetValueOrDefault(item.IdCameraTruoc.Value);
+
                                 if (cameraTruoc != null)
+
                                 {
                                     @cameraTruoc.DoPhanGiaiCamTruoc
                                 }
+
                                 else
+
                                 {
                                     <span class="text-muted">Không tìm thấy (ID: @item.IdCameraTruoc)</span>
                                 }
+
                             }
+
                             else
+
                             {
                                 <span class="text-muted">Chưa chọn</span>
                             }
                         </td>
                         <td>
                             @if (ViewBag.CameraSaus != null && item.IdCameraSau.HasValue)
+
                             {
+
                                 var cameraSau = ((Dictionary<int, DATN_DT.Models.CameraSau>)ViewBag.CameraSaus).GetValueOrDefault(item.IdCameraSau.Value);
+
                                 if (cameraSau != null)
+
                                 {
                                     @cameraSau.DoPhanGiaiCamSau
                                 }
+
                                 else
+
                                 {
                                     <span class="text-muted">Không tìm thấy (ID: @item.IdCameraSau)</span>
                                 }
+
                             }
+
                             else
+
                             {
                                 <span class="text-muted">Chưa chọn</span>
                             }
                         </td>
                         <td>
                             @if (ViewBag.Pins != null && item.IdPin.HasValue)
+
                             {
+
                                 var pin = ((Dictionary<int, DATN_DT.Models.Pin>)ViewBag.Pins).GetValueOrDefault(item.IdPin.Value);
+
                                 if (pin != null)
+
                                 {
                                     @pin.DungLuongPin
                                 }
+
                                 else
+
                                 {
                                     <span class="text-muted">Không tìm thấy (ID: @item.IdPin)</span>
                                 }
+
                             }
+
                             else
+
                             {
                                 <span class="text-muted">Chưa chọn</span>
                             }
                         </td>
                         <td>
                             @if (ViewBag.RAMs != null && item.IdRAM.HasValue)
+
                             {
+
                                 var ram = ((Dictionary<int, DATN_DT.Models.RAM>)ViewBag.RAMs).GetValueOrDefault(item.IdRAM.Value);
+
                                 if (ram != null)
+
                                 {
                                     @ram.DungLuongRAM
                                 }
+
                                 else
+
                                 {
                                     <span class="text-muted">Không tìm thấy (ID: @item.IdRAM)</span>
                                 }
+
                             }
+
                             else
+
                             {
                                 <span class="text-muted">Chưa chọn</span>
                             }
                         </td>
                         <td>
                             @if (ViewBag.ROMs != null && item.IdROM.HasValue)
+
                             {
+
                                 var rom = ((Dictionary<int, DATN_DT.Models.ROM>)ViewBag.ROMs).GetValueOrDefault(item.IdROM.Value);
+
                                 if (rom != null)
+
                                 {
                                     @rom.DungLuongROM
                                 }
+
                                 else
+
                                 {
                                     <span class="text-muted">Không tìm thấy (ID: @item.IdROM)</span>
                                 }
+
                             }
+
                             else
+
                             {
                                 <span class="text-muted">Chưa chọn</span>
                             }
@@ -290,20 +461,40 @@
                         <td>@item.Mau</td>
                         <td class="price-highlight">@item.GiaBanModel?.ToString("N0") đ</td>
                         <td>
-                            <button class="btn btn-sm btn-warning btn-edit"
-                                    data-id="@item.IdModelSanPham"
-                                    data-tenmodel="@item.TenModel"
-                                    data-idsanpham="@item.IdSanPham"
-                                    data-idmanhinh="@item.IdManHinh"
-                                    data-idcameratruoc="@item.IdCameraTruoc"
-                                    data-idcamerasau="@item.IdCameraSau"
-                                    data-idpin="@item.IdPin"
-                                    data-idram="@item.IdRAM"
-                                    data-idrom="@item.IdROM"
-                                    data-mau="@item.Mau"
-                                    data-giabanmodel="@item.GiaBanModel">
-                                Sửa
-                            </button>
+                            @if (anhSanPhams != null && anhSanPhams.Any())
+
+                            {
+                                <span class="badge bg-success">@anhSanPhams.Count ảnh</span>
+                            }
+
+                            else
+
+                            {
+                                <span class="badge bg-secondary">Chưa có ảnh</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-warning btn-edit"
+                                        data-id="@item.IdModelSanPham"
+                                        data-tenmodel="@item.TenModel"
+                                        data-idsanpham="@item.IdSanPham"
+                                        data-idmanhinh="@item.IdManHinh"
+                                        data-idcameratruoc="@item.IdCameraTruoc"
+                                        data-idcamerasau="@item.IdCameraSau"
+                                        data-idpin="@item.IdPin"
+                                        data-idram="@item.IdRAM"
+                                        data-idrom="@item.IdROM"
+                                        data-mau="@item.Mau"
+                                        data-giabanmodel="@item.GiaBanModel">
+                                    Sửa
+                                </button>
+                                <button class="btn btn-sm btn-manage-images btn-manage-images-modal"
+                                        data-id="@item.IdModelSanPham"
+                                        data-tenmodel="@item.TenModel">
+                                    <i class="fas fa-images"></i> Ảnh
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 }
@@ -311,6 +502,7 @@
         </table>
     </div>
 
+    <!-- Modal Thêm Model Sản Phẩm -->
     <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content p-3">
@@ -410,6 +602,7 @@
         </div>
     </div>
 
+    <!-- Modal Sửa Model Sản Phẩm -->
     <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content p-3">
@@ -495,7 +688,47 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Quản lý Ảnh -->
+    <div class="modal fade" id="imageManagementModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title">Quản lý Ảnh - <span id="modalModelName"></span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="currentModelId" />
+
+                    <!-- Khu vực upload ảnh -->
+                    <div class="upload-area" id="uploadArea">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h5>Kéo thả ảnh vào đây hoặc click để chọn</h5>
+                        <p class="text-muted">Hỗ trợ: JPG, JPEG, PNG, GIF, WEBP (Tối đa 5MB)</p>
+                        <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.gif,.webp" multiple style="display: none;" />
+                    </div>
+
+                    <!-- Danh sách ảnh -->
+                    <div class="image-preview-container">
+                        <h6>Danh sách ảnh:</h6>
+                        <div class="image-gallery" id="imageGallery">
+                            <!-- Ảnh sẽ được load ở đây -->
+                        </div>
+                        <div class="no-images d-none" id="noImagesMessage">
+                            <i class="fas fa-image fa-3x mb-3"></i>
+                            <p>Chưa có ảnh nào được upload</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // ========== CÁC HÀM CƠ BẢN ==========
         function performSearch() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
             const rows = document.querySelectorAll('#productsTableBody tr');
@@ -523,6 +756,13 @@
             performSearch();
         }
 
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.classList.remove("d-none");
+        }
+
+        // ========== QUẢN LÝ DROPDOWN ==========
         document.addEventListener('DOMContentLoaded', function () {
             loadDropdownData();
             document.getElementById('searchInput').addEventListener('input', function (e) {
@@ -579,6 +819,7 @@
             });
         }
 
+        // ========== QUẢN LÝ MODEL SẢN PHẨM ==========
         document.getElementById("createForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
@@ -710,12 +951,150 @@
             location.reload();
         });
 
-        function showError(id, msg) {
-            const el = document.getElementById(id);
-            el.textContent = msg;
-            el.classList.remove("d-none");
+        // ========== QUẢN LÝ ẢNH ==========
+        document.querySelectorAll('.btn-manage-images-modal').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const modelId = this.dataset.id;
+                const modelName = this.dataset.tenmodel;
+
+                document.getElementById('currentModelId').value = modelId;
+                document.getElementById('modalModelName').textContent = modelName;
+
+                loadImagesForModel(modelId);
+                new bootstrap.Modal(document.getElementById('imageManagementModal')).show();
+            });
+        });
+
+        // Upload area click event
+        document.getElementById('uploadArea').addEventListener('click', function () {
+            document.getElementById('fileInput').click();
+        });
+
+        // File input change event
+        document.getElementById('fileInput').addEventListener('change', function (e) {
+            if (e.target.files.length > 0) {
+                uploadFiles(e.target.files);
+            }
+        });
+
+        // Drag and drop functionality
+        const uploadArea = document.getElementById('uploadArea');
+
+        uploadArea.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            uploadArea.style.background = 'rgba(74, 144, 226, 0.3)';
+        });
+
+        uploadArea.addEventListener('dragleave', function (e) {
+            e.preventDefault();
+            uploadArea.style.background = 'rgba(74, 144, 226, 0.1)';
+        });
+
+        uploadArea.addEventListener('drop', function (e) {
+            e.preventDefault();
+            uploadArea.style.background = 'rgba(74, 144, 226, 0.1)';
+
+            if (e.dataTransfer.files.length > 0) {
+                uploadFiles(e.dataTransfer.files);
+            }
+        });
+
+        async function uploadFiles(files) {
+            const modelId = document.getElementById('currentModelId').value;
+
+            for (let file of files) {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('idModelSanPham', modelId);
+
+                try {
+                    const response = await fetch('/ModelSanPham/UploadImage', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        // Reload images after successful upload
+                        loadImagesForModel(modelId);
+                    } else {
+                        alert(result.message || 'Upload thất bại!');
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    alert('Lỗi khi upload ảnh!');
+                }
+            }
+
+            // Clear file input
+            document.getElementById('fileInput').value = '';
         }
 
+        async function loadImagesForModel(modelId) {
+            try {
+                const response = await fetch(`/ModelSanPham/GetImagesByModel?idModelSanPham=${modelId}`);
+                const images = await response.json();
+
+                const gallery = document.getElementById('imageGallery');
+                const noImagesMessage = document.getElementById('noImagesMessage');
+
+                gallery.innerHTML = '';
+
+                if (images && images.length > 0) {
+                    noImagesMessage.classList.add('d-none');
+
+                    images.forEach(image => {
+                        const imageItem = document.createElement('div');
+                        imageItem.className = 'image-item';
+                        imageItem.innerHTML = `
+                                    <img src="${image.duongDan}" alt="${image.tenFile}" />
+                                    <div class="image-actions">
+                                        <button class="btn-image-delete" onclick="deleteImage(${image.idAnh}, ${modelId})">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                `;
+                        gallery.appendChild(imageItem);
+                    });
+                } else {
+                    noImagesMessage.classList.remove('d-none');
+                }
+            } catch (error) {
+                console.error('Error loading images:', error);
+                alert('Lỗi khi tải danh sách ảnh!');
+            }
+        }
+
+        async function deleteImage(imageId, modelId) {
+            if (!confirm('Bạn có chắc chắn muốn xóa ảnh này?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/ModelSanPham/DeleteImage', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `idAnh=${imageId}`
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Reload images after successful deletion
+                    loadImagesForModel(modelId);
+                } else {
+                    alert(result.message || 'Xóa ảnh thất bại!');
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                alert('Lỗi khi xóa ảnh!');
+            }
+        }
+
+        // ========== MODAL CLEANUP ==========
         createModal.addEventListener("hidden.bs.modal", () => {
             createForm.reset();
             document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
@@ -724,6 +1103,11 @@
         editModal.addEventListener("hidden.bs.modal", () => {
             editForm.reset();
             document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
+        });
+
+        imageManagementModal.addEventListener("hidden.bs.modal", () => {
+            document.getElementById('imageGallery').innerHTML = '';
+            document.getElementById('noImagesMessage').classList.remove('d-none');
         });
     </script>
 </body>

@@ -548,7 +548,7 @@ namespace DATN_DT.Controllers
                     MaDon = GenerateOrderCode(),
                     NgayDat = DateTime.Now,
                     DiaChiGiaoHang = model.DiaChi,
-                    TrangThaiDH = "Chờ xác nhận",
+                    TrangThaiDH = 0,
                     TrangThaiHoaDon = "Chờ thanh toán",
                     PhuongThucThanhToan = model.PhuongThucTT,
                     GhiChu = model.GhiChu,

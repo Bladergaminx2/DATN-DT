@@ -1,14 +1,20 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using DATN_DT.Data;
+using DATN_DT.IRepos;
+using DATN_DT.IServices;
+using DATN_DT.Models;
+using DATN_DT.Repos;
+using DATN_DT.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Microsoft.EntityFrameworkCore;
-using DATN_DT.Models;
-using DATN_DT.Data;
+using System.Text.Json.Serialization;
 
 
 var builder = WebApplication.CreateBuilder(args);
 var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
 
+builder.Services.AddHttpClient(); // ← Add this line
 // Add services to the container.
 builder.Services.AddControllersWithViews(options =>
 {
@@ -20,7 +26,29 @@ builder.Services.AddControllersWithViews(options =>
 builder.Services.AddDbContext<MyDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Thêm các dịch vụ vào DI container
+builder.Services.AddControllers().AddJsonOptions(opt =>
+{
+    opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 
+});
+builder.Services.AddScoped<ISanPhamService, SanPhamService>();
+builder.Services.AddScoped<ISanPhamRepo, SanPhamRepo>();
+builder.Services.AddScoped<IRAMRepo, RAMRepo>();
+builder.Services.AddScoped<IRAMService, RAMService>();
+builder.Services.AddScoped<IROMRepo, ROMRepo>();
+builder.Services.AddScoped<IROMService, ROMService>();
+builder.Services.AddScoped<IManHinhRepo, ManHinhRepo>();
+builder.Services.AddScoped<IManHinhService, ManHinhService>();
+builder.Services.AddScoped<IThuongHieuRepo, ThuongHieuRepo>();
+builder.Services.AddScoped<IThuongHieuService, ThuongHieuService>();
+builder.Services.AddScoped<ITonKhoRepo, TonKhoRepo>();
+builder.Services.AddScoped<ITonKhoService, TonKhoService>();
+builder.Services.AddScoped<IKhoService, KhoService>();
+builder.Services.AddScoped<INhanVienRepo, NhanVienRepo>();
+builder.Services.AddScoped<INhanVienService, NhanVienService>();
+builder.Services.AddScoped<IPinRepo, PinRepo>();
+builder.Services.AddScoped<IPinService, PinService>();
 
 builder.Services.AddAuthentication(options =>
 {

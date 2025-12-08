@@ -83,17 +83,6 @@
             margin-top: 0.25rem;
         }
 
-
-        .form-control::placeholder {
-            color: #888;
-            opacity: 1;
-        }
-
-        .form-control:focus::placeholder {
-            color: transparent;
-        }
-
-
         .description-cell {
             white-space: pre-line;
             word-wrap: break-word;
@@ -101,18 +90,34 @@
             line-height: 1.5;
         }
 
-
         .btn-edit-container {
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100%;
         }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Quản Lý ROM</h2>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
 
         <div class="d-flex justify-content-end mb-3">
             <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
@@ -137,12 +142,17 @@
                         <td>@item.DungLuongROM</td>
                         <td class="description-cell">@item.MoTaROM</td>
                         <td>
-                            <div class="btn-edit-container">
+                            <div class="action-buttons">
                                 <button class="btn btn-sm btn-warning btn-edit"
                                         data-id="@item.IdROM"
                                         data-dungluong="@item.DungLuongROM"
                                         data-mota="@item.MoTaROM">
                                     Sửa
+                                </button>
+                                <button class="btn btn-sm btn-danger btn-delete"
+                                        data-id="@item.IdROM"
+                                        data-dungluong="@item.DungLuongROM">
+                                    Xóa
                                 </button>
                             </div>
                         </td>
@@ -152,7 +162,7 @@
         </table>
     </div>
 
-    <!-- Create -->
+    <!-- Create Modal -->
     <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content p-3">
@@ -164,10 +174,10 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Dung lượng ROM <span class="text-danger">*</span></label>
-                            <input type="text" id="DungLuongROM" class="form-control"
-                                   placeholder="VD: 32GB, 64GB, 128GB, 256GB, 512GB, 1TB" />
+                            <input type="text" id="DungLuongROM" class="form-control" required
+                                   placeholder="Nhập dung lượng ROM" />
                             <small id="errorDungLuongROM" class="text-danger d-none"></small>
-                            <small class="form-text text-muted">Nhập dung lượng ROM theo định dạng: số + GB/TB (ví dụ: 128GB, 1TB) - Lưu ý: GB/TB phải viết hoa</small>
+                            <small class="form-text text-muted">Ví dụ: 32GB, 64GB, 128GB, 256GB, 512GB, 1TB</small>
                         </div>
 
                         <div class="mb-3">
@@ -185,7 +195,7 @@
         </div>
     </div>
 
-    <!-- Edit -->
+    <!-- Edit Modal -->
     <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content p-3">
@@ -198,10 +208,10 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Dung lượng ROM <span class="text-danger">*</span></label>
-                            <input type="text" id="EditDungLuongROM" class="form-control"
-                                   placeholder="VD: 32GB, 64GB, 128GB, 256GB, 512GB, 1TB" />
+                            <input type="text" id="EditDungLuongROM" class="form-control" required
+                                   placeholder="Nhập dung lượng ROM" />
                             <small id="errorEditDungLuongROM" class="text-danger d-none"></small>
-                            <small class="form-text text-muted">Nhập dung lượng ROM theo định dạng: số + GB/TB (ví dụ: 128GB, 1TB) - Lưu ý: GB/TB phải viết hoa</small>
+                            <small class="form-text text-muted">Ví dụ: 32GB, 64GB, 128GB, 256GB, 512GB, 1TB</small>
                         </div>
 
                         <div class="mb-3">
@@ -220,166 +230,202 @@
     </div>
 
     <script>
+        // Hiển thị thông báo
+        function showAlert(message, type = 'success') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+            `;
+            alertContainer.appendChild(alert);
 
-        function isValidROMFormat(input) {
-            const pattern = /^\d+(GB|TB)$/;
-            return pattern.test(input.trim());
+            // Tự động ẩn sau 3 giây
+            setTimeout(() => {
+                if (alert.parentElement) {
+                    alert.remove();
+                }
+            }, 3000);
         }
 
-
-        function showError(id, msg) {
-            const el = document.getElementById(id);
-            el.textContent = msg;
-            el.classList.remove("d-none");
+        // Hiển thị lỗi
+        function showError(fieldId, message) {
+            const errorElement = document.getElementById(fieldId);
+            errorElement.textContent = message;
+            errorElement.classList.remove('d-none');
         }
 
-        function hideError(id) {
-            const el = document.getElementById(id);
-            el.classList.add("d-none");
+        // Ẩn lỗi
+        function hideError(fieldId) {
+            const errorElement = document.getElementById(fieldId);
+            errorElement.classList.add('d-none');
         }
 
-        const createModal = document.getElementById('createModal');
+        // Mở modal edit và điền dữ liệu
+        document.querySelectorAll(".btn-edit").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const id = btn.dataset.id;
+                const dungLuong = btn.dataset.dungluong;
+                const moTa = btn.dataset.mota || '';
 
+                document.getElementById("EditIdROM").value = id;
+                document.getElementById("EditDungLuongROM").value = dungLuong;
+                document.getElementById("EditMoTaROM").value = moTa;
+                hideError('errorEditDungLuongROM');
 
-        createModal.addEventListener('show.bs.modal', function () {
-
-            document.getElementById('DungLuongROM').placeholder = "VD: 32GB, 64GB, 128GB, 256GB, 512GB, 1TB";
-            document.getElementById('MoTaROM').placeholder = "Nhập mô tả về ROM (nếu có)";
-            hideError("errorDungLuongROM");
-        });
-
-        createModal.addEventListener('hidden.bs.modal', function () {
-            document.getElementById('createForm').reset();
-            document.getElementById('DungLuongROM').placeholder = "VD: 32GB, 64GB, 128GB, 256GB, 512GB, 1TB";
-            document.getElementById('MoTaROM').placeholder = "Nhập mô tả về ROM (nếu có)";
-            hideError("errorDungLuongROM");
-        });
-
-   
-        const editModal = document.getElementById('editModal');
-
-
-        editModal.addEventListener('hidden.bs.modal', function () {
-            document.getElementById('EditDungLuongROM').placeholder = "VD: 32GB, 64GB, 128GB, 256GB, 512GB, 1TB";
-            document.getElementById('EditMoTaROM').placeholder = "Nhập mô tả về ROM (nếu có)";
-            hideError("errorEditDungLuongROM");
-        });
-
-
-        document.addEventListener('DOMContentLoaded', function () {
-            const inputs = document.querySelectorAll('input[type="text"], textarea');
-
-            inputs.forEach(input => {
-                input.addEventListener('focus', function () {
-                    this.setAttribute('data-placeholder', this.getAttribute('placeholder'));
-                    this.setAttribute('placeholder', '');
-                });
-
-                input.addEventListener('blur', function () {
-                    if (this.value === '') {
-                        this.setAttribute('placeholder', this.getAttribute('data-placeholder') || '');
-                    }
-                });
+                new bootstrap.Modal(document.getElementById('editModal')).show();
             });
         });
 
-        // Thêm ROM
+        // Xử lý xóa ROM
+        document.querySelectorAll(".btn-delete").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const id = btn.dataset.id;
+                const dungLuong = btn.dataset.dungluong;
+
+                if (confirm(`Bạn có chắc chắn muốn xóa ROM "${dungLuong}"?`)) {
+                    try {
+                        const response = await fetch(`/ROM/Delete?id=${id}`, {
+                            method: 'DELETE'
+                        });
+
+                        if (response.ok) {
+                            const result = await response.json();
+                            showAlert(result.message, 'success');
+                            // Reload trang sau 1 giây
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            const error = await response.json();
+                            showAlert(error.message || 'Lỗi khi xóa ROM', 'danger');
+                        }
+                    } catch (error) {
+                        showAlert('Lỗi kết nối: ' + error.message, 'danger');
+                    }
+                }
+            });
+        });
+
+        // Xử lý thêm ROM
         document.getElementById("createForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
-            const dungLuongValue = DungLuongROM.value.trim();
+            const dungLuongValue = document.getElementById("DungLuongROM").value.trim();
 
-            if (!isValidROMFormat(dungLuongValue)) {
-                showError("errorDungLuongROM", "Định dạng không hợp lệ! Vui lòng nhập theo định dạng: số + GB/TB (ví dụ: 128GB, 1TB) - Lưu ý: GB/TB phải viết hoa");
+            // Chỉ kiểm tra trống
+            if (!dungLuongValue) {
+                showError("errorDungLuongROM", "Vui lòng nhập dung lượng ROM");
                 return;
             }
 
-            const rom = {
+            const romData = {
                 DungLuongROM: dungLuongValue,
-                MoTaROM: MoTaROM.value.trim()
+                MoTaROM: document.getElementById("MoTaROM").value.trim()
             };
 
-            const response = await fetch('/ROM/Create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(rom)
-            });
+            hideError('errorDungLuongROM');
 
-            let data = {};
-            try { data = await response.json(); } catch { }
+            try {
+                const response = await fetch('/ROM/Create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(romData)
+                });
 
-            if (!response.ok) {
-                if (response.status === 400 && typeof data === "object") {
-                    if (data.DungLuongROM) showError("errorDungLuongROM", data.DungLuongROM);
-                    return;
+                if (response.ok) {
+                    const result = await response.json();
+                    showAlert(result.message, 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('createModal')).hide();
+                    // Reload trang sau 1 giây
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    const error = await response.json();
+
+                    if (response.status === 400 && typeof error === 'object') {
+                        // Lỗi validation
+                        if (error.DungLuongROM) {
+                            showError('errorDungLuongROM', error.DungLuongROM);
+                        }
+                    } else if (response.status === 409) {
+                        // Lỗi trùng
+                        showError('errorDungLuongROM', error.message);
+                    } else {
+                        showAlert(error.message || 'Lỗi khi thêm ROM', 'danger');
+                    }
                 }
-
-                if (response.status === 409 && data.message) {
-                    showError("errorDungLuongROM", data.message);
-                    return;
-                }
-
-                alert(data.message || "Không thể thêm ROM. Vui lòng thử lại!");
-                return;
+            } catch (error) {
+                showAlert('Lỗi kết nối: ' + error.message, 'danger');
             }
-
-            location.reload();
         });
 
-        // Sửa ROM
-        document.querySelectorAll(".btn-edit").forEach(btn => {
-            btn.addEventListener("click", () => {
-                EditIdROM.value = btn.dataset.id;
-                EditDungLuongROM.value = btn.dataset.dungluong;
-                EditMoTaROM.value = btn.dataset.mota;
-                hideError("errorEditDungLuongROM");
-                new bootstrap.Modal(editModal).show();
-            });
-        });
-
-        // Cập nhật ROM
+        // Xử lý sửa ROM
         document.getElementById("editForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
-            const id = EditIdROM.value;
-            const dungLuongValue = EditDungLuongROM.value.trim();
+            const id = document.getElementById("EditIdROM").value;
+            const dungLuongValue = document.getElementById("EditDungLuongROM").value.trim();
 
-            if (!isValidROMFormat(dungLuongValue)) {
-                showError("errorEditDungLuongROM", "Định dạng không hợp lệ! Vui lòng nhập theo định dạng: số + GB/TB (ví dụ: 128GB, 1TB) - Lưu ý: GB/TB phải viết hoa");
+            // Chỉ kiểm tra trống
+            if (!dungLuongValue) {
+                showError("errorEditDungLuongROM", "Vui lòng nhập dung lượng ROM");
                 return;
             }
 
-            const rom = {
-                IdROM: id,
+            const romData = {
                 DungLuongROM: dungLuongValue,
-                MoTaROM: EditMoTaROM.value.trim()
+                MoTaROM: document.getElementById("EditMoTaROM").value.trim()
             };
 
-            const response = await fetch('/ROM/Edit/' + id, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(rom)
-            });
+            hideError('errorEditDungLuongROM');
 
-            let data = {};
-            try { data = await response.json(); } catch { }
+            try {
+                const response = await fetch(`/ROM/Edit?id=${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(romData)
+                });
 
-            if (!response.ok) {
-                if (response.status === 400 && typeof data === "object") {
-                    if (data.DungLuongROM) showError("errorEditDungLuongROM", data.DungLuongROM);
-                    return;
+                if (response.ok) {
+                    const result = await response.json();
+                    showAlert(result.message, 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+                    // Reload trang sau 1 giây
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    const error = await response.json();
+
+                    if (response.status === 400 && typeof error === 'object') {
+                        // Lỗi validation
+                        if (error.DungLuongROM) {
+                            showError('errorEditDungLuongROM', error.DungLuongROM);
+                        }
+                    } else if (response.status === 409) {
+                        // Lỗi trùng
+                        showError('errorEditDungLuongROM', error.message);
+                    } else if (response.status === 404) {
+                        showAlert(error.message, 'danger');
+                    } else {
+                        showAlert(error.message || 'Lỗi khi cập nhật ROM', 'danger');
+                    }
                 }
-
-                if (response.status === 409 && data.message) {
-                    showError("errorEditDungLuongROM", data.message);
-                    return;
-                }
-
-                alert(data.message || "Không thể cập nhật ROM. Vui lòng thử lại!");
-                return;
+            } catch (error) {
+                showAlert('Lỗi kết nối: ' + error.message, 'danger');
             }
+        });
 
-            location.reload();
+        // Reset form và ẩn lỗi khi modal đóng
+        document.getElementById('createModal').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('createForm').reset();
+            hideError('errorDungLuongROM');
+        });
+
+        document.getElementById('editModal').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('editForm').reset();
+            hideError('errorEditDungLuongROM');
         });
     </script>
 </body>
