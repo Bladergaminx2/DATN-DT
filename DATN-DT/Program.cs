@@ -19,8 +19,6 @@ var configuration = builder.Configuration;
 // ----------------------
 var key = Encoding.UTF8.GetBytes(configuration["Jwt:Key"]);
 
-
-
 builder.Services.AddHttpClient("ServerApi")
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://localhost:7150" ?? ""));
                 
