@@ -6,6 +6,8 @@
     {
         public int IdDonHang { get; set; }
         public int? IdKhachHang { get; set; }
+        public string HoTenNguoiNhan { get; set; } = string.Empty;
+        public string SdtNguoiNhan { get; set; } = string.Empty;
         public string? MaDon { get; set; }
         public DateTime? NgayDat { get; set; }
         public string? DiaChiGiaoHang { get; set; }

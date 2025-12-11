@@ -22,9 +22,17 @@ namespace DATN_DT.Controllers
         }
 
         // Hiển thị danh sách model sản phẩm
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int? sanPhamId)
         {
-            var modelSanPhams = await _context.ModelSanPhams.ToListAsync();
+            // Nếu có sanPhamId, chỉ lấy model của sản phẩm đó
+            IQueryable<ModelSanPham> query = _context.ModelSanPhams;
+            
+            if (sanPhamId.HasValue && sanPhamId.Value > 0)
+            {
+                query = query.Where(m => m.IdSanPham == sanPhamId.Value);
+            }
+            
+            var modelSanPhams = await query.ToListAsync();
 
             var sanPhams = await _context.SanPhams.ToDictionaryAsync(x => x.IdSanPham);
             var manHinhs = await _context.ManHinhs.ToDictionaryAsync(x => x.IdManHinh);
@@ -48,6 +56,11 @@ namespace DATN_DT.Controllers
             ViewBag.RAMs = rams;
             ViewBag.ROMs = roms;
             ViewBag.AnhSanPhams = anhSanPhams;
+            ViewBag.SelectedSanPhamId = sanPhamId;
+            ViewBag.AllSanPhams = await _context.SanPhams
+                .OrderBy(s => s.TenSanPham)
+                .Select(s => new { s.IdSanPham, s.TenSanPham, s.MaSanPham })
+                .ToListAsync();
 
             return View(modelSanPhams);
         }
@@ -379,6 +392,152 @@ namespace DATN_DT.Controllers
                 .Select(r => new { r.IdROM, DisplayText = r.DungLuongROM })
                 .ToListAsync();
             return Ok(list);
+        }
+
+        // ========== QUẢN LÝ IMEI ==========
+        
+        // GET: Lấy danh sách IMEI theo model
+        [HttpGet("ModelSanPham/GetImeisByModel")]
+        public async Task<IActionResult> GetImeisByModel(int modelId)
+        {
+            try
+            {
+                var imeis = await _context.Imeis
+                    .Where(i => i.IdModelSanPham == modelId)
+                    .Select(i => new
+                    {
+                        idImei = i.IdImei,
+                        maImei = i.MaImei,
+                        trangThai = i.TrangThai,
+                        moTa = i.MoTa,
+                        canDelete = !_context.HoaDonChiTiets.Any(h => h.IdImei == i.IdImei)
+                    })
+                    .OrderBy(i => i.maImei)
+                    .ToListAsync();
+
+                return Ok(new { success = true, data = imeis });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Lỗi khi lấy danh sách IMEI: {ex.Message}" });
+            }
+        }
+
+        // POST: Thêm IMEI mới
+        [HttpPost("ModelSanPham/AddImei")]
+        [Consumes("application/json")]
+        public async Task<IActionResult> AddImei([FromBody] Imei? imei)
+        {
+            if (imei == null)
+                return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ!" });
+
+            var errors = new Dictionary<string, string>();
+
+            if (string.IsNullOrWhiteSpace(imei.MaImei))
+                errors["MaImei"] = "Phải nhập mã IMEI!";
+            if (imei.IdModelSanPham == null || imei.IdModelSanPham == 0)
+                errors["IdModelSanPham"] = "Phải chọn model sản phẩm!";
+            if (string.IsNullOrWhiteSpace(imei.TrangThai))
+                errors["TrangThai"] = "Phải chọn trạng thái!";
+
+            if (errors.Count > 0)
+                return BadRequest(new { success = false, errors });
+
+            // Check trùng mã IMEI
+            bool exists = await _context.Imeis.AnyAsync(i =>
+                i.MaImei!.Trim().ToLower() == imei.MaImei.Trim().ToLower()
+            );
+            if (exists)
+                return Conflict(new { success = false, message = "Mã IMEI đã tồn tại!" });
+
+            try
+            {
+                imei.MaImei = imei.MaImei.Trim();
+                imei.MoTa = imei.MoTa?.Trim();
+                imei.TrangThai = imei.TrangThai.Trim();
+
+                _context.Imeis.Add(imei);
+                await _context.SaveChangesAsync();
+
+                // Cập nhật tồn kho
+                await UpdateTonKhoForModel(imei.IdModelSanPham.Value);
+
+                return Ok(new { success = true, message = "Thêm IMEI thành công!" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Lỗi khi thêm IMEI: {ex.Message}" });
+            }
+        }
+
+        // POST: Xóa IMEI
+        [HttpPost("ModelSanPham/DeleteImei")]
+        [Consumes("application/json")]
+        public async Task<IActionResult> DeleteImei([FromBody] int idImei)
+        {
+            try
+            {
+                var imei = await _context.Imeis.FindAsync(idImei);
+                if (imei == null)
+                    return NotFound(new { success = false, message = "Không tìm thấy IMEI!" });
+
+                // Kiểm tra xem IMEI có trong hóa đơn không
+                bool hasInvoice = await _context.HoaDonChiTiets.AnyAsync(h => h.IdImei == idImei);
+                if (hasInvoice)
+                    return BadRequest(new { success = false, message = "Không thể xóa IMEI vì đã có trong hóa đơn!" });
+
+                var modelId = imei.IdModelSanPham;
+
+                _context.Imeis.Remove(imei);
+                await _context.SaveChangesAsync();
+
+                // Cập nhật tồn kho
+                if (modelId.HasValue)
+                {
+                    await UpdateTonKhoForModel(modelId.Value);
+                }
+
+                return Ok(new { success = true, message = "Xóa IMEI thành công!" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Lỗi khi xóa IMEI: {ex.Message}" });
+            }
+        }
+
+        // Helper: Cập nhật tồn kho
+        private async Task UpdateTonKhoForModel(int modelSanPhamId)
+        {
+            var soLuongConHang = await _context.Imeis
+                .CountAsync(i => i.IdModelSanPham == modelSanPhamId && i.TrangThai == "Còn hàng");
+
+            var tonKhos = await _context.TonKhos
+                .Where(t => t.IdModelSanPham == modelSanPhamId)
+                .ToListAsync();
+
+            if (tonKhos.Any())
+            {
+                foreach (var tonKho in tonKhos)
+                {
+                    tonKho.SoLuong = soLuongConHang;
+                }
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                var khoMacDinh = await _context.Khos.FirstOrDefaultAsync();
+                if (khoMacDinh != null)
+                {
+                    var newTonKho = new TonKho
+                    {
+                        IdModelSanPham = modelSanPhamId,
+                        IdKho = khoMacDinh.IdKho,
+                        SoLuong = soLuongConHang
+                    };
+                    _context.TonKhos.Add(newTonKho);
+                    await _context.SaveChangesAsync();
+                }
+            }
         }
     }
 }

@@ -205,6 +205,20 @@
                 background: #138496;
             }
 
+        .btn-manage-imei {
+            background: #6f42c1;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 12px;
+            transition: 0.3s;
+        }
+
+            .btn-manage-imei:hover {
+                background: #5a32a3;
+            }
+
         .image-preview-container {
             max-height: 300px;
             overflow-y: auto;
@@ -227,6 +241,28 @@
                 <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
                     + Thêm Model Sản Phẩm
                 </button>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label"><strong>Chọn Sản Phẩm:</strong></label>
+                <select id="sanPhamFilter" class="form-control" onchange="filterBySanPham()">
+                    <option value="">-- Tất cả sản phẩm --</option>
+                    @if (ViewBag.AllSanPhams != null)
+                    {
+                        foreach (var sp in ViewBag.AllSanPhams)
+                        {
+                            var isSelected = ViewBag.SelectedSanPhamId != null && ViewBag.SelectedSanPhamId == sp.IdSanPham;
+                            if (isSelected)
+                            {
+                                <option value="@sp.IdSanPham" selected>@sp.MaSanPham - @sp.TenSanPham</option>
+                            }
+                            else
+                            {
+                                <option value="@sp.IdSanPham">@sp.MaSanPham - @sp.TenSanPham</option>
+                            }
+                        }
+                    }
+                </select>
             </div>
 
             <div class="search-input-group">
@@ -494,12 +530,38 @@
                                         data-tenmodel="@item.TenModel">
                                     <i class="fas fa-images"></i> Ảnh
                                 </button>
+                                <button class="btn btn-sm btn-info btn-manage-imei"
+                                        data-id="@item.IdModelSanPham"
+                                        data-tenmodel="@item.TenModel">
+                                    <i class="fas fa-mobile-alt"></i> IMEI
+                                </button>
                             </div>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
+
+        @if (!Model.Any())
+        {
+            <div class="text-center mt-5">
+                <i class="fas fa-box-open fa-5x text-muted mb-3"></i>
+                <h4 class="text-muted">
+                    @if (ViewBag.SelectedSanPhamId != null)
+                    {
+                        <text>Chưa có model nào cho sản phẩm này</text>
+                    }
+                    else
+                    {
+                        <text>Chưa có model sản phẩm nào. Vui lòng chọn sản phẩm để xem model.</text>
+                    }
+                </h4>
+                @if (ViewBag.SelectedSanPhamId == null)
+                {
+                    <p class="text-muted">Nhấn "Thêm Model Sản Phẩm" để bắt đầu</p>
+                }
+            </div>
+        }
     </div>
 
     <!-- Modal Thêm Model Sản Phẩm -->
@@ -689,6 +751,85 @@
         </div>
     </div>
 
+    <!-- Modal Quản lý IMEI -->
+    <div class="modal fade" id="imeiManagementModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title">Quản lý IMEI - <span id="imeiModalModelName"></span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="currentImeiModelId" />
+
+                    <!-- Form thêm IMEI -->
+                    <div class="card mb-3" style="background-color: #1e1e2a;">
+                        <div class="card-header bg-primary text-white">
+                            <i class="fas fa-plus-circle"></i> Thêm IMEI mới
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Mã IMEI <span class="text-danger">*</span></label>
+                                        <input type="text" id="newImeiCode" class="form-control" placeholder="Nhập mã IMEI" />
+                                        <small id="errorNewImeiCode" class="text-danger d-none"></small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Trạng thái <span class="text-danger">*</span></label>
+                                        <select id="newImeiStatus" class="form-control">
+                                            <option value="">Chọn trạng thái</option>
+                                            <option value="Còn hàng">Còn hàng</option>
+                                            <option value="Đã bán">Đã bán</option>
+                                            <option value="Hỏng">Hỏng</option>
+                                        </select>
+                                        <small id="errorNewImeiStatus" class="text-danger d-none"></small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Mô tả</label>
+                                <textarea id="newImeiMoTa" class="form-control" rows="2" placeholder="Nhập mô tả (tùy chọn)"></textarea>
+                            </div>
+                            <button class="btn btn-success" onclick="addNewImei()">
+                                <i class="fas fa-plus"></i> Thêm IMEI
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Danh sách IMEI -->
+                    <div>
+                        <h6>Danh sách IMEI:</h6>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Mã IMEI</th>
+                                        <th>Trạng thái</th>
+                                        <th>Mô tả</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="imeiListBody">
+                                    <!-- Danh sách IMEI sẽ được load ở đây -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="noImeiMessage" class="text-center text-muted py-4 d-none">
+                            <i class="fas fa-mobile-alt fa-3x mb-3"></i>
+                            <p>Chưa có IMEI nào</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Quản lý Ảnh -->
     <div class="modal fade" id="imageManagementModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -728,6 +869,16 @@
     </div>
 
     <script>
+        // ========== LỌC THEO SẢN PHẨM ==========
+        function filterBySanPham() {
+            const sanPhamId = document.getElementById('sanPhamFilter').value;
+            if (sanPhamId) {
+                window.location.href = '/ModelSanPham?sanPhamId=' + sanPhamId;
+            } else {
+                window.location.href = '/ModelSanPham';
+            }
+        }
+
         // ========== CÁC HÀM CƠ BẢN ==========
         function performSearch() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
@@ -1108,6 +1259,159 @@
         imageManagementModal.addEventListener("hidden.bs.modal", () => {
             document.getElementById('imageGallery').innerHTML = '';
             document.getElementById('noImagesMessage').classList.remove('d-none');
+        });
+
+        // ========== QUẢN LÝ IMEI ==========
+        document.querySelectorAll('.btn-manage-imei').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const modelId = this.dataset.id;
+                const modelName = this.dataset.tenmodel;
+
+                document.getElementById('currentImeiModelId').value = modelId;
+                document.getElementById('imeiModalModelName').textContent = modelName;
+
+                loadImeisForModel(modelId);
+                new bootstrap.Modal(document.getElementById('imeiManagementModal')).show();
+            });
+        });
+
+        async function loadImeisForModel(modelId) {
+            try {
+                const response = await fetch(`/ModelSanPham/GetImeisByModel?modelId=${modelId}`);
+                const result = await response.json();
+
+                const tbody = document.getElementById('imeiListBody');
+                const noImeiMessage = document.getElementById('noImeiMessage');
+                tbody.innerHTML = '';
+
+                if (result.success && result.data && result.data.length > 0) {
+                    noImeiMessage.classList.add('d-none');
+
+                    result.data.forEach(imei => {
+                        const row = document.createElement('tr');
+                        const statusBadge = imei.trangThai === 'Còn hàng' 
+                            ? '<span class="badge bg-success">Còn hàng</span>'
+                            : imei.trangThai === 'Đã bán'
+                            ? '<span class="badge bg-danger">Đã bán</span>'
+                            : '<span class="badge bg-warning">Hỏng</span>';
+
+                        const deleteBtn = imei.canDelete
+                            ? `<button class="btn btn-sm btn-danger" onclick="deleteImei(${imei.idImei}, ${modelId})">
+                                <i class="fas fa-trash"></i> Xóa
+                               </button>`
+                            : `<button class="btn btn-sm btn-secondary" disabled title="IMEI đã có trong hóa đơn, không thể xóa">
+                                <i class="fas fa-lock"></i> Khóa
+                               </button>`;
+
+                        row.innerHTML = `
+                            <td><code>${imei.maImei}</code></td>
+                            <td>${statusBadge}</td>
+                            <td>${imei.moTa || '-'}</td>
+                            <td>${deleteBtn}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    noImeiMessage.classList.remove('d-none');
+                }
+            } catch (error) {
+                console.error('Error loading IMEIs:', error);
+                alert('Lỗi khi tải danh sách IMEI!');
+            }
+        }
+
+        async function addNewImei() {
+            const modelId = parseInt(document.getElementById('currentImeiModelId').value);
+            const maImei = document.getElementById('newImeiCode').value.trim();
+            const trangThai = document.getElementById('newImeiStatus').value;
+            const moTa = document.getElementById('newImeiMoTa').value.trim();
+
+            // Validation
+            document.getElementById('errorNewImeiCode').classList.add('d-none');
+            document.getElementById('errorNewImeiStatus').classList.add('d-none');
+
+            let hasError = false;
+
+            if (!maImei) {
+                showError('errorNewImeiCode', 'Phải nhập mã IMEI!');
+                hasError = true;
+            }
+            if (!trangThai) {
+                showError('errorNewImeiStatus', 'Phải chọn trạng thái!');
+                hasError = true;
+            }
+
+            if (hasError) return;
+
+            try {
+                const response = await fetch('/ModelSanPham/AddImei', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        MaImei: maImei,
+                        IdModelSanPham: modelId,
+                        TrangThai: trangThai,
+                        MoTa: moTa || null
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    alert('Thêm IMEI thành công!');
+                    // Reset form
+                    document.getElementById('newImeiCode').value = '';
+                    document.getElementById('newImeiStatus').value = '';
+                    document.getElementById('newImeiMoTa').value = '';
+                    // Reload danh sách
+                    loadImeisForModel(modelId);
+                } else {
+                    if (result.errors) {
+                        if (result.errors.MaImei) showError('errorNewImeiCode', result.errors.MaImei);
+                        if (result.errors.TrangThai) showError('errorNewImeiStatus', result.errors.TrangThai);
+                    } else {
+                        alert(result.message || 'Lỗi khi thêm IMEI!');
+                    }
+                }
+            } catch (error) {
+                console.error('Error adding IMEI:', error);
+                alert('Lỗi kết nối khi thêm IMEI!');
+            }
+        }
+
+        async function deleteImei(imeiId, modelId) {
+            if (!confirm('Bạn có chắc chắn muốn xóa IMEI này?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/ModelSanPham/DeleteImei', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(imeiId)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    alert('Xóa IMEI thành công!');
+                    loadImeisForModel(modelId);
+                } else {
+                    alert(result.message || 'Lỗi khi xóa IMEI!');
+                }
+            } catch (error) {
+                console.error('Error deleting IMEI:', error);
+                alert('Lỗi kết nối khi xóa IMEI!');
+            }
+        }
+
+        // Cleanup modal IMEI
+        document.getElementById('imeiManagementModal').addEventListener("hidden.bs.modal", () => {
+            document.getElementById('imeiListBody').innerHTML = '';
+            document.getElementById('noImeiMessage').classList.add('d-none');
+            document.getElementById('newImeiCode').value = '';
+            document.getElementById('newImeiStatus').value = '';
+            document.getElementById('newImeiMoTa').value = '';
         });
     </script>
 </body>
