@@ -1,0 +1,253 @@
+﻿@model DATN_DT.DTO.hoadondtotest.ThanhToanViewModel
+@{
+    ViewData["Title"] = "Thanh Toán";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var selectedItems = ViewBag.SelectedItems as string ?? "";
+    var tongTien = ViewBag.TongTien ?? 0m;
+}
+
+<style>
+    .product-image {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+    }
+
+    .summary-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+    }
+
+    .form-control:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-cart-check me-2"></i>Thông Tin Thanh Toán</h4>
+                </div>
+                <div class="card-body">
+                    <form id="checkoutForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Họ và tên *</label>
+                                    <input type="text" class="form-control" id="hoTen" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Số điện thoại *</label>
+                                    <input type="tel" class="form-control" id="soDienThoai" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Địa chỉ giao hàng *</label>
+                            <textarea class="form-control" id="diaChi" rows="3" required></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Ghi chú</label>
+                            <textarea class="form-control" id="ghiChu" rows="2" placeholder="Ghi chú cho đơn hàng..."></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Phương thức thanh toán *</label>
+                            <div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="phuongThucTT" id="cod" value="COD" checked>
+                                    <label class="form-check-label" for="cod">
+                                        <i class="bi bi-truck me-1"></i>Thanh toán khi nhận hàng (COD)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="phuongThucTT" id="chuyenKhoan" value="ChuyenKhoan">
+                                    <label class="form-check-label" for="chuyenKhoan">
+                                        <i class="bi bi-bank me-1"></i>Chuyển khoản ngân hàng
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Thông tin đơn hàng -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-receipt me-2"></i>Đơn Hàng Của Bạn</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th class="text-end">Thành tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model?.SelectedCartItems != null)
+                                {
+                                    foreach (var item in Model.SelectedCartItems)
+                                    {
+                                        // SỬA LỖI Ở ĐÂY: Sử dụng List<AnhSanPhamViewModel> thay vì anonymous type
+                                        var anhDaiDien = item.ModelSanPham.AnhSanPhams.FirstOrDefault()?.DuongDan ?? "/images/default-product.jpg";
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <img src="@anhDaiDien" alt="@item.ModelSanPham.SanPham.TenSanPham" class="product-image me-2">
+                                                    <div>
+                                                        <small class="d-block fw-bold">@item.ModelSanPham.SanPham.TenSanPham</small>
+                                                        <small class="text-muted">
+                                                            @item.ModelSanPham.TenModel - @item.ModelSanPham.Mau<br>
+                                                            @item.ModelSanPham.RAM?.DungLuongRAM - @item.ModelSanPham.ROM?.DungLuongROM<br>
+                                                            Số lượng: @item.SoLuong
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-end">
+                                                <strong>@string.Format("{0:N0} ₫", item.ThanhTien)</strong>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tạm tính:</span>
+                        <span>@string.Format("{0:N0} ₫", Model.TongTien)</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Phí vận chuyển:</span>
+                        <span>30.000 ₫</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                        <strong>Tổng cộng:</strong>
+                        <strong class="text-danger fs-5">@string.Format("{0:N0} ₫", Model.TongTien + 30000)</strong>
+                    </div>
+
+                    <button type="button" class="btn btn-danger w-100 btn-lg" id="btnXacNhanThanhToan">
+                        <i class="bi bi-credit-card me-2"></i>XÁC NHẬN ĐẶT HÀNG
+                    </button>
+
+                    <div class="text-center mt-2">
+                        <small class="text-muted">Bằng cách đặt hàng, bạn đồng ý với <a href="#">điều khoản</a> của chúng tôi</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hỗ trợ -->
+            <div class="card">
+                <div class="card-body text-center">
+                    <h6><i class="bi bi-headset me-2"></i>Hỗ Trợ 24/7</h6>
+                    <p class="mb-1">Hotline: <strong>1900 1000</strong></p>
+                    <small class="text-muted">Chúng tôi luôn sẵn sàng hỗ trợ bạn</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal loading -->
+<div class="modal fade" id="loadingModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p>Đang xử lý đơn hàng...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Biến toàn cục
+        const selectedItems = '@selectedItems';
+        const tongTien = @Model.TongTien;
+
+        // Xử lý xác nhận thanh toán
+        document.getElementById('btnXacNhanThanhToan').addEventListener('click', async function() {
+            // Validate form
+            const form = document.getElementById('checkoutForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            // Lấy thông tin từ form
+            const thongTinThanhToan = {
+                hoTen: document.getElementById('hoTen').value,
+                soDienThoai: document.getElementById('soDienThoai').value,
+                email: document.getElementById('email').value,
+                diaChi: document.getElementById('diaChi').value,
+                ghiChu: document.getElementById('ghiChu').value,
+                phuongThucTT: document.querySelector('input[name="phuongThucTT"]:checked').value,
+                selectedCartItems: selectedItems.split(',').map(id => parseInt(id)),
+                tongTien: tongTien
+            };
+
+            // Hiển thị loading
+            const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+            loadingModal.show();
+
+            try {
+                const response = await fetch('/GioHang/XacNhanThanhToan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(thongTinThanhToan)
+                });
+
+                const result = await response.json();
+
+                loadingModal.hide();
+
+                if (result.success) {
+                    // Thành công - chuyển hướng đến trang cảm ơn
+                    window.location.href = '/GioHang/CamOn?maDon=' + result.data.maDon;
+                } else {
+                    // Thất bại - hiển thị thông báo lỗi
+                    alert('Lỗi: ' + result.message);
+                }
+            } catch (error) {
+                loadingModal.hide();
+                console.error('Lỗi thanh toán:', error);
+                alert('Có lỗi xảy ra khi xử lý đơn hàng. Vui lòng thử lại.');
+            }
+        });
+
+        // Auto-fill thông tin khách hàng nếu có
+        document.addEventListener('DOMContentLoaded', function() {
+            // Có thể thêm logic auto-fill từ thông tin đăng nhập ở đây
+            console.log('Selected Items:', selectedItems);
+            console.log('Tổng tiền:', tongTien);
+        });
+    </script>
+}

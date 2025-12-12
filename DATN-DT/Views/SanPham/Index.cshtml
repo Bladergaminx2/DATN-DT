@@ -12,6 +12,7 @@
     <title>Quản lý Sản Phẩm</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
     <style>
         body {
@@ -111,6 +112,7 @@
             border-radius: 4px;
             font-size: 12px;
         }
+
         .form-control::placeholder {
             color: #888 !important;
             opacity: 1 !important;
@@ -127,14 +129,25 @@
         }
 
         .btn-mota {
-            background-color: #6f42c1;
+            background-color: #17a2b8;
             color: white;
             border: none;
         }
 
             .btn-mota:hover {
-                background-color: #5a32a3;
+                background-color: #138496;
                 color: white;
+            }
+
+        .btn-edit {
+            background-color: #ffc107;
+            color: black;
+            border: none;
+        }
+
+            .btn-edit:hover {
+                background-color: #e0a800;
+                color: black;
             }
 
         .mota-content {
@@ -168,22 +181,48 @@
             flex: 1;
             min-width: 250px;
         }
+
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+        }
+
+            .btn-delete:hover {
+                background-color: #c82333;
+                color: white;
+            }
+
+        .btn-back {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            margin-right: 10px;
+        }
+
+        .btn-back:hover {
+            background-color: #5a6268;
+            color: white;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Quản Lý Sản Phẩm</h2>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-cubes"></i> Quản Lý Sản Phẩm</h2>        
+        </div>
 
         <div class="search-container">
             <div class="search-header">
-                <h4 class="mb-0">Tìm kiếm sản phẩm</h4>
+                <h4 class="mb-0"><i class="fas fa-search"></i> Tìm kiếm sản phẩm</h4>
                 <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
-                    + Thêm Sản Phẩm
+                    <i class="fas fa-plus"></i> Thêm Sản Phẩm
                 </button>
             </div>
-            
+
             <div class="search-input-group">
-                <input type="text" id="searchInput" class="form-control search-input" placeholder="Tìm theo mã, tên sản phẩm, thương hiệu..." />
+                <input type="text" id="searchInput" class="form-control search-input"
+                       placeholder="Tìm theo mã, tên sản phẩm, thương hiệu..." />
                 <select id="searchStatus" class="form-control" style="width: 200px;">
                     <option value="">Tất cả trạng thái</option>
                     <option value="Còn hàng">Còn hàng</option>
@@ -192,88 +231,122 @@
                     <option value="Ngừng kinh doanh">Ngừng kinh doanh</option>
                 </select>
                 <button class="btn btn-primary" onclick="performSearch()">
-                    Tìm kiếm
+                    <i class="fas fa-search"></i> Tìm kiếm
                 </button>
                 <button class="btn btn-secondary" onclick="clearSearch()">
-                    Reset
+                    <i class="fas fa-undo"></i> Reset
                 </button>
             </div>
         </div>
 
-        <table class="table table-hover text-center align-middle" id="productsTable">
-            <thead>
-                <tr>
-                    <th>Mã SP</th>
-                    <th>Tên sản phẩm</th>
-                    <th>Thương hiệu</th>
-                    <th>Giá gốc</th>
-                    <th>Giá niêm yết</th>
-                    <th>VAT</th>
-                    <th>Trạng thái</th>
-                    <th>Hành động</th>
-                </tr>
-            </thead>
-            <tbody id="productsTableBody">
-                @foreach (var item in Model)
-                {
-                    <tr data-ma="@item.MaSanPham" data-ten="@item.TenSanPham" data-thuonghieu="@item.ThuongHieu?.TenThuongHieu" data-trangthai="@item.TrangThaiSP">
-                        <td>@item.MaSanPham</td>
-                        <td>@item.TenSanPham</td>
-                        <td>@item.ThuongHieu?.TenThuongHieu</td>
-                        <td class="price">@item.GiaGoc?.ToString("N0") ₫</td>
-                        <td class="price">@item.GiaNiemYet?.ToString("N0") ₫</td>
-                        <td><span class="vat-badge">@item.VAT%</span></td>
-                        <td>
-                            @{
-                                var statusClass = "status-active";
-                                if (item.TrangThaiSP == "Ngừng kinh doanh")
-                                {
-                                    statusClass = "status-inactive";
-                                }
-                                else if (item.TrangThaiSP == "Hết hàng")
-                                {
-                                    statusClass = "status-warning";
-                                }
-                                else if (item.TrangThaiSP == "Đang nhập hàng")
-                                {
-                                    statusClass = "status-info";
-                                }
-                            }
-                            <span class="@statusClass">
-                                @item.TrangThaiSP
-                            </span>
-                        </td>
-                        <td>
-                            <div class="btn-action-group">
-                                <button class="btn btn-sm btn-mota btn-mota-detail"
-                                        data-mota="@item.MoTa"
-                                        data-ten="@item.TenSanPham">
-                                    Mô tả
-                                </button>
-                                <button class="btn btn-sm btn-warning btn-edit"
-                                        data-id="@item.IdSanPham"
-                                        data-ma="@item.MaSanPham"
-                                        data-ten="@item.TenSanPham"
-                                        data-thuonghieu="@item.IdThuongHieu"
-                                        data-mota="@item.MoTa"
-                                        data-giagoc="@item.GiaGoc"
-                                        data-vat="@item.VAT"
-                                        data-trangthai="@item.TrangThaiSP">
-                                    Sửa
-                                </button>
-                            </div>
-                        </td>
+        <div class="table-responsive">
+            <table class="table table-hover text-center align-middle" id="productsTable">
+                <thead>
+                    <tr>
+                        <th>Mã SP</th>
+                        <th>Tên sản phẩm</th>
+                        <th>Thương hiệu</th>
+                        <th>Giá gốc</th>
+                        <th>Giá niêm yết</th>
+                        <th>VAT</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody id="productsTableBody">
+                    @foreach (var item in Model)
+                    {
+                        <tr data-ma="@item.MaSanPham" data-ten="@item.TenSanPham"
+                            data-thuonghieu="@item.ThuongHieu?.TenThuongHieu" data-trangthai="@item.TrangThaiSP">
+                            <td><code>@item.MaSanPham</code></td>
+                            <td>@item.TenSanPham</td>
+                            <td>
+                                @if (item.ThuongHieu != null)
+                                {
+                                    <span class="badge bg-primary">@item.ThuongHieu.TenThuongHieu</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Chưa có</span>
+                                }
+                            </td>
+                            <td class="price">@item.GiaGoc?.ToString("N0") ₫</td>
+                            <td class="price">@item.GiaNiemYet?.ToString("N0") ₫</td>
+                            <td><span class="vat-badge">@(item.VAT?.ToString("F0") ?? "0")%</span></td>
+                            <td>
+                                @{
+                                    var statusClass = "status-active";
+                                    var statusIcon = "fa-check-circle";
+
+                                    if (item.TrangThaiSP == "Ngừng kinh doanh")
+                                    {
+                                        statusClass = "status-inactive";
+                                        statusIcon = "fa-times-circle";
+                                    }
+                                    else if (item.TrangThaiSP == "Hết hàng")
+                                    {
+                                        statusClass = "status-warning";
+                                        statusIcon = "fa-exclamation-circle";
+                                    }
+                                    else if (item.TrangThaiSP == "Đang nhập hàng")
+                                    {
+                                        statusClass = "status-info";
+                                        statusIcon = "fa-truck-loading";
+                                    }
+                                    else if (item.TrangThaiSP == "Còn hàng")
+                                    {
+                                        statusIcon = "fa-check-circle";
+                                    }
+                                }
+                                <span class="@statusClass">
+                                    <i class="fas @statusIcon"></i> @item.TrangThaiSP
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-action-group">
+                                    <a href="/SanPham/ModelSanPham/@item.IdSanPham"
+                                       class="btn btn-sm btn-mota"
+                                       title="Xem model sản phẩm">
+                                        <i class="fas fa-mobile-alt"></i> Model
+                                    </a>
+                                    <button class="btn btn-sm btn-edit btn-edit-product"
+                                            data-id="@item.IdSanPham"
+                                            data-ma="@item.MaSanPham"
+                                            data-ten="@item.TenSanPham"
+                                            data-thuonghieu="@item.IdThuongHieu"
+                                            data-mota="@item.MoTa"
+                                            data-giagoc="@item.GiaGoc"
+                                            data-vat="@item.VAT"
+                                            data-trangthai="@item.TrangThaiSP">
+                                        <i class="fas fa-edit"></i> Sửa
+                                    </button>
+                                    <button class="btn btn-sm btn-delete" onclick="deleteProduct(@item.IdSanPham, '@item.TenSanPham')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="text-center mt-5">
+                <i class="fas fa-box-open fa-5x text-muted mb-3"></i>
+                <h4 class="text-muted">Chưa có sản phẩm nào</h4>
+                <p class="text-muted">Nhấn "Thêm Sản Phẩm" để bắt đầu</p>
+            </div>
+        }
     </div>
 
+    <!-- Modal Thêm Sản Phẩm -->
     <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content p-3">
                 <div class="modal-header">
-                    <h5 class="modal-title">Thêm Sản Phẩm</h5>
+                    <h5 class="modal-title"><i class="fas fa-plus-circle"></i> Thêm Sản Phẩm</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <form id="createForm">
@@ -282,15 +355,17 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Mã sản phẩm <span class="text-danger">*</span></label>
-                                    <input type="text" id="MaSanPham" class="form-control" placeholder="VD: IP15PM128" />
-                                    <small id="errorMaSanPham" class="text-danger d-none">Phải nhập mã sản phẩm!</small>
+                                    <input type="text" id="MaSanPham" class="form-control"
+                                           placeholder="VD: IP15PM128" required />
+                                    <small id="errorMaSanPham" class="text-danger d-none"></small>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Tên sản phẩm <span class="text-danger">*</span></label>
-                                    <input type="text" id="TenSanPham" class="form-control" placeholder="VD: iPhone 15 Pro Max 128GB" />
-                                    <small id="errorTenSanPham" class="text-danger d-none">Phải nhập tên sản phẩm!</small>
+                                    <input type="text" id="TenSanPham" class="form-control"
+                                           placeholder="VD: iPhone 15 Pro Max 128GB" required />
+                                    <small id="errorTenSanPham" class="text-danger d-none"></small>
                                 </div>
                             </div>
                         </div>
@@ -299,23 +374,23 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Thương hiệu <span class="text-danger">*</span></label>
-                                    <select id="IdThuongHieu" class="form-control">
-                                        <option value="">Chọn thương hiệu</option>
+                                    <select id="IdThuongHieu" class="form-control" required>
+                                        <option value="">Đang tải thương hiệu...</option>
                                     </select>
-                                    <small id="errorIdThuongHieu" class="text-danger d-none">Phải chọn thương hiệu!</small>
+                                    <small id="errorIdThuongHieu" class="text-danger d-none"></small>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Trạng thái <span class="text-danger">*</span></label>
-                                    <select id="TrangThaiSP" class="form-control">
+                                    <select id="TrangThaiSP" class="form-control" required>
                                         <option value="">Chọn trạng thái</option>
                                         <option value="Còn hàng">Còn hàng</option>
                                         <option value="Hết hàng">Hết hàng</option>
                                         <option value="Đang nhập hàng">Đang nhập hàng</option>
                                         <option value="Ngừng kinh doanh">Ngừng kinh doanh</option>
                                     </select>
-                                    <small id="errorTrangThaiSP" class="text-danger d-none">Phải chọn trạng thái sản phẩm!</small>
+                                    <small id="errorTrangThaiSP" class="text-danger d-none"></small>
                                 </div>
                             </div>
                         </div>
@@ -324,45 +399,59 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Giá gốc <span class="text-danger">*</span></label>
-                                    <input type="number" id="GiaGoc" class="form-control" placeholder="VD: 25000000" min="0" />
-                                    <small id="errorGiaGoc" class="text-danger d-none">Giá gốc phải lớn hơn 0!</small>
+                                    <div class="input-group">
+                                        <input type="number" id="GiaGoc" class="form-control"
+                                               placeholder="VD: 25000000" min="0" step="1000" required />
+                                        <span class="input-group-text">₫</span>
+                                    </div>
+                                    <small id="errorGiaGoc" class="text-danger d-none"></small>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">VAT (%)</label>
-                                    <input type="number" id="VAT" class="form-control" placeholder="VD: 10" min="0" max="100" />
+                                    <div class="input-group">
+                                        <input type="number" id="VAT" class="form-control"
+                                               placeholder="VD: 10" min="0" max="100" step="0.1" value="10" />
+                                        <span class="input-group-text">%</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Mô tả</label>
-                            <textarea id="MoTa" class="form-control" placeholder="Nhập mô tả chi tiết về sản phẩm..." rows="3"></textarea>
+                            <textarea id="MoTa" class="form-control"
+                                      placeholder="Nhập mô tả chi tiết về sản phẩm..." rows="3"></textarea>
                         </div>
 
                         <div class="mb-3">
                             <div class="alert alert-info">
-                                <strong>Giá niêm yết sẽ được tính tự động:</strong>
-                                <span id="giaNiemYetPreview">0 ₫</span>
+                                <strong><i class="fas fa-calculator"></i> Giá niêm yết sẽ được tính tự động:</strong>
+                                <span id="giaNiemYetPreview" class="fw-bold ms-2">0 ₫</span>
                             </div>
                         </div>
                     </div>
 
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                        <button type="submit" class="btn btn-primary">Lưu</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times"></i> Hủy
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="createSubmitBtn">
+                            <i class="fas fa-save"></i> Lưu
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
+    <!-- Modal Sửa Sản Phẩm -->
     <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content p-3">
                 <div class="modal-header">
-                    <h5 class="modal-title">Chỉnh sửa Sản Phẩm</h5>
+                    <h5 class="modal-title"><i class="fas fa-edit"></i> Chỉnh sửa Sản Phẩm</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <form id="editForm">
@@ -372,15 +461,17 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Mã sản phẩm <span class="text-danger">*</span></label>
-                                    <input type="text" id="EditMaSanPham" class="form-control" placeholder="VD: IP15PM128" />
-                                    <small id="errorEditMaSanPham" class="text-danger d-none">Phải nhập mã sản phẩm!</small>
+                                    <input type="text" id="EditMaSanPham" class="form-control"
+                                           placeholder="VD: IP15PM128" required />
+                                    <small id="errorEditMaSanPham" class="text-danger d-none"></small>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Tên sản phẩm <span class="text-danger">*</span></label>
-                                    <input type="text" id="EditTenSanPham" class="form-control" placeholder="VD: iPhone 15 Pro Max 128GB" />
-                                    <small id="errorEditTenSanPham" class="text-danger d-none">Phải nhập tên sản phẩm!</small>
+                                    <input type="text" id="EditTenSanPham" class="form-control"
+                                           placeholder="VD: iPhone 15 Pro Max 128GB" required />
+                                    <small id="errorEditTenSanPham" class="text-danger d-none"></small>
                                 </div>
                             </div>
                         </div>
@@ -389,22 +480,22 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Thương hiệu <span class="text-danger">*</span></label>
-                                    <select id="EditIdThuongHieu" class="form-control">
-                                        <option value="">Chọn thương hiệu</option>
+                                    <select id="EditIdThuongHieu" class="form-control" required>
+                                        <option value="">Đang tải thương hiệu...</option>
                                     </select>
-                                    <small id="errorEditIdThuongHieu" class="text-danger d-none">Phải chọn thương hiệu!</small>
+                                    <small id="errorEditIdThuongHieu" class="text-danger d-none"></small>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Trạng thái <span class="text-danger">*</span></label>
-                                    <select id="EditTrangThaiSP" class="form-control">
+                                    <select id="EditTrangThaiSP" class="form-control" required>
                                         <option value="Còn hàng">Còn hàng</option>
                                         <option value="Hết hàng">Hết hàng</option>
                                         <option value="Đang nhập hàng">Đang nhập hàng</option>
                                         <option value="Ngừng kinh doanh">Ngừng kinh doanh</option>
                                     </select>
-                                    <small id="errorEditTrangThaiSP" class="text-danger d-none">Phải chọn trạng thái sản phẩm!</small>
+                                    <small id="errorEditTrangThaiSP" class="text-danger d-none"></small>
                                 </div>
                             </div>
                         </div>
@@ -413,72 +504,190 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Giá gốc <span class="text-danger">*</span></label>
-                                    <input type="number" id="EditGiaGoc" class="form-control" placeholder="VD: 25000000" min="0" />
-                                    <small id="errorEditGiaGoc" class="text-danger d-none">Giá gốc phải lớn hơn 0!</small>
+                                    <div class="input-group">
+                                        <input type="number" id="EditGiaGoc" class="form-control"
+                                               placeholder="VD: 25000000" min="0" step="1000" required />
+                                        <span class="input-group-text">₫</span>
+                                    </div>
+                                    <small id="errorEditGiaGoc" class="text-danger d-none"></small>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">VAT (%)</label>
-                                    <input type="number" id="EditVAT" class="form-control" placeholder="VD: 10" min="0" max="100" />
+                                    <div class="input-group">
+                                        <input type="number" id="EditVAT" class="form-control"
+                                               placeholder="VD: 10" min="0" max="100" step="0.1" />
+                                        <span class="input-group-text">%</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Mô tả</label>
-                            <textarea id="EditMoTa" class="form-control" placeholder="Nhập mô tả chi tiết về sản phẩm..." rows="3"></textarea>
+                            <textarea id="EditMoTa" class="form-control"
+                                      placeholder="Nhập mô tả chi tiết về sản phẩm..." rows="3"></textarea>
                         </div>
 
                         <div class="mb-3">
                             <div class="alert alert-info">
-                                <strong>Giá niêm yết sẽ được tính tự động:</strong>
-                                <span id="editGiaNiemYetPreview">0 ₫</span>
+                                <strong><i class="fas fa-calculator"></i> Giá niêm yết sẽ được tính tự động:</strong>
+                                <span id="editGiaNiemYetPreview" class="fw-bold ms-2">0 ₫</span>
                             </div>
                         </div>
                     </div>
 
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                        <button type="submit" class="btn btn-warning">Cập nhật</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times"></i> Hủy
+                        </button>
+                        <button type="submit" class="btn btn-warning" id="editSubmitBtn">
+                            <i class="fas fa-save"></i> Cập nhật
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="motaModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+    <!-- Modal Xác nhận xóa -->
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
             <div class="modal-content p-3">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="motaModalTitle">Mô tả sản phẩm</h5>
+                    <h5 class="modal-title text-danger"><i class="fas fa-exclamation-triangle"></i> Xác nhận xóa</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mota-content" id="motaContent"></div>
+                    <p id="deleteConfirmMessage">Bạn có chắc chắn muốn xóa sản phẩm này?</p>
+                    <p class="text-warning"><i class="fas fa-info-circle"></i> Lưu ý: Tất cả model và IMEI của sản phẩm này cũng sẽ bị xóa!</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Hủy
+                    </button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                        <i class="fas fa-trash"></i> Xóa
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        // ============================
+        // BIẾN TOÀN CỤC VÀ KHỞI TẠO
+        // ============================
+        let productToDelete = null;
+
         document.addEventListener('DOMContentLoaded', function () {
             loadThuongHieu();
             setupPriceCalculation();
             updateCreatePrice();
             updateEditPrice();
+            setupEventListeners();
+            setupSearch();
+        });
 
-            document.getElementById('searchInput').addEventListener('input', function(e) {
-                if (e.target.value.length >= 2 || e.target.value.length === 0) {
+        // ============================
+        // TỰ ĐỘNG SINH MÃ SẢN PHẨM
+        // ============================
+        async function generateProductCode() {
+            try {
+                const response = await fetch('/SanPham/GenerateProductCode');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.code) {
+                        document.getElementById('MaSanPham').value = data.code;
+                    }
+                }
+            } catch (error) {
+                console.error('Lỗi khi sinh mã sản phẩm:', error);
+                // Nếu lỗi, để trống để người dùng nhập thủ công
+            }
+        }
+
+        // ============================
+        // XỬ LÝ THƯƠNG HIỆU
+        // ============================
+        async function loadThuongHieu() {
+            try {
+                console.log('🔄 Đang tải danh sách thương hiệu...');
+
+                const createSelect = document.getElementById('IdThuongHieu');
+                const editSelect = document.getElementById('EditIdThuongHieu');
+
+                createSelect.innerHTML = '<option value="">Đang tải thương hiệu...</option>';
+                editSelect.innerHTML = '<option value="">Đang tải thương hiệu...</option>';
+
+                const response = await fetch('/SanPham/GetThuongHieu');
+
+                console.log('📡 Response status:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`Lỗi HTTP! status: ${response.status}`);
+                }
+
+                const responseData = await response.json();
+                console.log('📦 Dữ liệu thương hiệu nhận được:', responseData);
+
+                createSelect.innerHTML = '<option value="">Chọn thương hiệu</option>';
+                editSelect.innerHTML = '<option value="">Chọn thương hiệu</option>';
+
+                // Kiểm tra response có success và data không
+                if (responseData && responseData.success && responseData.data && Array.isArray(responseData.data)) {
+                    const thuongHieuList = responseData.data;
+                    console.log(`✅ Có ${thuongHieuList.length} thương hiệu`);
+
+                    if (thuongHieuList.length > 0) {
+                        thuongHieuList.forEach(th => {
+                            const id = th.idThuongHieu || th.IdThuongHieu;
+                            const ten = th.tenThuongHieu || th.TenThuongHieu;
+
+                            if (id && ten) {
+                                createSelect.innerHTML += `<option value="${id}">${ten}</option>`;
+                                editSelect.innerHTML += `<option value="${id}">${ten}</option>`;
+                            }
+                        });
+
+                        console.log('✅ Đã tải thương hiệu thành công');
+                    } else {
+                        createSelect.innerHTML += '<option value="" disabled>Không có thương hiệu nào</option>';
+                        editSelect.innerHTML += '<option value="" disabled>Không có thương hiệu nào</option>';
+                    }
+                } else {
+                    console.error('❌ Response không đúng định dạng:', responseData);
+                    createSelect.innerHTML += '<option value="" disabled>Lỗi định dạng dữ liệu</option>';
+                    editSelect.innerHTML += '<option value="" disabled>Lỗi định dạng dữ liệu</option>';
+                }
+            } catch (error) {
+                console.error('❌ Lỗi khi tải thương hiệu:', error);
+
+                const createSelect = document.getElementById('IdThuongHieu');
+                const editSelect = document.getElementById('EditIdThuongHieu');
+
+                createSelect.innerHTML = '<option value="">Lỗi khi tải thương hiệu</option>';
+                editSelect.innerHTML = '<option value="">Lỗi khi tải thương hiệu</option>';
+
+                alert('Không thể tải danh sách thương hiệu. Vui lòng thử lại sau!');
+            }
+        }
+
+        // ============================
+        // TÌM KIẾM
+        // ============================
+        function setupSearch() {
+            document.getElementById('searchInput').addEventListener('input', function() {
+                if (this.value.length >= 2 || this.value.length === 0) {
                     performSearch();
                 }
             });
 
-            document.getElementById('searchStatus').addEventListener('change', performSearch);
-        });
+            document.getElementById('searchStatus').addEventListener('change', function() {
+                performSearch();
+            });
+        }
 
         function performSearch() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
@@ -491,11 +700,11 @@
                 const thuongHieu = row.getAttribute('data-thuonghieu').toLowerCase();
                 const trangThai = row.getAttribute('data-trangthai');
 
-                const matchesSearch = !searchTerm || 
-                    maSP.includes(searchTerm) || 
-                    tenSP.includes(searchTerm) || 
+                const matchesSearch = !searchTerm ||
+                    maSP.includes(searchTerm) ||
+                    tenSP.includes(searchTerm) ||
                     thuongHieu.includes(searchTerm);
-                
+
                 const matchesStatus = !statusFilter || trangThai === statusFilter;
 
                 if (matchesSearch && matchesStatus) {
@@ -512,6 +721,9 @@
             performSearch();
         }
 
+        // ============================
+        // XỬ LÝ LỖI
+        // ============================
         function hideAllErrors() {
             document.querySelectorAll('small.text-danger').forEach(el => {
                 el.classList.add("d-none");
@@ -520,27 +732,17 @@
 
         function showError(id, msg) {
             const el = document.getElementById(id);
-            el.textContent = msg;
-            el.classList.remove("d-none");
-        }
-        async function loadThuongHieu() {
-            try {
-                const response = await fetch('/SanPham/GetThuongHieu');
-                const thuongHieus = await response.json();
-                
-                const createSelect = document.getElementById('IdThuongHieu');
-                const editSelect = document.getElementById('EditIdThuongHieu');
-                
-                createSelect.innerHTML = '<option value="">Chọn thương hiệu</option>';
-                editSelect.innerHTML = '<option value="">Chọn thương hiệu</option>';
-                
-                thuongHieus.forEach(th => {
-                    createSelect.innerHTML += `<option value="${th.idThuongHieu}">${th.tenThuongHieu}</option>`;
-                    editSelect.innerHTML += `<option value="${th.idThuongHieu}">${th.tenThuongHieu}</option>`;
-                });
-            } catch (error) {
-                console.error('Lỗi khi load thương hiệu:', error);
+            if (el) {
+                el.textContent = msg;
+                el.classList.remove("d-none");
             }
+        }
+
+        // ============================
+        // ĐỊNH DẠNG TIỀN TỆ
+        // ============================
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
         }
 
         function tinhGiaNiemYet(giaGoc, vat) {
@@ -548,10 +750,9 @@
             return giaGoc * (1 + vatValue / 100);
         }
 
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-        }
-
+        // ============================
+        // TÍNH TOÁN GIÁ
+        // ============================
         function setupPriceCalculation() {
             document.getElementById('GiaGoc').addEventListener('input', updateCreatePrice);
             document.getElementById('VAT').addEventListener('input', updateCreatePrice);
@@ -573,36 +774,63 @@
             document.getElementById('editGiaNiemYetPreview').textContent = formatCurrency(giaNiemYet);
         }
 
-        function showMotaModal(tenSanPham, moTa) {
-            const modalTitle = document.getElementById('motaModalTitle');
-            const motaContent = document.getElementById('motaContent');
+        // ============================
+        // XÓA SẢN PHẨM
+        // ============================
+        function deleteProduct(id, tenSanPham) {
+            productToDelete = id;
+            document.getElementById('deleteConfirmMessage').textContent =
+                `Bạn có chắc chắn muốn xóa sản phẩm "${tenSanPham}"?`;
 
-            modalTitle.textContent = `Mô tả: ${tenSanPham}`;
-
-            if (moTa && moTa.trim() !== '') {
-                motaContent.textContent = moTa;
-                motaContent.classList.remove('text-muted');
-            } else {
-                motaContent.textContent = 'Sản phẩm này chưa có mô tả.';
-                motaContent.classList.add('text-muted');
-            }
-
-            const motaModal = new bootstrap.Modal(document.getElementById('motaModal'));
-            motaModal.show();
+            const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+            deleteModal.show();
         }
 
+        document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
+            if (!productToDelete) return;
+
+            try {
+                const response = await fetch('/SanPham/Delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ id: productToDelete })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    alert('Xóa sản phẩm thành công!');
+                    location.reload();
+                } else {
+                    alert(data.message || 'Xóa sản phẩm thất bại!');
+                }
+            } catch (error) {
+                console.error('Lỗi khi xóa sản phẩm:', error);
+                alert('Có lỗi xảy ra khi xóa sản phẩm!');
+            } finally {
+                const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal'));
+                deleteModal.hide();
+                productToDelete = null;
+            }
+        });
+
+        // ============================
+        // THÊM SẢN PHẨM
+        // ============================
         document.getElementById("createForm").addEventListener("submit", async (e) => {
             e.preventDefault();
             hideAllErrors();
 
             const sp = {
-                MaSanPham: MaSanPham.value.trim(),
-                TenSanPham: TenSanPham.value.trim(),
-                IdThuongHieu: parseInt(IdThuongHieu.value),
-                MoTa: MoTa.value.trim(),
-                GiaGoc: parseFloat(GiaGoc.value),
-                VAT: parseFloat(VAT.value) || 0,
-                TrangThaiSP: TrangThaiSP.value
+                MaSanPham: document.getElementById('MaSanPham').value.trim(),
+                TenSanPham: document.getElementById('TenSanPham').value.trim(),
+                IdThuongHieu: parseInt(document.getElementById('IdThuongHieu').value),
+                MoTa: document.getElementById('MoTa').value.trim(),
+                GiaGoc: parseFloat(document.getElementById('GiaGoc').value) || 0,
+                VAT: parseFloat(document.getElementById('VAT').value) || 0,
+                TrangThaiSP: document.getElementById('TrangThaiSP').value
             };
 
             let hasError = false;
@@ -630,151 +858,198 @@
 
             if (hasError) return;
 
-            const response = await fetch('/SanPham/Create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(sp)
-            });
+            // Disable button và hiển thị loading
+            const submitBtn = document.getElementById('createSubmitBtn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+            submitBtn.disabled = true;
 
-            let data = {};
-            try { data = await response.json(); } catch { }
+            try {
+                const response = await fetch('/SanPham/Create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(sp)
+                });
 
-            if (!response.ok) {
-                if (response.status === 400 && typeof data === "object") {
-                    if (data.MaSanPham) showError("errorMaSanPham", data.MaSanPham);
-                    if (data.TenSanPham) showError("errorTenSanPham", data.TenSanPham);
-                    if (data.IdThuongHieu) showError("errorIdThuongHieu", data.IdThuongHieu);
-                    if (data.GiaGoc) showError("errorGiaGoc", data.GiaGoc);
-                    if (data.TrangThaiSP) showError("errorTrangThaiSP", data.TrangThaiSP);
-                    return;
-                }
+                const data = await response.json();
 
-                if (response.status === 409 && data.message) {
-                    if (data.message.includes("Mã")) {
-                        showError("errorMaSanPham", data.message);
-                    } else if (data.message.includes("Tên")) {
-                        showError("errorTenSanPham", data.message);
+                if (response.ok && data.success) {
+                    alert("Thêm sản phẩm thành công!");
+                    location.reload();
+                } else {
+                    if (response.status === 400) {
+                        if (data.errors) {
+                            Object.keys(data.errors).forEach(key => {
+                                const errorField = `error${key}`;
+                                if (document.getElementById(errorField)) {
+                                    showError(errorField, data.errors[key]);
+                                }
+                            });
+                        } else if (data.message) {
+                            alert(data.message);
+                        }
+                    } else if (response.status === 409 && data.message) {
+                        if (data.message.includes("Mã")) {
+                            showError("errorMaSanPham", data.message);
+                        } else if (data.message.includes("Tên")) {
+                            showError("errorTenSanPham", data.message);
+                        } else {
+                            alert(data.message);
+                        }
+                    } else {
+                        alert(data.message || "Có lỗi xảy ra khi thêm sản phẩm!");
                     }
-                    return;
                 }
-
-                alert(data.message || "Không thể thêm Sản Phẩm. Vui lòng thử lại!");
-                return;
+            } catch (error) {
+                console.error('Lỗi khi thêm sản phẩm:', error);
+                alert("Có lỗi kết nối xảy ra. Vui lòng thử lại!");
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
             }
-
-            location.reload();
         });
 
-        document.querySelectorAll(".btn-edit").forEach(btn => {
-            btn.addEventListener("click", () => {
-                EditIdSanPham.value = btn.dataset.id;
-                EditMaSanPham.value = btn.dataset.ma;
-                EditTenSanPham.value = btn.dataset.ten;
-                EditIdThuongHieu.value = btn.dataset.thuonghieu;
-                EditMoTa.value = btn.dataset.mota || '';
-                EditGiaGoc.value = btn.dataset.giagoc;
-                EditVAT.value = btn.dataset.vat || '';
-                EditTrangThaiSP.value = btn.dataset.trangthai;
+        // ============================
+        // SỬA SẢN PHẨM
+        // ============================
+        function setupEventListeners() {
+            document.querySelectorAll(".btn-edit-product").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    const id = this.getAttribute('data-id');
+                    const ma = this.getAttribute('data-ma');
+                    const ten = this.getAttribute('data-ten');
+                    const idThuongHieu = this.getAttribute('data-thuonghieu');
+                    const moTa = this.getAttribute('data-mota') || '';
+                    const giaGoc = this.getAttribute('data-giagoc');
+                    const vat = this.getAttribute('data-vat') || '0';
+                    const trangThai = this.getAttribute('data-trangthai');
 
+                    document.getElementById('EditIdSanPham').value = id;
+                    document.getElementById('EditMaSanPham').value = ma;
+                    document.getElementById('EditTenSanPham').value = ten;
+                    document.getElementById('EditIdThuongHieu').value = idThuongHieu;
+                    document.getElementById('EditMoTa').value = moTa;
+                    document.getElementById('EditGiaGoc').value = giaGoc;
+                    document.getElementById('EditVAT').value = vat;
+                    document.getElementById('EditTrangThaiSP').value = trangThai;
+
+                    updateEditPrice();
+                    const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+                    editModal.show();
+                });
+            });
+
+            document.getElementById("editForm").addEventListener("submit", async function (e) {
+                e.preventDefault();
+                hideAllErrors();
+
+                const id = document.getElementById('EditIdSanPham').value;
+                const sp = {
+                    IdSanPham: parseInt(id),
+                    MaSanPham: document.getElementById('EditMaSanPham').value.trim(),
+                    TenSanPham: document.getElementById('EditTenSanPham').value.trim(),
+                    IdThuongHieu: parseInt(document.getElementById('EditIdThuongHieu').value),
+                    MoTa: document.getElementById('EditMoTa').value.trim(),
+                    GiaGoc: parseFloat(document.getElementById('EditGiaGoc').value) || 0,
+                    VAT: parseFloat(document.getElementById('EditVAT').value) || 0,
+                    TrangThaiSP: document.getElementById('EditTrangThaiSP').value
+                };
+
+                let hasError = false;
+
+                if (!sp.MaSanPham) {
+                    showError("errorEditMaSanPham", "Phải nhập mã sản phẩm!");
+                    hasError = true;
+                }
+                if (!sp.TenSanPham) {
+                    showError("errorEditTenSanPham", "Phải nhập tên sản phẩm!");
+                    hasError = true;
+                }
+                if (!sp.IdThuongHieu || sp.IdThuongHieu === 0) {
+                    showError("errorEditIdThuongHieu", "Phải chọn thương hiệu!");
+                    hasError = true;
+                }
+                if (!sp.GiaGoc || sp.GiaGoc <= 0) {
+                    showError("errorEditGiaGoc", "Giá gốc phải lớn hơn 0!");
+                    hasError = true;
+                }
+                if (!sp.TrangThaiSP) {
+                    showError("errorEditTrangThaiSP", "Phải chọn trạng thái sản phẩm!");
+                    hasError = true;
+                }
+
+                if (hasError) return;
+
+                // Disable button và hiển thị loading
+                const submitBtn = document.getElementById('editSubmitBtn');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+                submitBtn.disabled = true;
+
+                try {
+                    const response = await fetch('/SanPham/Edit/' + id, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(sp)
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        alert("Cập nhật sản phẩm thành công!");
+                        location.reload();
+                    } else {
+                        if (response.status === 400) {
+                            if (data.errors) {
+                                Object.keys(data.errors).forEach(key => {
+                                    const errorField = `errorEdit${key}`;
+                                    if (document.getElementById(errorField)) {
+                                        showError(errorField, data.errors[key]);
+                                    }
+                                });
+                            } else if (data.message) {
+                                alert(data.message);
+                            }
+                        } else if (response.status === 409 && data.message) {
+                            if (data.message.includes("Mã")) {
+                                showError("errorEditMaSanPham", data.message);
+                            } else if (data.message.includes("Tên")) {
+                                showError("errorEditTenSanPham", data.message);
+                            } else {
+                                alert(data.message);
+                            }
+                        } else if (response.status === 404 && data.message) {
+                            alert(data.message);
+                        } else {
+                            alert(data.message || "Có lỗi xảy ra khi cập nhật sản phẩm!");
+                        }
+                    }
+                } catch (error) {
+                    console.error('Lỗi khi cập nhật sản phẩm:', error);
+                    alert("Có lỗi kết nối xảy ra. Vui lòng thử lại!");
+                } finally {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
+            });
+
+            document.getElementById('createModal').addEventListener('hidden.bs.modal', function () {
+                document.getElementById('createForm').reset();
+                hideAllErrors();
+                updateCreatePrice();
+            });
+
+            document.getElementById('editModal').addEventListener('hidden.bs.modal', function () {
+                document.getElementById('editForm').reset();
+                hideAllErrors();
                 updateEditPrice();
-                new bootstrap.Modal(editModal).show();
-            });
-        });
-
-        document.querySelectorAll(".btn-mota-detail").forEach(btn => {
-            btn.addEventListener("click", () => {
-                const tenSanPham = btn.dataset.ten;
-                const moTa = btn.dataset.mota;
-                showMotaModal(tenSanPham, moTa);
-            });
-        });
-
-        document.getElementById("editForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            hideAllErrors();
-
-            const id = EditIdSanPham.value;
-            const sp = {
-                IdSanPham: parseInt(id),
-                MaSanPham: EditMaSanPham.value.trim(),
-                TenSanPham: EditTenSanPham.value.trim(),
-                IdThuongHieu: parseInt(EditIdThuongHieu.value),
-                MoTa: EditMoTa.value.trim(),
-                GiaGoc: parseFloat(EditGiaGoc.value),
-                VAT: parseFloat(EditVAT.value) || 0,
-                TrangThaiSP: EditTrangThaiSP.value
-            };
-            let hasError = false;
-
-            if (!sp.MaSanPham) {
-                showError("errorEditMaSanPham", "Phải nhập mã sản phẩm!");
-                hasError = true;
-            }
-            if (!sp.TenSanPham) {
-                showError("errorEditTenSanPham", "Phải nhập tên sản phẩm!");
-                hasError = true;
-            }
-            if (!sp.IdThuongHieu || sp.IdThuongHieu === 0) {
-                showError("errorEditIdThuongHieu", "Phải chọn thương hiệu!");
-                hasError = true;
-            }
-            if (!sp.GiaGoc || sp.GiaGoc <= 0) {
-                showError("errorEditGiaGoc", "Giá gốc phải lớn hơn 0!");
-                hasError = true;
-            }
-            if (!sp.TrangThaiSP) {
-                showError("errorEditTrangThaiSP", "Phải chọn trạng thái sản phẩm!");
-                hasError = true;
-            }
-
-            if (hasError) return;
-
-            const response = await fetch('/SanPham/Edit/' + id, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(sp)
             });
 
-            let data = {};
-            try { data = await response.json(); } catch { }
-
-            if (!response.ok) {
-                if (response.status === 400 && typeof data === "object") {
-                    if (data.MaSanPham) showError("errorEditMaSanPham", data.MaSanPham);
-                    if (data.TenSanPham) showError("errorEditTenSanPham", data.TenSanPham);
-                    if (data.IdThuongHieu) showError("errorEditIdThuongHieu", data.IdThuongHieu);
-                    if (data.GiaGoc) showError("errorEditGiaGoc", data.GiaGoc);
-                    if (data.TrangThaiSP) showError("errorEditTrangThaiSP", data.TrangThaiSP);
-                    return;
-                }
-
-                if (response.status === 409 && data.message) {
-                    if (data.message.includes("Mã")) {
-                        showError("errorEditMaSanPham", data.message);
-                    } else if (data.message.includes("Tên")) {
-                        showError("errorEditTenSanPham", data.message);
-                    }
-                    return;
-                }
-
-                alert(data.message || "Không thể cập nhật Sản Phẩm. Vui lòng thử lại!");
-                return;
-            }
-
-            location.reload();
-        });
-
-        createModal.addEventListener("hidden.bs.modal", () => {
-            createForm.reset();
-            hideAllErrors();
-            updateCreatePrice();
-        });
-
-        editModal.addEventListener("hidden.bs.modal", () => {
-            editForm.reset();
-            hideAllErrors();
-            updateEditPrice();
-        });
+            document.getElementById('createModal').addEventListener('show.bs.modal', async function () {
+                loadThuongHieu();
+                await generateProductCode();
+            });
+        }
     </script>
 </body>
 </html>

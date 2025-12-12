@@ -86,27 +86,27 @@
             line-height: 1.5;
         }
 
-        .btn-edit-container {
+        .action-buttons {
             display: flex;
+            gap: 5px;
             justify-content: center;
-            align-items: center;
-            height: 100%;
         }
 
-
-        .form-control::placeholder {
-            color: #888;
-            opacity: 1;
-        }
-
-        .form-control:focus::placeholder {
-            color: transparent;
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Quản Lý Màn Hình</h2>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
 
         <div class="d-flex justify-content-end mb-3">
             <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
@@ -137,7 +137,7 @@
                         <td>@item.TinhNangMan</td>
                         <td class="description-cell">@item.MoTaMan</td>
                         <td>
-                            <div class="btn-edit-container">
+                            <div class="action-buttons">
                                 <button class="btn btn-sm btn-warning btn-edit"
                                         data-id="@item.IdManHinh"
                                         data-congnghe="@item.CongNgheManHinh"
@@ -147,6 +147,11 @@
                                         data-mota="@item.MoTaMan">
                                     Sửa
                                 </button>
+                                <button class="btn btn-sm btn-danger btn-delete"
+                                        data-id="@item.IdManHinh"
+                                        data-congnghe="@item.CongNgheManHinh">
+                                    Xóa
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -155,7 +160,7 @@
         </table>
     </div>
 
-    <!-- Create -->
+    <!-- Create Modal -->
     <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content p-3">
@@ -204,7 +209,7 @@
         </div>
     </div>
 
-    <!-- Edit -->
+    <!-- Edit Modal -->
     <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content p-3">
@@ -255,125 +260,206 @@
     </div>
 
     <script>
+        // Hiển thị thông báo
+        function showAlert(message, type = 'success') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+            `;
+            alertContainer.appendChild(alert);
+
+            setTimeout(() => {
+                if (alert.parentElement) {
+                    alert.remove();
+                }
+            }, 3000);
+        }
+
+        // Hiển thị lỗi
+        function showError(fieldId, message) {
+            const errorElement = document.getElementById(fieldId);
+            errorElement.textContent = message;
+            errorElement.classList.remove('d-none');
+        }
+
+        // Ẩn lỗi
+        function hideError(fieldId) {
+            const errorElement = document.getElementById(fieldId);
+            errorElement.classList.add('d-none');
+        }
+
+        // Ẩn tất cả lỗi
+        function hideAllErrors() {
+            document.querySelectorAll('.text-danger').forEach(el => {
+                el.classList.add('d-none');
+            });
+        }
+
+        // Mở modal edit và điền dữ liệu
+        document.querySelectorAll(".btn-edit").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const id = btn.dataset.id;
+                const congnghe = btn.dataset.congnghe;
+                const kichthuoc = btn.dataset.kichthuoc;
+                const dophangiai = btn.dataset.dophangiai;
+                const tinhnang = btn.dataset.tinhnang;
+                const mota = btn.dataset.mota || '';
+
+                document.getElementById("EditIdManHinh").value = id;
+                document.getElementById("EditCongNgheManHinh").value = congnghe;
+                document.getElementById("EditKichThuoc").value = kichthuoc;
+                document.getElementById("EditDoPhanGiai").value = dophangiai;
+                document.getElementById("EditTinhNangMan").value = tinhnang;
+                document.getElementById("EditMoTaMan").value = mota;
+
+                hideAllErrors();
+                new bootstrap.Modal(document.getElementById('editModal')).show();
+            });
+        });
+
+        // Xử lý xóa màn hình
+        document.querySelectorAll(".btn-delete").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const id = btn.dataset.id;
+                const congnghe = btn.dataset.congnghe;
+
+                if (confirm(`Bạn có chắc chắn muốn xóa màn hình "${congnghe}"?`)) {
+                    try {
+                        const response = await fetch(`/ManHinh/Delete?id=${id}`, {
+                            method: 'DELETE'
+                        });
+
+                        if (response.ok) {
+                            const result = await response.json();
+                            showAlert(result.message, 'success');
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            const error = await response.json();
+                            showAlert(error.message || 'Lỗi khi xóa màn hình', 'danger');
+                        }
+                    } catch (error) {
+                        showAlert('Lỗi kết nối: ' + error.message, 'danger');
+                    }
+                }
+            });
+        });
+
+        // Xử lý thêm màn hình
         document.getElementById("createForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
-            const mh = {
-                CongNgheManHinh: CongNgheManHinh.value.trim(),
-                KichThuoc: KichThuoc.value.trim(),
-                DoPhanGiai: DoPhanGiai.value.trim(),
-                TinhNangMan: TinhNangMan.value.trim(),
-                MoTaMan: MoTaMan.value.trim()
+            const mhData = {
+                CongNgheManHinh: document.getElementById("CongNgheManHinh").value.trim(),
+                KichThuoc: document.getElementById("KichThuoc").value.trim(),
+                DoPhanGiai: document.getElementById("DoPhanGiai").value.trim(),
+                TinhNangMan: document.getElementById("TinhNangMan").value.trim(),
+                MoTaMan: document.getElementById("MoTaMan").value.trim()
             };
 
-            const response = await fetch('/ManHinh/Create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(mh)
-            });
+            hideAllErrors();
 
-            let data = {};
-            try { data = await response.json(); } catch { }
+            try {
+                const response = await fetch('/ManHinh/Create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(mhData)
+                });
 
-            ["errorCongNgheManHinh", "errorKichThuoc", "errorDoPhanGiai", "errorTinhNangMan"]
-                .forEach(id => document.getElementById(id).classList.add("d-none"));
+                if (response.ok) {
+                    const result = await response.json();
+                    showAlert(result.message, 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('createModal')).hide();
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    const error = await response.json();
 
-            if (!response.ok) {
-                if (response.status === 400 && typeof data === "object") {
-                    if (data.CongNgheManHinh) showError("errorCongNgheManHinh", data.CongNgheManHinh);
-                    if (data.KichThuoc) showError("errorKichThuoc", data.KichThuoc);
-                    if (data.DoPhanGiai) showError("errorDoPhanGiai", data.DoPhanGiai);
-                    if (data.TinhNangMan) showError("errorTinhNangMan", data.TinhNangMan);
-                    return;
+                    if (response.status === 400 && typeof error === "object") {
+                        if (error.CongNgheManHinh) showError("errorCongNgheManHinh", error.CongNgheManHinh);
+                        if (error.KichThuoc) showError("errorKichThuoc", error.KichThuoc);
+                        if (error.DoPhanGiai) showError("errorDoPhanGiai", error.DoPhanGiai);
+                        if (error.TinhNangMan) showError("errorTinhNangMan", error.TinhNangMan);
+                        return;
+                    }
+
+                    if (response.status === 409 && error.message) {
+                        showAlert(error.message, 'warning');
+                        return;
+                    }
+
+                    showAlert(error.message || "Không thể thêm Màn Hình", 'danger');
                 }
-
-                if (response.status === 409 && data.message) {
-                    ["errorCongNgheManHinh", "errorKichThuoc", "errorDoPhanGiai", "errorTinhNangMan"]
-                        .forEach(id => showError(id, data.message));
-                    return;
-                }
-
-                alert(data.message || "Không thể thêm Màn Hình. Vui lòng thử lại!");
-                return;
+            } catch (error) {
+                showAlert('Lỗi kết nối: ' + error.message, 'danger');
             }
-
-            location.reload();
         });
 
-
-        document.querySelectorAll(".btn-edit").forEach(btn => {
-            btn.addEventListener("click", () => {
-                EditIdManHinh.value = btn.dataset.id;
-                EditCongNgheManHinh.value = btn.dataset.congnghe;
-                EditKichThuoc.value = btn.dataset.kichthuoc;
-                EditDoPhanGiai.value = btn.dataset.dophangiai;
-                EditTinhNangMan.value = btn.dataset.tinhnang;
-                EditMoTaMan.value = btn.dataset.mota;
-                new bootstrap.Modal(editModal).show();
-            });
-        });
-
+        // Xử lý sửa màn hình
         document.getElementById("editForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
-            const id = EditIdManHinh.value;
-            const mh = {
-                IdManHinh: id,
-                CongNgheManHinh: EditCongNgheManHinh.value.trim(),
-                KichThuoc: EditKichThuoc.value.trim(),
-                DoPhanGiai: EditDoPhanGiai.value.trim(),
-                TinhNangMan: EditTinhNangMan.value.trim(),
-                MoTaMan: EditMoTaMan.value.trim()
+            const id = document.getElementById("EditIdManHinh").value;
+            const mhData = {
+                CongNgheManHinh: document.getElementById("EditCongNgheManHinh").value.trim(),
+                KichThuoc: document.getElementById("EditKichThuoc").value.trim(),
+                DoPhanGiai: document.getElementById("EditDoPhanGiai").value.trim(),
+                TinhNangMan: document.getElementById("EditTinhNangMan").value.trim(),
+                MoTaMan: document.getElementById("EditMoTaMan").value.trim()
             };
 
-            ["errorEditCongNgheManHinh", "errorEditKichThuoc", "errorEditDoPhanGiai", "errorEditTinhNangMan"]
-                .forEach(id => document.getElementById(id).classList.add("d-none"));
+            hideAllErrors();
 
-            const response = await fetch('/ManHinh/Edit/' + id, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(mh)
-            });
+            try {
+                const response = await fetch(`/ManHinh/Edit?id=${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(mhData)
+                });
 
-            let data = {};
-            try { data = await response.json(); } catch { }
+                if (response.ok) {
+                    const result = await response.json();
+                    showAlert(result.message, 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    const error = await response.json();
 
-            if (!response.ok) {
-                if (response.status === 400 && typeof data === "object") {
-                    if (data.CongNgheManHinh) showError("errorEditCongNgheManHinh", data.CongNgheManHinh);
-                    if (data.KichThuoc) showError("errorEditKichThuoc", data.KichThuoc);
-                    if (data.DoPhanGiai) showError("errorEditDoPhanGiai", data.DoPhanGiai);
-                    if (data.TinhNangMan) showError("errorEditTinhNangMan", data.TinhNangMan);
-                    return;
+                    if (response.status === 400 && typeof error === "object") {
+                        if (error.CongNgheManHinh) showError("errorEditCongNgheManHinh", error.CongNgheManHinh);
+                        if (error.KichThuoc) showError("errorEditKichThuoc", error.KichThuoc);
+                        if (error.DoPhanGiai) showError("errorEditDoPhanGiai", error.DoPhanGiai);
+                        if (error.TinhNangMan) showError("errorEditTinhNangMan", error.TinhNangMan);
+                        return;
+                    }
+
+                    if (response.status === 409 && error.message) {
+                        showAlert(error.message, 'warning');
+                        return;
+                    }
+
+                    if (response.status === 404) {
+                        showAlert(error.message, 'danger');
+                        return;
+                    }
+
+                    showAlert(error.message || "Không thể cập nhật Màn Hình", 'danger');
                 }
-
-                if (response.status === 409 && data.message) {
-                    ["errorEditCongNgheManHinh", "errorEditKichThuoc", "errorEditDoPhanGiai", "errorEditTinhNangMan"]
-                        .forEach(id => showError(id, data.message));
-                    return;
-                }
-
-                alert(data.message || "Không thể cập nhật Màn Hình. Vui lòng thử lại!");
-                return;
+            } catch (error) {
+                showAlert('Lỗi kết nối: ' + error.message, 'danger');
             }
-
-            location.reload();
         });
 
-        function showError(id, msg) {
-            const el = document.getElementById(id);
-            el.textContent = msg;
-            el.classList.remove("d-none");
-        }
-
-        createModal.addEventListener("hidden.bs.modal", () => {
-            createForm.reset();
-            document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
+        // Reset form khi modal đóng
+        document.getElementById('createModal').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('createForm').reset();
+            hideAllErrors();
         });
 
-        editModal.addEventListener("hidden.bs.modal", () => {
-            editForm.reset();
-            document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
+        document.getElementById('editModal').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('editForm').reset();
+            hideAllErrors();
         });
     </script>
 </body>

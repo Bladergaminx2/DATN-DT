@@ -16,6 +16,7 @@ namespace DATN_DT.Repos
         {
             if (await GetManHinhById(manhinh.IdManHinh) != null) throw new DuplicateWaitObjectException($"Man hinh : {manhinh.IdManHinh} already exists");
             await _context.ManHinhs.AddAsync(manhinh);
+            _context.SaveChangesAsync();
         }
 
         public async Task Delete(int id)
@@ -23,6 +24,7 @@ namespace DATN_DT.Repos
             var manhinh = await GetManHinhById(id);
             if (manhinh == null) throw new KeyNotFoundException("Not found!");
             _context.ManHinhs.Remove(manhinh);
+           await _context.SaveChangesAsync();
         }
 
         public async Task<List<ManHinh>> GetAllManHinhs()
@@ -35,15 +37,11 @@ namespace DATN_DT.Repos
             return await _context.ManHinhs.FindAsync(id);
         }
 
-        public async Task SaveChanges()
-        {
-            await _context.SaveChangesAsync();
-        }
-
         public async Task Update(ManHinh manhinh)
         {
             if (await GetManHinhById(manhinh.IdManHinh) == null) throw new KeyNotFoundException("Not found!");
             _context.ManHinhs.Update(manhinh);
+            _context.SaveChangesAsync();
         }
     }
 }

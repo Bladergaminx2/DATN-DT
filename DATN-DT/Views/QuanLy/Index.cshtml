@@ -94,6 +94,7 @@
                 border-radius: 8px;
                 transition: background-color 0.3s;
                 gap: 10px;
+                cursor: pointer;
             }
 
                 .sidebar a:hover {
@@ -136,14 +137,30 @@
                 visibility: visible;
             }
 
-        /* Main */
+        /* Main Content Area */
         main {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: calc(100vh - 100px);
+            padding: 20px;
+            margin-top: 100px;
+            margin-left: 0;
+            transition: margin-left 0.3s ease;
+            min-height: calc(100vh - 100px);
         }
 
+            main.with-sidebar {
+                margin-left: 250px;
+            }
+
+        /* Content Container */
+        .content-container {
+            background-color: #1e1e2d;
+            border-radius: 15px;
+            padding: 25px;
+            color: white;
+            min-height: calc(100vh - 140px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Welcome Box */
         .welcome-box {
             background-color: #36363f;
             color: white;
@@ -151,6 +168,7 @@
             border-radius: 20px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
             text-align: center;
+            display: block;
         }
 
             .welcome-box h1 {
@@ -158,6 +176,20 @@
                 margin: 0;
                 letter-spacing: 1px;
             }
+
+        /* Iframe for loading external content */
+        .content-iframe {
+            width: 100%;
+            height: calc(100vh - 140px);
+            border: none;
+            border-radius: 15px;
+            background-color: white;
+        }
+
+        /* Hide content when not active */
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -170,33 +202,56 @@
 
     <div class="sidebar" id="sidebar">
         <h2>Menu</h2>
-        <a href="#"><img src="~/ImgResource/Icons/id-card-regular-full.svg" class="icon" />Nhân Viên</a>
-        <a href="#"><img src="~/ImgResource/Icons/user-regular-full.svg" class="icon" />Khách Hàng</a>
+        <a href="#" data-page="nhanvien" class="nav-link">
+            <img src="~/ImgResource/Icons/id-card-regular-full.svg" class="icon" />Nhân Viên
+        </a>
+        <a href="#" data-page="khachhang" class="nav-link">
+            <img src="~/ImgResource/Icons/user-regular-full.svg" class="icon" />Khách Hàng
+        </a>
 
         <a href="#" id="productMenu">
             <img src="~/ImgResource/Icons/mobile-screen-solid-full.svg" class="icon" />Sản Phẩm
         </a>
         <div class="submenu" id="productSubmenu">
-            <a href="#">Màn Hình</a>
-            <a href="#">Camera Trước</a>
-            <a href="#">Camera Sau</a>
-            <a href="#">Pin</a>
-            <a href="#">RAM</a>
-            <a href="#">ROM</a>
+            <a href="#" data-page="sanpham">Tất Cả Sản Phẩm</a>
+            <a href="#" data-page="manhinh">Màn Hình</a>
+            <a href="#" data-page="cameratruoc">Camera Trước</a>
+            <a href="#" data-page="camerasau">Camera Sau</a>
+            <a href="#" data-page="pin">Pin</a>
+            <a href="#" data-page="ram">RAM</a>
+            <a href="#" data-page="rom">ROM</a>
+            <a href="#" data-page="thuonghieu">Thương hiệu</a>
+            <a href="#" data-page="kho">Kho</a>
         </div>
 
-        <a href="#"><img src="~/ImgResource/Icons/percent-solid-full.svg" class="icon" />Khuyến Mãi</a>
-        <a href="#"><img src="~/ImgResource/Icons/money-bill-solid-full.svg" class="icon" />Thanh Toán</a>
-        <a href="#"><img src="~/ImgResource/Icons/boxes-packing-solid-full.svg" class="icon" />Đơn Hàng</a>
-        <a href="#"><img src="~/ImgResource/Icons/file-invoice-dollar-solid-full.svg" class="icon" />Hóa Đơn</a>
-        <a href="#"><img src="~/ImgResource/Icons/screwdriver-wrench-solid-full.svg" class="icon" />Bảo Hành</a>
+        <a href="#" data-page="khuyenmai" class="nav-link">
+            <img src="~/ImgResource/Icons/percent-solid-full.svg" class="icon" />Khuyến Mãi
+        </a>
+        <a href="#" data-page="thanhtoan" class="nav-link">
+            <img src="~/ImgResource/Icons/money-bill-solid-full.svg" class="icon" />Thanh Toán
+        </a>
+        <a href="#" data-page="donhang" class="nav-link">
+            <img src="~/ImgResource/Icons/boxes-packing-solid-full.svg" class="icon" />Đơn Hàng
+        </a>
+        <a href="#" data-page="hoadon" class="nav-link">
+            <img src="~/ImgResource/Icons/file-invoice-dollar-solid-full.svg" class="icon" />Hóa Đơn
+        </a>
+        <a href="#" data-page="baohanh" class="nav-link">
+            <img src="~/ImgResource/Icons/screwdriver-wrench-solid-full.svg" class="icon" />Bảo Hành
+        </a>
     </div>
 
     <div class="overlay" id="overlay"></div>
 
-    <main>
-        <div class="welcome-box">
+    <main id="mainContent">
+        <!-- Welcome Screen (Default) -->
+        <div id="welcomeScreen" class="content-container welcome-box">
             <h1>Welcome to Tech Phone Management</h1>
+        </div>
+
+        <!-- Content Area for loaded pages -->
+        <div id="contentArea" class="content-container hidden">
+            <iframe id="contentFrame" class="content-iframe" sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
         </div>
     </main>
 
@@ -206,11 +261,35 @@
         const menuBtn = document.getElementById("menuBtn");
         const productMenu = document.getElementById("productMenu");
         const productSubmenu = document.getElementById("productSubmenu");
+        const mainContent = document.getElementById("mainContent");
+        const welcomeScreen = document.getElementById("welcomeScreen");
+        const contentArea = document.getElementById("contentArea");
+        const contentFrame = document.getElementById("contentFrame");
 
+        // Page URL mapping
+        const pageUrls = {
+            'nhanvien': 'https://localhost:7150/NhanVien',
+            'khachhang': 'https://localhost:7150/KhachHang',
+            'sanpham': 'https://localhost:7150/SanPham',
+            'manhinh': 'https://localhost:7150/ManHinh',
+            'cameratruoc': 'https://localhost:7150/CameraTruoc',
+            'camerasau': '#',
+            'pin': 'https://localhost:7150/Pin',
+            'ram': 'https://localhost:7150/RAM',
+            'rom': 'https://localhost:7150/ROM',
+            'thuonghieu': 'https://localhost:7150/ThuongHieu',
+            'kho': 'https://localhost:7150/Kho',
+            'khuyenmai': '#',
+            'thanhtoan': '#',
+            'donhang': '#',
+            'hoadon': '#',
+            'baohanh': 'https://localhost:7150/BaoHanh'
+        };
+
+        // Menu toggle
         menuBtn.addEventListener("click", (e) => {
             e.stopPropagation();
-            sidebar.classList.toggle("active");
-            overlay.classList.toggle("active");
+            toggleSidebar();
         });
 
         overlay.addEventListener("click", closeSidebar);
@@ -225,16 +304,84 @@
             }
         });
 
+        // Toggle sidebar
+        function toggleSidebar() {
+            const isActive = sidebar.classList.toggle("active");
+            overlay.classList.toggle("active");
+
+            if (isActive) {
+                mainContent.classList.add("with-sidebar");
+            } else {
+                mainContent.classList.remove("with-sidebar");
+            }
+        }
+
         function closeSidebar() {
             sidebar.classList.remove("active");
             overlay.classList.remove("active");
+            mainContent.classList.remove("with-sidebar");
         }
 
-        // Toggle submenu
+        // Toggle product submenu
         productMenu.addEventListener("click", (e) => {
             e.preventDefault();
             productSubmenu.classList.toggle("show");
         });
+
+        // Navigation click handlers
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = this.getAttribute('data-page');
+                loadPage(page);
+                closeSidebar();
+            });
+        });
+
+        // Submenu item click handlers
+        document.querySelectorAll('#productSubmenu a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = this.getAttribute('data-page');
+                loadPage(page);
+                closeSidebar();
+            });
+        });
+
+        // Load page function
+        function loadPage(pageKey) {
+            const url = pageUrls[pageKey];
+
+            if (url && url !== '#') {
+                // Show content area, hide welcome screen
+                welcomeScreen.classList.add('hidden');
+                contentArea.classList.remove('hidden');
+
+                // Load the page in iframe
+                contentFrame.src = url;
+            } else {
+                // For pages without URL, show welcome screen
+                welcomeScreen.classList.remove('hidden');
+                contentArea.classList.add('hidden');
+                contentFrame.src = '';
+            }
+        }
+
+        // Handle iframe navigation (optional - for back/forward buttons)
+        contentFrame.addEventListener('load', function() {
+            // You can add additional logic here if needed
+            console.log('Page loaded in iframe');
+        });
+
+        // Close sidebar when clicking outside on mobile
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                closeSidebar();
+            }
+        });
+
+        // Initialize
+        closeSidebar();
     </script>
 </body>
 </html>

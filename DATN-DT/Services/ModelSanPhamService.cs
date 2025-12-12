@@ -1,40 +1,41 @@
-﻿using DATN_DT.IServices;
+﻿using DATN_DT.IRepos;
+using DATN_DT.IServices;
 using DATN_DT.Models;
 
 namespace DATN_DT.Services
 {
     public class ModelSanPhamService : IModelSanPhamService
     {
-        private readonly HttpClient _httpClient;
-        public ModelSanPhamService(HttpClient httpClient)
+        private readonly IModelSanPhamRepo _IModelSanPhamRepo;
+        public ModelSanPhamService(IModelSanPhamRepo Imodelsprepo)
         {
-            _httpClient = httpClient;
+            _IModelSanPhamRepo = Imodelsprepo;
         }
         public async Task Create(ModelSanPham modelSanPham)
         {
-            await _httpClient.PostAsJsonAsync<ModelSanPham>("https://localhost:7150/api/ModelSanPhams", modelSanPham);
+            await _IModelSanPhamRepo.Create(modelSanPham);
         }
 
         public async Task Delete(int id)
         {
-            await _httpClient.DeleteAsync($"https://localhost:7150/api/ModelSanPhams/{id}");
+            await _IModelSanPhamRepo.Delete(id);
         }
 
         public Task<List<ModelSanPham>> GetAllModelSanPhams()
         {
-            var response =  _httpClient.GetFromJsonAsync<List< ModelSanPham>>("https://localhost:7150/api/ModelSanPhams");
+            var response =  _IModelSanPhamRepo.GetAllModelSanPhams();
             return response;
         }
 
         public async Task<ModelSanPham?> GetModelSanPhamById(int id)
         {
-            var response = await _httpClient.GetFromJsonAsync<ModelSanPham>($"https://localhost:7150/api/ModelSanPhams/{id}");
+            var response = await _IModelSanPhamRepo.GetModelSanPhamById(id);
             return response;
         }
 
         public async Task Update(ModelSanPham modelSanPham)
         {
-            await _httpClient.PutAsJsonAsync<ModelSanPham>($"https://localhost:7150/api/ModelSanPhams/{modelSanPham.IdModelSanPham}", modelSanPham);
+            await _IModelSanPhamRepo.Update(modelSanPham);
         }
     }
 }

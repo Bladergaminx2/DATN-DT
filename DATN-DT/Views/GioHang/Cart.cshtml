@@ -1,0 +1,155 @@
+﻿@{
+    ViewData["Title"] = "Giỏ Hàng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .quantity-control .quantity-input {
+        -moz-appearance: textfield;
+    }
+
+        .quantity-control .quantity-input::-webkit-outer-spin-button,
+        .quantity-control .quantity-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+    .quantity-control .form-control {
+        border: 1px solid #dee2e6;
+    }
+
+    .quantity-control .btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 1px solid #6c757d;
+        background-color: white;
+        color: #6c757d;
+    }
+
+        .quantity-control .btn:hover {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .quantity-control .btn:focus {
+            box-shadow: none;
+        }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    .btn-checkout:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    /* Style cho nút xóa */
+    .btn-delete {
+        border: 1px solid #dc3545;
+        background-color: white;
+        color: #dc3545;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .btn-delete:hover {
+            background-color: #dc3545;
+            color: white;
+        }
+
+    /* Bootstrap icon size */
+    .bi-trash {
+        width: 16px;
+        height: 16px;
+    }
+</style>
+
+<div class="container mt-4">
+    <h2 class="mb-4">Giỏ Hàng Của Bạn</h2>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Sản Phẩm</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="50" class="text-center">
+                                        <input type="checkbox" id="selectAll">
+                                    </th>
+                                    <th width="80">Ảnh</th>
+                                    <th>Sản Phẩm</th>
+                                    <th width="120" class="text-center">Đơn Giá</th>
+                                    <th width="150" class="text-center">Số Lượng</th>
+                                    <th width="120" class="text-center">Thành Tiền</th>
+                                    <th width="80" class="text-center">Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cartItems">
+                                <!-- Dữ liệu sẽ được load bằng JavaScript -->
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <p class="mt-2 text-muted">Đang tải giỏ hàng...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header">
+                    <h5 class="mb-0">Tổng Thanh Toán</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <strong>Tổng tiền:</strong>
+                        <strong id="totalPayment" class="text-danger fs-5">0 ₫</strong>
+                    </div>
+                    <button id="btnCheckout" class="btn btn-danger w-100" disabled>
+                        Thanh Toán (<span id="selectedCount">0</span> sản phẩm)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xác nhận xóa -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">
+                    <i class="bi bi-trash me-1"></i>Xóa
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/giohang.js"></script>
+}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">

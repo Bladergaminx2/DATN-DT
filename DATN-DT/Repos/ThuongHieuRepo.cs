@@ -8,21 +8,33 @@ namespace DATN_DT.Repos
     public class ThuongHieuRepo : IThuongHieuRepo
     {
         private readonly MyDbContext _context;
+
         public ThuongHieuRepo(MyDbContext context)
         {
             _context = context;
         }
+
         public async Task Create(ThuongHieu thuongHieu)
         {
-            if (await GetThuongHieuById(thuongHieu.IdThuongHieu) != null) throw new ArgumentException("ThuongHieu already exists");
+            // Kiểm tra trùng tên thương hiệu thay vì ID
+            var existing = await _context.ThuongHieus
+                .FirstOrDefaultAsync(x => x.TenThuongHieu.ToLower() == thuongHieu.TenThuongHieu.ToLower());
+
+            if (existing != null)
+                throw new ArgumentException("Thương hiệu đã tồn tại");
+
             await _context.ThuongHieus.AddAsync(thuongHieu);
+            await _context.SaveChangesAsync(); // Nên save changes ở repo
         }
 
         public async Task Delete(int id)
         {
             var thuongHieu = await GetThuongHieuById(id);
-            if (thuongHieu == null) throw new KeyNotFoundException("ThuongHieu not found");
+            if (thuongHieu == null)
+                throw new KeyNotFoundException("Không tìm thấy thương hiệu");
+
             _context.ThuongHieus.Remove(thuongHieu);
+            await _context.SaveChangesAsync(); // Nên save changes ở repo
         }
 
         public async Task<List<ThuongHieu>> GetAllThuongHieus()
@@ -32,18 +44,39 @@ namespace DATN_DT.Repos
 
         public async Task<ThuongHieu?> GetThuongHieuById(int id)
         {
-            return await _context.ThuongHieus.FindAsync(id);
+            // Sửa lỗi: thiếu FirstOrDefaultAsync
+            return await _context.ThuongHieus
+                .FirstOrDefaultAsync(x => x.IdThuongHieu == id);
         }
 
-        public async Task SaveChanges()
+        public async Task<ThuongHieu?> GetThuongHieuByName(string name)
         {
-            await _context.SaveChangesAsync();
+            return await _context.ThuongHieus
+                .FirstOrDefaultAsync(x => x.TenThuongHieu.ToLower() == name.ToLower());
         }
 
         public async Task Update(ThuongHieu thuongHieu)
         {
-            if (await GetThuongHieuById(thuongHieu.IdThuongHieu) == null) throw new KeyNotFoundException("ThuongHieu not found");
-            _context.Entry(thuongHieu).State = EntityState.Modified;
+            var existing = await GetThuongHieuById(thuongHieu.IdThuongHieu);
+            if (existing == null)
+                throw new KeyNotFoundException("Không tìm thấy thương hiệu");
+
+            // Kiểm tra trùng tên (trừ chính nó)
+            var duplicate = await _context.ThuongHieus
+                .FirstOrDefaultAsync(x =>
+                    x.TenThuongHieu.ToLower() == thuongHieu.TenThuongHieu.ToLower() &&
+                    x.IdThuongHieu != thuongHieu.IdThuongHieu);
+
+            if (duplicate != null)
+                throw new ArgumentException("Tên thương hiệu đã tồn tại");
+
+            // Cập nhật thông tin
+            existing.TenThuongHieu = thuongHieu.TenThuongHieu;
+            existing.TrangThaiThuongHieu = thuongHieu.TrangThaiThuongHieu;
+            // Có thể thêm các trường khác nếu có
+
+            _context.ThuongHieus.Update(existing);
+            await _context.SaveChangesAsync(); // Nên save changes ở repo
         }
     }
 }

@@ -16,6 +16,7 @@ namespace DATN_DT.Repos
         {
             if (await GetRAMById(ram.IdRAM) != null) throw new ArgumentException($"Ram {ram.IdRAM} already exists");
             await _context.RAMs.AddAsync(ram);
+            _context.SaveChanges();
         }
 
         public async Task Delete(int id)
@@ -23,6 +24,7 @@ namespace DATN_DT.Repos
             var ram = await GetRAMById(id);
             if (ram == null) throw new KeyNotFoundException("Ram not found");
             _context.RAMs.Remove(ram);
+            _context.SaveChanges();
         }
 
         public async Task<List<RAM>> GetAllRAMs()
@@ -35,15 +37,10 @@ namespace DATN_DT.Repos
             return await _context.RAMs.FindAsync(id);
         }
 
-        public async Task SaveChanges()
-        {
-            await _context.SaveChangesAsync();
-        }
-
         public async Task Update(RAM ram)
         {
-            if (await GetRAMById(ram.IdRAM) == null) throw new KeyNotFoundException("Ram not found");
-            _context.Entry(ram).State = EntityState.Modified;
+            _context.RAMs.Update(ram);
+            _context.SaveChanges();
         }
     }
 }

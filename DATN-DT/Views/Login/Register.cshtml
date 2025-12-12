@@ -42,12 +42,6 @@
             </div>
 
             <div class="form-group">
-                <label asp-for="DiaChiKhachHang" class="form-label">Địa chỉ *</label>
-                <textarea asp-for="DiaChiKhachHang" class="form-control" rows="3"></textarea>
-                <span asp-validation-for="DiaChiKhachHang" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
                 <button type="submit" class="btn btn-success btn-block" id="registerBtn">
                     Đăng Ký
                 </button>
@@ -108,7 +102,6 @@
                     EmailKhachHang: $('#EmailKhachHang').val(),
                     Password: $('#Password').val(),
                     SdtKhachHang: $('#SdtKhachHang').val(),
-                    DiaChiKhachHang: $('#DiaChiKhachHang').val()
                 };
                 
                 console.log('Sending data:', formData); // Debug log

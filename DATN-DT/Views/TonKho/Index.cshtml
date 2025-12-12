@@ -104,11 +104,22 @@
             gap: 5px;
             justify-content: center;
         }
+
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Quản Lý Tồn Kho</h2>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
 
         <div class="d-flex justify-content-end mb-3">
             <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
@@ -133,39 +144,23 @@
                     <tr>
                         <td>@item.IdTonKho</td>
                         <td>
-                            @if (ViewBag.ModelSanPhams != null && item.IdModelSanPham.HasValue)
+                            @if (item.ModelSanPham != null)
                             {
-                                var modelSanPham = ((Dictionary<int, DATN_DT.Models.ModelSanPham>)ViewBag.ModelSanPhams).GetValueOrDefault(item.IdModelSanPham.Value);
-                                if (modelSanPham != null)
-                                {
-                                    @modelSanPham.TenModel
-                                }
-                                else
-                                {
-                                    <span class="text-muted">Không tìm thấy (ID: @item.IdModelSanPham)</span>
-                                }
+                                @item.ModelSanPham.TenModel
                             }
                             else
                             {
-                                <span class="text-muted">Chưa chọn</span>
+                                <span class="text-muted">Chưa chọn model</span>
                             }
                         </td>
                         <td>
-                            @if (ViewBag.Khos != null && item.IdKho.HasValue)
+                            @if (item.Kho != null)
                             {
-                                var kho = ((Dictionary<int, DATN_DT.Models.Kho>)ViewBag.Khos).GetValueOrDefault(item.IdKho.Value);
-                                if (kho != null)
-                                {
-                                    @kho.TenKho
-                                }
-                                else
-                                {
-                                    <span class="text-muted">Không tìm thấy (ID: @item.IdKho)</span>
-                                }
+                                @item.Kho.TenKho
                             }
                             else
                             {
-                                <span class="text-muted">Chưa chọn</span>
+                                <span class="text-muted">Chưa chọn kho</span>
                             }
                         </td>
                         <td>
@@ -201,8 +196,14 @@
                                 <button class="btn btn-sm btn-warning btn-edit"
                                         data-id="@item.IdTonKho"
                                         data-idmodelsanpham="@item.IdModelSanPham"
-                                        data-idkho="@item.IdKho">
+                                        data-idkho="@item.IdKho"
+                                        data-soluong="@item.SoLuong">
                                     Sửa
+                                </button>
+                                <button class="btn btn-sm btn-danger btn-delete"
+                                        data-id="@item.IdTonKho"
+                                        data-model="@(item.ModelSanPham?.TenModel ?? "N/A")">
+                                    Xóa
                                 </button>
                             </div>
                         </td>
@@ -212,7 +213,7 @@
         </table>
     </div>
 
-    <!-- Create -->
+    <!-- Create Modal -->
     <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content p-3">
@@ -238,10 +239,12 @@
                             <small id="errorIdKho" class="text-danger d-none"></small>
                         </div>
 
-                        <div class="alert alert-info">
-                            <small>
-                                <strong>Lưu ý:</strong> Số lượng sẽ được tự động tính từ số IMEI có trạng thái "Còn hàng" của model sản phẩm này.
-                            </small>
+                        <div class="mb-3">
+                            <label class="form-label">Số Lượng <span class="text-danger">*</span></label>
+                            <input type="number" id="SoLuong" class="form-control" min="1" value="1"
+                                   placeholder="Nhập số lượng sản phẩm" />
+                            <small id="errorSoLuong" class="text-danger d-none"></small>
+                            <small class="form-text text-muted">Nhập số lượng sản phẩm tồn kho (phải lớn hơn 0)</small>
                         </div>
                     </div>
 
@@ -254,7 +257,7 @@
         </div>
     </div>
 
-    <!--Edit -->
+    <!-- Edit Modal -->
     <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content p-3">
@@ -281,10 +284,12 @@
                             <small id="errorEditIdKho" class="text-danger d-none"></small>
                         </div>
 
-                        <div class="alert alert-info">
-                            <small>
-                                <strong>Lưu ý:</strong> Số lượng được tự động tính từ IMEI và không thể chỉnh sửa thủ công.
-                            </small>
+                        <div class="mb-3">
+                            <label class="form-label">Số Lượng <span class="text-danger">*</span></label>
+                            <input type="number" id="EditSoLuong" class="form-control" min="1"
+                                   placeholder="Nhập số lượng sản phẩm" />
+                            <small id="errorEditSoLuong" class="text-danger d-none"></small>
+                            <small class="form-text text-muted">Nhập số lượng sản phẩm tồn kho (phải lớn hơn 0)</small>
                         </div>
                     </div>
 
@@ -298,152 +303,273 @@
     </div>
 
     <script>
-   
+        // Hiển thị thông báo
+        function showAlert(message, type = 'success') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+            `;
+            alertContainer.appendChild(alert);
+
+            setTimeout(() => {
+                if (alert.parentElement) {
+                    alert.remove();
+                }
+            }, 3000);
+        }
+
+        // Hiển thị lỗi
+        function showError(fieldId, message) {
+            const errorElement = document.getElementById(fieldId);
+            errorElement.textContent = message;
+            errorElement.classList.remove('d-none');
+        }
+
+        // Ẩn lỗi
+        function hideError(fieldId) {
+            const errorElement = document.getElementById(fieldId);
+            errorElement.classList.add('d-none');
+        }
+
+        // Ẩn tất cả lỗi
+        function hideAllErrors() {
+            document.querySelectorAll('.text-danger').forEach(el => {
+                el.classList.add('d-none');
+            });
+        }
+
+        // Tải dữ liệu dropdown từ API
         async function loadDropdownData() {
             try {
-                const responses = await Promise.all([
-                    fetch('/TonKho/GetAllModelSanPham').then(r => r.json()),
-                    fetch('/TonKho/GetAllKho').then(r => r.json())
-                ]);
+                const modelResponse = await fetch('/api/ModelSanPham');
+                const khoResponse = await fetch('/api/Kho');
 
-                const [modelSanPhamList, khoList] = responses;
-                populateDropdown('IdModelSanPham', modelSanPhamList, 'idModelSanPham', 'displayText');
-                populateDropdown('IdKho', khoList, 'idKho', 'displayText');
+                if (modelResponse.ok && khoResponse.ok) {
+                    const modelSanPhamList = await modelResponse.json();
+                    const khoList = await khoResponse.json();
 
-              
-                populateDropdown('EditIdModelSanPham', modelSanPhamList, 'idModelSanPham', 'displayText');
-                populateDropdown('EditIdKho', khoList, 'idKho', 'displayText');
-
+                    populateDropdown('IdModelSanPham', modelSanPhamList, 'idModelSanPham', 'tenModel');
+                    populateDropdown('IdKho', khoList, 'idKho', 'tenKho');
+                    populateDropdown('EditIdModelSanPham', modelSanPhamList, 'idModelSanPham', 'tenModel');
+                    populateDropdown('EditIdKho', khoList, 'idKho', 'tenKho');
+                } else {
+                    throw new Error('Không thể tải dữ liệu dropdown');
+                }
             } catch (error) {
                 console.error('Error loading dropdown data:', error);
-                alert('Không thể tải dữ liệu dropdown. Vui lòng thử lại!');
+                showAlert('Không thể tải danh sách model và kho', 'warning');
             }
         }
 
         function populateDropdown(selectId, dataList, valueField, textField) {
             const select = document.getElementById(selectId);
-            select.innerHTML = '<option value="">Chọn...</option>';
-            dataList.forEach(item => {
-                const option = document.createElement('option');
-                option.value = item[valueField];
-                option.textContent = item[textField];
-                select.appendChild(option);
-            });
+            if (!select) return;
+
+            const firstOption = select.options[0];
+            select.innerHTML = '';
+            select.appendChild(firstOption);
+
+            if (dataList && dataList.length > 0) {
+                dataList.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item[valueField];
+                    option.textContent = item[textField] || `ID: ${item[valueField]}`;
+                    select.appendChild(option);
+                });
+            }
         }
 
-        // them
+        // Mở modal edit và điền dữ liệu
+        document.querySelectorAll(".btn-edit").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const id = btn.dataset.id;
+                const idModelSanPham = btn.dataset.idmodelsanpham;
+                const idKho = btn.dataset.idkho;
+                const soLuong = btn.dataset.soluong;
+
+                document.getElementById("EditIdTonKho").value = id;
+                document.getElementById("EditIdModelSanPham").value = idModelSanPham;
+                document.getElementById("EditIdKho").value = idKho;
+                document.getElementById("EditSoLuong").value = soLuong;
+
+                hideAllErrors();
+                new bootstrap.Modal(document.getElementById('editModal')).show();
+            });
+        });
+
+        // Xử lý xóa tồn kho
+        document.querySelectorAll(".btn-delete").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const id = btn.dataset.id;
+                const modelName = btn.dataset.model;
+
+                if (confirm(`Bạn có chắc chắn muốn xóa tồn kho của model "${modelName}"?`)) {
+                    try {
+                        const response = await fetch(`/TonKho/Delete?id=${id}`, {
+                            method: 'DELETE'
+                        });
+
+                        if (response.ok) {
+                            const result = await response.json();
+                            showAlert(result.message, 'success');
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            const error = await response.json();
+                            showAlert(error.message || 'Lỗi khi xóa tồn kho', 'danger');
+                        }
+                    } catch (error) {
+                        showAlert('Lỗi kết nối: ' + error.message, 'danger');
+                    }
+                }
+            });
+        });
+
+        // Xử lý thêm tồn kho
         document.getElementById("createForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
-            const tonKho = {
-                IdModelSanPham: parseInt(IdModelSanPham.value),
-                IdKho: parseInt(IdKho.value)
+            const tonKhoData = {
+                IdModelSanPham: parseInt(document.getElementById("IdModelSanPham").value) || 0,
+                IdKho: parseInt(document.getElementById("IdKho").value) || 0,
+                SoLuong: parseInt(document.getElementById("SoLuong").value) || 0
             };
 
-            const response = await fetch('/TonKho/Create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(tonKho)
-            });
+            // Kiểm tra validation
+            let isValid = true;
+            hideAllErrors();
 
-            let data = {};
-            try { data = await response.json(); } catch { }
-
-            
-            ["errorIdModelSanPham", "errorIdKho"]
-                .forEach(id => document.getElementById(id).classList.add("d-none"));
-
-            if (!response.ok) {
-                if (response.status === 400 && typeof data === "object") {
-                    if (data.IdModelSanPham) showError("errorIdModelSanPham", data.IdModelSanPham);
-                    if (data.IdKho) showError("errorIdKho", data.IdKho);
-                    return;
-                }
-
-                if (response.status === 409 && data.message) {
-                    showError("errorIdModelSanPham", data.message);
-                    return;
-                }
-
-                alert(data.message || "Không thể thêm Tồn Kho. Vui lòng thử lại!");
-                return;
+            if (tonKhoData.IdModelSanPham === 0) {
+                showError("errorIdModelSanPham", "Phải chọn model sản phẩm!");
+                isValid = false;
+            }
+            if (tonKhoData.IdKho === 0) {
+                showError("errorIdKho", "Phải chọn kho!");
+                isValid = false;
+            }
+            if (tonKhoData.SoLuong <= 0) {
+                showError("errorSoLuong", "Số lượng phải lớn hơn 0!");
+                isValid = false;
             }
 
-            location.reload();
+            if (!isValid) return;
+
+            try {
+                const response = await fetch('/TonKho/Create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(tonKhoData)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showAlert(result.message, 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('createModal')).hide();
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    const error = await response.json();
+
+                    if (response.status === 400 && typeof error === 'object') {
+                        // Lỗi validation
+                        if (error.IdModelSanPham) showError('errorIdModelSanPham', error.IdModelSanPham);
+                        if (error.IdKho) showError('errorIdKho', error.IdKho);
+                        if (error.SoLuong) showError('errorSoLuong', error.SoLuong);
+                    } else if (response.status === 409) {
+                        // Lỗi trùng
+                        showAlert(error.message, 'warning');
+                    } else {
+                        showAlert(error.message || 'Lỗi khi thêm tồn kho', 'danger');
+                    }
+                }
+            } catch (error) {
+                showAlert('Lỗi kết nối: ' + error.message, 'danger');
+            }
         });
 
-    
-        document.querySelectorAll(".btn-edit").forEach(btn => {
-            btn.addEventListener("click", () => {
-                EditIdTonKho.value = btn.dataset.id;
-                EditIdModelSanPham.value = btn.dataset.idmodelsanpham;
-                EditIdKho.value = btn.dataset.idkho;
-                
-                new bootstrap.Modal(editModal).show();
-            });
-        });
-
-        // edit
+        // Xử lý sửa tồn kho
         document.getElementById("editForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
-            const id = EditIdTonKho.value;
-            const tonKho = {
-                IdModelSanPham: parseInt(EditIdModelSanPham.value),
-                IdKho: parseInt(EditIdKho.value)
+            const id = document.getElementById("EditIdTonKho").value;
+            const tonKhoData = {
+                IdModelSanPham: parseInt(document.getElementById("EditIdModelSanPham").value) || 0,
+                IdKho: parseInt(document.getElementById("EditIdKho").value) || 0,
+                SoLuong: parseInt(document.getElementById("EditSoLuong").value) || 0
             };
 
-       
-            ["errorEditIdModelSanPham", "errorEditIdKho"]
-                .forEach(id => document.getElementById(id).classList.add("d-none"));
+            // Kiểm tra validation
+            let isValid = true;
+            hideAllErrors();
 
-            const response = await fetch('/TonKho/Edit/' + id, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(tonKho)
-            });
-
-            let data = {};
-            try { data = await response.json(); } catch { }
-
-            if (!response.ok) {
-                if (response.status === 400 && typeof data === "object") {
-                    if (data.IdModelSanPham) showError("errorEditIdModelSanPham", data.IdModelSanPham);
-                    if (data.IdKho) showError("errorEditIdKho", data.IdKho);
-                    return;
-                }
-
-                if (response.status === 409 && data.message) {
-                    showError("errorEditIdModelSanPham", data.message);
-                    return;
-                }
-
-                alert(data.message || "Không thể cập nhật Tồn Kho. Vui lòng thử lại!");
-                return;
+            if (tonKhoData.IdModelSanPham === 0) {
+                showError("errorEditIdModelSanPham", "Phải chọn model sản phẩm!");
+                isValid = false;
+            }
+            if (tonKhoData.IdKho === 0) {
+                showError("errorEditIdKho", "Phải chọn kho!");
+                isValid = false;
+            }
+            if (tonKhoData.SoLuong <= 0) {
+                showError("errorEditSoLuong", "Số lượng phải lớn hơn 0!");
+                isValid = false;
             }
 
-            location.reload();
+            if (!isValid) return;
+
+            try {
+                const response = await fetch(`/TonKho/Edit?id=${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(tonKhoData)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showAlert(result.message, 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    const error = await response.json();
+
+                    if (response.status === 400 && typeof error === 'object') {
+                        // Lỗi validation
+                        if (error.IdModelSanPham) showError('errorEditIdModelSanPham', error.IdModelSanPham);
+                        if (error.IdKho) showError('errorEditIdKho', error.IdKho);
+                        if (error.SoLuong) showError('errorEditSoLuong', error.SoLuong);
+                    } else if (response.status === 409) {
+                        // Lỗi trùng
+                        showAlert(error.message, 'warning');
+                    } else {
+                        showAlert(error.message || 'Lỗi khi cập nhật tồn kho', 'danger');
+                    }
+                }
+            } catch (error) {
+                showAlert('Lỗi kết nối: ' + error.message, 'danger');
+            }
         });
 
-        function showError(id, msg) {
-            const el = document.getElementById(id);
-            el.textContent = msg;
-            el.classList.remove("d-none");
-        }
-
-        // Reset form khi đóng modal
-        createModal.addEventListener("hidden.bs.modal", () => {
-            createForm.reset();
-            document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
+        // Reset form và ẩn lỗi khi modal đóng
+        document.getElementById('createModal').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('createForm').reset();
+            document.getElementById('SoLuong').value = 1;
+            hideAllErrors();
         });
 
-        editModal.addEventListener("hidden.bs.modal", () => {
-            editForm.reset();
-            document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
+        document.getElementById('editModal').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('editForm').reset();
+            hideAllErrors();
         });
 
-      
-        document.addEventListener('DOMContentLoaded', loadDropdownData);
+        // Tải dữ liệu dropdown khi trang được load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDropdownData();
+        });
     </script>
 </body>
 </html>

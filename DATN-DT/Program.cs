@@ -4,69 +4,54 @@ using DATN_DT.IServices;
 using DATN_DT.Models;
 using DATN_DT.Repos;
 using DATN_DT.Services;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Text.Json.Serialization;
+
 
 var builder = WebApplication.CreateBuilder(args);
-var configuration = builder.Configuration;
+var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
 
-// ----------------------
-// JWT Key
-// ----------------------
-var key = Encoding.UTF8.GetBytes(configuration["Jwt:Key"]);
-
-builder.Services.AddHttpClient("ServerApi")
-                .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://localhost:7150" ?? ""));
-                
-
-// ----------------------
-// Add services to DI
-// ----------------------
+builder.Services.AddHttpClient(); // ← Add this line
+// Add services to the container.
 builder.Services.AddControllersWithViews(options =>
 {
+    // Gắn filter toàn cục
     options.Filters.Add(typeof(DATN_DT.CustomAttribute.AuthorizeRoleFromTokenGlobalFilter));
 });
 
-// DbContext
+
 builder.Services.AddDbContext<MyDbContext>(options =>
-    options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// IHttpContextAccessor
-builder.Services.AddHttpContextAccessor();
+// Thêm các dịch vụ vào DI container
+builder.Services.AddControllers().AddJsonOptions(opt =>
+{
+    opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 
-// ----------------------
-// Repos & Services
-// ----------------------
-// Scoped: dùng DbContext → nên Scoped
-builder.Services.AddScoped<ISanPhamRepo, SanPhamRepo>();
+});
 builder.Services.AddScoped<ISanPhamService, SanPhamService>();
+builder.Services.AddScoped<ISanPhamRepo, SanPhamRepo>();
+builder.Services.AddScoped<IRAMRepo, RAMRepo>();
+builder.Services.AddScoped<IRAMService, RAMService>();
+builder.Services.AddScoped<IROMRepo, ROMRepo>();
+builder.Services.AddScoped<IROMService, ROMService>();
+builder.Services.AddScoped<IManHinhRepo, ManHinhRepo>();
+builder.Services.AddScoped<IManHinhService, ManHinhService>();
 builder.Services.AddScoped<IThuongHieuRepo, ThuongHieuRepo>();
 builder.Services.AddScoped<IThuongHieuService, ThuongHieuService>();
 builder.Services.AddScoped<ITonKhoRepo, TonKhoRepo>();
 builder.Services.AddScoped<ITonKhoService, TonKhoService>();
-builder.Services.AddScoped<IModelSanPhamRepo, ModelSanPhamRepo>();
-builder.Services.AddScoped<IModelSanPhamService, ModelSanPhamService>();
-builder.Services.AddScoped<IManHinhRepo, ManHinhRepo>();
-builder.Services.AddScoped<IManHinhService, ManHinhService>();
+builder.Services.AddScoped<IKhoService, KhoService>();
 builder.Services.AddScoped<INhanVienRepo, NhanVienRepo>();
 builder.Services.AddScoped<INhanVienService, NhanVienService>();
-builder.Services.AddScoped<IRAMRepo, RAMRepo>();
-builder.Services.AddScoped<IRAMService, RAMService>();
 builder.Services.AddScoped<IPinRepo, PinRepo>();
 builder.Services.AddScoped<IPinService, PinService>();
-builder.Services.AddScoped<IROMRepo, ROMRepo>();
-builder.Services.AddScoped<IROMService, ROMService>();
 
-// HttpClient cho service gọi API
-builder.Services.AddHttpClient();
 
-// ----------------------
-// JWT Authentication
-// ----------------------
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -83,89 +68,96 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(key)
     };
 
-    // Lấy token từ cookie "jwt"
+    // Đọc token từ cookie "jwt"
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
         {
             var token = context.HttpContext.Request.Cookies["jwt"];
             if (!string.IsNullOrEmpty(token))
+            {
                 context.Token = token;
+            }
             return Task.CompletedTask;
         }
     };
 });
 
+// Các service khác...
+builder.Services.AddControllersWithViews();
+
+// Đăng ký IHttpContextAccessor
+builder.Services.AddHttpContextAccessor();
+
 var app = builder.Build();
 
-// ----------------------
-// Middleware
-// ----------------------
+// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
 app.UseRouting();
 
-app.UseAuthentication();
+app.UseAuthentication();  // 🔐 thêm dòng này
 app.UseAuthorization();
 
-// ----------------------
-// Seed Role & Admin
-// ----------------------
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<MyDbContext>();
+//using (var scope = app.Services.CreateScope())
+//{
+//    var db = scope.ServiceProvider.GetRequiredService<MyDbContext>();
 
-    // Tạo role ADMIN nếu chưa có
-    var roleAdmin = await db.ChucVus.FirstOrDefaultAsync(r => r.TenChucVuVietHoa == "ADMIN");
-    if (roleAdmin == null)
-    {
-        roleAdmin = new ChucVu
-        {
-            TenChucVu = "Admin",
-            TenChucVuVietHoa = "ADMIN"
-        };
-        db.ChucVus.Add(roleAdmin);
-        await db.SaveChangesAsync();
-    }
+//    // ========== 1. TẠO ROLE ADMIN ==========
+//    var roleAdmin = db.ChucVus.FirstOrDefault(r => r.TenChucVuVietHoa == "ADMIN");
 
-    // Tạo tài khoản admin nếu chưa có
-    var admin = await db.NhanViens.FirstOrDefaultAsync(nv => nv.TenTaiKhoanNV == "admin");
-    if (admin == null)
-    {
-        string password = "admin123"; // mật khẩu mặc định
-        string hashedPassword;
-        using (var sha = System.Security.Cryptography.SHA256.Create())
-        {
-            var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
-            hashedPassword = Convert.ToBase64String(bytes);
-        }
+//    if (roleAdmin == null)
+//    {
+//        roleAdmin = new ChucVu
+//        {
+//            TenChucVu = "Admin",
+//            TenChucVuVietHoa = "ADMIN"
+//        };
+//        db.ChucVus.Add(roleAdmin);
+//        db.SaveChanges();
+//    }
 
-        admin = new NhanVien
-        {
-            TenTaiKhoanNV = "admin",
-            Password = hashedPassword,
-            HoTenNhanVien = "Tài khoản quản trị",
-            IdChucVu = roleAdmin.IdChucVu,
-            TrangThaiNV = 1,
-            NgayVaoLam = DateTime.Now
-        };
+//    // ========== 2. TẠO TÀI KHOẢN ADMIN ==========
+//    var admin = db.NhanViens.FirstOrDefault(nv => nv.TenTaiKhoanNV == "admin");
 
-        db.NhanViens.Add(admin);
-        await db.SaveChangesAsync();
-    }
-}
+//    if (admin == null)
+//    {
+//        string password = "admin123";  // mật khẩu mặc định (nên đổi sau)
+//        string hashedPassword;
 
-// ----------------------
-// Routing
-// ----------------------
+//        // hash SHA256
+//        using (var sha = System.Security.Cryptography.SHA256.Create())
+//        {
+//            var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
+//            hashedPassword = Convert.ToBase64String(bytes);
+//        }
+
+//        admin = new NhanVien
+//        {
+//            TenTaiKhoanNV = "admin",
+//            Password = hashedPassword,
+//            HoTenNhanVien = "Tài khoản quản trị",
+//            IdChucVu = roleAdmin.IdChucVu,
+//            TrangThaiNV = 1,
+//            NgayVaoLam = DateTime.Now
+//        };
+
+//        db.NhanViens.Add(admin);
+//        db.SaveChanges();
+//    }
+//}
+
 app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Login}/{action=Index}/{id?}");
+    name: "login",
+    pattern: "{controller=Login}/{action=Index}");
+
 
 app.Run();

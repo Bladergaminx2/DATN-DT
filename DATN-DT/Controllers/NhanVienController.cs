@@ -1,85 +1,107 @@
-﻿using DATN_DT.IServices;
-using DATN_DT.Models;
-using Microsoft.AspNetCore.Authorization;
+﻿using DATN_DT.Form;
+using DATN_DT.IServices;
 using Microsoft.AspNetCore.Mvc;
-using System.Net.Http;
 
 namespace DATN_DT.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
+    [Route("NhanVien")]
     public class NhanVienController : Controller
     {
         private readonly INhanVienService _nhanVienService;
-        private readonly HttpClient _httpClient;
 
-        public NhanVienController(INhanVienService nhanVienService,
-                                  IHttpClientFactory httpClientFactory)
+        public NhanVienController(INhanVienService nhanVienService)
         {
             _nhanVienService = nhanVienService;
-            _httpClient = httpClientFactory.CreateClient(); // dùng khi cần call API ngoài
         }
 
         // --- GET ALL ---
-        [Authorize(Roles = "NhanVien")]
-        [HttpGet("get-all")]
-        public async Task<IActionResult> GetAll()
+        [HttpGet("")]
+        public async Task<IActionResult> Index()
         {
             var nhanVienList = await _nhanVienService.GetAllNhanViens();
-            return Ok(nhanVienList);
+            return View(nhanVienList);
         }
 
-        // --- GET BY ID ---
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        // --- GET ALL CHUC VU ---
+        [HttpGet("ChucVu")]
+        public async Task<IActionResult> GetChucVus()
         {
-            var nhanVien = await _nhanVienService.GetNhanVienById(id);
-            if (nhanVien == null)
-                return NotFound(new { message = "Không tìm thấy nhân viên!" });
+            var chucVus = await _nhanVienService.GetChucVus();
+            return Ok(chucVus);
+        }
 
-            return Ok(nhanVien);
+        // --- GET CHUC VU EXCEPT ADMIN ---
+        [HttpGet("ChucVu/ExceptAdmin")]
+        public async Task<IActionResult> GetChucVusExceptAdmin()
+        {
+            var chucVus = await _nhanVienService.GetChucVusExceptAdmin();
+            return Ok(chucVus);
         }
 
         // --- CREATE ---
-        [HttpPost]
+        [HttpPost("Create")]
         [Consumes("application/json")]
-        public async Task<IActionResult> Create([FromBody] NhanVien? nhanVien)
+        public async Task<IActionResult> Create([FromBody] NhanVienFormSystemCreate? nhanVien)
         {
             if (nhanVien == null)
                 return BadRequest(new { message = "Dữ liệu không hợp lệ!" });
 
-            await _nhanVienService.Create(nhanVien);
-
-            return Ok(new { message = "Thêm Nhân viên thành công!" });
+            try
+            {
+                await _nhanVienService.Create(nhanVien);
+                return Ok(new { message = "Thêm Nhân viên thành công!" });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi server: " + ex.Message });
+            }
         }
 
         // --- UPDATE ---
-        [HttpPut("{id}")]
+        [HttpPost("Update/{id}")]
         [Consumes("application/json")]
-        public async Task<IActionResult> Update(int id, [FromBody] NhanVien? nhanVien)
+        public async Task<IActionResult> Update(int id, [FromBody] NhanVienFormSystem? nhanVien)
         {
-            if (nhanVien == null || id != nhanVien.IdNhanVien)
-                return BadRequest(new { message = "Dữ liệu không hợp lệ!" });
+            try
+            {
+                if (nhanVien == null)
+                    return BadRequest(new { message = "Dữ liệu không hợp lệ!" });
 
-            await _nhanVienService.Update(nhanVien);
+                await _nhanVienService.Update(id, nhanVien);
 
-            return Ok(new { message = "Cập nhật Nhân viên thành công!" });
+                return Ok(new { message = "Cập nhật Nhân viên thành công!" });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Lỗi server khi cập nhật nhân viên",
+                    detail = ex.Message
+                });
+            }
         }
 
         // --- DELETE ---
-        [HttpDelete("{id}")]
+        [HttpDelete("Delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            await _nhanVienService.Delete(id);
-            return Ok(new { message = "Xóa nhân viên thành công!" });
-        }
-
-        // --- CALL API QUA HTTPCLIENT (OPTIONAL) ---
-        [HttpGet("external-test")]
-        public async Task<IActionResult> TestHttpClient()
-        {
-            var json = await _httpClient.GetStringAsync("https://api.github.com/");
-            return Ok(new { externalData = json });
+            try
+            {
+                await _nhanVienService.Delete(id);
+                return Ok(new { message = "Xóa nhân viên thành công!" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi server: " + ex.Message });
+            }
         }
     }
 }

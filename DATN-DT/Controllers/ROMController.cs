@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 
 namespace DATN_DT.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
     public class ROMController : Controller
     {
         private readonly IROMService _romService;
@@ -20,15 +18,15 @@ namespace DATN_DT.Controllers
         }
 
         // ===== GET ALL =====
-        [HttpGet("list")]
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
             var roms = await _romService.GetAllROMs();
-            return Ok(roms);
+            return View(roms);
         }
 
         // ===== CREATE =====
-        [HttpPost("create")]
+        [HttpPost]
         [Consumes("application/json")]
         public async Task<IActionResult> Create([FromBody] ROM? rom)
         {
@@ -59,7 +57,7 @@ namespace DATN_DT.Controllers
         }
 
         // ===== EDIT =====
-        [HttpPut("edit/{id}")]
+        [HttpPut]
         [Consumes("application/json")]
         public async Task<IActionResult> Edit(int id, [FromBody] ROM? rom)
         {
@@ -93,13 +91,12 @@ namespace DATN_DT.Controllers
 
             return Ok(new { message = "Cập nhật ROM thành công!" });
         }
-
-        // ===== HTTPCLIENT TEST =====
-        [HttpGet("test-http")]
-        public async Task<IActionResult> TestHttpClient()
+        // ===== TEST HTTPCLIENT =====
+        [HttpDelete]
+        public async Task<IActionResult> Delete(int id)
         {
-            var data = await _httpClient.GetStringAsync("https://api.github.com/");
-            return Ok(new { response = data });
+            await _romService.Delete(id);
+            return Ok(new { message = "Xoá RAM thành công!" });
         }
     }
 }

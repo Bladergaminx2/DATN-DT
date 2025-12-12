@@ -1,6 +1,6 @@
 ﻿using DATN_DT.Data;
+using DATN_DT.Form;
 using DATN_DT.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -9,8 +9,6 @@ using System.Threading.Tasks;
 
 namespace DATN_DT.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
     public class KhachHangController : Controller
     {
         private readonly MyDbContext _context;
@@ -21,8 +19,6 @@ namespace DATN_DT.Controllers
         }
 
         // --- Index: Lấy danh sách Khách hàng ---
-        [Authorize(Roles = "KhachHang")]
-        [HttpGet("profile")]
         public async Task<IActionResult> Index()
         {
             var khachHangs = await _context.KhachHangs.ToListAsync();
@@ -32,7 +28,7 @@ namespace DATN_DT.Controllers
         // --- Create: Thêm Khách hàng mới ---
         [HttpPost]
         [Consumes("application/json")]
-        public async Task<IActionResult> Create([FromBody] KhachHang? khachHang)
+        public async Task<IActionResult> Create([FromBody] KhachHangAdmninForm? khachHang)
         {
             if (khachHang == null)
                 return BadRequest(new { message = "Dữ liệu khách hàng không hợp lệ!" });
@@ -48,7 +44,7 @@ namespace DATN_DT.Controllers
                 errors["SdtKhachHang"] = "Phải nhập số điện thoại!";
 
             // Validation cho EmailKhachHang 
-             if (string.IsNullOrWhiteSpace(khachHang.EmailKhachHang))
+            if (string.IsNullOrWhiteSpace(khachHang.EmailKhachHang))
                 errors["EmailKhachHang"] = "Phải nhập Email!";
 
             if (errors.Count > 0)
@@ -74,15 +70,18 @@ namespace DATN_DT.Controllers
 
             try
             {
-                // Chuẩn hóa dữ liệu trước khi lưu
-                khachHang.HoTenKhachHang = khachHang.HoTenKhachHang!.Trim();
-                khachHang.SdtKhachHang = khachHang.SdtKhachHang!.Trim();
-                khachHang.EmailKhachHang = khachHang.EmailKhachHang?.Trim();
-                khachHang.DiaChiKhachHang = khachHang.DiaChiKhachHang?.Trim();
-                khachHang.DiemTichLuy ??= 0;
-                khachHang.TrangThaiKhachHang = 1;
+                var data = new KhachHang()
+                {
+                    HoTenKhachHang = khachHang.HoTenKhachHang!.Trim(),
+                    SdtKhachHang = khachHang.SdtKhachHang!.Trim(),
+                    EmailKhachHang = khachHang.EmailKhachHang?.Trim(),
+                    DiemTichLuy = 0,
+                    // Sử dụng ảnh mặc định từ thư mục www
+                    DefaultImage = "/images/hARUdummiepfpcyr.png", // Đường dẫn ảnh mặc định
+                    TrangThaiKhachHang = 1,
+                };
 
-                _context.KhachHangs.Add(khachHang);
+                _context.KhachHangs.Add(data);
                 await _context.SaveChangesAsync();
 
                 return Ok(new { message = "Thêm Khách hàng thành công!" });
@@ -97,7 +96,7 @@ namespace DATN_DT.Controllers
         [HttpPost]
         [Route("KhachHang/Edit/{id}")]
         [Consumes("application/json")]
-        public async Task<IActionResult> Edit(int id, [FromBody] KhachHang? khachHang)
+        public async Task<IActionResult> Edit(int id, [FromBody] KhachHangAdmninForm? khachHang)
         {
             if (khachHang == null)
                 return BadRequest(new { message = "Dữ liệu khách hàng không hợp lệ!" });
@@ -138,13 +137,13 @@ namespace DATN_DT.Controllers
 
             try
             {
-                // Cập nhật thông tin
+                // Cập nhật thông tin (không thay đổi ảnh đại diện)
                 existing.HoTenKhachHang = khachHang.HoTenKhachHang!.Trim();
                 existing.SdtKhachHang = khachHang.SdtKhachHang!.Trim();
                 existing.EmailKhachHang = khachHang.EmailKhachHang?.Trim();
-                existing.DiaChiKhachHang = khachHang.DiaChiKhachHang?.Trim();
-                existing.DiemTichLuy = khachHang.DiemTichLuy;
                 existing.TrangThaiKhachHang = khachHang.TrangThaiKhachHang;
+                // Giữ nguyên DefaultImage hiện tại, không cập nhật
+
                 _context.KhachHangs.Update(existing);
                 await _context.SaveChangesAsync();
 
