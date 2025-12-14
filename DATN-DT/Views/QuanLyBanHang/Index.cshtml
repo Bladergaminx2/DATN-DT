@@ -1,0 +1,720 @@
+@{
+    ViewData["Title"] = "Quản Lý Bán Hàng Offline";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+            padding: 15px 20px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        .date-filter {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .btn-date-option {
+            margin: 5px;
+        }
+        table {
+            background: white;
+        }
+        .table thead th {
+            background-color: #667eea;
+            color: white;
+            border: none;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        /* CSS cho modal chi tiết hóa đơn */
+        #detailModal .modal-body {
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        #detailModal .table {
+            width: 100%;
+            table-layout: auto;
+        }
+        #detailModal .table th,
+        #detailModal .table td {
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+        #detailModal .table th:nth-child(2),
+        #detailModal .table td:nth-child(2) {
+            white-space: normal;
+            width: auto;
+            min-width: 120px;
+        }
+        #detailModal .table img {
+            max-width: 200px;
+            max-height: 200px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+        }
+        #detailModal .table td:nth-child(8) {
+            white-space: normal;
+            word-break: break-all;
+            max-width: 200px;
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid mt-4">
+        <h2 class="mb-4"><i class="fas fa-chart-line"></i> Quản Lý Bán Hàng Offline</h2>
+
+        <!-- Date Filter -->
+        <div class="date-filter">
+            <div class="row align-items-end">
+                <div class="col-md-12 mb-3">
+                    <label class="form-label"><strong>Chọn thời gian:</strong></label>
+                    <div>
+                        <button type="button" class="btn btn-primary btn-date-option" onclick="selectDateOption('today')">
+                            <i class="fas fa-calendar-day"></i> Hôm nay
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-date-option" onclick="selectDateOption('yesterday')">
+                            <i class="fas fa-calendar-minus"></i> Hôm qua
+                        </button>
+                        <button type="button" class="btn btn-info btn-date-option" onclick="selectDateOption('custom')">
+                            <i class="fas fa-calendar-alt"></i> Tùy chỉnh
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4" id="customDateRange" style="display: none;">
+                    <label class="form-label">Từ ngày:</label>
+                    <input type="date" id="fromDate" class="form-control" />
+                </div>
+                <div class="col-md-4" id="customDateRange2" style="display: none;">
+                    <label class="form-label">Đến ngày:</label>
+                    <input type="date" id="toDate" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-success" onclick="loadData()">
+                        <i class="fas fa-search"></i> Tìm kiếm
+                    </button>
+                    <button type="button" class="btn btn-warning" onclick="exportExcel()" id="btnExportExcel" disabled>
+                        <i class="fas fa-file-excel"></i> Xuất Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="stat-card">
+                    <div class="stat-value" id="tongDoanhThu">0</div>
+                    <div class="stat-label">Tổng Doanh Thu (VNĐ)</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="stat-card">
+                    <div class="stat-value" id="soLuongDonHang">0</div>
+                    <div class="stat-label">Số Lượng Đơn Hàng</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Biểu Đồ Doanh Thu</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoice Table -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-receipt"></i> Danh Sách Hóa Đơn</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="invoiceTable">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Mã đơn</th>
+                                <th>Ngày đặt</th>
+                                <th>Tên khách hàng</th>
+                                <th>Số điện thoại</th>
+                                <th>Phương thức thanh toán</th>
+                                <th>Tổng tiền</th>
+                                <th>Chi tiết</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoiceTableBody">
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">
+                                    <i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Chi tiết hóa đơn -->
+    <div class="modal fade" id="detailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Chi tiết hóa đơn</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="detailModalBody">
+                    <!-- Nội dung chi tiết sẽ được load ở đây -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let revenueChart = null;
+        let currentFromDate = null;
+        let currentToDate = null;
+
+        // Khởi tạo: mặc định là hôm nay
+        document.addEventListener('DOMContentLoaded', function() {
+            selectDateOption('today');
+            loadData();
+        });
+
+        function selectDateOption(option) {
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            // Reset buttons
+            document.querySelectorAll('.btn-date-option').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            if (option === 'today') {
+                document.querySelector('[onclick="selectDateOption(\'today\')"]').classList.add('active');
+                document.getElementById('fromDate').value = formatDate(today);
+                document.getElementById('toDate').value = formatDate(today);
+                document.getElementById('customDateRange').style.display = 'none';
+                document.getElementById('customDateRange2').style.display = 'none';
+            } else if (option === 'yesterday') {
+                document.querySelector('[onclick="selectDateOption(\'yesterday\')"]').classList.add('active');
+                document.getElementById('fromDate').value = formatDate(yesterday);
+                document.getElementById('toDate').value = formatDate(yesterday);
+                document.getElementById('customDateRange').style.display = 'none';
+                document.getElementById('customDateRange2').style.display = 'none';
+            } else if (option === 'custom') {
+                document.querySelector('[onclick="selectDateOption(\'custom\')"]').classList.add('active');
+                document.getElementById('customDateRange').style.display = 'block';
+                document.getElementById('customDateRange2').style.display = 'block';
+                if (!document.getElementById('fromDate').value) {
+                    document.getElementById('fromDate').value = formatDate(today);
+                    document.getElementById('toDate').value = formatDate(today);
+                }
+            }
+        }
+
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('vi-VN').format(value) + ' đ';
+        }
+
+        // Helper function để lấy giá trị từ object (hỗ trợ cả camelCase và PascalCase)
+        function getValue(obj, ...keys) {
+            if (!obj) return null;
+            for (const key of keys) {
+                if (obj[key] !== undefined && obj[key] !== null) {
+                    return obj[key];
+                }
+            }
+            return null;
+        }
+
+        // Helper function để parse ngày từ format dd/MM/yyyy
+        function parseDate(dateString) {
+            if (!dateString || typeof dateString !== 'string') {
+                return new Date(0);
+            }
+            const parts = dateString.split('/');
+            if (parts.length !== 3) {
+                return new Date(0);
+            }
+            // parts[0] = day, parts[1] = month, parts[2] = year
+            // Note: month is 0-indexed in JavaScript Date
+            return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+        }
+
+        async function loadData() {
+            const fromDate = document.getElementById('fromDate').value;
+            const toDate = document.getElementById('toDate').value;
+
+            if (!fromDate || !toDate) {
+                alert('Vui lòng chọn ngày!');
+                return;
+            }
+
+            currentFromDate = fromDate;
+            currentToDate = toDate;
+
+            try {
+                const response = await fetch(`/QuanLyBanHang/GetData?fromDate=${fromDate}&toDate=${toDate}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    // Debug: Log dữ liệu để kiểm tra
+                    console.log('Data received:', data);
+                    console.log('DonHangs:', data.donHangs);
+
+                    // Cập nhật thống kê
+                    document.getElementById('tongDoanhThu').textContent = formatCurrency(data.tongDoanhThu || 0);
+                    document.getElementById('soLuongDonHang').textContent = data.soLuongDonHang || 0;
+
+                    // Cập nhật biểu đồ
+                    if (data.donHangs && Array.isArray(data.donHangs)) {
+                        updateChart(data.donHangs);
+                    }
+
+                    // Cập nhật bảng
+                    if (data.donHangs && Array.isArray(data.donHangs)) {
+                        updateTable(data.donHangs);
+                    }
+
+                    // Enable nút xuất Excel
+                    document.getElementById('btnExportExcel').disabled = false;
+                } else {
+                    alert('Lỗi: ' + (data.message || 'Không thể tải dữ liệu'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi kết nối!');
+            }
+        }
+
+        function updateChart(donHangs) {
+            let ctx;
+            try {
+                ctx = document.getElementById('revenueChart').getContext('2d');
+
+                // Destroy chart nếu đã tồn tại
+                if (revenueChart) {
+                    revenueChart.destroy();
+                }
+            } catch (error) {
+                console.warn('Chart initialization error:', error);
+                return;
+            }
+
+            // Kiểm tra dữ liệu hợp lệ
+            if (!donHangs || !Array.isArray(donHangs) || donHangs.length === 0) {
+                // Tạo biểu đồ rỗng
+                try {
+                    revenueChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Không có dữ liệu'],
+                        datasets: [{
+                            label: 'Doanh thu (VNĐ)',
+                            data: [0],
+                            backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                            borderColor: 'rgba(102, 126, 234, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                    });
+                } catch (error) {
+                    console.warn('Chart creation error:', error);
+                }
+                return;
+            }
+
+            // Chuẩn bị dữ liệu - Nhóm theo ngày và tính tổng doanh thu
+            console.log('Preparing chart data from:', donHangs);
+            console.log('First donHang sample:', donHangs[0]);
+            
+            // Nhóm các đơn hàng theo ngày
+            const dailyRevenue = {};
+            
+            donHangs.forEach((d, index) => {
+                const ngayDat = getValue(d, 'ngayDat', 'NgayDat');
+                const tongTien = getValue(d, 'tongTien', 'TongTien');
+                
+                let dateKey = null;
+                if (ngayDat && typeof ngayDat === 'string' && ngayDat !== 'N/A') {
+                    // Lấy phần ngày (dd/MM/yyyy)
+                    dateKey = ngayDat.split(' ')[0];
+                }
+                
+                if (!dateKey) {
+                    console.warn(`DonHang ${index}: Không có ngày hợp lệ, bỏ qua`);
+                    return;
+                }
+                
+                // Parse giá trị tiền
+                let value = 0;
+                if (tongTien !== null && tongTien !== undefined) {
+                    value = parseFloat(tongTien);
+                    if (isNaN(value)) {
+                        value = 0;
+                    }
+                }
+                
+                // Cộng dồn vào ngày tương ứng
+                if (dailyRevenue[dateKey]) {
+                    dailyRevenue[dateKey] += value;
+                } else {
+                    dailyRevenue[dateKey] = value;
+                }
+                
+                console.log(`DonHang ${index}: NgayDat=${ngayDat}, DateKey=${dateKey}, TongTien=${tongTien}, Parsed=${value}`);
+            });
+            
+            // Sắp xếp các ngày theo thứ tự thời gian
+            const sortedDates = Object.keys(dailyRevenue).sort((a, b) => {
+                // Chuyển đổi dd/MM/yyyy thành Date để so sánh
+                const dateA = parseDate(a);
+                const dateB = parseDate(b);
+                return dateA - dateB;
+            });
+            
+            // Tạo labels và revenues từ dữ liệu đã nhóm
+            const labels = sortedDates;
+            const revenues = sortedDates.map(date => dailyRevenue[date]);
+            
+            console.log('Daily Revenue grouped:', dailyRevenue);
+            console.log('Sorted dates:', sortedDates);
+            console.log('Labels:', labels);
+            console.log('Revenues:', revenues);
+            console.log('Max revenue:', Math.max(...revenues, 0));
+
+            // Tìm giá trị max để set scale phù hợp
+            const maxRevenue = revenues.length > 0 ? Math.max(...revenues) : 0;
+            const minRevenue = revenues.length > 0 ? Math.min(...revenues.filter(r => r > 0)) : 0;
+            const suggestedMax = maxRevenue > 0 ? Math.ceil(maxRevenue * 1.2) : 1000000; // Thêm 20% padding và làm tròn lên
+            
+            console.log('Chart config:', { maxRevenue, minRevenue, suggestedMax, revenuesLength: revenues.length });
+
+            try {
+                revenueChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Doanh thu (VNĐ)',
+                        data: revenues,
+                        backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: suggestedMax,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                },
+                                // Không set stepSize cố định, để Chart.js tự tính
+                                autoSkip: true,
+                                maxTicksLimit: 10
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 0
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Doanh thu: ' + formatCurrency(context.parsed.y);
+                                }
+                            }
+                        },
+                        legend: {
+                            display: true
+                        }
+                    }
+                }
+                });
+                console.log('Chart created successfully');
+            } catch (error) {
+                console.error('Chart creation error:', error);
+                console.error('Error details:', error.stack);
+            }
+        }
+
+        let donHangData = [];
+
+        function updateTable(donHangs) {
+            const tbody = document.getElementById('invoiceTableBody');
+            tbody.innerHTML = '';
+
+            if (donHangs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Không có dữ liệu</td></tr>';
+                donHangData = [];
+                return;
+            }
+
+            donHangData = donHangs;
+
+            donHangs.forEach((donHang, index) => {
+                // Debug: Log từng đơn hàng
+                console.log(`DonHang ${index}:`, donHang);
+                console.log(`DonHang ${index} keys:`, Object.keys(donHang || {}));
+                
+                // Sử dụng helper function để lấy giá trị
+                const idDonHang = getValue(donHang, 'idDonHang', 'IdDonHang');
+                const maDon = getValue(donHang, 'maDon', 'MaDon') || (idDonHang ? `DH${idDonHang}` : 'N/A');
+                const ngayDat = getValue(donHang, 'ngayDat', 'NgayDat') || 'N/A';
+                const tenKhachHang = getValue(donHang, 'tenKhachHang', 'TenKhachHang') || 'Khách vãng lai';
+                const sdtKhachHang = getValue(donHang, 'sdtKhachHang', 'SdtKhachHang') || 'N/A';
+                const phuongThuc = getValue(donHang, 'phuongThucThanhToan', 'PhuongThucThanhToan') || 'Chưa xác định';
+                const tongTienRaw = getValue(donHang, 'tongTien', 'TongTien');
+                const tongTien = tongTienRaw !== null && tongTienRaw !== undefined ? (parseFloat(tongTienRaw) || 0) : 0;
+                
+                console.log(`DonHang ${index} parsed:`, { 
+                    idDonHang, maDon, ngayDat, tenKhachHang, 
+                    sdtKhachHang, phuongThuc, tongTienRaw, tongTien 
+                });
+                
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td><strong>${maDon}</strong></td>
+                    <td>${ngayDat}</td>
+                    <td>${tenKhachHang}</td>
+                    <td>${sdtKhachHang}</td>
+                    <td>${phuongThuc}</td>
+                    <td><strong class="text-success">${formatCurrency(tongTien)}</strong></td>
+                    <td>
+                        <button class="btn btn-sm btn-info" onclick="showDetail(${index})">
+                            <i class="fas fa-eye"></i> Xem
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function showDetail(index) {
+            console.log('showDetail called with index:', index);
+            console.log('donHangData length:', donHangData.length);
+            console.log('donHangData:', donHangData);
+            
+            const donHang = donHangData[index];
+            if (!donHang) {
+                console.error('DonHang not found at index:', index);
+                alert('Không tìm thấy thông tin đơn hàng!');
+                return;
+            }
+
+            console.log('DonHang selected:', donHang);
+            console.log('DonHang keys:', Object.keys(donHang || {}));
+
+            // Sử dụng helper function để lấy giá trị
+            const idDonHang = getValue(donHang, 'idDonHang', 'IdDonHang');
+            const maDon = getValue(donHang, 'maDon', 'MaDon') || (idDonHang ? `DH${idDonHang}` : 'N/A');
+            const ngayDat = getValue(donHang, 'ngayDat', 'NgayDat') || 'N/A';
+            const tenKhachHang = getValue(donHang, 'tenKhachHang', 'TenKhachHang') || 'Khách vãng lai';
+            const sdtKhachHang = getValue(donHang, 'sdtKhachHang', 'SdtKhachHang') || 'N/A';
+            const phuongThuc = getValue(donHang, 'phuongThucThanhToan', 'PhuongThucThanhToan') || 'Chưa xác định';
+            const tongTienRaw = getValue(donHang, 'tongTien', 'TongTien');
+            const tongTien = tongTienRaw !== null && tongTienRaw !== undefined ? (parseFloat(tongTienRaw) || 0) : 0;
+            
+            // Lấy chi tiết sản phẩm
+            const chiTiet = getValue(donHang, 'chiTiet', 'ChiTiet');
+            console.log('ChiTiet:', chiTiet);
+
+            // Lấy tên nhân viên
+            const tenNhanVien = getValue(donHang, 'tenNhanVien', 'TenNhanVien') || 'N/A';
+
+            let html = `
+                <div class="mb-3">
+                    <h6><strong>Thông tin đơn hàng:</strong></h6>
+                    <p><strong>Mã đơn:</strong> ${maDon}</p>
+                    <p><strong>Ngày đặt:</strong> ${ngayDat}</p>
+                    <p><strong>Tên khách hàng:</strong> ${tenKhachHang}</p>
+                    <p><strong>Số điện thoại:</strong> ${sdtKhachHang}</p>
+                    <p><strong>Người tạo hóa đơn:</strong> ${tenNhanVien}</p>
+                    <p><strong>Phương thức thanh toán:</strong> ${phuongThuc}</p>
+                    <p><strong>Tổng tiền:</strong> <span class="text-success">${formatCurrency(tongTien)}</span></p>
+                </div>
+                <hr>
+                <h6><strong>Chi tiết sản phẩm:</strong></h6>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">STT</th>
+                                <th style="width: auto; min-width: 150px;">Ảnh</th>
+                                <th>Tên sản phẩm</th>
+                                <th>Tên model</th>
+                                <th>RAM</th>
+                                <th>ROM</th>
+                                <th>Màu</th>
+                                <th style="max-width: 200px;">IMEI</th>
+                                <th style="width: 80px;">Số lượng</th>
+                                <th>Đơn giá</th>
+                                <th>Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            if (chiTiet && Array.isArray(chiTiet) && chiTiet.length > 0) {
+                chiTiet.forEach((item, idx) => {
+                    console.log(`ChiTiet item ${idx}:`, item);
+                    
+                    const tenSanPham = getValue(item, 'tenSanPham', 'TenSanPham') || 'N/A';
+                    const tenModel = getValue(item, 'tenModel', 'TenModel') || 'N/A';
+                    const ram = getValue(item, 'ram', 'RAM') || 'N/A';
+                    const rom = getValue(item, 'rom', 'ROM') || 'N/A';
+                    const mau = getValue(item, 'mau', 'Mau') || 'N/A';
+                    const anhSanPham = getValue(item, 'anhSanPham', 'AnhSanPham') || '';
+                    const imeis = getValue(item, 'imeis', 'Imeis');
+                    const soLuong = getValue(item, 'soLuong', 'SoLuong') || 0;
+                    const donGiaRaw = getValue(item, 'donGia', 'DonGia');
+                    const donGia = donGiaRaw !== null && donGiaRaw !== undefined ? (parseFloat(donGiaRaw) || 0) : 0;
+                    const thanhTienRaw = getValue(item, 'thanhTien', 'ThanhTien');
+                    const thanhTien = thanhTienRaw !== null && thanhTienRaw !== undefined ? (parseFloat(thanhTienRaw) || 0) : 0;
+                    
+                    let imeiDisplay = 'N/A';
+                    if (imeis && Array.isArray(imeis) && imeis.length > 0) {
+                        imeiDisplay = imeis.join(', ');
+                    }
+                    
+                    // Tạo đường dẫn ảnh - tự động điều chỉnh kích thước
+                    let anhHtml = '<span class="text-muted">N/A</span>';
+                    if (anhSanPham && anhSanPham.trim() !== '') {
+                        const anhPath = anhSanPham.startsWith('/') ? anhSanPham : '/' + anhSanPham;
+                        anhHtml = `<img src="${anhPath}" alt="${tenSanPham}" class="img-fluid" style="max-width: 100px; max-height: 100px; width: auto; height: auto; object-fit: contain;" onload="this.style.width='auto'; this.style.height='auto';" />`;
+                    }
+                    
+                    html += `
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle;">${idx + 1}</td>
+                            <td style="text-align: center; vertical-align: middle; padding: 10px;">${anhHtml}</td>
+                            <td style="vertical-align: middle;">${tenSanPham}</td>
+                            <td style="vertical-align: middle;">${tenModel}</td>
+                            <td style="vertical-align: middle;">${ram}</td>
+                            <td style="vertical-align: middle;">${rom}</td>
+                            <td style="vertical-align: middle;">${mau}</td>
+                            <td style="font-size: 0.85em; word-break: break-all; max-width: 200px; vertical-align: middle;">${imeiDisplay}</td>
+                            <td style="text-align: center; vertical-align: middle;">${soLuong}</td>
+                            <td style="vertical-align: middle;">${formatCurrency(donGia)}</td>
+                            <td style="vertical-align: middle;"><strong>${formatCurrency(thanhTien)}</strong></td>
+                        </tr>
+                    `;
+                });
+            } else {
+                html += `
+                    <tr>
+                        <td colspan="11" class="text-center text-muted">Không có chi tiết sản phẩm</td>
+                    </tr>
+                `;
+            }
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            document.getElementById('detailModalBody').innerHTML = html;
+            const modal = new bootstrap.Modal(document.getElementById('detailModal'));
+            modal.show();
+        }
+
+        function exportExcel() {
+            if (!currentFromDate || !currentToDate) {
+                alert('Vui lòng tìm kiếm dữ liệu trước khi xuất Excel!');
+                return;
+            }
+
+            window.location.href = `/QuanLyBanHang/ExportExcel?fromDate=${currentFromDate}&toDate=${currentToDate}`;
+        }
+    </script>
+</body>
+</html>

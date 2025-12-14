@@ -95,10 +95,12 @@
                     </div>
                     <div class="mt-2 row">
                         <div class="col-md-6 mb-2">
-                            <input type="text" id="tenKhachHang" class="form-control form-control-sm" placeholder="Tên khách hàng" />
+                            <input type="text" id="tenKhachHang" class="form-control form-control-sm" placeholder="Tên khách hàng" required />
+                            <small id="tenKhachHangError" class="text-danger d-none"></small>
                         </div>
                         <div class="col-md-6 mb-2">
-                            <input type="text" id="sdtKhachHang" class="form-control form-control-sm" placeholder="Số điện thoại" />
+                            <input type="text" id="sdtKhachHang" class="form-control form-control-sm" placeholder="Số điện thoại" required />
+                            <small id="sdtKhachHangError" class="text-danger d-none"></small>
                         </div>
                     </div>
                 </div>
@@ -254,10 +256,12 @@
                 if (response && response.success && response.data && response.data.length > 0) {
                     var html = '<div class="list-group">';
                     response.data.forEach(function (product) {
-                        html += '<button type="button" class="list-group-item list-group-item-action" onclick="selectProduct(' + product.idSanPham + ', \'' + (product.tenSanPham || '').replace(/'/g, "\\'") + '\')">' +
-                            '<div class="d-flex w-100 justify-content-between">' +
-                                '<h5 class="mb-1">' + product.tenSanPham + '</h5>' +
-                                '<small>' + (product.thuongHieu || '') + '</small>' +
+                        var tenSanPham = product.tenSanPham || 'N/A';
+                        var thuongHieu = product.thuongHieu || 'N/A';
+                        html += '<button type="button" class="list-group-item list-group-item-action" onclick="selectProduct(' + product.idSanPham + ', \'' + tenSanPham.replace(/'/g, "\\'") + '\')">' +
+                            '<div class="d-flex w-100 justify-content-between align-items-center">' +
+                                '<span class="flex-grow-1 text-left">' + tenSanPham + '</span>' +
+                                '<small class="text-muted ml-3">' + thuongHieu + '</small>' +
                             '</div>' +
                         '</button>';
                     });
@@ -503,6 +507,52 @@
             $('#diemTichLuy').text('');
             $('#tenKhachHang').val('').prop('disabled', false);
             $('#sdtKhachHang').val('').prop('disabled', false);
+            // Xóa thông báo lỗi
+            $('#tenKhachHangError').addClass('d-none').text('');
+            $('#sdtKhachHangError').addClass('d-none').text('');
+        }
+
+        // Hàm validation thông tin khách hàng
+        function validateKhachHang() {
+            var isValid = true;
+            var tenKhachHang = $('#tenKhachHang').val().trim();
+            var sdtKhachHang = $('#sdtKhachHang').val().trim();
+            var idKhachHang = $('#idKhachHang').val();
+
+            // Nếu đã chọn khách hàng thân thiết thì không cần validate
+            if (idKhachHang && idKhachHang !== '') {
+                $('#tenKhachHangError').addClass('d-none').text('');
+                $('#sdtKhachHangError').addClass('d-none').text('');
+                return true;
+            }
+
+            // Validate tên khách hàng
+            if (!tenKhachHang || tenKhachHang.length === 0) {
+                $('#tenKhachHangError').removeClass('d-none').text('Vui lòng nhập tên khách hàng');
+                isValid = false;
+            } else if (tenKhachHang.length < 2) {
+                $('#tenKhachHangError').removeClass('d-none').text('Tên khách hàng phải có ít nhất 2 ký tự');
+                isValid = false;
+            } else if (tenKhachHang.length > 100) {
+                $('#tenKhachHangError').removeClass('d-none').text('Tên khách hàng không được vượt quá 100 ký tự');
+                isValid = false;
+            } else {
+                $('#tenKhachHangError').addClass('d-none').text('');
+            }
+
+            // Validate số điện thoại
+            var phoneRegex = /^(0|\+84)[0-9]{9,10}$/;
+            if (!sdtKhachHang || sdtKhachHang.length === 0) {
+                $('#sdtKhachHangError').removeClass('d-none').text('Vui lòng nhập số điện thoại');
+                isValid = false;
+            } else if (!phoneRegex.test(sdtKhachHang.replace(/\s/g, ''))) {
+                $('#sdtKhachHangError').removeClass('d-none').text('Số điện thoại không hợp lệ (VD: 0123456789 hoặc +84123456789)');
+                isValid = false;
+            } else {
+                $('#sdtKhachHangError').addClass('d-none').text('');
+            }
+
+            return isValid;
         }
 
         function thanhToan() {
@@ -514,6 +564,12 @@
             var hasMissingImei = selectedProducts.some(function (p) { return !p.selectedImeis || p.selectedImeis.length === 0; });
             if (hasMissingImei) {
                 alert('Vui lòng chọn IMEI cho tất cả sản phẩm trước khi thanh toán');
+                return;
+            }
+
+            // Validate thông tin khách hàng
+            if (!validateKhachHang()) {
+                alert('Vui lòng kiểm tra lại thông tin khách hàng');
                 return;
             }
 
@@ -530,26 +586,42 @@
 
             var orderData = {
                 IdKhachHang: $('#khachHangSelect').val() || null,
-                TenKhachHang: $('#tenKhachHang').val() || '',
-                SdtKhachHang: $('#sdtKhachHang').val() || '',
-                DiaChiGiaoHang: '',
+                TenKhachHang: $('#tenKhachHang').val().trim() || '',
+                SdtKhachHang: $('#sdtKhachHang').val().trim() || '',
+                DiaChiGiaoHang: 'Thanh Toán Tại Quầy',
                 PhuongThucThanhToan: $('#phuongThucTT').val(),
                 ChiTietDonHang: selectedProducts.map(function (p) {
                     return {
                         IdModelSanPham: p.idModelSanPham,
                         SoLuong: p.soLuong,
-                        SelectedImeis: p.selectedImeis
+                        SelectedImeis: p.selectedImeis,
+                        IdKhuyenMai: p.idKhuyenMai || null
                     };
                 })
             };
 
             $.post('@Url.Action("Create", "DonHang")', orderData, function (response) {
                 if (response && response.success) {
-                    alert('Thanh toán thành công!\nMã đơn: ' + response.maDon + '\nNgày bảo hành: ' + response.ngayBaoHanh);
-                    location.reload();
+                    var message = 'Thanh toán thành công!\nMã đơn: ' + response.maDon + '\nNgày bảo hành: ' + response.ngayBaoHanh;
+                    alert(message);
+                    
+                    // Chuyển hướng sang trang xuất PDF để tải file
+                    if (response.pdfUrl && response.maDon) {
+                        // Chuyển hướng sang trang ExportPdf để tải file
+                        window.location.href = response.pdfUrl;
+                    } else {
+                        console.log('Không có pdfUrl hoặc maDon trong response:', response);
+                        // Nếu không có pdfUrl, reload trang
+                        setTimeout(function() {
+                            location.reload();
+                        }, 2000);
+                    }
                 } else {
                     alert('Lỗi: ' + (response ? response.message : 'Không xác định'));
                 }
+            }).fail(function(xhr, status, error) {
+                console.error('Lỗi AJAX:', error);
+                alert('Có lỗi xảy ra khi thanh toán. Vui lòng thử lại.');
             });
         }
 
@@ -595,6 +667,31 @@
                 var parts = selectedText.split(' - ');
                 $('#tenKhachHang').val(parts[0] || '').prop('disabled', !!$(this).val());
                 $('#sdtKhachHang').val(parts[1] || '').prop('disabled', !!$(this).val());
+                // Xóa thông báo lỗi khi chọn khách hàng
+                $('#tenKhachHangError').addClass('d-none').text('');
+                $('#sdtKhachHangError').addClass('d-none').text('');
+            });
+
+            // Validation real-time cho tên khách hàng
+            $('#tenKhachHang').on('blur', function() {
+                if (!$(this).prop('disabled')) {
+                    validateKhachHang();
+                }
+            });
+
+            // Validation real-time cho số điện thoại
+            $('#sdtKhachHang').on('blur', function() {
+                if (!$(this).prop('disabled')) {
+                    validateKhachHang();
+                }
+            });
+
+            // Xóa khoảng trắng thừa khi nhập số điện thoại
+            $('#sdtKhachHang').on('input', function() {
+                var value = $(this).val().replace(/\s/g, '');
+                if (value !== $(this).val()) {
+                    $(this).val(value);
+                }
             });
 
             $('#searchProduct').keypress(function (e) {

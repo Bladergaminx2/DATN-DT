@@ -1,4 +1,4 @@
-﻿namespace DATN_DT.Models
+namespace DATN_DT.Models
 {
     using DATN_DT.Models;
 
@@ -6,6 +6,7 @@
     {
         public int IdDonHang { get; set; }
         public int? IdKhachHang { get; set; }
+        public int? IdNhanVien { get; set; }
         public string HoTenNguoiNhan { get; set; } = string.Empty;
         public string SdtNguoiNhan { get; set; } = string.Empty;
         public string? MaDon { get; set; }
@@ -20,6 +21,7 @@
 
         // Navigation properties
         public KhachHang? KhachHang { get; set; }
+        public NhanVien? NhanVien { get; set; }
         public ICollection<DonHangChiTiet>? DonHangChiTiets { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-﻿using DATN_DT.Data;
+using DATN_DT.Data;
 using DATN_DT.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -26,12 +26,12 @@ namespace DATN_DT.Controllers
         {
             // Nếu có sanPhamId, chỉ lấy model của sản phẩm đó
             IQueryable<ModelSanPham> query = _context.ModelSanPhams;
-            
+
             if (sanPhamId.HasValue && sanPhamId.Value > 0)
             {
                 query = query.Where(m => m.IdSanPham == sanPhamId.Value);
             }
-            
+
             var modelSanPhams = await query.ToListAsync();
 
             var sanPhams = await _context.SanPhams.ToDictionaryAsync(x => x.IdSanPham);
@@ -92,18 +92,46 @@ namespace DATN_DT.Controllers
                 errors["Mau"] = "Phải nhập màu!";
             if (model?.GiaBanModel == null || model.GiaBanModel <= 0)
                 errors["GiaBanModel"] = "Giá bán phải lớn hơn 0!";
+            else if (model.GiaBanModel > 1000000000) // 1 tỷ
+                errors["GiaBanModel"] = "Giá bán không được vượt quá 1.000.000.000 đ!";
+            else if (model.IdSanPham.HasValue)
+            {
+                // Kiểm tra giá bán model phải hợp lý so với giá gốc sản phẩm
+                var sanPham = await _context.SanPhams.FindAsync(model.IdSanPham.Value);
+                if (sanPham != null && sanPham.GiaGoc.HasValue)
+                {
+                    // Giá bán model không được nhỏ hơn 50% giá gốc và không được lớn hơn 300% giá gốc
+                    if (model.GiaBanModel < sanPham.GiaGoc.Value * 0.5m)
+                        errors["GiaBanModel"] = $"Giá bán model không được nhỏ hơn 50% giá gốc ({sanPham.GiaGoc.Value * 0.5m:N0} đ)!";
+                    else if (model.GiaBanModel > sanPham.GiaGoc.Value * 3m)
+                        errors["GiaBanModel"] = $"Giá bán model không được lớn hơn 300% giá gốc ({sanPham.GiaGoc.Value * 3m:N0} đ)!";
+                }
+            }
 
             if (errors.Count > 0)
                 return BadRequest(errors);
 
-            // Check trùng
-            bool exists = await _context.ModelSanPhams.AnyAsync(m =>
+            // Check trùng tên model trong cùng sản phẩm
+            bool existsTenModel = await _context.ModelSanPhams.AnyAsync(m =>
                 m.TenModel!.Trim().ToLower() == model!.TenModel!.Trim().ToLower() &&
-                m.Mau!.Trim().ToLower() == model.Mau!.Trim().ToLower() &&
                 m.IdSanPham == model.IdSanPham
             );
-            if (exists)
-                return Conflict(new { message = "Model sản phẩm đã tồn tại!" });
+            if (existsTenModel)
+                return Conflict(new { message = "Tên model đã tồn tại trong sản phẩm này!" });
+
+            // Check trùng tổ hợp: Pin, RAM, ROM, Màn hình, Camera trước, Camera sau, Màu (không phân biệt hoa thường)
+            bool existsCombo = await _context.ModelSanPhams.AnyAsync(m =>
+                m.IdSanPham == model.IdSanPham &&
+                m.IdPin == model.IdPin &&
+                m.IdRAM == model.IdRAM &&
+                m.IdROM == model.IdROM &&
+                m.IdManHinh == model.IdManHinh &&
+                m.IdCameraTruoc == model.IdCameraTruoc &&
+                m.IdCameraSau == model.IdCameraSau &&
+                m.Mau!.Trim().ToLower() == model.Mau!.Trim().ToLower()
+            );
+            if (existsCombo)
+                return Conflict(new { message = "Sản phẩm chi tiết đã tồn tại trong sản phẩm này!" });
 
             try
             {
@@ -149,6 +177,21 @@ namespace DATN_DT.Controllers
                 errors["Mau"] = "Phải nhập màu!";
             if (model?.GiaBanModel == null || model.GiaBanModel <= 0)
                 errors["GiaBanModel"] = "Giá bán phải lớn hơn 0!";
+            else if (model.GiaBanModel > 1000000000) // 1 tỷ
+                errors["GiaBanModel"] = "Giá bán không được vượt quá 1.000.000.000 đ!";
+            else if (model.IdSanPham.HasValue)
+            {
+                // Kiểm tra giá bán model phải hợp lý so với giá gốc sản phẩm
+                var sanPham = await _context.SanPhams.FindAsync(model.IdSanPham.Value);
+                if (sanPham != null && sanPham.GiaGoc.HasValue)
+                {
+                    // Giá bán model không được nhỏ hơn 50% giá gốc và không được lớn hơn 300% giá gốc
+                    if (model.GiaBanModel < sanPham.GiaGoc.Value * 0.5m)
+                        errors["GiaBanModel"] = $"Giá bán model không được nhỏ hơn 50% giá gốc ({sanPham.GiaGoc.Value * 0.5m:N0} đ)!";
+                    else if (model.GiaBanModel > sanPham.GiaGoc.Value * 3m)
+                        errors["GiaBanModel"] = $"Giá bán model không được lớn hơn 300% giá gốc ({sanPham.GiaGoc.Value * 3m:N0} đ)!";
+                }
+            }
 
             if (errors.Count > 0)
                 return BadRequest(errors);
@@ -157,15 +200,34 @@ namespace DATN_DT.Controllers
             if (existing == null)
                 return NotFound(new { message = "Không tìm thấy model sản phẩm!" });
 
-            // Check trùng
-            bool exists = await _context.ModelSanPhams.AnyAsync(m =>
+            // Check trùng tên model trong cùng sản phẩm (không được thay đổi IdSanPham)
+            // Đảm bảo IdSanPham không thay đổi
+            if (existing.IdSanPham != model.IdSanPham)
+                return BadRequest(new { message = "Không thể thay đổi sản phẩm sau khi đã tạo model!" });
+
+            // Check trùng tên model trong cùng sản phẩm
+            bool existsTenModel = await _context.ModelSanPhams.AnyAsync(m =>
                 m.TenModel!.Trim().ToLower() == model!.TenModel!.Trim().ToLower() &&
-                m.Mau!.Trim().ToLower() == model.Mau!.Trim().ToLower() &&
                 m.IdSanPham == model.IdSanPham &&
                 m.IdModelSanPham != id
             );
-            if (exists)
-                return Conflict(new { message = "Model sản phẩm đã tồn tại!" });
+            if (existsTenModel)
+                return Conflict(new { message = "Tên model đã tồn tại trong sản phẩm này!" });
+
+            // Check trùng tổ hợp: Pin, RAM, ROM, Màn hình, Camera trước, Camera sau, Màu (không phân biệt hoa thường)
+            bool existsCombo = await _context.ModelSanPhams.AnyAsync(m =>
+                m.IdModelSanPham != id &&
+                m.IdSanPham == model.IdSanPham &&
+                m.IdPin == model.IdPin &&
+                m.IdRAM == model.IdRAM &&
+                m.IdROM == model.IdROM &&
+                m.IdManHinh == model.IdManHinh &&
+                m.IdCameraTruoc == model.IdCameraTruoc &&
+                m.IdCameraSau == model.IdCameraSau &&
+                m.Mau!.Trim().ToLower() == model.Mau!.Trim().ToLower()
+            );
+            if (existsCombo)
+                return Conflict(new { message = "Sản phẩm chi tiết đã tồn tại trong sản phẩm này!" });
 
             try
             {
@@ -216,6 +278,14 @@ namespace DATN_DT.Controllers
                 // Kiểm tra kích thước file (tối đa 5MB)
                 if (file.Length > 5 * 1024 * 1024)
                     return BadRequest(new { message = "Kích thước file không được vượt quá 5MB!" });
+
+                // Kiểm tra số lượng ảnh hiện có (tối đa 8 ảnh)
+                const int maxImages = 8;
+                var currentImageCount = await _context.AnhSanPhams
+                    .CountAsync(a => a.IdModelSanPham == idModelSanPham);
+                
+                if (currentImageCount >= maxImages)
+                    return BadRequest(new { message = $"Đã đạt giới hạn tối đa {maxImages} ảnh. Vui lòng xóa ảnh cũ trước khi thêm ảnh mới!" });
 
                 // Tạo thư mục lưu trữ nếu chưa tồn tại
                 var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "model-images");
@@ -395,7 +465,7 @@ namespace DATN_DT.Controllers
         }
 
         // ========== QUẢN LÝ IMEI ==========
-        
+
         // GET: Lấy danh sách IMEI theo model
         [HttpGet("ModelSanPham/GetImeisByModel")]
         public async Task<IActionResult> GetImeisByModel(int modelId)
@@ -435,6 +505,13 @@ namespace DATN_DT.Controllers
 
             if (string.IsNullOrWhiteSpace(imei.MaImei))
                 errors["MaImei"] = "Phải nhập mã IMEI!";
+            else
+            {
+                // Kiểm tra IMEI phải là 15 chữ số
+                var imeiRegex = new System.Text.RegularExpressions.Regex(@"^\d{15}$");
+                if (!imeiRegex.IsMatch(imei.MaImei.Trim()))
+                    errors["MaImei"] = "Mã IMEI phải gồm đúng 15 chữ số!";
+            }
             if (imei.IdModelSanPham == null || imei.IdModelSanPham == 0)
                 errors["IdModelSanPham"] = "Phải chọn model sản phẩm!";
             if (string.IsNullOrWhiteSpace(imei.TrangThai))
@@ -539,5 +616,88 @@ namespace DATN_DT.Controllers
                 }
             }
         }
+
+        // Xóa model sản phẩm
+        [HttpPost]
+        [Route("ModelSanPham/Delete/{id}")]
+        public async Task<IActionResult> Delete(int id)
+            {
+                try
+                {
+                    var modelSanPham = await _context.ModelSanPhams.FindAsync(id);
+                    if (modelSanPham == null)
+                        return NotFound(new { success = false, message = "Không tìm thấy model sản phẩm!" });
+
+                    // Kiểm tra xem model có trong giỏ hàng chi tiết không
+                    bool hasGioHangChiTiet = await _context.GioHangChiTiets
+                        .AnyAsync(g => g.IdModelSanPham == id);
+                    if (hasGioHangChiTiet)
+                        return BadRequest(new { success = false, message = "Không thể xóa model sản phẩm vì đã có trong giỏ hàng chi tiết!" });
+
+                    // Kiểm tra xem model có trong hóa đơn chi tiết không
+                    bool hasHoaDonChiTiet = await _context.HoaDonChiTiets
+                        .AnyAsync(h => h.IdModelSanPham == id);
+                    if (hasHoaDonChiTiet)
+                        return BadRequest(new { success = false, message = "Không thể xóa model sản phẩm vì đã có trong hóa đơn chi tiết!" });
+
+                    // Kiểm tra xem model có trong đơn hàng chi tiết không
+                    bool hasDonHangChiTiet = await _context.DonHangChiTiets
+                        .AnyAsync(d => d.IdModelSanPham == id);
+                    if (hasDonHangChiTiet)
+                        return BadRequest(new { success = false, message = "Không thể xóa model sản phẩm vì đã có trong đơn hàng chi tiết!" });
+
+                    // Xóa các ảnh liên quan
+                    var anhSanPhams = await _context.AnhSanPhams
+                        .Where(a => a.IdModelSanPham == id)
+                        .ToListAsync();
+                    foreach (var anh in anhSanPhams)
+                    {
+                        // Xóa file vật lý
+                        if (!string.IsNullOrEmpty(anh.DuongDan))
+                        {
+                            var filePath = Path.Combine(_environment.WebRootPath, anh.DuongDan.TrimStart('/'));
+                            if (System.IO.File.Exists(filePath))
+                            {
+                                System.IO.File.Delete(filePath);
+                            }
+                        }
+                        _context.AnhSanPhams.Remove(anh);
+                    }
+
+                    // Xóa các IMEI liên quan (chỉ xóa nếu chưa có trong hóa đơn)
+                    var imeis = await _context.Imeis
+                        .Where(i => i.IdModelSanPham == id)
+                        .ToListAsync();
+                    foreach (var imei in imeis)
+                    {
+                        // Kiểm tra IMEI có trong hóa đơn chi tiết không
+                        bool imeiInHoaDon = await _context.HoaDonChiTiets
+                            .AnyAsync(h => h.IdImei == imei.IdImei);
+                        if (!imeiInHoaDon)
+                        {
+                            _context.Imeis.Remove(imei);
+                        }
+                    }
+
+                    // Xóa tồn kho liên quan
+                    var tonKhos = await _context.TonKhos
+                        .Where(t => t.IdModelSanPham == id)
+                        .ToListAsync();
+                    foreach (var tonKho in tonKhos)
+                    {
+                        _context.TonKhos.Remove(tonKho);
+                    }
+
+                    // Xóa model sản phẩm
+                    _context.ModelSanPhams.Remove(modelSanPham);
+                    await _context.SaveChangesAsync();
+
+                    return Ok(new { success = true, message = "Xóa model sản phẩm thành công!" });
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, new { success = false, message = $"Lỗi khi xóa model sản phẩm: {ex.Message}" });
+                }
+            }
+        }
     }
-}

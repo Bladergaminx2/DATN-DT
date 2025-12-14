@@ -1,4 +1,4 @@
-﻿using DATN_DT.Data;
+using DATN_DT.Data;
 using DATN_DT.IRepos;
 using DATN_DT.Models;
 using Microsoft.EntityFrameworkCore;
@@ -14,10 +14,8 @@ namespace DATN_DT.Repos
         }
         public async Task Create(SanPham sanpham)
         {
-            if (await GetSanPhamById(sanpham.IdSanPham) != null) 
-            {
-                throw new Exception("SanPham with the same Id already exists.");
-            }
+            // Không cần check ID vì ID sẽ được tự động tạo bởi database (Identity column)
+            // Chỉ cần add entity, EF sẽ tự động tạo ID mới
             await _context.SanPhams.AddAsync(sanpham);
         }
 
@@ -33,7 +31,9 @@ namespace DATN_DT.Repos
 
         public async Task<List<SanPham>> GetAllSanPhams()
         {
-            return await _context.SanPhams.ToListAsync();
+            return await _context.SanPhams
+                .Include(s => s.ThuongHieu)
+                .ToListAsync();
         }
 
         public async Task<SanPham?> GetSanPhamById(int id)
@@ -48,11 +48,23 @@ namespace DATN_DT.Repos
 
         public async Task Update(SanPham sanpham)
         {
-            if (GetSanPhamById(sanpham.IdSanPham) == null)
+            var existing = await GetSanPhamById(sanpham.IdSanPham);
+            if (existing == null)
             {
                 throw new Exception("SanPham not found.");
             }
-            _context.Entry(sanpham).State = EntityState.Modified;
+            
+            // Cập nhật các thuộc tính từ entity mới vào entity đã tồn tại
+            existing.MaSanPham = sanpham.MaSanPham;
+            existing.TenSanPham = sanpham.TenSanPham;
+            existing.IdThuongHieu = sanpham.IdThuongHieu;
+            existing.MoTa = sanpham.MoTa;
+            existing.GiaGoc = sanpham.GiaGoc;
+            existing.GiaNiemYet = sanpham.GiaNiemYet;
+            existing.VAT = sanpham.VAT;
+            existing.TrangThaiSP = sanpham.TrangThaiSP;
+            
+            _context.SanPhams.Update(existing);
         }
     }
 }       

@@ -17,6 +17,8 @@
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="Select.HtmlToPdf.NetCore" Version="25.2.0" />
+    <PackageReference Include="EPPlus" Version="7.5.2" />
   </ItemGroup>
 
   <ItemGroup>

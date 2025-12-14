@@ -1,4 +1,4 @@
-﻿using DATN_DT.Models;
+using DATN_DT.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace DATN_DT.Data
@@ -185,6 +185,13 @@ namespace DATN_DT.Data
                 .HasForeignKey(d => d.IdKhachHang)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // DonHang -> NhanVien
+            modelBuilder.Entity<DonHang>()
+                .HasOne(d => d.NhanVien)
+                .WithMany()
+                .HasForeignKey(d => d.IdNhanVien)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // DonHangChiTiet relationships
             modelBuilder.Entity<DonHangChiTiet>()
                 .HasOne(d => d.DonHang)
@@ -237,12 +244,6 @@ namespace DATN_DT.Data
                 .HasForeignKey(h => h.IdNhanVien)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<HoaDon>()
-                .HasOne(h => h.KhuyenMai)
-                .WithMany()
-                .HasForeignKey(h => h.IdKhuyenMai)
-                .OnDelete(DeleteBehavior.Restrict);
-
             // HoaDonChiTiet relationships
             modelBuilder.Entity<HoaDonChiTiet>()
                 .HasOne(h => h.HoaDon)
@@ -260,6 +261,12 @@ namespace DATN_DT.Data
                 .HasOne(h => h.Imei)
                 .WithMany()
                 .HasForeignKey(h => h.IdImei)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<HoaDonChiTiet>()
+                .HasOne(h => h.KhuyenMai)
+                .WithMany()
+                .HasForeignKey(h => h.IdKhuyenMai)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Imei -> ModelSanPham
