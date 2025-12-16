@@ -1,4 +1,4 @@
-﻿@model IEnumerable<DATN_DT.Models.SanPham>
+@model IEnumerable<DATN_DT.Models.SanPham>
 
 @{
     ViewData["Title"] = "Quản lý Sản Phẩm";
@@ -352,15 +352,15 @@
                 <form id="createForm">
                     <div class="modal-body">
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-6 d-none">
                                 <div class="mb-3">
                                     <label class="form-label">Mã sản phẩm <span class="text-danger">*</span></label>
                                     <input type="text" id="MaSanPham" class="form-control"
-                                           placeholder="VD: IP15PM128" required />
+                                           placeholder="VD: IP15PM128" required readonly />
                                     <small id="errorMaSanPham" class="text-danger d-none"></small>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Tên sản phẩm <span class="text-danger">*</span></label>
                                     <input type="text" id="TenSanPham" class="form-control"
@@ -407,12 +407,12 @@
                                     <small id="errorGiaGoc" class="text-danger d-none"></small>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-6 d-none">
                                 <div class="mb-3">
                                     <label class="form-label">VAT (%)</label>
                                     <div class="input-group">
                                         <input type="number" id="VAT" class="form-control"
-                                               placeholder="VD: 10" min="0" max="100" step="0.1" value="10" />
+                                               placeholder="VD: 10" min="0" max="100" step="0.1" value="10" readonly />
                                         <span class="input-group-text">%</span>
                                     </div>
                                 </div>
@@ -458,15 +458,15 @@
                     <input type="hidden" id="EditIdSanPham" />
                     <div class="modal-body">
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-6 d-none">
                                 <div class="mb-3">
                                     <label class="form-label">Mã sản phẩm <span class="text-danger">*</span></label>
                                     <input type="text" id="EditMaSanPham" class="form-control"
-                                           placeholder="VD: IP15PM128" required />
+                                           placeholder="VD: IP15PM128" required readonly />
                                     <small id="errorEditMaSanPham" class="text-danger d-none"></small>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Tên sản phẩm <span class="text-danger">*</span></label>
                                     <input type="text" id="EditTenSanPham" class="form-control"
@@ -512,12 +512,12 @@
                                     <small id="errorEditGiaGoc" class="text-danger d-none"></small>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-6 d-none">
                                 <div class="mb-3">
                                     <label class="form-label">VAT (%)</label>
                                     <div class="input-group">
                                         <input type="number" id="EditVAT" class="form-control"
-                                               placeholder="VD: 10" min="0" max="100" step="0.1" />
+                                               placeholder="VD: 10" min="0" max="100" step="0.1" value="10" readonly />
                                         <span class="input-group-text">%</span>
                                     </div>
                                 </div>
@@ -600,11 +600,13 @@
                     const data = await response.json();
                     if (data.success && data.code) {
                         document.getElementById('MaSanPham').value = data.code;
+                        return true; // Trả về true nếu thành công
                     }
                 }
+                return false; // Trả về false nếu không thành công
             } catch (error) {
                 console.error('Lỗi khi sinh mã sản phẩm:', error);
-                // Nếu lỗi, để trống để người dùng nhập thủ công
+                return false; // Trả về false nếu có lỗi
             }
         }
 
@@ -670,7 +672,7 @@
                 createSelect.innerHTML = '<option value="">Lỗi khi tải thương hiệu</option>';
                 editSelect.innerHTML = '<option value="">Lỗi khi tải thương hiệu</option>';
 
-                alert('Không thể tải danh sách thương hiệu. Vui lòng thử lại sau!');
+                showMessageBox('Không thể tải danh sách thương hiệu. Vui lòng thử lại sau!', 'error');
             }
         }
 
@@ -790,25 +792,25 @@
             if (!productToDelete) return;
 
             try {
-                const response = await fetch('/SanPham/Delete', {
-                    method: 'POST',
+                const response = await fetch(`/SanPham/Delete/${productToDelete}`, {
+                    method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ id: productToDelete })
+                    }
                 });
 
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    alert('Xóa sản phẩm thành công!');
-                    location.reload();
+                    showMessageBox('Xóa sản phẩm thành công!', 'success', function() {
+                        location.reload();
+                    });
                 } else {
-                    alert(data.message || 'Xóa sản phẩm thất bại!');
+                    showMessageBox(data.message || 'Xóa sản phẩm thất bại!', 'error');
                 }
             } catch (error) {
                 console.error('Lỗi khi xóa sản phẩm:', error);
-                alert('Có lỗi xảy ra khi xóa sản phẩm!');
+                showMessageBox('Có lỗi xảy ra khi xóa sản phẩm!', 'error');
             } finally {
                 const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal'));
                 deleteModal.hide();
@@ -823,22 +825,33 @@
             e.preventDefault();
             hideAllErrors();
 
+            // Đảm bảo mã sản phẩm đã được sinh trước khi submit
+            let maSanPham = document.getElementById('MaSanPham').value.trim();
+            if (!maSanPham || maSanPham === '') {
+                // Nếu mã chưa có, tự động sinh mã
+                await generateProductCode();
+                maSanPham = document.getElementById('MaSanPham').value.trim();
+                
+                // Nếu vẫn chưa có mã sau khi sinh, báo lỗi
+                if (!maSanPham || maSanPham === '') {
+                    showMessageBox("Không thể tạo mã sản phẩm. Vui lòng thử lại!", 'error');
+                    return;
+                }
+            }
+
             const sp = {
-                MaSanPham: document.getElementById('MaSanPham').value.trim(),
-                TenSanPham: document.getElementById('TenSanPham').value.trim(),
+                // Không gửi IdSanPham - để backend tự tạo
+                MaSanPham: maSanPham.toUpperCase(),
+                TenSanPham: document.getElementById('TenSanPham').value.trim().toUpperCase(),
                 IdThuongHieu: parseInt(document.getElementById('IdThuongHieu').value),
                 MoTa: document.getElementById('MoTa').value.trim(),
                 GiaGoc: parseFloat(document.getElementById('GiaGoc').value) || 0,
-                VAT: parseFloat(document.getElementById('VAT').value) || 0,
+                VAT: 10, // VAT mặc định 10%, không cho người dùng nhập
                 TrangThaiSP: document.getElementById('TrangThaiSP').value
             };
 
             let hasError = false;
-
-            if (!sp.MaSanPham) {
-                showError("errorMaSanPham", "Phải nhập mã sản phẩm!");
-                hasError = true;
-            }
+            
             if (!sp.TenSanPham) {
                 showError("errorTenSanPham", "Phải nhập tên sản phẩm!");
                 hasError = true;
@@ -874,8 +887,9 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    alert("Thêm sản phẩm thành công!");
-                    location.reload();
+                    showMessageBox("Thêm sản phẩm thành công!", 'success', function() {
+                        location.reload();
+                    });
                 } else {
                     if (response.status === 400) {
                         if (data.errors) {
@@ -886,7 +900,7 @@
                                 }
                             });
                         } else if (data.message) {
-                            alert(data.message);
+                            showMessageBox(data.message, 'error');
                         }
                     } else if (response.status === 409 && data.message) {
                         if (data.message.includes("Mã")) {
@@ -894,15 +908,15 @@
                         } else if (data.message.includes("Tên")) {
                             showError("errorTenSanPham", data.message);
                         } else {
-                            alert(data.message);
+                            showMessageBox(data.message, 'warning');
                         }
                     } else {
-                        alert(data.message || "Có lỗi xảy ra khi thêm sản phẩm!");
+                        showMessageBox(data.message || "Có lỗi xảy ra khi thêm sản phẩm!", 'error');
                     }
                 }
             } catch (error) {
                 console.error('Lỗi khi thêm sản phẩm:', error);
-                alert("Có lỗi kết nối xảy ra. Vui lòng thử lại!");
+                showMessageBox("Có lỗi kết nối xảy ra. Vui lòng thử lại!", 'error');
             } finally {
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
@@ -913,6 +927,30 @@
         // SỬA SẢN PHẨM
         // ============================
         function setupEventListeners() {
+            // Tự động viết hoa khi nhập Mã sản phẩm
+            document.getElementById('MaSanPham').addEventListener('input', function(e) {
+                e.target.value = e.target.value.toUpperCase();
+            });
+
+            // Tự động viết hoa khi nhập Tên sản phẩm
+            document.getElementById('TenSanPham').addEventListener('input', function(e) {
+                e.target.value = e.target.value.toUpperCase();
+            });
+
+            // Tự động viết hoa khi nhập Mã sản phẩm (Edit)
+            // Mã sản phẩm đã bị ẩn và readonly, không cần event listener
+            // document.getElementById('EditMaSanPham').addEventListener('input', function(e) {
+            //     e.target.value = e.target.value.toUpperCase();
+            // });
+
+            // Tự động viết hoa khi nhập Tên sản phẩm (Edit)
+            document.getElementById('EditTenSanPham').addEventListener('input', function(e) {
+                e.target.value = e.target.value.toUpperCase();
+            });
+
+            // Đảm bảo VAT luôn là 10
+            document.getElementById('VAT').value = 10;
+            document.getElementById('EditVAT').value = 10;
             document.querySelectorAll(".btn-edit-product").forEach(btn => {
                 btn.addEventListener("click", function () {
                     const id = this.getAttribute('data-id');
@@ -930,7 +968,7 @@
                     document.getElementById('EditIdThuongHieu').value = idThuongHieu;
                     document.getElementById('EditMoTa').value = moTa;
                     document.getElementById('EditGiaGoc').value = giaGoc;
-                    document.getElementById('EditVAT').value = vat;
+                    document.getElementById('EditVAT').value = 10; // VAT mặc định 10%, không cho thay đổi
                     document.getElementById('EditTrangThaiSP').value = trangThai;
 
                     updateEditPrice();
@@ -946,12 +984,12 @@
                 const id = document.getElementById('EditIdSanPham').value;
                 const sp = {
                     IdSanPham: parseInt(id),
-                    MaSanPham: document.getElementById('EditMaSanPham').value.trim(),
-                    TenSanPham: document.getElementById('EditTenSanPham').value.trim(),
+                    MaSanPham: document.getElementById('EditMaSanPham').value.trim().toUpperCase(),
+                    TenSanPham: document.getElementById('EditTenSanPham').value.trim().toUpperCase(),
                     IdThuongHieu: parseInt(document.getElementById('EditIdThuongHieu').value),
                     MoTa: document.getElementById('EditMoTa').value.trim(),
                     GiaGoc: parseFloat(document.getElementById('EditGiaGoc').value) || 0,
-                    VAT: parseFloat(document.getElementById('EditVAT').value) || 0,
+                    VAT: 10, // VAT mặc định 10%, không cho người dùng thay đổi
                     TrangThaiSP: document.getElementById('EditTrangThaiSP').value
                 };
 
@@ -996,8 +1034,9 @@
                     const data = await response.json();
 
                     if (response.ok && data.success) {
-                        alert("Cập nhật sản phẩm thành công!");
-                        location.reload();
+                        showMessageBox("Cập nhật sản phẩm thành công!", 'success', function() {
+                            location.reload();
+                        });
                     } else {
                         if (response.status === 400) {
                             if (data.errors) {
@@ -1008,7 +1047,7 @@
                                     }
                                 });
                             } else if (data.message) {
-                                alert(data.message);
+                                showMessageBox(data.message, 'error');
                             }
                         } else if (response.status === 409 && data.message) {
                             if (data.message.includes("Mã")) {
@@ -1016,17 +1055,17 @@
                             } else if (data.message.includes("Tên")) {
                                 showError("errorEditTenSanPham", data.message);
                             } else {
-                                alert(data.message);
+                                showMessageBox(data.message, 'warning');
                             }
                         } else if (response.status === 404 && data.message) {
-                            alert(data.message);
+                            showMessageBox(data.message, 'error');
                         } else {
-                            alert(data.message || "Có lỗi xảy ra khi cập nhật sản phẩm!");
+                            showMessageBox(data.message || "Có lỗi xảy ra khi cập nhật sản phẩm!", 'error');
                         }
                     }
                 } catch (error) {
                     console.error('Lỗi khi cập nhật sản phẩm:', error);
-                    alert("Có lỗi kết nối xảy ra. Vui lòng thử lại!");
+                    showMessageBox("Có lỗi kết nối xảy ra. Vui lòng thử lại!", 'error');
                 } finally {
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
@@ -1050,6 +1089,74 @@
                 await generateProductCode();
             });
         }
+
+        // ============================
+        // HÀM HIỂN THỊ MESSAGE BOX
+        // ============================
+        function showMessageBox(message, type = 'info', callback = null) {
+            const modal = document.getElementById('messageBoxModal');
+            const title = document.getElementById('messageBoxTitle');
+            const messageEl = document.getElementById('messageBoxMessage');
+            const header = document.getElementById('messageBoxHeader');
+
+            // Set message
+            messageEl.textContent = message;
+
+            // Set style based on type
+            header.className = 'modal-header';
+            title.innerHTML = '';
+
+            switch (type) {
+                case 'success':
+                    header.classList.add('bg-success', 'text-white');
+                    title.innerHTML = '<i class="fas fa-check-circle"></i> Thành công';
+                    break;
+                case 'error':
+                case 'danger':
+                    header.classList.add('bg-danger', 'text-white');
+                    title.innerHTML = '<i class="fas fa-exclamation-circle"></i> Lỗi';
+                    break;
+                case 'warning':
+                    header.classList.add('bg-warning', 'text-dark');
+                    title.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Cảnh báo';
+                    break;
+                default:
+                    header.classList.add('bg-info', 'text-white');
+                    title.innerHTML = '<i class="fas fa-info-circle"></i> Thông báo';
+            }
+
+            // Show modal
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+
+            // Callback after modal is hidden
+            if (callback) {
+                modal.addEventListener('hidden.bs.modal', function onHidden() {
+                    callback();
+                    modal.removeEventListener('hidden.bs.modal', onHidden);
+                });
+            }
+        }
     </script>
+
+    <!-- Message Box Modal -->
+    <div class="modal fade" id="messageBoxModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header" id="messageBoxHeader">
+                    <h5 class="modal-title" id="messageBoxTitle">
+                        <i class="fas fa-info-circle"></i> Thông báo
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="messageBoxMessage" class="mb-0"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

@@ -62,8 +62,14 @@ namespace DATN_DT.Controllers
             if (sp == null)
                 return BadRequest(new { success = false, message = "Dữ liệu sản phẩm không hợp lệ!" });
 
+            // Đảm bảo IdSanPham không được truyền vào (tự sinh bởi database)
+            // Entity Framework sẽ tự động tạo ID mới nếu IdSanPham = 0 hoặc không được set
+            sp.IdSanPham = 0;
+
+            // Mã sản phẩm được tự động sinh bởi frontend (generateProductCode)
+            // Chỉ kiểm tra nếu mã chưa được tạo (trường hợp lỗi)
             if (string.IsNullOrWhiteSpace(sp.MaSanPham))
-                errors["MaSanPham"] = "Phải nhập mã sản phẩm!";
+                errors["MaSanPham"] = "Mã sản phẩm chưa được tạo. Vui lòng thử lại!";
             if (string.IsNullOrWhiteSpace(sp.TenSanPham))
                 errors["TenSanPham"] = "Phải nhập tên sản phẩm!";
             if (sp.IdThuongHieu == null || sp.IdThuongHieu == 0)
@@ -77,21 +83,31 @@ namespace DATN_DT.Controllers
                 return BadRequest(new { success = false, errors });
 
             // CHECK TRÙNG MÃ SẢN PHẨM
-            bool exists = await _context.SanPhams.AnyAsync(s =>
-                s.MaSanPham!.Trim().ToLower() == sp.MaSanPham!.Trim().ToLower()
+            bool existsMa = await _context.SanPhams.AnyAsync(s =>
+                s.MaSanPham!.Trim().ToUpper() == sp.MaSanPham!.Trim().ToUpper()
             );
-            if (exists)
+            if (existsMa)
                 return Conflict(new { success = false, message = "Mã sản phẩm đã tồn tại!" });
+
+            // CHECK TRÙNG TÊN SẢN PHẨM (case-insensitive)
+            bool existsTen = await _context.SanPhams.AnyAsync(s =>
+                s.TenSanPham!.Trim().ToUpper() == sp.TenSanPham!.Trim().ToUpper()
+            );
+            if (existsTen)
+                return Conflict(new { success = false, message = "Tên sản phẩm đã tồn tại!" });
 
             try
             {
-                // FORMAT DỮ LIỆU
-                sp.MaSanPham = sp.MaSanPham.Trim();
-                sp.TenSanPham = sp.TenSanPham.Trim();
+                // FORMAT DỮ LIỆU - Viết hoa tất cả
+                sp.MaSanPham = sp.MaSanPham.Trim().ToUpper();
+                sp.TenSanPham = sp.TenSanPham.Trim().ToUpper();
                 sp.MoTa = sp.MoTa?.Trim();
 
+                // VAT mặc định 10%
+                sp.VAT = 10;
+
                 // TÍNH GIÁ NIÊM YẾT TỰ ĐỘNG
-                sp.GiaNiemYet = sp.GiaGoc * (1 + (sp.VAT ?? 0) / 100);
+                sp.GiaNiemYet = sp.GiaGoc * (1 + (sp.VAT ?? 10) / 100);
 
                 await _sanPhamService.Create(sp);
                 await _context.SaveChangesAsync(); // Lưu vào DB
@@ -144,24 +160,35 @@ namespace DATN_DT.Controllers
                 return NotFound(new { success = false, message = "Không tìm thấy sản phẩm!" });
 
             // CHECK TRÙNG MÃ SẢN PHẨM (TRỪ SẢN PHẨM HIỆN TẠI)
-            bool duplicateExists = await _context.SanPhams.AnyAsync(s =>
-                s.MaSanPham!.Trim().ToLower() == sp.MaSanPham!.Trim().ToLower() &&
+            bool duplicateMa = await _context.SanPhams.AnyAsync(s =>
+                s.MaSanPham!.Trim().ToUpper() == sp.MaSanPham!.Trim().ToUpper() &&
                 s.IdSanPham != id
             );
-            if (duplicateExists)
+            if (duplicateMa)
                 return Conflict(new { success = false, message = "Mã sản phẩm đã tồn tại!" });
+
+            // CHECK TRÙNG TÊN SẢN PHẨM (TRỪ SẢN PHẨM HIỆN TẠI)
+            bool duplicateTen = await _context.SanPhams.AnyAsync(s =>
+                s.TenSanPham!.Trim().ToUpper() == sp.TenSanPham!.Trim().ToUpper() &&
+                s.IdSanPham != id
+            );
+            if (duplicateTen)
+                return Conflict(new { success = false, message = "Tên sản phẩm đã tồn tại!" });
 
             try
             {
                 sp.IdSanPham = id; // ĐẢM BẢO ID ĐÚNG
 
-                // FORMAT DỮ LIỆU
-                sp.MaSanPham = sp.MaSanPham.Trim();
-                sp.TenSanPham = sp.TenSanPham.Trim();
+                // FORMAT DỮ LIỆU - Viết hoa tất cả
+                sp.MaSanPham = sp.MaSanPham.Trim().ToUpper();
+                sp.TenSanPham = sp.TenSanPham.Trim().ToUpper();
                 sp.MoTa = sp.MoTa?.Trim();
 
+                // VAT mặc định 10%
+                sp.VAT = 10;
+
                 // TÍNH GIÁ NIÊM YẾT TỰ ĐỘNG
-                sp.GiaNiemYet = sp.GiaGoc * (1 + (sp.VAT ?? 0) / 100);
+                sp.GiaNiemYet = sp.GiaGoc * (1 + (sp.VAT ?? 10) / 100);
 
                 await _sanPhamService.Update(sp);
                 await _context.SaveChangesAsync(); // Lưu vào DB
@@ -211,32 +238,178 @@ namespace DATN_DT.Controllers
         }
 
         // ----------------------------
-        // POST: Xóa sản phẩm
+        // GET: Tự động sinh mã sản phẩm
         // ----------------------------
-        [HttpPost]
+        [HttpGet("SanPham/GenerateProductCode")]
+        public async Task<IActionResult> GenerateProductCode()
+        {
+            try
+            {
+                // Lấy mã sản phẩm cuối cùng có format SPxxx
+                var lastProduct = await _context.SanPhams
+                    .Where(s => s.MaSanPham != null && s.MaSanPham.StartsWith("SP"))
+                    .OrderByDescending(s => s.MaSanPham)
+                    .FirstOrDefaultAsync();
+
+                string newCode;
+                if (lastProduct == null || string.IsNullOrWhiteSpace(lastProduct.MaSanPham))
+                {
+                    // Nếu chưa có sản phẩm nào, bắt đầu từ SP001
+                    newCode = "SP001";
+                }
+                else
+                {
+                    // Lấy số từ mã cuối cùng (ví dụ: SP001 -> 001)
+                    string lastCode = lastProduct.MaSanPham.Trim().ToUpper();
+                    if (lastCode.StartsWith("SP") && lastCode.Length > 2)
+                    {
+                        string numberPart = lastCode.Substring(2);
+                        if (int.TryParse(numberPart, out int lastNumber))
+                        {
+                            // Tăng số lên 1 và format lại
+                            int newNumber = lastNumber + 1;
+                            newCode = "SP" + newNumber.ToString("D3"); // D3 = 3 chữ số với số 0 đứng trước
+                        }
+                        else
+                        {
+                            // Nếu không parse được, bắt đầu từ SP001
+                            newCode = "SP001";
+                        }
+                    }
+                    else
+                    {
+                        // Nếu format không đúng, bắt đầu từ SP001
+                        newCode = "SP001";
+                    }
+                }
+
+                // Kiểm tra mã mới có trùng không (phòng trường hợp có mã bị xóa)
+                bool exists = await _context.SanPhams.AnyAsync(s => s.MaSanPham == newCode);
+                if (exists)
+                {
+                    // Nếu trùng, tìm mã tiếp theo chưa tồn tại
+                    int nextNumber = int.Parse(newCode.Substring(2)) + 1;
+                    while (true)
+                    {
+                        newCode = "SP" + nextNumber.ToString("D3");
+                        exists = await _context.SanPhams.AnyAsync(s => s.MaSanPham == newCode);
+                        if (!exists) break;
+                        nextNumber++;
+                    }
+                }
+
+                return Ok(new { success = true, code = newCode });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi GenerateProductCode: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Lỗi khi sinh mã sản phẩm: " + ex.Message
+                });
+            }
+        }
+
+        // ----------------------------
+        // DELETE: Xóa sản phẩm
+        // ----------------------------
+        [HttpDelete("SanPham/Delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             try
             {
-                // Kiểm tra sản phẩm có model nào không
+                // Kiểm tra sản phẩm có tồn tại không
+                var sanPham = await _sanPhamService.GetSanPhamById(id);
+                if (sanPham == null)
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = "Không tìm thấy sản phẩm!"
+                    });
+                }
+
+                // Kiểm tra sản phẩm có model nào không (tất cả model, không chỉ TrangThai == 1)
                 var hasModels = await _context.ModelSanPhams
-                    .AnyAsync(m => m.IdSanPham == id && m.TrangThai == 1);
+                    .AnyAsync(m => m.IdSanPham == id);
 
                 if (hasModels)
+                {
+                    // Đếm số lượng model để hiển thị thông báo chi tiết hơn
+                    var modelCount = await _context.ModelSanPhams
+                        .CountAsync(m => m.IdSanPham == id);
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = $"Không thể xóa sản phẩm vì còn {modelCount} model sản phẩm. Vui lòng xóa tất cả model trước."
+                    });
+                }
+
+                // Kiểm tra xem có đơn hàng chi tiết nào sử dụng model của sản phẩm này không
+                // (thông qua ModelSanPham -> DonHangChiTiet)
+                var hasDonHangChiTiet = await _context.DonHangChiTiets
+                    .Include(d => d.ModelSanPham)
+                    .AnyAsync(d => d.ModelSanPham != null && d.ModelSanPham.IdSanPham == id);
+
+                if (hasDonHangChiTiet)
                 {
                     return BadRequest(new
                     {
                         success = false,
-                        message = "Không thể xóa sản phẩm vì còn model sản phẩm. Vui lòng xóa tất cả model trước."
+                        message = "Không thể xóa sản phẩm vì đã có đơn hàng sử dụng sản phẩm này."
                     });
                 }
 
+                // Kiểm tra giỏ hàng chi tiết
+                var hasGioHangChiTiet = await _context.GioHangChiTiets
+                    .Include(g => g.ModelSanPham)
+                    .AnyAsync(g => g.ModelSanPham != null && g.ModelSanPham.IdSanPham == id);
+
+                if (hasGioHangChiTiet)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Không thể xóa sản phẩm vì đã có giỏ hàng chứa sản phẩm này."
+                    });
+                }
+
+                // Kiểm tra hóa đơn chi tiết
+                var hasHoaDonChiTiet = await _context.HoaDonChiTiets
+                    .Include(h => h.ModelSanPham)
+                    .AnyAsync(h => h.ModelSanPham != null && h.ModelSanPham.IdSanPham == id);
+
+                if (hasHoaDonChiTiet)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Không thể xóa sản phẩm vì đã có hóa đơn sử dụng sản phẩm này."
+                    });
+                }
+
+                // Thực hiện xóa
                 await _sanPhamService.Delete(id);
+                await _context.SaveChangesAsync(); // Lưu thay đổi vào database
+                
                 return Ok(new { success = true, message = "Xóa sản phẩm thành công!" });
+            }
+            catch (DbUpdateException dbEx)
+            {
+                Console.WriteLine($"Lỗi database khi xóa sản phẩm: {dbEx.Message}");
+                Console.WriteLine($"Inner exception: {dbEx.InnerException?.Message}");
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Không thể xóa sản phẩm do ràng buộc dữ liệu. Vui lòng kiểm tra lại các model và đơn hàng liên quan."
+                });
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Lỗi khi xóa sản phẩm: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
                 return StatusCode(500, new
                 {
                     success = false,

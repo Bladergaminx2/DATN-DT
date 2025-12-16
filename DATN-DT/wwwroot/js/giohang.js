@@ -1,4 +1,4 @@
-﻿// Biến toàn cục
+// Biến toàn cục
 let cartData = [];
 let selectedItems = new Set(); // Lưu trữ IdGioHangChiTiet
 let itemToDelete = null;

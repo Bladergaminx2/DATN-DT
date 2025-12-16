@@ -1,0 +1,306 @@
+@model DATN_DT.Controllers.InvoiceViewModel
+@{
+    ViewData["Title"] = "Phiếu Bán Hàng";
+    Layout = null;
+    
+    // Helper function để chuyển số thành chữ
+    string NumberToWords(decimal number)
+    {
+        // Đơn giản hóa - chỉ hiển thị số
+        return number.ToString("N0") + " đồng";
+    }
+    
+    var donHang = Model.DonHang;
+    var chiTietList = Model.ChiTietList;
+    var tongTien = chiTietList.Sum(c => c.ChiTiet.ThanhTien ?? 0);
+    var soTienDaThanhToan = tongTien; // Đã thanh toán toàn bộ
+    var soTienConPhaiThanhToan = 0; // Đã thanh toán hết
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phiếu Bán Hàng - Poly phone</title>
+    <style>
+        body {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 14px;
+            line-height: 1.4;
+            background: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .invoice-container {
+            width: 210mm;
+            min-height: 297mm;
+            background: #fff;
+            margin: 0 auto;
+            padding: 20mm;
+            box-sizing: border-box;
+            position: relative;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .company-info {
+            width: 60%;
+        }
+        .company-name {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 16px;
+        }
+        .invoice-meta {
+            width: 35%;
+            text-align: right;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0 40px 0;
+            position: relative;
+        }
+
+        .stamp {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-3deg);
+            border: 3px solid #c0392b;
+            color: #c0392b;
+            padding: 5px 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+            text-transform: uppercase;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+        .stamp-mst {
+            font-size: 16px;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .info-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .customer-info, .payment-info {
+            width: 48%;
+        }
+        .row {
+            display: flex;
+            margin-bottom: 5px;
+        }
+        .label {
+            min-width: 80px;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            vertical-align: top;
+        }
+        th {
+            background-color: #e0e0e0;
+            text-align: center;
+            font-weight: bold;
+        }
+        .col-stt { width: 40px; text-align: center; }
+        .col-name { text-align: left; }
+        .col-kho { width: 60px; text-align: center; }
+        .col-sl { width: 40px; text-align: center; }
+        .col-price { width: 100px; text-align: right; }
+        .col-total { width: 100px; text-align: right; }
+        .col-bh { width: 80px; text-align: center; }
+
+        .totals {
+            margin-top: 10px;
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .amount-in-words {
+            font-style: italic;
+            margin: 10px 0;
+        }
+
+        .footer-notes {
+            font-size: 12px;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+        .signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            text-align: center;
+        }
+        .sig-block {
+            width: 24%;
+        }
+        .sig-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .sig-sub {
+            font-size: 12px;
+            font-style: italic;
+            margin-bottom: 60px;
+        }
+
+        @@media print {
+            body { background: none; margin: 0; }
+            .invoice-container { width: 100%; margin: 0; padding: 10px; box-shadow: none; }
+            @@page { margin: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="invoice-container">
+    <div class="header">
+        <div class="company-info">
+            <div class="company-name">Poly phone</div>
+            <div>36 Nguyễn Văn Huyên</div>
+            <div>0941088000</div>
+        </div>
+        <div class="invoice-meta">
+            <div>Số: <strong>@(donHang.MaDon ?? "N/A")</strong></div>
+            <div>Ngày: @(donHang.NgayDat?.ToString("dd/MM/yyyy") ?? "N/A")</div>
+            <div>Thời gian: @(donHang.NgayDat?.ToString("hh:mm:ss tt") ?? "N/A")</div>
+        </div>
+    </div>
+
+    <div class="title">
+        PHIẾU BÁN HÀNG
+        <div class="stamp">
+            ĐÃ THANH TOÁN
+            <span class="stamp-mst">MST: 0123456789</span>
+        </div>
+    </div>
+
+    <div class="info-section">
+        <div class="customer-info">
+            <strong>I. Thông tin khách hàng</strong>
+            <div class="row"><span class="label">Mã KH:</span> <span>@(donHang.IdKhachHang.HasValue ? "KH" + donHang.IdKhachHang.Value.ToString("D4") : "Khách vãng lai")</span></div>
+            <div class="row"><span class="label">Tên KH:</span> <span>@(donHang.KhachHang?.HoTenKhachHang ?? donHang.HoTenNguoiNhan ?? "Khách vãng lai")</span></div>
+            <div class="row"><span class="label">Địa chỉ:</span> <span>@(donHang.DiaChiGiaoHang ?? "N/A")</span></div>
+            <div class="row"><span class="label">Tel:</span> <span>@(donHang.KhachHang?.SdtKhachHang ?? donHang.SdtNguoiNhan ?? "N/A")</span></div>
+        </div>
+        <div class="payment-info">
+            <strong>Thông tin tài khoản thanh toán:</strong>
+            <div style="margin-top: 5px;">Ngân hàng Việt Nam Thịnh Vượng (VPBank)</div>
+            <div>Chủ TK: Nguyễn Văn Nam</div>
+            <div>Số TK: 35991999</div>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th class="col-stt">STT</th>
+                <th class="col-name">Tên, quy cách hàng hóa</th>
+                <th class="col-kho">Kho</th>
+                <th class="col-sl">SL</th>
+                <th class="col-price">Đơn giá</th>
+                <th class="col-total">Tổng tiền</th>
+                <th class="col-bh">Bảo hành</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                int stt = 1;
+                foreach (var item in chiTietList)
+                {
+                    var chiTiet = item.ChiTiet;
+                    var model = chiTiet.ModelSanPham;
+                    var sanPham = model?.SanPham;
+                    var imeis = item.Imeis ?? new List<string>();
+                    
+                    <tr>
+                        <td class="col-stt">@stt</td>
+                        <td class="col-name">
+                            <strong>@(sanPham?.TenSanPham ?? "N/A") - @(model?.TenModel ?? "N/A")</strong><br>
+                            @if (imeis.Any())
+                            {
+                                <span style="font-size: 12px; color: #555;">Imei: [@string.Join(", ", imeis)]</span>
+                            }
+                        </td>
+                        <td class="col-kho">36 - NVH</td>
+                        <td class="col-sl">@(chiTiet.SoLuong ?? 0)</td>
+                        <td class="col-price">@((chiTiet.DonGia ?? 0).ToString("N0"))</td>
+                        <td class="col-total">@((chiTiet.ThanhTien ?? 0).ToString("N0"))</td>
+                        <td class="col-bh">12 tháng</td>
+                    </tr>
+                    stt++;
+                }
+            }
+        </tbody>
+    </table>
+
+    <div class="totals">
+        <div class="total-row">
+            <span>Số tiền đã thanh toán:</span>
+            <span>@soTienDaThanhToan.ToString("N0")</span>
+        </div>
+        <div class="total-row">
+            <span>Số tiền còn phải thanh toán:</span>
+            <span>@soTienConPhaiThanhToan.ToString("N0")</span>
+        </div>
+        <div class="total-row" style="margin-top: 5px; border-top: 1px solid #000; padding-top: 5px;">
+            <span>Tổng cộng:</span>
+            <span>@tongTien.ToString("N0")</span>
+        </div>
+        <div class="amount-in-words">Bằng chữ: @NumberToWords(tongTien)</div>
+    </div>
+
+    <div class="footer-notes">
+        <strong>Quý khách lưu ý:</strong><br>
+        - Vui lòng kiểm tra số lượng, số imei, hình thức hàng hóa, phụ kiện khi nhận hàng và nhận phiếu bảo hành.<br>
+        - Truy cập webside: Smartviets.com để biết thêm thông tin về chính sách bảo hành của công ty.
+    </div>
+
+    <div class="signatures">
+        <div class="sig-block">
+            <div class="sig-title">Khách hàng</div>
+            <div class="sig-sub">(Kiểm tra và ký nhận)</div>
+        </div>
+        <div class="sig-block">
+            <div class="sig-title">(Kiểm tra và ký nhận)</div>
+            <div class="sig-sub">(Ký và ghi rõ họ tên)</div>
+        </div>
+        <div class="sig-block">
+            <div class="sig-title">Kế toán</div>
+            <div class="sig-sub">(Ký và ghi rõ họ tên)</div>
+        </div>
+        <div class="sig-block">
+            <div class="sig-title">Phụ trách</div>
+            <div class="sig-sub">(Ký và ghi rõ họ tên)</div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+

@@ -4,6 +4,7 @@ using DATN_DT.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DATN_DT.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    partial class MyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251213052902_hoadon")]
+    partial class hoadon
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -226,9 +229,6 @@ namespace DATN_DT.Migrations
                     b.Property<int?>("IdKhachHang")
                         .HasColumnType("int");
 
-                    b.Property<int?>("IdNhanVien")
-                        .HasColumnType("int");
-
                     b.Property<string>("MaDon")
                         .HasColumnType("nvarchar(max)");
 
@@ -251,8 +251,6 @@ namespace DATN_DT.Migrations
                     b.HasKey("IdDonHang");
 
                     b.HasIndex("IdKhachHang");
-
-                    b.HasIndex("IdNhanVien");
 
                     b.ToTable("DonHangs");
                 });
@@ -345,9 +343,6 @@ namespace DATN_DT.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdHoaDon"));
-
-                    b.Property<string>("HoTenNguoiNhan")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("IdKhachHang")
                         .HasColumnType("int");
@@ -529,6 +524,9 @@ namespace DATN_DT.Migrations
 
                     b.Property<DateTime?>("NgayKetThuc")
                         .HasColumnType("datetime2");
+
+                    b.Property<int?>("SoLuong")
+                        .HasColumnType("int");
 
                     b.Property<string>("TrangThaiKM")
                         .HasColumnType("nvarchar(max)");
@@ -894,14 +892,7 @@ namespace DATN_DT.Migrations
                         .HasForeignKey("IdKhachHang")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("DATN_DT.Models.NhanVien", "NhanVien")
-                        .WithMany()
-                        .HasForeignKey("IdNhanVien")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.Navigation("KhachHang");
-
-                    b.Navigation("NhanVien");
                 });
 
             modelBuilder.Entity("DATN_DT.Models.DonHangChiTiet", b =>
