@@ -1,4 +1,6 @@
 ﻿using DATN_DT.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace DATN_DT.IServices
 {
@@ -9,6 +11,5 @@ namespace DATN_DT.IServices
         Task<ManHinh?> GetManHinhById(int id);
         Task<List<ManHinh>> GetAllManHinhs();
         Task Update(ManHinh manHinh);
-
     }
 }

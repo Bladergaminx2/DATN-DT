@@ -1,6 +1,6 @@
 ﻿using DATN_DT.Models;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace DATN_DT.IServices
 {
@@ -8,13 +8,22 @@ namespace DATN_DT.IServices
     {
         Task Create(TonKho tonKho);
         Task Delete(int id);
-        Task<TonKho?> GetTonKhoById(int id);
         Task<List<TonKho>> GetAllTonKhos();
-
-        Task<List<ModelSanPham>> GetModelSanPhams();
-        Task<bool> CheckDuplicate(int? idModelSanPham, int? idKho, int excludeId);
-        Task<List<Kho>> GetKhos();
-
+        Task<TonKho?> GetTonKhoById(int id);
         Task Update(TonKho tonKho);
+
+        // Các phương thức bổ sung
+        Task<int> GetSoLuongImeiConHang(int idModelSanPham);
+        Task<List<Kho>> GetAllKho();
+        Task<List<ModelSanPham>> GetAllModelSanPham();
+        Task<bool> IsModelSanPhamInAnyKho(int idModelSanPham);
+        Task<TonKho?> GetTonKhoByModelAndKho(int idModelSanPham, int idKho);
+        Task UpdateSoLuongFromImei(int idModelSanPham);
+        Task<TonKho?> GetTonKhoByModelSanPham(int idModelSanPham);
+
+        // Các phương thức mới cho Cách 1
+        Task RefreshTonKhoForModel(int idModelSanPham);
+        Task RefreshAllTonKho();
+        Task CheckAndUpdateTonKhoOnImeiChange(int idModelSanPham, string? oldTrangThai = null, string? newTrangThai = null);
     }
 }

@@ -1,0 +1,1369 @@
+﻿@model DATN_DT.Controllers.ProductDetailViewModel
+@{
+    ViewData["Title"] = "Chi tiết sản phẩm";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"]</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+    <style>
+        body {
+            background-color: #12121d;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            padding: 20px;
+        }
+
+        .product-detail-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: #1e1e2a;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-button {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            margin-bottom: 20px;
+            transition: 0.3s;
+        }
+
+            .back-button:hover {
+                background-color: #5a6268;
+                color: white;
+            }
+
+        .image-section {
+            background-color: #2b2b33;
+            border-radius: 10px;
+            padding: 20px;
+            height: 100%;
+        }
+
+        .info-section {
+            background-color: #2b2b33;
+            border-radius: 10px;
+            padding: 25px;
+            height: 100%;
+        }
+
+        .imei-section {
+            background-color: #2b2b33;
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+
+        .main-image {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 10px;
+            background-color: #1e1e2a;
+            padding: 10px;
+        }
+
+        .thumbnail-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+
+        .thumbnail {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: 0.3s;
+            background-color: #1e1e2a;
+            padding: 5px;
+        }
+
+            .thumbnail:hover,
+            .thumbnail.active {
+                border-color: #4a90e2;
+                transform: scale(1.05);
+            }
+
+        .product-title {
+            color: #fff;
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .product-brand {
+            color: #4a90e2;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        .price-tag {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .specs-section {
+            margin-bottom: 25px;
+        }
+
+        .spec-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #444;
+        }
+
+            .spec-item:last-child {
+                border-bottom: none;
+            }
+
+        .spec-label {
+            color: #aaa;
+            font-weight: 500;
+        }
+
+        .spec-value {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .imei-card {
+            background-color: #1e1e2a;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .imei-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .imei-title {
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .imei-total {
+            background-color: #4a90e2;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .imei-status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            background-color: #2b2b33;
+            border-radius: 8px;
+            border-left: 4px solid #4a90e2;
+        }
+
+        .status-available {
+            border-left-color: #28a745;
+        }
+
+        .status-sold {
+            border-left-color: #dc3545;
+        }
+
+        .status-other {
+            border-left-color: #ffc107;
+        }
+
+        .status-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .dot-available {
+            background-color: #28a745;
+        }
+
+        .dot-sold {
+            background-color: #dc3545;
+        }
+
+        .dot-other {
+            background-color: #ffc107;
+        }
+
+        .status-name {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .status-count {
+            background-color: #444;
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        /* Table styles */
+        .table-dark {
+            background-color: #1e1e2a;
+            color: white;
+        }
+
+            .table-dark th {
+                background-color: #2b2b33;
+                border-color: #444;
+            }
+
+            .table-dark td {
+                border-color: #444;
+                vertical-align: middle;
+            }
+
+        .search-box {
+            background-color: #1e1e2a;
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 8px 15px;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+            .search-box:focus {
+                border-color: #4a90e2;
+                outline: none;
+            }
+
+        .imei-code {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .badge-available {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+        }
+
+        .badge-sold {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+        }
+
+        .badge-returned {
+            background-color: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
+        .badge-warranty {
+            background-color: rgba(23, 162, 184, 0.2);
+            color: #17a2b8;
+        }
+
+        /* Modal styles */
+        .modal-content {
+            background-color: #2b2b33;
+            color: white;
+            border-radius: 10px;
+            border: none;
+        }
+
+        .modal-header {
+            border-bottom: 1px solid #444;
+            padding: 20px;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            border-top: 1px solid #444;
+            padding: 20px;
+        }
+
+        .form-control {
+            background-color: #1e1e2a;
+            color: white;
+            border: 1px solid #444;
+        }
+
+            .form-control:focus {
+                border-color: #4a90e2;
+                box-shadow: none;
+                background-color: #1e1e2a;
+                color: white;
+            }
+
+        .btn-close-white {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+
+        .no-images {
+            text-align: center;
+            color: #6c757d;
+            padding: 40px 20px;
+        }
+
+            .no-images i {
+                font-size: 3rem;
+                margin-bottom: 15px;
+            }
+
+        .error-message {
+            background-color: #dc3545;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 50px auto;
+            max-width: 500px;
+        }
+
+        .table-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .alert-success {
+            background-color: rgba(40, 167, 69, 0.2);
+            border-color: #28a745;
+            color: #28a745;
+        }
+
+        .alert-danger {
+            background-color: rgba(220, 53, 69, 0.2);
+            border-color: #dc3545;
+            color: #dc3545;
+        }
+
+
+        .updating-row {
+            background-color: rgba(255, 193, 7, 0.2) !important;
+            transition: background-color 0.5s ease;
+        }
+
+        .updated-row {
+            background-color: rgba(40, 167, 69, 0.1) !important;
+            animation: highlightUpdate 2s ease-out;
+        }
+
+        @@keyframes highlightUpdate {
+            0% {
+                background-color: rgba(40, 167, 69, 0.3);
+            }
+
+            100% {
+                background-color: rgba(40, 167, 69, 0.1);
+            }
+        }
+
+        /* Notification*/
+        .update-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 9999;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @@keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @@media (max-width: 768px) {
+            .product-detail-container {
+                padding: 15px;
+            }
+
+            .product-title {
+                font-size: 1.4rem;
+            }
+
+            .price-tag {
+                font-size: 1.2rem;
+            }
+
+            .thumbnail {
+                width: 60px;
+                height: 60px;
+            }
+
+            .table-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .table-actions {
+                justify-content: space-between;
+            }
+
+            .update-notification {
+                bottom: 10px;
+                right: 10px;
+                left: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+    {
+        <div class="error-message">
+            <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+            <h4>Lỗi</h4>
+            <p>@ViewBag.ErrorMessage</p>
+            <button class="btn btn-light mt-3" onclick="window.history.back()">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </button>
+        </div>
+    }
+    else if (Model == null)
+    {
+        <div class="error-message">
+            <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+            <h4>Lỗi</h4>
+            <p>Không tìm thấy thông tin sản phẩm</p>
+            <button class="btn btn-light mt-3" onclick="window.history.back()">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </button>
+        </div>
+    }
+    else
+    {
+        <div class="product-detail-container">
+            <!-- Nút quay lại -->
+            <button class="back-button" onclick="window.history.back()">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </button>
+
+            <div class="row">
+                <!-- Cột bên trái: Ảnh sản phẩm -->
+                <div class="col-lg-6 col-md-6 mb-4">
+                    <div class="image-section">
+                        @if (Model.AnhSanPhams != null && Model.AnhSanPhams.Any())
+                        {
+                            <img id="mainImage" src="@Model.AnhSanPhams.First().DuongDan"
+                                 alt="@Model.TenModel" class="main-image"
+                                 onerror="this.src='https://via.placeholder.com/400x400/2b2b33/666666?text=No+Image'">
+
+                            <div class="thumbnail-container">
+                                @foreach (var image in Model.AnhSanPhams)
+                                {
+                                    <img src="@image.DuongDan" alt="@Model.TenModel"
+                                         class="thumbnail @(image == Model.AnhSanPhams.First() ? "active" : "")"
+                                         onclick="changeMainImage('@image.DuongDan', this)"
+                                         onerror="this.src='https://via.placeholder.com/80x80/2b2b33/666666?text=No+Image'">
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="no-images">
+                                <i class="fas fa-image"></i>
+                                <p>Không có ảnh sản phẩm</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Cột bên phải: Thông tin sản phẩm và IMEI -->
+                <div class="col-lg-6 col-md-6 mb-4">
+                    <div class="info-section">
+                        <!-- Thông tin cơ bản -->
+                        <h1 class="product-title">@Model.TenModel</h1>
+                        <div class="product-brand">
+                            <i class="fas fa-tag"></i> @Model.TenThuongHieu - @Model.TenSanPham
+                        </div>
+
+                        <!-- Giá bán -->
+                        <div class="price-tag">
+                            @FormatCurrency(Model.GiaBan)
+                        </div>
+
+                        <!-- Màu sắc -->
+                        <div class="mb-3">
+                            <span class="spec-label"><i class="fas fa-palette"></i> Màu sắc:</span>
+                            <span class="spec-value">@Model.Mau</span>
+                        </div>
+
+                        <!-- Thông số kỹ thuật -->
+                        <div class="specs-section">
+                            <h5 class="text-white mb-3"><i class="fas fa-microchip"></i> Thông số kỹ thuật</h5>
+
+                            <div class="spec-item">
+                                <span class="spec-label">Bộ nhớ trong (ROM):</span>
+                                <span class="spec-value">@Model.DungLuongROM</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">RAM:</span>
+                                <span class="spec-value">@Model.DungLuongRAM</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Dung lượng pin:</span>
+                                <span class="spec-value">@Model.DungLuongPin</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Công nghệ màn hình:</span>
+                                <span class="spec-value">@Model.CongNgheManHinh</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Kích thước màn hình:</span>
+                                <span class="spec-value">@Model.KichThuocManHinh</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Camera trước:</span>
+                                <span class="spec-value">@Model.DoPhanGiaiCamTruoc</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Camera sau:</span>
+                                <span class="spec-value">@Model.DoPhanGiaiCamSau</span>
+                            </div>
+                        </div>
+
+                        <!-- Thông tin IMEI  -->
+                        <div class="imei-section">
+                            <div class="imei-card">
+                                <div class="imei-header">
+                                    <div class="imei-title">
+                                        <i class="fas fa-barcode"></i> Tổng quan IMEI
+                                    </div>
+                                    <div class="imei-total" id="imeiTotalCount">
+                                    </div>
+                                </div>
+
+                                <div id="imeiStatusContainer">
+
+                                    <div class="text-center text-muted py-3">
+                                        <i class="fas fa-spinner fa-spin"></i> Đang tải thống kê IMEI...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phần danh sách IMEI với tìm kiếm và bảng -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="imei-section">
+                        <div class="imei-header">
+                            <div class="imei-title">
+                                <i class="fas fa-list"></i> Danh sách IMEI
+                            </div>
+                        </div>
+
+                        <!-- Thanh tìm kiếm và điều khiển -->
+                        <div class="table-controls">
+                            <input type="text" id="searchImei" class="search-box"
+                                   placeholder="🔍 Tìm kiếm theo mã IMEI..." style="width: 300px;">
+
+                            <div class="table-actions">
+                                <select id="statusFilter" class="form-control" style="width: 200px;">
+                                    <option value="">Tất cả trạng thái</option>
+                                    <option value="Còn hàng">Còn hàng</option>
+                                    <option value="Đã bán">Đã bán</option>
+                                    <option value="Đã trả hàng">Đã trả hàng</option>
+                                    <option value="Bảo hành">Bảo hành</option>
+                                </select>
+                                <button class="btn btn-primary" onclick="loadImeiData()">
+                                    <i class="fas fa-sync-alt"></i> Làm mới
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Alert messages -->
+                        <div id="alertContainer"></div>
+
+                        <!-- Bảng danh sách IMEI -->
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover" id="imeiTable">
+                                <thead>
+                                    <tr>
+                                        <th>Mã IMEI</th>
+                                        <th>Trạng thái</th>
+                                        <th>Mô tả</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="imeiTableBody">
+                                    <!-- Dữ liệu sẽ được tải bằng JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Loading spinner -->
+                        <div class="loading-spinner" id="loadingSpinner">
+                            <i class="fas fa-spinner fa-spin fa-2x"></i>
+                            <p class="mt-2">Đang tải dữ liệu IMEI...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Modal Edit IMEI -->
+    <div class="modal fade" id="editImeiModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chỉnh sửa IMEI</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editImeiForm">
+                    <input type="hidden" id="editImeiId" />
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Mã IMEI <span class="text-danger">*</span></label>
+                            <input type="text" id="editMaImei" class="form-control" maxlength="15"
+                                   placeholder="Nhập mã IMEI (15 chữ số)" />
+                            <small id="errorEditMaImei" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Model Sản Phẩm <span class="text-danger">*</span></label>
+                            <select id="editIdModelSanPham" class="form-control">
+                                <option value="">Chọn model sản phẩm</option>
+                            </select>
+                            <small id="errorEditIdModelSanPham" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mô Tả</label>
+                            <textarea id="editMoTa" class="form-control" rows="3"
+                                      placeholder="Nhập mô tả (nếu có)"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Trạng Thái <span class="text-danger">*</span></label>
+                            <select id="editTrangThai" class="form-control">
+                                <option value="">Chọn trạng thái</option>
+                                <option value="Còn hàng">Còn hàng</option>
+                                <option value="Đã bán">Đã bán</option>
+                                <option value="Đã trả hàng">Đã trả hàng</option>
+                                <option value="Bảo hành">Bảo hành</option>
+                            </select>
+                            <small id="errorEditTrangThai" class="text-danger d-none"></small>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <small>
+                                <i class="fas fa-info-circle"></i>
+                                <strong>Lưu ý:</strong> Thay đổi trạng thái hoặc model sản phẩm sẽ ảnh hưởng đến tồn kho.
+                            </small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-warning" id="btnUpdateImei">
+                            <span id="updateSpinner" class="d-none">
+                                <i class="fas fa-spinner fa-spin"></i> Đang xử lý...
+                            </span>
+                            <span id="updateText">Cập nhật</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        let imeiTable;
+        let currentProductId = @Model?.IdModelSanPham;
+        let allImeiData = []; // Lưu tất cả dữ liệu IMEI
+
+        // ========== THÔNG BÁO CẬP NHẬT CHO TRANG INDEX ==========
+        function notifyIndexPageAboutImeiUpdate() {
+            const productId = currentProductId;
+
+            if (productId) {
+                console.log('Notifying Index page about IMEI update for product:', productId);
+
+                // Gọi hàm trong parent window (trang Index)
+                if (window.opener) {
+                    // Nếu mở từ popup
+                    if (window.opener.notifyImeiUpdate) {
+                        window.opener.notifyImeiUpdate(productId);
+                    }
+                } else if (window.parent) {
+                    // Nếu trong iframe
+                    if (window.parent.notifyImeiUpdate) {
+                        window.parent.notifyImeiUpdate(productId);
+                    }
+                } else {
+                    // Sử dụng localStorage để giao tiếp giữa các tab
+                    localStorage.setItem('imei_updated', JSON.stringify({
+                        productId: productId,
+                        timestamp: Date.now()
+                    }));
+
+                    // Remove sau 100ms
+                    setTimeout(() => {
+                        localStorage.removeItem('imei_updated');
+                    }, 100);
+                }
+
+                // Gọi API để cập nhật server
+                fetch('/ProductOverview/NotifyImeiUpdate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ProductId: productId,
+                        Action: 'update',
+                        Timestamp: new Date().toISOString()
+                    })
+                }).then(response => {
+                    if (response.ok) {
+                        console.log('Stock update notification sent to server');
+                    }
+                }).catch(error => {
+                    console.error('Error sending stock update:', error);
+                });
+
+                // Hiển thị thông báo
+                showUpdateNotification('Đã cập nhật tồn kho trên trang danh sách');
+            }
+        }
+
+        function showUpdateNotification(message) {
+            // Xóa notification cũ
+            const oldNotification = document.querySelector('.update-notification');
+            if (oldNotification) {
+                oldNotification.remove();
+            }
+
+            // Tạo notification mới
+            const notification = document.createElement('div');
+            notification.className = 'update-notification';
+            notification.innerHTML = `
+                        <i class="fas fa-check-circle"></i>
+                        <span>${message}</span>
+                        <button class="btn-close btn-close-white ms-2" onclick="this.parentElement.remove()"></button>
+                    `;
+
+            document.body.appendChild(notification);
+
+
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 3000);
+        }
+
+        // ========== STATUS DISPLAY FUNCTIONS
+        function getStatusDisplayName(status) {
+            if (!status) return "Không xác định";
+
+            switch (status.toLowerCase()) {
+                case 'còn hàng': return 'Còn hàng';
+                case 'đã bán': return 'Đã bán';
+                case 'đã trả hàng': return 'Đã trả hàng';
+                case 'bảo hành': return 'Bảo hành';
+                default: return status;
+            }
+        }
+
+        function getStatusBadgeClass(status) {
+            if (!status) return 'badge-available';
+
+            switch (status.toLowerCase()) {
+                case 'còn hàng': return 'badge-available';
+                case 'đã bán': return 'badge-sold';
+                case 'đã trả hàng': return 'badge-returned';
+                case 'bảo hành': return 'badge-warranty';
+                default: return 'badge-available';
+            }
+        }
+
+        // ========== INITIALIZATION
+        document.addEventListener('DOMContentLoaded', function () {
+            loadImeiData(); // Tải danh sách IMEI
+            loadImeiOverview(); // Tải tổng quan IMEI
+            loadModelSanPhamDropdown();
+            setupUpdateListener();
+        });
+
+        // ========== SETUP UPDATE LISTENER
+        function setupUpdateListener() {
+            window.addEventListener('storage', function (event) {
+                if (event.key === 'imei_updated') {
+                    try {
+                        const data = JSON.parse(event.newValue || '{}');
+                        if (data.productId && data.productId === currentProductId) {
+                            loadImeiData();
+                            loadImeiOverview();
+                        }
+                    } catch (e) {
+                        console.error('Error parsing storage event:', e);
+                    }
+                }
+            });
+        }
+
+        // ========== IMEI DATA MANAGEMENT
+        async function loadImeiData() {
+            showImeiLoading(true);
+
+            try {
+                const searchTerm = document.getElementById('searchImei').value;
+                const statusFilter = document.getElementById('statusFilter').value;
+                const productId = currentProductId;
+
+
+                const response = await fetch(`/ProductOverview/GetImeiByProduct?productId=${productId}&searchTerm=${encodeURIComponent(searchTerm)}&status=${encodeURIComponent(statusFilter)}`);
+
+                if (!response.ok) {
+                    throw new Error('Không thể tải dữ liệu IMEI');
+                }
+
+                const imeis = await response.json();
+                allImeiData = imeis;
+                renderImeiTable(imeis);
+            } catch (error) {
+                console.error('Error loading IMEI data:', error);
+                showAlert('Lỗi khi tải danh sách IMEI: ' + error.message, 'danger');
+            } finally {
+                showImeiLoading(false);
+            }
+        }
+
+        async function loadImeiOverview() {
+            try {
+                const productId = currentProductId;
+                const response = await fetch(`/ProductOverview/GetImeiOverview?productId=${productId}`);
+
+                if (!response.ok) {
+                    throw new Error('Không thể tải tổng quan IMEI');
+                }
+
+                const overview = await response.json();
+                updateImeiSummary(overview);
+            } catch (error) {
+                console.error('Error loading IMEI overview:', error);
+                showAlert('Lỗi khi tải tổng quan IMEI: ' + error.message, 'danger');
+            }
+        }
+
+        function renderImeiTable(imeis) {
+            const tbody = document.getElementById('imeiTableBody');
+            tbody.innerHTML = '';
+
+            if (!imeis || imeis.length === 0) {
+                tbody.innerHTML = `
+                                            <tr>
+                                                <td colspan="4" class="text-center py-4">
+                                                    <i class="fas fa-box-open fa-2x mb-3 text-muted"></i>
+                                                    <p class="text-muted">Không tìm thấy IMEI nào</p>
+                                                </td>
+                                            </tr>`;
+                return;
+            }
+
+            imeis.forEach(imei => {
+                const row = document.createElement('tr');
+                row.setAttribute('data-imei-id', imei.idImei);
+
+                const statusClass = getStatusBadgeClass(imei.trangThai);
+                const statusText = getStatusDisplayName(imei.trangThai);
+
+                row.innerHTML = `
+                                            <td class="imei-code">${escapeHtml(imei.maImei)}</td>
+                                            <td>
+                                                <span class="status-badge ${statusClass}">${statusText}</span>
+                                            </td>
+                                            <td>
+                                                ${imei.moTa ?
+                        `<span title="${escapeHtml(imei.moTa)}">
+                                                        ${escapeHtml(imei.moTa.length > 50 ? imei.moTa.substring(0, 50) + '...' : imei.moTa)}
+                                                    </span>` :
+                        '<span class="text-muted">Không có mô tả</span>'
+                    }
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-warning btn-sm" onclick="openEditModal(
+                                                    ${imei.idImei},
+                                                    '${escapeHtml(imei.maImei)}',
+                                                    ${imei.idModelSanPham},
+                                                    '${escapeHtml(imei.moTa || '')}',
+                                                    '${escapeHtml(imei.trangThai)}'
+                                                )">
+                                                    <i class="fas fa-edit"></i> Sửa
+                                                </button>
+                                            </td>
+                                        `;
+                tbody.appendChild(row);
+            });
+
+
+            if ($.fn.DataTable.isDataTable('#imeiTable')) {
+                imeiTable.destroy();
+            }
+
+            imeiTable = $('#imeiTable').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json'
+                },
+                pageLength: 10,
+                ordering: true,
+                order: [[0, 'asc']]
+            });
+        }
+
+        // ========== CẬP NHẬT NGAY LẬP TỨC TRÊN GIAO DIỆN
+        function updateImeiRowInTable(imeiId, updatedData) {
+            // Tìm dòng cần cập nhật
+            const row = document.querySelector(`tr[data-imei-id="${imeiId}"]`);
+            if (!row) return;
+
+            // Thêm class updating để hiệu ứng
+            row.classList.add('updating-row');
+
+            // Cập nhật dữ liệu trong mảng allImeiData
+            const index = allImeiData.findIndex(i => i.idImei == imeiId);
+            if (index !== -1) {
+                allImeiData[index] = { ...allImeiData[index], ...updatedData };
+            }
+
+            // Cập nhật trực tiếp trên giao diện
+            const statusCell = row.cells[1];
+            const maImeiCell = row.cells[0];
+            const moTaCell = row.cells[2];
+
+            // Cập nhật mã IMEI
+            if (updatedData.MaImei) {
+                maImeiCell.textContent = updatedData.MaImei;
+            }
+
+            // Cập nhật trạng thái
+            const statusClass = getStatusBadgeClass(updatedData.TrangThai);
+            const statusText = getStatusDisplayName(updatedData.TrangThai);
+            statusCell.innerHTML = `<span class="status-badge ${statusClass}">${statusText}</span>`;
+
+            // Cập nhật mô tả
+            if (updatedData.MoTa !== undefined) {
+                const displayText = updatedData.MoTa
+                    ? (updatedData.MoTa.length > 50 ? updatedData.MoTa.substring(0, 50) + '...' : updatedData.MoTa)
+                    : 'Không có mô tả';
+
+                moTaCell.innerHTML = updatedData.MoTa
+                    ? `<span title="${escapeHtml(updatedData.MoTa)}">${escapeHtml(displayText)}</span>`
+                    : '<span class="text-muted">Không có mô tả</span>';
+            }
+
+            // Hiệu ứng hoàn thành
+            setTimeout(() => {
+                row.classList.remove('updating-row');
+                row.classList.add('updated-row');
+
+                setTimeout(() => {
+                    row.classList.remove('updated-row');
+                }, 2000);
+            }, 500);
+
+            // Tải lại tổng quan IMEI từ server để đảm bảo đồng bộ
+            loadImeiOverview();
+        }
+
+        // Cập nhật thống kê IMEI (sử dụng data từ API)
+        function updateImeiSummary(overview) {
+            if (!overview) return;
+
+            // Tính tổng số IMEI
+            document.getElementById('imeiTotalCount').textContent = `Tổng: ${overview.totalImei}`;
+
+            // Cập nhật hiển thị
+            const statusContainer = document.getElementById('imeiStatusContainer');
+            if (statusContainer) {
+                if (!overview.statusCounts || overview.statusCounts.length === 0) {
+                    statusContainer.innerHTML = `
+                                        <div class="text-center text-muted py-3">
+                                            <i class="fas fa-info-circle"></i> Không có dữ liệu IMEI
+                                        </div>`;
+                    return;
+                }
+
+                let html = '';
+                overview.statusCounts.forEach(item => {
+                    const status = item.status || 'Không xác định';
+                    const count = item.count || 0;
+                    const statusKey = status.replace(/ /g, '-');
+
+                    const statusClass = status.toLowerCase().includes('còn hàng') ? 'status-available' :
+                        status.toLowerCase().includes('đã bán') ? 'status-sold' : 'status-other';
+                    const dotClass = status.toLowerCase().includes('còn hàng') ? 'dot-available' :
+                        status.toLowerCase().includes('đã bán') ? 'dot-sold' : 'dot-other';
+
+                    html += `
+                                        <div class="imei-status-item ${statusClass}" id="status-${statusKey}">
+                                            <div class="status-info">
+                                                <div class="status-dot ${dotClass}"></div>
+                                                <span class="status-name">${getStatusDisplayName(status)}</span>
+                                            </div>
+                                            <span class="status-count" id="count-${statusKey}">${count}</span>
+                                        </div>`;
+                });
+                statusContainer.innerHTML = html;
+            }
+        }
+
+        // ========== MODAL FUNCTIONS
+        async function loadModelSanPhamDropdown() {
+            try {
+                const response = await fetch('/Imei/GetAllModelSanPham');
+                if (!response.ok) throw new Error('Network error');
+
+                const models = await response.json();
+                const dropdown = document.getElementById('editIdModelSanPham');
+
+                dropdown.innerHTML = '<option value="">Chọn model sản phẩm</option>';
+                models.forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model.idModelSanPham;
+                    option.textContent = model.displayText;
+                    dropdown.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading models:', error);
+            }
+        }
+
+        function openEditModal(id, maImei, idModelSanPham, moTa, trangThai) {
+            document.getElementById('editImeiId').value = id;
+            document.getElementById('editMaImei').value = maImei;
+            document.getElementById('editIdModelSanPham').value = idModelSanPham;
+            document.getElementById('editMoTa').value = moTa;
+            document.getElementById('editTrangThai').value = trangThai;
+
+
+            clearEditErrors();
+
+            const modal = new bootstrap.Modal(document.getElementById('editImeiModal'));
+            modal.show();
+        }
+
+        // ========== FORM HANDLING
+        document.getElementById('editImeiForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            // Vô hiệu hóa nút để tránh click nhiều lần
+            const updateBtn = document.getElementById('btnUpdateImei');
+            const updateSpinner = document.getElementById('updateSpinner');
+            const updateText = document.getElementById('updateText');
+
+            updateBtn.disabled = true;
+            updateSpinner.classList.remove('d-none');
+            updateText.textContent = 'Đang xử lý...';
+
+            try {
+                const imeiId = document.getElementById('editImeiId').value;
+                const imeiData = {
+                    MaImei: document.getElementById('editMaImei').value.trim(),
+                    IdModelSanPham: parseInt(document.getElementById('editIdModelSanPham').value),
+                    MoTa: document.getElementById('editMoTa').value.trim(),
+                    TrangThai: document.getElementById('editTrangThai').value
+                };
+
+                // Validate
+                if (!validateImeiForm(imeiData)) {
+                    updateBtn.disabled = false;
+                    updateSpinner.classList.add('d-none');
+                    updateText.textContent = 'Cập nhật';
+                    return;
+                }
+
+                const response = await fetch(`/Imei/Edit/${imeiId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(imeiData)
+                });
+
+                let result;
+                try {
+                    result = await response.json();
+                } catch {
+                    result = { message: 'Cập nhật thành công!' };
+                }
+
+                if (response.ok) {
+                    // Success - CẬP NHẬT NGAY TRÊN GIAO DIỆN
+                    updateImeiRowInTable(imeiId, imeiData);
+
+                    // Đóng modal
+                    bootstrap.Modal.getInstance(document.getElementById('editImeiModal')).hide();
+
+                    // Hiển thị thông báo
+                    showAlert('Cập nhật IMEI thành công!', 'success');
+
+                    // GỬI THÔNG BÁO CẬP NHẬT CHO TRANG INDEX
+                    notifyIndexPageAboutImeiUpdate();
+
+                    // Tải lại danh sách IMEI để đảm bảo đồng bộ
+                    setTimeout(() => {
+                        loadImeiData();
+                        loadImeiOverview();
+                    }, 500);
+
+                } else {
+                    // Show errors
+                    if (typeof result === 'object') {
+                        if (result.MaImei) showEditError('errorEditMaImei', result.MaImei);
+                        if (result.IdModelSanPham) showEditError('errorEditIdModelSanPham', result.IdModelSanPham);
+                        if (result.TrangThai) showEditError('errorEditTrangThai', result.TrangThai);
+                        if (result.message) showAlert(result.message, 'danger');
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating IMEI:', error);
+                showAlert('Lỗi khi cập nhật IMEI: ' + error.message, 'danger');
+            } finally {
+                // Khôi phục trạng thái nút
+                updateBtn.disabled = false;
+                updateSpinner.classList.add('d-none');
+                updateText.textContent = 'Cập nhật';
+            }
+        });
+
+        // ========== VALIDATION ==========
+        function validateImeiForm(imeiData) {
+            let isValid = true;
+            clearEditErrors();
+
+            if (!imeiData.MaImei) {
+                showEditError('errorEditMaImei', 'Vui lòng nhập mã IMEI');
+                isValid = false;
+            } else if (!/^\d{15}$/.test(imeiData.MaImei)) {
+                showEditError('errorEditMaImei', 'Mã IMEI phải có đúng 15 chữ số');
+                isValid = false;
+            }
+
+            if (!imeiData.IdModelSanPham) {
+                showEditError('errorEditIdModelSanPham', 'Vui lòng chọn model sản phẩm');
+                isValid = false;
+            }
+
+            if (!imeiData.TrangThai) {
+                showEditError('errorEditTrangThai', 'Vui lòng chọn trạng thái');
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        function clearEditErrors() {
+            document.querySelectorAll('#editImeiForm .text-danger').forEach(el => {
+                el.classList.add('d-none');
+            });
+        }
+
+        function showEditError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.classList.remove('d-none');
+        }
+
+        // ========== UTILITY FUNCTIONS ==========
+        function showImeiLoading(show) {
+            const spinner = document.getElementById('loadingSpinner');
+            const tableBody = document.getElementById('imeiTableBody');
+
+            if (show) {
+                spinner.style.display = 'block';
+                tableBody.innerHTML = '';
+            } else {
+                spinner.style.display = 'none';
+            }
+        }
+
+        function changeMainImage(src, element) {
+            document.getElementById('mainImage').src = src;
+            document.querySelectorAll('.thumbnail').forEach(thumb => {
+                thumb.classList.remove('active');
+            });
+            element.classList.add('active');
+        }
+
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert ${alertClass} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} me-2"></i>
+                                            <div>${message}</div>
+                                        </div>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+                                    `;
+
+            alertContainer.appendChild(alertDiv);
+
+            setTimeout(() => {
+                if (alertDiv.parentElement) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // ========== EVENT LISTENERS ==========
+        document.getElementById('searchImei').addEventListener('input', function () {
+            clearTimeout(this.searchTimeout);
+            this.searchTimeout = setTimeout(() => loadImeiData(), 500);
+        });
+
+        document.getElementById('statusFilter').addEventListener('change', loadImeiData);
+
+        // Reset form khi modal đóng
+        document.getElementById('editImeiModal').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('editImeiForm').reset();
+            clearEditErrors();
+        });
+
+        // Format currency
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(amount);
+        }
+    </script>
+</body>
+</html>
+
+@functions {
+    // Helper function để format currency trong C#
+    public string FormatCurrency(decimal amount)
+    {
+        return string.Format("{0:N0} ₫", amount);
+    }
+
+    // Helper function để lấy CSS class cho trạng thái IMEI
+    public string GetStatusClass(string status)
+    {
+        return status?.ToLower() switch
+        {
+            "available" or "còn hàng" => "status-available",
+            "sold" or "đã bán" => "status-sold",
+            _ => "status-other"
+        };
+    }
+
+    // Helper function để lấy CSS class cho dot
+    public string GetDotClass(string status)
+    {
+        return status?.ToLower() switch
+        {
+            "available" or "còn hàng" => "dot-available",
+            "sold" or "đã bán" => "dot-sold",
+            _ => "dot-other"
+        };
+    }
+
+    // Helper function để hiển thị tên trạng thái
+    public string GetStatusDisplayName(string status)
+    {
+        return status?.ToLower() switch
+        {
+            "available" or "còn hàng" => "Còn hàng",
+            "sold" or "đã bán" => "Đã bán",
+            "returned" or "đã trả hàng" => "Đã trả hàng",
+            "warranty" or "bảo hành" => "Bảo hành",
+            _ => status ?? "Không xác định"
+        };
+    }
+}

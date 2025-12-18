@@ -5,159 +5,254 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Linq;
+using System;
 
 namespace DATN_DT.Controllers
 {
-
+    [Route("[controller]")]
+    [ApiController]
     public class PinController : Controller
     {
         private readonly IPinService _pinService;
-        private readonly HttpClient _httpClient;
 
-        public PinController(IPinService pinService, IHttpClientFactory httpClientFactory)
+        public PinController(IPinService pinService)
         {
             _pinService = pinService;
-            _httpClient = httpClientFactory.CreateClient();
         }
 
-
+        // ===== GET: Pin/Index =====
         [HttpGet]
+        [Route("")]
+        [Route("Index")]
         public async Task<IActionResult> Index()
         {
-            var pins = await _pinService.GetAllPins();
-            return View(pins);
+            try
+            {
+                var pins = await _pinService.GetAllPins();
+                return View(pins);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading pins: {ex.Message}");
+                return View(new List<Pin>());
+            }
         }
 
         // ===== CREATE =====
         [HttpPost]
+        [Route("Create")]
         [Consumes("application/json")]
-        public async Task<IActionResult> Create([FromBody] Pin? pin)
+        public async Task<IActionResult> Create([FromBody] Pin pin)
         {
-            // 1. Validation cơ bản (kiểm tra rỗng)
-            var errors = ValidatePin(pin);
-            if (errors.Count > 0)
-                return BadRequest(errors);
+            try
+            {
+                Console.WriteLine("=== CREATE PIN ===");
+                Console.WriteLine($"Received: {System.Text.Json.JsonSerializer.Serialize(pin)}");
 
-            // 2. Chuẩn hóa và Validation dung lượng pin là số
-            string rawDungLuongPin = pin!.DungLuongPin.Trim();
-            if (!Regex.IsMatch(rawDungLuongPin, @"^\d+$"))
-                return BadRequest(new { DungLuongPin = "Dung lượng pin chỉ được nhập số!" });
+                if (pin == null)
+                {
+                    return BadRequest(new { Message = "Dữ liệu pin không được rỗng!" });
+                }
 
-            // 3. Chuẩn hóa dữ liệu và thêm đơn vị
-            pin.LoaiPin = pin.LoaiPin!.Trim();
-            pin.CongNgheSac = pin.CongNgheSac!.Trim();
-            pin.MoTaPin = pin.MoTaPin?.Trim();
-            pin.DungLuongPin = rawDungLuongPin + "mAh";
+                // Validation
+                var errors = new Dictionary<string, string>();
+                if (string.IsNullOrWhiteSpace(pin.LoaiPin))
+                    errors["LoaiPin"] = "Phải nhập loại pin!";
+                if (string.IsNullOrWhiteSpace(pin.DungLuongPin))
+                    errors["DungLuongPin"] = "Phải nhập dung lượng pin!";
+                if (string.IsNullOrWhiteSpace(pin.CongNgheSac))
+                    errors["CongNgheSac"] = "Phải nhập công nghệ sạc!";
 
-            // 4. Kiểm tra trùng
-            var all = await _pinService.GetAllPins();
-            bool exists = all.Any(p =>
-                p.LoaiPin!.Trim().Equals(pin.LoaiPin, StringComparison.OrdinalIgnoreCase) &&
-                p.DungLuongPin!.Trim().Equals(pin.DungLuongPin, StringComparison.OrdinalIgnoreCase) &&
-                p.CongNgheSac!.Trim().Equals(pin.CongNgheSac, StringComparison.OrdinalIgnoreCase)
-            );
+                if (errors.Count > 0)
+                    return BadRequest(new { Errors = errors });
 
-            if (exists)
-                return Conflict(new { message = "Pin đã tồn tại!" });
+                // Validate dung lượng là số
+                string rawDungLuongPin = pin.DungLuongPin.Trim();
+                if (!Regex.IsMatch(rawDungLuongPin, @"^\d+$"))
+                    return BadRequest(new { DungLuongPin = "Dung lượng pin chỉ được nhập số!" });
 
-            // 5. Tạo mới
-            await _pinService.Create(pin);
+                // Chuẩn hóa dữ liệu
+                pin.LoaiPin = pin.LoaiPin.Trim();
+                pin.CongNgheSac = pin.CongNgheSac.Trim();
+                pin.MoTaPin = pin.MoTaPin?.Trim();
+                pin.DungLuongPin = rawDungLuongPin + "mAh";
 
-            return Ok(new { message = "Thêm pin thành công!" });
+                // Kiểm tra trùng
+                var allPins = await _pinService.GetAllPins();
+                bool exists = allPins.Any(p =>
+                    p.LoaiPin.Trim().Equals(pin.LoaiPin, StringComparison.OrdinalIgnoreCase) &&
+                    p.DungLuongPin.Trim().Equals(pin.DungLuongPin, StringComparison.OrdinalIgnoreCase) &&
+                    p.CongNgheSac.Trim().Equals(pin.CongNgheSac, StringComparison.OrdinalIgnoreCase)
+                );
+
+                if (exists)
+                    return Conflict(new { Message = "Pin đã tồn tại trong hệ thống!" });
+
+                // Tạo mới
+                await _pinService.Create(pin);
+
+                return Ok(new
+                {
+                    Message = "Thêm pin thành công!",
+                    Success = true,
+                    Id = pin.IdPin
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"CREATE ERROR: {ex.Message}");
+                return StatusCode(500, new
+                {
+                    Message = "Lỗi hệ thống khi thêm pin!",
+                    Error = ex.Message
+                });
+            }
         }
 
         // ===== EDIT =====
-        // Giống RAMController, dùng [HttpPut] và nhận ID qua query string hoặc route mặc định
         [HttpPut]
+        [Route("Edit/{id:int}")]
         [Consumes("application/json")]
-        public async Task<IActionResult> Edit(int id, [FromBody] Pin? pin)
+        public async Task<IActionResult> Edit(int id, [FromBody] Pin pin)
         {
-            // 1. Validation cơ bản (kiểm tra rỗng)
-            var errors = ValidatePin(pin);
-            if (errors.Count > 0)
-                return BadRequest(errors);
+            try
+            {
+                Console.WriteLine($"=== EDIT PIN ID: {id} ===");
+                Console.WriteLine($"Data: {System.Text.Json.JsonSerializer.Serialize(pin)}");
 
-            // 2. Tìm kiếm pin hiện tại
-            var existing = await _pinService.GetPinById(id);
-            if (existing == null)
-                return NotFound(new { message = "Không tìm thấy pin!" });
+                if (pin == null)
+                    return BadRequest(new { Message = "Dữ liệu pin không được rỗng!" });
 
-            // 3. Chuẩn hóa và Validation dung lượng pin là số
-            string rawDungLuongPin = pin!.DungLuongPin.Trim();
-            if (!Regex.IsMatch(rawDungLuongPin, @"^\d+$"))
-                return BadRequest(new { DungLuongPin = "Dung lượng pin chỉ được nhập số!" });
+                // Validation
+                var errors = new Dictionary<string, string>();
+                if (string.IsNullOrWhiteSpace(pin.LoaiPin))
+                    errors["LoaiPin"] = "Phải nhập loại pin!";
+                if (string.IsNullOrWhiteSpace(pin.DungLuongPin))
+                    errors["DungLuongPin"] = "Phải nhập dung lượng pin!";
+                if (string.IsNullOrWhiteSpace(pin.CongNgheSac))
+                    errors["CongNgheSac"] = "Phải nhập công nghệ sạc!";
 
-            // 4. Chuẩn hóa dữ liệu và thêm đơn vị cho đối tượng mới
-            string newLoaiPin = pin.LoaiPin!.Trim();
-            string newCongNgheSac = pin.CongNgheSac!.Trim();
-            string newDungLuongPin = rawDungLuongPin + "mAh";
-            string newMoTaPin = pin.MoTaPin?.Trim();
+                if (errors.Count > 0)
+                    return BadRequest(new { Errors = errors });
 
-            // 5. Kiểm tra trùng (trừ chính nó)
-            var all = await _pinService.GetAllPins();
-            bool exists = all.Any(p =>
-                p.IdPin != id &&
-                p.LoaiPin!.Trim().Equals(newLoaiPin, StringComparison.OrdinalIgnoreCase) &&
-                p.DungLuongPin!.Trim().Equals(newDungLuongPin, StringComparison.OrdinalIgnoreCase) &&
-                p.CongNgheSac!.Trim().Equals(newCongNgheSac, StringComparison.OrdinalIgnoreCase)
-            );
+                // Validate dung lượng là số
+                string rawDungLuongPin = pin.DungLuongPin.Trim();
+                if (!Regex.IsMatch(rawDungLuongPin, @"^\d+$"))
+                    return BadRequest(new { DungLuongPin = "Dung lượng pin chỉ được nhập số!" });
 
-            if (exists)
-                return Conflict(new { message = "Pin đã tồn tại!" });
+                // Gán ID và chuẩn hóa
+                pin.IdPin = id;
+                pin.LoaiPin = pin.LoaiPin.Trim();
+                pin.CongNgheSac = pin.CongNgheSac.Trim();
+                pin.MoTaPin = pin.MoTaPin?.Trim();
+                pin.DungLuongPin = rawDungLuongPin + "mAh";
 
-            // 6. Cập nhật dữ liệu vào đối tượng existing và lưu
-            existing.LoaiPin = newLoaiPin;
-            existing.DungLuongPin = newDungLuongPin;
-            existing.CongNgheSac = newCongNgheSac;
-            existing.MoTaPin = newMoTaPin;
+                // Kiểm tra tồn tại
+                var existingPin = await _pinService.GetPinById(id);
+                if (existingPin == null)
+                    return NotFound(new { Message = $"Không tìm thấy pin với ID={id}!" });
 
-            await _pinService.Update(existing);
+                // Kiểm tra trùng (trừ chính nó)
+                var allPins = await _pinService.GetAllPins();
+                bool exists = allPins.Any(p =>
+                    p.IdPin != id &&
+                    p.LoaiPin.Trim().Equals(pin.LoaiPin, StringComparison.OrdinalIgnoreCase) &&
+                    p.DungLuongPin.Trim().Equals(pin.DungLuongPin, StringComparison.OrdinalIgnoreCase) &&
+                    p.CongNgheSac.Trim().Equals(pin.CongNgheSac, StringComparison.OrdinalIgnoreCase)
+                );
 
-            return Ok(new { message = "Cập nhật pin thành công!" });
+                if (exists)
+                    return Conflict(new { Message = "Pin đã tồn tại trong hệ thống!" });
+
+                // Cập nhật
+                await _pinService.Update(pin);
+
+                return Ok(new
+                {
+                    Message = "Cập nhật pin thành công!",
+                    Success = true,
+                    Id = id
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"EDIT ERROR ID {id}: {ex.Message}");
+                return StatusCode(500, new
+                {
+                    Message = "Lỗi hệ thống khi cập nhật pin!",
+                    Error = ex.Message
+                });
+            }
         }
 
-        // ===== DELETE - Dùng HttpDelete (giống RAMController) =====
-        // Mặc định là DELETE /Pin/Delete?id=...
+        // ===== DELETE =====
         [HttpDelete]
+        [Route("Delete/{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var existing = await _pinService.GetPinById(id);
-            if (existing == null)
-                return NotFound(new { message = $"Không tìm thấy Pin với ID = {id} để xóa!" });
-
-            await _pinService.Delete(id);
-            return Ok(new { message = "Xoá Pin thành công!" });
-        }
-
-
-        // ===== TEST HTTP CLIENT - Giữ lại ví dụ sử dụng HttpClient =====
-        // Mặc định là GET /Pin/ExternalApiDemo
-        [HttpGet("external-test")]
-        public async Task<IActionResult> ExternalApiDemo()
-        {
-            var result = await _httpClient.GetStringAsync("https://api.github.com/");
-            return Ok(new { response = result });
-        }
-
-        // ===== VALIDATION =====
-        private Dictionary<string, string> ValidatePin(Pin? pin)
-        {
-            var errors = new Dictionary<string, string>();
-
-            if (pin == null)
+            try
             {
-                errors["Model"] = "Dữ liệu pin không được rỗng!";
-                return errors;
+                var existingPin = await _pinService.GetPinById(id);
+                if (existingPin == null)
+                    return NotFound(new { Message = $"Không tìm thấy pin với ID={id}!" });
+
+                await _pinService.Delete(id);
+
+                return Ok(new
+                {
+                    Message = "Xóa pin thành công!",
+                    Success = true
+                });
             }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    Message = "Lỗi hệ thống khi xóa pin!",
+                    Error = ex.Message
+                });
+            }
+        }
 
-            if (string.IsNullOrWhiteSpace(pin.LoaiPin))
-                errors["LoaiPin"] = "Phải nhập loại pin!";
-            if (string.IsNullOrWhiteSpace(pin.DungLuongPin))
-                errors["DungLuongPin"] = "Phải nhập dung lượng pin!";
-            if (string.IsNullOrWhiteSpace(pin.CongNgheSac))
-                errors["CongNgheSac"] = "Phải nhập công nghệ sạc!";
+        // ===== GET ALL (API) =====
+        [HttpGet]
+        [Route("GetAll")]
+        [Produces("application/json")]
+        public async Task<IActionResult> GetAll()
+        {
+            try
+            {
+                var pins = await _pinService.GetAllPins();
+                return Ok(pins);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = ex.Message });
+            }
+        }
 
-            return errors;
+        // ===== GET BY ID (API) =====
+        [HttpGet]
+        [Route("GetById/{id:int}")]
+        [Produces("application/json")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            try
+            {
+                var pin = await _pinService.GetPinById(id);
+                if (pin == null)
+                    return NotFound(new { Message = $"Không tìm thấy pin với ID={id}" });
+
+                return Ok(pin);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = ex.Message });
+            }
         }
     }
 }

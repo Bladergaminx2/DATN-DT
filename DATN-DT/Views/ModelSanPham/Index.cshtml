@@ -1,4 +1,4 @@
-@model IEnumerable<DATN_DT.Models.ModelSanPham>
+﻿@model IEnumerable<DATN_DT.Models.ModelSanPham>
 
 @{
     ViewData["Title"] = "Quản lý Model Sản Phẩm";
@@ -126,13 +126,12 @@
 
         .image-item {
             position: relative;
-            width: 120px;
-            min-height: 120px;
+            width: 100px;
+            height: 100px;
             border-radius: 8px;
             overflow: hidden;
             border: 2px solid #444;
             transition: all 0.3s ease;
-            background: #2a2a2a;
         }
 
             .image-item:hover {
@@ -142,27 +141,9 @@
 
             .image-item img {
                 width: 100%;
-                height: 100px;
+                height: 100%;
                 object-fit: cover;
             }
-
-        .image-info {
-            padding: 5px;
-            background: rgba(0, 0, 0, 0.7);
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-        }
-
-        .image-name {
-            color: white;
-            font-size: 11px;
-            margin: 0;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
 
         .image-actions {
             position: absolute;
@@ -224,20 +205,6 @@
                 background: #138496;
             }
 
-        .btn-manage-imei {
-            background: #6f42c1;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 6px 12px;
-            font-size: 12px;
-            transition: 0.3s;
-        }
-
-            .btn-manage-imei:hover {
-                background: #5a32a3;
-            }
-
         .image-preview-container {
             max-height: 300px;
             overflow-y: auto;
@@ -260,28 +227,6 @@
                 <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
                     + Thêm Model Sản Phẩm
                 </button>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label"><strong>Chọn Sản Phẩm:</strong></label>
-                <select id="sanPhamFilter" class="form-control" onchange="filterBySanPham()">
-                    <option value="">-- Tất cả sản phẩm --</option>
-                    @if (ViewBag.AllSanPhams != null)
-                    {
-                        foreach (var sp in ViewBag.AllSanPhams)
-                        {
-                            var isSelected = ViewBag.SelectedSanPhamId != null && ViewBag.SelectedSanPhamId == sp.IdSanPham;
-                            if (isSelected)
-                            {
-                                <option value="@sp.IdSanPham" selected>@sp.MaSanPham - @sp.TenSanPham</option>
-                            }
-                            else
-                            {
-                                <option value="@sp.IdSanPham">@sp.MaSanPham - @sp.TenSanPham</option>
-                            }
-                        }
-                    }
-                </select>
             </div>
 
             <div class="search-input-group">
@@ -549,43 +494,12 @@
                                         data-tenmodel="@item.TenModel">
                                     <i class="fas fa-images"></i> Ảnh
                                 </button>
-                                <button class="btn btn-sm btn-info btn-manage-imei"
-                                        data-id="@item.IdModelSanPham"
-                                        data-tenmodel="@item.TenModel">
-                                    <i class="fas fa-mobile-alt"></i> IMEI
-                                </button>
-                                <button class="btn btn-sm btn-danger btn-delete"
-                                        data-id="@item.IdModelSanPham"
-                                        data-tenmodel="@item.TenModel">
-                                    <i class="fas fa-trash"></i> Xóa
-                                </button>
                             </div>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
-
-        @if (!Model.Any())
-        {
-            <div class="text-center mt-5">
-                <i class="fas fa-box-open fa-5x text-muted mb-3"></i>
-                <h4 class="text-muted">
-                    @if (ViewBag.SelectedSanPhamId != null)
-                    {
-                        <text>Chưa có model nào cho sản phẩm này</text>
-                    }
-                    else
-                    {
-                        <text>Chưa có model sản phẩm nào. Vui lòng chọn sản phẩm để xem model.</text>
-                    }
-                </h4>
-                @if (ViewBag.SelectedSanPhamId == null)
-                {
-                    <p class="text-muted">Nhấn "Thêm Model Sản Phẩm" để bắt đầu</p>
-                }
-            </div>
-        }
     </div>
 
     <!-- Modal Thêm Model Sản Phẩm -->
@@ -709,10 +623,8 @@
 
                                 <div class="mb-3">
                                     <label class="form-label">Sản Phẩm <span class="text-danger">*</span></label>
-                                    <select id="EditIdSanPham" class="form-control" disabled></select>
-                                    <input type="hidden" id="EditIdSanPhamHidden" />
+                                    <select id="EditIdSanPham" class="form-control"></select>
                                     <small id="errorEditIdSanPham" class="text-danger d-none"></small>
-                                    <small class="text-muted">Không thể thay đổi sản phẩm sau khi đã tạo model</small>
                                 </div>
 
                                 <div class="mb-3">
@@ -777,86 +689,6 @@
         </div>
     </div>
 
-    <!-- Modal Quản lý IMEI -->
-    <div class="modal fade" id="imeiManagementModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content p-3">
-                <div class="modal-header">
-                    <h5 class="modal-title">Quản lý IMEI - <span id="imeiModalModelName"></span></h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="currentImeiModelId" />
-
-                    <!-- Form thêm IMEI -->
-                    <div class="card mb-3" style="background-color: #1e1e2a;">
-                        <div class="card-header bg-primary text-white">
-                            <i class="fas fa-plus-circle"></i> Thêm IMEI mới
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Mã IMEI <span class="text-danger">*</span></label>
-                                        <input type="text" id="newImeiCode" class="form-control" placeholder="Nhập mã IMEI (15 chữ số)" maxlength="15" pattern="[0-9]{15}" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
-                                        <small id="errorNewImeiCode" class="text-danger d-none"></small>
-                                        <small class="text-muted">IMEI tiêu chuẩn gồm 15 chữ số</small>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Trạng thái <span class="text-danger">*</span></label>
-                                        <select id="newImeiStatus" class="form-control">
-                                            <option value="">Chọn trạng thái</option>
-                                            <option value="Còn hàng">Còn hàng</option>
-                                            <option value="Đã bán">Đã bán</option>
-                                            <option value="Hỏng">Hỏng</option>
-                                        </select>
-                                        <small id="errorNewImeiStatus" class="text-danger d-none"></small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Mô tả</label>
-                                <textarea id="newImeiMoTa" class="form-control" rows="2" placeholder="Nhập mô tả (tùy chọn)"></textarea>
-                            </div>
-                            <button class="btn btn-success" onclick="addNewImei()">
-                                <i class="fas fa-plus"></i> Thêm IMEI
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Danh sách IMEI -->
-                    <div>
-                        <h6>Danh sách IMEI:</h6>
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Mã IMEI</th>
-                                        <th>Trạng thái</th>
-                                        <th>Mô tả</th>
-                                        <th>Hành động</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="imeiListBody">
-                                    <!-- Danh sách IMEI sẽ được load ở đây -->
-                                </tbody>
-                            </table>
-                        </div>
-                        <div id="noImeiMessage" class="text-center text-muted py-4 d-none">
-                            <i class="fas fa-mobile-alt fa-3x mb-3"></i>
-                            <p>Chưa có IMEI nào</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Modal Quản lý Ảnh -->
     <div class="modal fade" id="imageManagementModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -872,13 +704,8 @@
                     <div class="upload-area" id="uploadArea">
                         <i class="fas fa-cloud-upload-alt"></i>
                         <h5>Kéo thả ảnh vào đây hoặc click để chọn</h5>
-                        <p class="text-muted">Hỗ trợ: JPG, JPEG, PNG, GIF, WEBP (Tối đa 5MB, tối đa 8 ảnh)</p>
+                        <p class="text-muted">Hỗ trợ: JPG, JPEG, PNG, GIF, WEBP (Tối đa 5MB)</p>
                         <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.gif,.webp" multiple style="display: none;" />
-                    </div>
-
-                    <!-- Thông báo số lượng ảnh đã chọn -->
-                    <div id="imageCountInfo" class="alert alert-info d-none mb-3">
-                        <i class="fas fa-info-circle"></i> <span id="imageCountText"></span>
                     </div>
 
                     <!-- Danh sách ảnh -->
@@ -901,16 +728,6 @@
     </div>
 
     <script>
-        // ========== LỌC THEO SẢN PHẨM ==========
-        function filterBySanPham() {
-            const sanPhamId = document.getElementById('sanPhamFilter').value;
-            if (sanPhamId) {
-                window.location.href = '/ModelSanPham?sanPhamId=' + sanPhamId;
-            } else {
-                window.location.href = '/ModelSanPham';
-            }
-        }
-
         // ========== CÁC HÀM CƠ BẢN ==========
         function performSearch() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
@@ -969,8 +786,7 @@
 
                 const [sanPhamList, manHinhList, cameraTruocList, cameraSauList, pinList, ramList, romList] = responses;
 
-                // Ẩn tên sản phẩm, chỉ hiển thị mã sản phẩm
-                populateDropdown('IdSanPham', sanPhamList, 'idSanPham', 'maSanPham');
+                populateDropdown('IdSanPham', sanPhamList, 'idSanPham', 'tenSanPham');
                 populateDropdown('IdManHinh', manHinhList, 'idManHinh', 'displayText');
                 populateDropdown('IdCameraTruoc', cameraTruocList, 'idCamTruoc', 'displayText');
                 populateDropdown('IdCameraSau', cameraSauList, 'idCameraSau', 'displayText');
@@ -978,8 +794,7 @@
                 populateDropdown('IdRAM', ramList, 'idRAM', 'displayText');
                 populateDropdown('IdROM', romList, 'idROM', 'displayText');
 
-                // Ẩn tên sản phẩm, chỉ hiển thị mã sản phẩm
-                populateDropdown('EditIdSanPham', sanPhamList, 'idSanPham', 'maSanPham');
+                populateDropdown('EditIdSanPham', sanPhamList, 'idSanPham', 'tenSanPham');
                 populateDropdown('EditIdManHinh', manHinhList, 'idManHinh', 'displayText');
                 populateDropdown('EditIdCameraTruoc', cameraTruocList, 'idCamTruoc', 'displayText');
                 populateDropdown('EditIdCameraSau', cameraSauList, 'idCameraSau', 'displayText');
@@ -1050,12 +865,7 @@
                 }
 
                 if (response.status === 409 && data.message) {
-                    // Nếu là lỗi trùng tổ hợp, hiển thị message box (ẩn tên sản phẩm)
-                    if (data.message.includes("Sản phẩm chi tiết đã tồn tại")) {
-                        alert("Sản phẩm chi tiết đã tồn tại trong sản phẩm này!");
-                    } else {
-                        showError("errorTenModel", data.message);
-                    }
+                    showError("errorTenModel", data.message);
                     return;
                 }
 
@@ -1071,7 +881,6 @@
                 EditIdModelSanPham.value = btn.dataset.id;
                 EditTenModel.value = btn.dataset.tenmodel;
                 EditIdSanPham.value = btn.dataset.idsanpham;
-                EditIdSanPhamHidden.value = btn.dataset.idsanpham; // Lưu giá trị vào hidden field
                 EditIdManHinh.value = btn.dataset.idmanhinh;
                 EditIdCameraTruoc.value = btn.dataset.idcameratruoc;
                 EditIdCameraSau.value = btn.dataset.idcamerasau;
@@ -1081,9 +890,6 @@
                 EditMau.value = btn.dataset.mau;
                 EditGiaBanModel.value = btn.dataset.giabanmodel;
 
-                // Disable field IdSanPham để không cho thay đổi
-                EditIdSanPham.disabled = true;
-
                 new bootstrap.Modal(editModal).show();
             });
         });
@@ -1092,11 +898,9 @@
             e.preventDefault();
 
             const id = EditIdModelSanPham.value;
-            // Sử dụng hidden field vì EditIdSanPham đã bị disable
-            const idSanPham = EditIdSanPhamHidden.value || EditIdSanPham.value;
             const model = {
                 TenModel: EditTenModel.value.trim(),
-                IdSanPham: parseInt(idSanPham),
+                IdSanPham: parseInt(EditIdSanPham.value),
                 IdManHinh: parseInt(EditIdManHinh.value),
                 IdCameraTruoc: parseInt(EditIdCameraTruoc.value),
                 IdCameraSau: parseInt(EditIdCameraSau.value),
@@ -1122,37 +926,21 @@
 
             if (!response.ok) {
                 if (response.status === 400 && typeof data === "object") {
-                    if (data.message) {
-                        // Nếu có message về việc không thể thay đổi sản phẩm
-                        if (data.message.includes("thay đổi sản phẩm")) {
-                            showError("errorEditIdSanPham", data.message);
-                        } else if (data.TenModel) {
-                            showError("errorEditTenModel", data.TenModel);
-                        } else {
-                            alert(data.message);
-                        }
-                    } else {
-                        if (data.TenModel) showError("errorEditTenModel", data.TenModel);
-                        if (data.IdSanPham) showError("errorEditIdSanPham", data.IdSanPham);
-                        if (data.IdManHinh) showError("errorEditIdManHinh", data.IdManHinh);
-                        if (data.IdCameraTruoc) showError("errorEditIdCameraTruoc", data.IdCameraTruoc);
-                        if (data.IdCameraSau) showError("errorEditIdCameraSau", data.IdCameraSau);
-                        if (data.IdPin) showError("errorEditIdPin", data.IdPin);
-                        if (data.IdRAM) showError("errorEditIdRAM", data.IdRAM);
-                        if (data.IdROM) showError("errorEditIdROM", data.IdROM);
-                        if (data.Mau) showError("errorEditMau", data.Mau);
-                        if (data.GiaBanModel) showError("errorEditGiaBanModel", data.GiaBanModel);
-                    }
+                    if (data.TenModel) showError("errorEditTenModel", data.TenModel);
+                    if (data.IdSanPham) showError("errorEditIdSanPham", data.IdSanPham);
+                    if (data.IdManHinh) showError("errorEditIdManHinh", data.IdManHinh);
+                    if (data.IdCameraTruoc) showError("errorEditIdCameraTruoc", data.IdCameraTruoc);
+                    if (data.IdCameraSau) showError("errorEditIdCameraSau", data.IdCameraSau);
+                    if (data.IdPin) showError("errorEditIdPin", data.IdPin);
+                    if (data.IdRAM) showError("errorEditIdRAM", data.IdRAM);
+                    if (data.IdROM) showError("errorEditIdROM", data.IdROM);
+                    if (data.Mau) showError("errorEditMau", data.Mau);
+                    if (data.GiaBanModel) showError("errorEditGiaBanModel", data.GiaBanModel);
                     return;
                 }
 
                 if (response.status === 409 && data.message) {
-                    // Nếu là lỗi trùng tổ hợp, hiển thị message box (ẩn tên sản phẩm)
-                    if (data.message.includes("Sản phẩm chi tiết đã tồn tại")) {
-                        alert("Sản phẩm chi tiết đã tồn tại trong sản phẩm này!");
-                    } else {
-                        showError("errorEditTenModel", data.message);
-                    }
+                    showError("errorEditTenModel", data.message);
                     return;
                 }
 
@@ -1163,40 +951,7 @@
             location.reload();
         });
 
-        // ========== XÓA MODEL SẢN PHẨM ==========
-        document.querySelectorAll('.btn-delete').forEach(btn => {
-            btn.addEventListener('click', async function () {
-                const modelId = this.dataset.id;
-                const modelName = this.dataset.tenmodel || '';
-
-                if (!confirm(`Bạn có chắc chắn muốn xóa model "${modelName}"?\n\nLưu ý: Chỉ có thể xóa khi model không có trong giỏ hàng, hóa đơn hoặc đơn hàng chi tiết.`)) {
-                    return;
-                }
-
-                try {
-                    const response = await fetch(`/ModelSanPham/Delete/${modelId}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-
-                    const result = await response.json();
-
-                    if (response.ok && result.success) {
-                        alert('Xóa model sản phẩm thành công!');
-                        location.reload();
-                    } else {
-                        alert(result.message || 'Lỗi khi xóa model sản phẩm!');
-                    }
-                } catch (error) {
-                    console.error('Error deleting model:', error);
-                    alert('Lỗi kết nối khi xóa model sản phẩm!');
-                }
-            });
-        });
-
         // ========== QUẢN LÝ ẢNH ==========
-        const imageManagementModal = document.getElementById('imageManagementModal');
-        
         document.querySelectorAll('.btn-manage-images-modal').forEach(btn => {
             btn.addEventListener('click', function () {
                 const modelId = this.dataset.id;
@@ -1205,18 +960,9 @@
                 document.getElementById('currentModelId').value = modelId;
                 document.getElementById('modalModelName').textContent = modelName;
 
-                // Ẩn thông báo số lượng ảnh khi mở modal
-                document.getElementById('imageCountInfo').classList.add('d-none');
-                
                 loadImagesForModel(modelId);
-                new bootstrap.Modal(imageManagementModal).show();
+                new bootstrap.Modal(document.getElementById('imageManagementModal')).show();
             });
-        });
-
-        // Ẩn thông báo số lượng ảnh khi đóng modal
-        imageManagementModal.addEventListener('hidden.bs.modal', function () {
-            document.getElementById('imageCountInfo').classList.add('d-none');
-            document.getElementById('fileInput').value = '';
         });
 
         // Upload area click event
@@ -1227,7 +973,7 @@
         // File input change event
         document.getElementById('fileInput').addEventListener('change', function (e) {
             if (e.target.files.length > 0) {
-                validateAndShowImageInfo(e.target.files);
+                uploadFiles(e.target.files);
             }
         });
 
@@ -1249,152 +995,41 @@
             uploadArea.style.background = 'rgba(74, 144, 226, 0.1)';
 
             if (e.dataTransfer.files.length > 0) {
-                validateAndShowImageInfo(e.dataTransfer.files);
+                uploadFiles(e.dataTransfer.files);
             }
         });
-
-        // Validate và hiển thị thông tin ảnh trước khi upload
-        async function validateAndShowImageInfo(files) {
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    const maxImages = 8;
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-
-    const modelId = document.getElementById('currentModelId').value;
-    const fileInput = document.getElementById('fileInput');
-    const imageCountInfo = document.getElementById('imageCountInfo');
-    const imageCountText = document.getElementById('imageCountText');
-
-    let currentImageCount = 0;
-
-    // ===== 1. Lấy số ảnh hiện có trong DB =====
-    try {
-        const response = await fetch(`/ModelSanPham/GetImagesByModel?idModelSanPham=${modelId}`);
-        const existingImages = await response.json();
-        currentImageCount = existingImages ? existingImages.length : 0;
-    } catch (error) {
-        console.error('Error loading existing images:', error);
-        alert('Không thể kiểm tra số lượng ảnh hiện có!');
-        return;
-    }
-
-    // ===== 2. Check tổng số ảnh =====
-    const totalImages = currentImageCount + files.length;
-
-    if (totalImages > maxImages) {
-        alert(
-            `❌ Quá số lượng ảnh cho phép!\n\n` +
-            `Ảnh hiện có: ${currentImageCount}\n` +
-            `Ảnh vừa chọn: ${files.length}\n` +
-            `Tối đa cho phép: ${maxImages}\n\n` +
-            `👉 Vui lòng xóa bớt ảnh cũ trước khi thêm mới.`
-        );
-
-        fileInput.value = '';
-        imageCountInfo.classList.add('d-none');
-        return; // ⛔ DỪNG HOÀN TOÀN – KHÔNG CHECK, KHÔNG UPLOAD
-    }
-
-    // ===== 3. Validate từng file =====
-    const validFiles = [];
-    const invalidFiles = [];
-
-    for (let file of files) {
-        if (!allowedTypes.includes(file.type)) {
-            invalidFiles.push(`${file.name} - Định dạng không hỗ trợ`);
-        } else if (file.size > maxSize) {
-            invalidFiles.push(`${file.name} - Kích thước > 5MB`);
-        } else {
-            validFiles.push(file);
-        }
-    }
-
-    // ===== 4. Báo lỗi nếu có file không hợp lệ =====
-    if (invalidFiles.length > 0) {
-        alert(
-            '❌ Các ảnh không hợp lệ:\n' +
-            invalidFiles.map(x => `- ${x}`).join('\n')
-        );
-
-        fileInput.value = '';
-        imageCountInfo.classList.add('d-none');
-        return;
-    }
-
-    // ===== 5. Hiển thị thông tin & xác nhận upload =====
-    const fileNames = validFiles.map(f => f.name).join(', ');
-    imageCountText.innerHTML = `Đã chọn <strong>${validFiles.length}</strong> ảnh: ${fileNames}`;
-    imageCountInfo.classList.remove('d-none');
-
-    const confirmMessage =
-        `Bạn đang thêm ${validFiles.length} ảnh.\n` +
-        `Tổng sau khi thêm: ${currentImageCount + validFiles.length}/${maxImages}\n\n` +
-        `Bạn có muốn tiếp tục upload không?`;
-
-    if (confirm(confirmMessage)) {
-        uploadFiles(validFiles);
-    } else {
-        fileInput.value = '';
-        imageCountInfo.classList.add('d-none');
-    }
-}
-
 
         async function uploadFiles(files) {
-    const modelId = document.getElementById('currentModelId').value;
+            const modelId = document.getElementById('currentModelId').value;
 
-    let successCount = 0;
-    const failedFiles = [];
+            for (let file of files) {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('idModelSanPham', modelId);
 
-    for (let file of files) {
-        try {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('idModelSanPham', modelId);
+                try {
+                    const response = await fetch('/ModelSanPham/UploadImage', {
+                        method: 'POST',
+                        body: formData
+                    });
 
-            const response = await fetch('/ModelSanPham/UploadImage', {
-                method: 'POST',
-                body: formData
-            });
+                    const result = await response.json();
 
-            const result = await response.json();
-
-            if (response.ok) {
-                successCount++;
-            } else {
-                failedFiles.push({
-                    name: file.name,
-                    reason: result.message || 'Upload thất bại'
-                });
+                    if (response.ok) {
+                        // Reload images after successful upload
+                        loadImagesForModel(modelId);
+                    } else {
+                        alert(result.message || 'Upload thất bại!');
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    alert('Lỗi khi upload ảnh!');
+                }
             }
-        } catch (error) {
-            failedFiles.push({
-                name: file.name,
-                reason: 'Lỗi kết nối'
-            });
+
+            // Clear file input
+            document.getElementById('fileInput').value = '';
         }
-    }
-
-    // ===== Thông báo kết quả =====
-    let message = '';
-
-    if (successCount > 0) {
-        message += `✅ Upload thành công ${successCount} ảnh.\n`;
-    }
-
-    if (failedFiles.length > 0) {
-        message += `\n❌ ${failedFiles.length} ảnh lỗi:\n`;
-        failedFiles.forEach(f => {
-            message += `- ${f.name}: ${f.reason}\n`;
-        });
-    }
-
-    alert(message || 'Không có ảnh nào được upload');
-
-    document.getElementById('fileInput').value = '';
-    document.getElementById('imageCountInfo').classList.add('d-none');
-
-    loadImagesForModel(modelId);
-}
 
         async function loadImagesForModel(modelId) {
             try {
@@ -1412,14 +1047,10 @@
                     images.forEach(image => {
                         const imageItem = document.createElement('div');
                         imageItem.className = 'image-item';
-                        const imageName = image.tenFile || image.duongDan.split('/').pop() || 'Ảnh';
                         imageItem.innerHTML = `
-                                    <img src="${image.duongDan}" alt="${imageName}" />
-                                    <div class="image-info">
-                                        <p class="image-name" title="${imageName}">${imageName.length > 20 ? imageName.substring(0, 20) + '...' : imageName}</p>
-                                    </div>
+                                    <img src="${image.duongDan}" alt="${image.tenFile}" />
                                     <div class="image-actions">
-                                        <button class="btn-image-delete" onclick="deleteImage(${image.idAnh}, ${modelId})" title="Xóa ảnh">
+                                        <button class="btn-image-delete" onclick="deleteImage(${image.idAnh}, ${modelId})">
                                             <i class="fas fa-times"></i>
                                         </button>
                                     </div>
@@ -1436,23 +1067,12 @@
         }
 
         async function deleteImage(imageId, modelId) {
-            // Kiểm tra số lượng ảnh hiện có trước khi xóa
+            if (!confirm('Bạn có chắc chắn muốn xóa ảnh này?')) {
+                return;
+            }
+
             try {
-                const response = await fetch(`/ModelSanPham/GetImagesByModel?idModelSanPham=${modelId}`);
-                const existingImages = await response.json();
-                const currentImageCount = existingImages ? existingImages.length : 0;
-
-                // Nếu đã có ảnh ban đầu, phải giữ lại ít nhất 1 ảnh
-                if (currentImageCount <= 1) {
-                    alert('Không thể xóa ảnh! Sản phẩm phải có ít nhất 1 ảnh.');
-                    return;
-                }
-
-                if (!confirm('Bạn có chắc chắn muốn xóa ảnh này?')) {
-                    return;
-                }
-
-                const deleteResponse = await fetch('/ModelSanPham/DeleteImage', {
+                const response = await fetch('/ModelSanPham/DeleteImage', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -1460,12 +1080,11 @@
                     body: `idAnh=${imageId}`
                 });
 
-                const result = await deleteResponse.json();
+                const result = await response.json();
 
-                if (deleteResponse.ok) {
+                if (response.ok) {
                     // Reload images after successful deletion
                     loadImagesForModel(modelId);
-                    alert('Xóa ảnh thành công!');
                 } else {
                     alert(result.message || 'Xóa ảnh thất bại!');
                 }
@@ -1484,174 +1103,11 @@
         editModal.addEventListener("hidden.bs.modal", () => {
             editForm.reset();
             document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
-            // Re-enable IdSanPham khi đóng modal
-            EditIdSanPham.disabled = false;
-            EditIdSanPhamHidden.value = '';
         });
 
         imageManagementModal.addEventListener("hidden.bs.modal", () => {
             document.getElementById('imageGallery').innerHTML = '';
             document.getElementById('noImagesMessage').classList.remove('d-none');
-        });
-
-        // ========== QUẢN LÝ IMEI ==========
-        document.querySelectorAll('.btn-manage-imei').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const modelId = this.dataset.id;
-                const modelName = this.dataset.tenmodel;
-
-                document.getElementById('currentImeiModelId').value = modelId;
-                document.getElementById('imeiModalModelName').textContent = modelName;
-
-                loadImeisForModel(modelId);
-                new bootstrap.Modal(document.getElementById('imeiManagementModal')).show();
-            });
-        });
-
-        async function loadImeisForModel(modelId) {
-            try {
-                const response = await fetch(`/ModelSanPham/GetImeisByModel?modelId=${modelId}`);
-                const result = await response.json();
-
-                const tbody = document.getElementById('imeiListBody');
-                const noImeiMessage = document.getElementById('noImeiMessage');
-                tbody.innerHTML = '';
-
-                if (result.success && result.data && result.data.length > 0) {
-                    noImeiMessage.classList.add('d-none');
-
-                    result.data.forEach(imei => {
-                        const row = document.createElement('tr');
-                        const statusBadge = imei.trangThai === 'Còn hàng' 
-                            ? '<span class="badge bg-success">Còn hàng</span>'
-                            : imei.trangThai === 'Đã bán'
-                            ? '<span class="badge bg-danger">Đã bán</span>'
-                            : '<span class="badge bg-warning">Hỏng</span>';
-
-                        const deleteBtn = imei.canDelete
-                            ? `<button class="btn btn-sm btn-danger" onclick="deleteImei(${imei.idImei}, ${modelId})">
-                                <i class="fas fa-trash"></i> Xóa
-                               </button>`
-                            : `<button class="btn btn-sm btn-secondary" disabled title="IMEI đã có trong hóa đơn, không thể xóa">
-                                <i class="fas fa-lock"></i> Khóa
-                               </button>`;
-
-                        row.innerHTML = `
-                            <td><code>${imei.maImei}</code></td>
-                            <td>${statusBadge}</td>
-                            <td>${imei.moTa || '-'}</td>
-                            <td>${deleteBtn}</td>
-                        `;
-                        tbody.appendChild(row);
-                    });
-                } else {
-                    noImeiMessage.classList.remove('d-none');
-                }
-            } catch (error) {
-                console.error('Error loading IMEIs:', error);
-                alert('Lỗi khi tải danh sách IMEI!');
-            }
-        }
-
-        async function addNewImei() {
-            const modelId = parseInt(document.getElementById('currentImeiModelId').value);
-            const maImei = document.getElementById('newImeiCode').value.trim();
-            const trangThai = document.getElementById('newImeiStatus').value;
-            const moTa = document.getElementById('newImeiMoTa').value.trim();
-
-            // Validation
-            document.getElementById('errorNewImeiCode').classList.add('d-none');
-            document.getElementById('errorNewImeiStatus').classList.add('d-none');
-
-            let hasError = false;
-
-            if (!maImei) {
-                showError('errorNewImeiCode', 'Phải nhập mã IMEI!');
-                hasError = true;
-            } else {
-                // Kiểm tra IMEI phải là 15 chữ số
-                const imeiRegex = /^\d{15}$/;
-                if (!imeiRegex.test(maImei)) {
-                    showError('errorNewImeiCode', 'Mã IMEI phải gồm đúng 15 chữ số!');
-                    hasError = true;
-                }
-            }
-            if (!trangThai) {
-                showError('errorNewImeiStatus', 'Phải chọn trạng thái!');
-                hasError = true;
-            }
-
-            if (hasError) return;
-
-            try {
-                const response = await fetch('/ModelSanPham/AddImei', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        MaImei: maImei,
-                        IdModelSanPham: modelId,
-                        TrangThai: trangThai,
-                        MoTa: moTa || null
-                    })
-                });
-
-                const result = await response.json();
-
-                if (response.ok && result.success) {
-                    alert('Thêm IMEI thành công!');
-                    // Reset form
-                    document.getElementById('newImeiCode').value = '';
-                    document.getElementById('newImeiStatus').value = '';
-                    document.getElementById('newImeiMoTa').value = '';
-                    // Reload danh sách
-                    loadImeisForModel(modelId);
-                } else {
-                    if (result.errors) {
-                        if (result.errors.MaImei) showError('errorNewImeiCode', result.errors.MaImei);
-                        if (result.errors.TrangThai) showError('errorNewImeiStatus', result.errors.TrangThai);
-                    } else {
-                        alert(result.message || 'Lỗi khi thêm IMEI!');
-                    }
-                }
-            } catch (error) {
-                console.error('Error adding IMEI:', error);
-                alert('Lỗi kết nối khi thêm IMEI!');
-            }
-        }
-
-        async function deleteImei(imeiId, modelId) {
-            if (!confirm('Bạn có chắc chắn muốn xóa IMEI này?')) {
-                return;
-            }
-
-            try {
-                const response = await fetch('/ModelSanPham/DeleteImei', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(imeiId)
-                });
-
-                const result = await response.json();
-
-                if (response.ok && result.success) {
-                    alert('Xóa IMEI thành công!');
-                    loadImeisForModel(modelId);
-                } else {
-                    alert(result.message || 'Lỗi khi xóa IMEI!');
-                }
-            } catch (error) {
-                console.error('Error deleting IMEI:', error);
-                alert('Lỗi kết nối khi xóa IMEI!');
-            }
-        }
-
-        // Cleanup modal IMEI
-        document.getElementById('imeiManagementModal').addEventListener("hidden.bs.modal", () => {
-            document.getElementById('imeiListBody').innerHTML = '';
-            document.getElementById('noImeiMessage').classList.add('d-none');
-            document.getElementById('newImeiCode').value = '';
-            document.getElementById('newImeiStatus').value = '';
-            document.getElementById('newImeiMoTa').value = '';
         });
     </script>
 </body>
