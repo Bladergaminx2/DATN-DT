@@ -18,7 +18,6 @@ namespace DATN_DT.Controllers
     {
         private readonly ITonKhoService _tonKhoService;
 
-        public TonKhoController(ITonKhoService tonKhoService, IHttpClientFactory httpClientFactory)
         public TonKhoController(ITonKhoService tonKhoService)
         {
             _tonKhoService = tonKhoService;
