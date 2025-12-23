@@ -1,13 +1,16 @@
-﻿using DATN_DT.Models;
+﻿// IThuongHieuRepo.cs
+using DATN_DT.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace DATN_DT.IRepos
 {
     public interface IThuongHieuRepo
     {
-        Task Create(ThuongHieu thuongHieu);
-        Task Delete(int id);
-        Task<ThuongHieu?> GetThuongHieuById(int id);
+        Task CreateThuongHieu(ThuongHieu thuongHieu);
+        Task DeleteThuongHieu(int id);
         Task<List<ThuongHieu>> GetAllThuongHieus();
-        Task Update(ThuongHieu thuongHieu);
+        Task<ThuongHieu?> GetThuongHieuById(int id);
+        Task UpdateThuongHieu(ThuongHieu thuongHieu);
     }
 }

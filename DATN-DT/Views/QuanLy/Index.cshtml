@@ -8,6 +8,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Trang Quản Lý</title>
+
+    <!-- Thêm các thư viện cần thiết -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
     <style>
         body {
             margin: 0;
@@ -94,7 +100,6 @@
                 border-radius: 8px;
                 transition: background-color 0.3s;
                 gap: 10px;
-                cursor: pointer;
             }
 
                 .sidebar a:hover {
@@ -115,8 +120,16 @@
             }
 
             .submenu.show {
-                max-height: 300px;
+                max-height: 500px;
             }
+
+        /* Separator cho dropdown */
+        .submenu-separator {
+            height: 1px;
+            background-color: #444;
+            margin: 10px 0;
+            opacity: 0.5;
+        }
 
         /* Overlay */
         .overlay {
@@ -137,30 +150,20 @@
                 visibility: visible;
             }
 
-        /* Main Content Area */
-        main {
-            padding: 20px;
-            margin-top: 100px;
+        /* Main content container */
+        .main-content {
             margin-left: 0;
             transition: margin-left 0.3s ease;
             min-height: calc(100vh - 100px);
+            padding: 0;
+            position: relative;
         }
 
-            main.with-sidebar {
+            .main-content.sidebar-open {
                 margin-left: 250px;
             }
 
-        /* Content Container */
-        .content-container {
-            background-color: #1e1e2d;
-            border-radius: 15px;
-            padding: 25px;
-            color: white;
-            min-height: calc(100vh - 140px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Welcome Box */
+        /* Welcome box */
         .welcome-box {
             background-color: #36363f;
             color: white;
@@ -168,7 +171,8 @@
             border-radius: 20px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
             text-align: center;
-            display: block;
+            margin: 50px auto;
+            max-width: 800px;
         }
 
             .welcome-box h1 {
@@ -177,18 +181,116 @@
                 letter-spacing: 1px;
             }
 
-        /* Iframe for loading external content */
-        .content-iframe {
-            width: 100%;
-            height: calc(100vh - 140px);
-            border: none;
-            border-radius: 15px;
-            background-color: white;
+        /* Page Container */
+        .page-container {
+            display: none;
+            min-height: calc(100vh - 100px);
+            background-color: #12121d;
         }
 
-        /* Hide content when not active */
-        .hidden {
-            display: none;
+            .page-container.active {
+                display: block;
+                animation: fadeIn 0.3s ease;
+            }
+
+        @@keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Page Header */
+        .page-header {
+            background-color: #36363f;
+            padding: 20px 30px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+            .page-header h2 {
+                color: #f5f5f5;
+                margin: 0;
+                font-size: 24px;
+            }
+
+        /* Back Button */
+        .btn-back {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .btn-back:hover {
+                background-color: #5a6268;
+            }
+
+        /* Iframe Container */
+        .iframe-container {
+            width: 100%;
+            height: calc(100vh - 160px); /* 100vh - header height - page header height */
+            border: none;
+            overflow: hidden;
+        }
+
+        .iframe-full {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Toast Container */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .toast {
+            background-color: #1e1e2a;
+            border: 1px solid #444;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        /* Responsive */
+        @@media (max-width: 768px) {
+            .welcome-box {
+                padding: 40px 20px;
+                margin: 20px;
+            }
+
+                .welcome-box h1 {
+                    font-size: 28px;
+                }
+
+            .page-header {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+
+                .page-header h2 {
+                    font-size: 20px;
+                }
+
+            .iframe-container {
+                height: calc(100vh - 200px);
+            }
         }
     </style>
 </head>
@@ -202,10 +304,10 @@
 
     <div class="sidebar" id="sidebar">
         <h2>Menu</h2>
-        <a href="#" data-page="nhanvien" class="nav-link">
+        <a href="#" data-page="nhanvien">
             <img src="~/ImgResource/Icons/id-card-regular-full.svg" class="icon" />Nhân Viên
         </a>
-        <a href="#" data-page="khachhang" class="nav-link">
+        <a href="#" data-page="khachhang">
             <img src="~/ImgResource/Icons/user-regular-full.svg" class="icon" />Khách Hàng
         </a>
 
@@ -213,83 +315,350 @@
             <img src="~/ImgResource/Icons/mobile-screen-solid-full.svg" class="icon" />Sản Phẩm
         </a>
         <div class="submenu" id="productSubmenu">
-            <a href="#" data-page="sanpham">Tất Cả Sản Phẩm</a>
+            <!-- Sử dụng iframe cho tất cả trang -->
+            <a href="#" data-page="productoverview">Overview Sản Phẩm</a>
+            <a href="#" data-page="modelsanpham">Model Sản Phẩm</a>
+            <a href="#" data-page="sanpham">Sản Phẩm</a>
+
+            <div class="submenu-separator"></div>
+
             <a href="#" data-page="manhinh">Màn Hình</a>
             <a href="#" data-page="cameratruoc">Camera Trước</a>
             <a href="#" data-page="camerasau">Camera Sau</a>
             <a href="#" data-page="pin">Pin</a>
             <a href="#" data-page="ram">RAM</a>
             <a href="#" data-page="rom">ROM</a>
-            <a href="#" data-page="thuonghieu">Thương hiệu</a>
+
+            <div class="submenu-separator"></div>
+
+            <a href="#" data-page="tonkho">Tồn Kho</a>
             <a href="#" data-page="kho">Kho</a>
+            <a href="#" data-page="imei">Imei</a>
         </div>
 
-        <a href="#" data-page="khuyenmai" class="nav-link">
+        <a href="#" data-page="khuyenmai">
             <img src="~/ImgResource/Icons/percent-solid-full.svg" class="icon" />Khuyến Mãi
         </a>
-        <a href="#" data-page="thanhtoan" class="nav-link">
+        <a href="#" data-page="thanhtoan">
             <img src="~/ImgResource/Icons/money-bill-solid-full.svg" class="icon" />Thanh Toán
         </a>
-        <a href="#" data-page="donhang" class="nav-link">
+        <a href="#" data-page="donhang">
             <img src="~/ImgResource/Icons/boxes-packing-solid-full.svg" class="icon" />Đơn Hàng
         </a>
-        <a href="#" data-page="hoadon" class="nav-link">
+        <a href="#" data-page="hoadon">
             <img src="~/ImgResource/Icons/file-invoice-dollar-solid-full.svg" class="icon" />Hóa Đơn
         </a>
-        <a href="#" data-page="baohanh" class="nav-link">
+        <a href="#" data-page="baohanh">
             <img src="~/ImgResource/Icons/screwdriver-wrench-solid-full.svg" class="icon" />Bảo Hành
         </a>
     </div>
 
     <div class="overlay" id="overlay"></div>
 
-    <main id="mainContent">
-        <!-- Welcome Screen (Default) -->
-        <div id="welcomeScreen" class="content-container welcome-box">
-            <h1>Welcome to Tech Phone Management</h1>
+    <!-- Main Content Container -->
+    <div class="main-content" id="mainContent">
+        <!-- Welcome Page (default) -->
+        <div class="page-container active" id="welcomePage">
+            <div class="welcome-box">
+                <h1>Welcome to Tech Phone Management</h1>
+            </div>
         </div>
 
-        <!-- Content Area for loaded pages -->
-        <div id="contentArea" class="content-container hidden">
-            <iframe id="contentFrame" class="content-iframe" sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
+        <!-- ========== THÊM CÁC TRANG MỚI Ở ĐÂY ========== -->
+        <!-- Nhân Viên Page -->
+        <div class="page-container" id="nhanvienPage">
+            <div class="page-header">
+                <h2>Nhân Viên</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/NhanVien" class="iframe-full" id="nhanvienFrame"></iframe>
+            </div>
         </div>
-    </main>
+
+        <!-- Khách Hàng Page -->
+        <div class="page-container" id="khachhangPage">
+            <div class="page-header">
+                <h2>Khách Hàng</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/KhachHang" class="iframe-full" id="khachhangFrame"></iframe>
+            </div>
+        </div>
+
+        <!-- Chức Vụ Page -->
+        <div class="page-container" id="chucvuPage">
+            <div class="page-header">
+                <h2>Chức Vụ</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/ChucVu" class="iframe-full" id="chucvuFrame"></iframe>
+            </div>
+        </div>
+
+        <!-- Địa Chỉ Page -->
+        <div class="page-container" id="diachiPage">
+            <div class="page-header">
+                <h2>Địa Chỉ</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/DiaChi" class="iframe-full" id="diachiFrame"></iframe>
+            </div>
+        </div>
+
+        <!-- ========== CÁC TRANG CŨ GIỮ NGUYÊN ========== -->
+        <!-- Product Overview Page -->
+        <div class="page-container" id="productOverviewPage">
+            <div class="page-header">
+                <h2>Product Overview</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/ProductOverview" class="iframe-full" id="productOverviewFrame"></iframe>
+            </div>
+        </div>
+
+        <!-- Model Sản Phẩm Page -->
+        <div class="page-container" id="modelSanPhamPage">
+            <div class="page-header">
+                <h2>Model Sản Phẩm</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/ModelSanPham" class="iframe-full" id="modelSanPhamFrame"></iframe>
+            </div>
+        </div>
+
+        <!-- San Pham Page -->
+        <div class="page-container" id="sanPhamPage">
+            <div class="page-header">
+                <h2>Sản Phẩm</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/SanPham" class="iframe-full" id="sanPhamFrame"></iframe>
+            </div>
+        </div>
+
+        <!-- Màn Hình Page -->
+        <div class="page-container" id="manHinhPage">
+            <div class="page-header">
+                <h2>Màn Hình</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/ManHinh" class="iframe-full" id="manHinhFrame"></iframe>
+            </div>
+        </div>
+
+        <!-- Camera Trước Page -->
+        <div class="page-container" id="cameraTruocPage">
+            <div class="page-header">
+                <h2>Camera Trước</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/CameraTruoc" class="iframe-full" id="cameraTruocFrame"></iframe>
+            </div>
+        </div>
+
+        <!-- Camera Sau Page -->
+        <div class="page-container" id="cameraSauPage">
+            <div class="page-header">
+                <h2>Camera Sau</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/CameraSau" class="iframe-full" id="cameraSauFrame"></iframe>
+            </div>
+        </div>
+
+        <!-- Pin Page -->
+        <div class="page-container" id="pinPage">
+            <div class="page-header">
+                <h2>Pin</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/Pin" class="iframe-full" id="pinFrame"></iframe>
+            </div>
+        </div>
+
+        <!-- RAM Page -->
+        <div class="page-container" id="ramPage">
+            <div class="page-header">
+                <h2>RAM</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/RAM" class="iframe-full" id="ramFrame"></iframe>
+            </div>
+        </div>
+
+        <!-- ROM Page -->
+        <div class="page-container" id="romPage">
+            <div class="page-header">
+                <h2>ROM</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/ROM" class="iframe-full" id="romFrame"></iframe>
+            </div>
+        </div>
+
+        <!-- Tồn Kho Page -->
+        <div class="page-container" id="tonKhoPage">
+            <div class="page-header">
+                <h2>Tồn Kho</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/TonKho" class="iframe-full" id="tonKhoFrame"></iframe>
+            </div>
+        </div>
+
+        <!-- Kho Page -->
+        <div class="page-container" id="khoPage">
+            <div class="page-header">
+                <h2>Kho</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/Kho" class="iframe-full" id="khoFrame"></iframe>
+            </div>
+        </div>
+
+        <!-- IMEI Page -->
+        <div class="page-container" id="imeiPage">
+            <div class="page-header">
+                <h2>IMEI</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/Imei" class="iframe-full" id="imeiFrame"></iframe>
+            </div>
+        </div>
+
+        <!-- Khuyến Mãi Page -->
+        <div class="page-container" id="khuyenMaiPage">
+            <div class="page-header">
+                <h2>Khuyến Mãi</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/KhuyenMai" class="iframe-full" id="khuyenMaiFrame"></iframe>
+            </div>
+        </div>
+
+        <!-- Thanh Toán Page -->
+        <div class="page-container" id="thanhToanPage">
+            <div class="page-header">
+                <h2>Thanh Toán</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/ThanhToan" class="iframe-full" id="thanhToanFrame"></iframe>
+            </div>
+        </div>
+
+        <!-- Đơn Hàng Page -->
+        <div class="page-container" id="donHangPage">
+            <div class="page-header">
+                <h2>Đơn Hàng</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/DonHang" class="iframe-full" id="donHangFrame"></iframe>
+            </div>
+        </div>
+
+        <!-- Hóa Đơn Page -->
+        <div class="page-container" id="hoaDonPage">
+            <div class="page-header">
+                <h2>Hóa Đơn</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/HoaDon" class="iframe-full" id="hoaDonFrame"></iframe>
+            </div>
+        </div>
+
+        <!-- Bảo Hành Page -->
+        <div class="page-container" id="baoHanhPage">
+            <div class="page-header">
+                <h2>Bảo Hành</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/BaoHanh" class="iframe-full" id="baoHanhFrame"></iframe>
+            </div>
+        </div>
+    </div>
 
     <script>
+        // ========== INITIALIZATION
+        document.addEventListener('DOMContentLoaded', function () {
+            setupMenuNavigation();
+        });
+
+        // ========== SIDEBAR FUNCTIONS
         const sidebar = document.getElementById("sidebar");
         const overlay = document.getElementById("overlay");
         const menuBtn = document.getElementById("menuBtn");
         const productMenu = document.getElementById("productMenu");
         const productSubmenu = document.getElementById("productSubmenu");
         const mainContent = document.getElementById("mainContent");
-        const welcomeScreen = document.getElementById("welcomeScreen");
-        const contentArea = document.getElementById("contentArea");
-        const contentFrame = document.getElementById("contentFrame");
 
-        // Page URL mapping
-        const pageUrls = {
-            'nhanvien': 'https://localhost:7150/NhanVien',
-            'khachhang': 'https://localhost:7150/KhachHang',
-            'sanpham': 'https://localhost:7150/SanPham',
-            'manhinh': 'https://localhost:7150/ManHinh',
-            'cameratruoc': 'https://localhost:7150/CameraTruoc',
-            'camerasau': 'https://localhost:7150/CameraSau',
-            'pin': 'https://localhost:7150/Pin',
-            'ram': 'https://localhost:7150/RAM',
-            'rom': 'https://localhost:7150/ROM',
-            'thuonghieu': 'https://localhost:7150/ThuongHieu',
-            'kho': 'https://localhost:7150/Kho',
-            'khuyenmai': 'https://localhost:7150/KhuyenMai',
-            'thanhtoan': 'https://localhost:7150/ThanhToan',
-            'donhang': 'https://localhost:7150/DonHang',
-            'hoadon': 'https://localhost:7150/HoaDon',
-            'baohanh': 'https://localhost:7150/BaoHanh'
-        };
-
-        // Menu toggle
         menuBtn.addEventListener("click", (e) => {
             e.stopPropagation();
-            toggleSidebar();
+            sidebar.classList.toggle("active");
+            overlay.classList.toggle("active");
+            updateMainContentMargin();
         });
 
         overlay.addEventListener("click", closeSidebar);
@@ -304,22 +673,18 @@
             }
         });
 
-        // Toggle sidebar
-        function toggleSidebar() {
-            const isActive = sidebar.classList.toggle("active");
-            overlay.classList.toggle("active");
-
-            if (isActive) {
-                mainContent.classList.add("with-sidebar");
-            } else {
-                mainContent.classList.remove("with-sidebar");
-            }
-        }
-
         function closeSidebar() {
             sidebar.classList.remove("active");
             overlay.classList.remove("active");
-            mainContent.classList.remove("with-sidebar");
+            updateMainContentMargin();
+        }
+
+        function updateMainContentMargin() {
+            if (sidebar.classList.contains("active")) {
+                mainContent.classList.add("sidebar-open");
+            } else {
+                mainContent.classList.remove("sidebar-open");
+            }
         }
 
         // Toggle product submenu
@@ -328,60 +693,113 @@
             productSubmenu.classList.toggle("show");
         });
 
-        // Navigation click handlers
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const page = this.getAttribute('data-page');
-                loadPage(page);
-                closeSidebar();
+        // ========== PAGE NAVIGATION - CẬP NHẬT PHẦN NÀY
+        function setupMenuNavigation() {
+            const menuLinks = document.querySelectorAll('.sidebar a[data-page]');
+
+            menuLinks.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const page = this.getAttribute('data-page');
+
+                    // Thêm các trang mới vào đây
+                    if (page === 'nhanvien') {
+                        showPage('nhanvienPage');
+                    } else if (page === 'khachhang') {
+                        showPage('khachhangPage');
+                    } else if (page === 'productoverview') {
+                        showPage('productOverviewPage');
+                    } else if (page === 'modelsanpham') {
+                        showPage('modelSanPhamPage');
+                    } else if (page === 'sanpham') {
+                        showPage('sanPhamPage');
+                    } else if (page === 'manhinh') {
+                        showPage('manHinhPage');
+                    } else if (page === 'cameratruoc') {
+                        showPage('cameraTruocPage');
+                    } else if (page === 'camerasau') {
+                        showPage('cameraSauPage');
+                    } else if (page === 'pin') {
+                        showPage('pinPage');
+                    } else if (page === 'ram') {
+                        showPage('ramPage');
+                    } else if (page === 'rom') {
+                        showPage('romPage');
+                    } else if (page === 'tonkho') {
+                        showPage('tonKhoPage');
+                    } else if (page === 'kho') {
+                        showPage('khoPage');
+                    } else if (page === 'imei') {
+                        showPage('imeiPage');
+                    } else if (page === 'khuyenmai') {
+                        showPage('khuyenMaiPage');
+                    } else if (page === 'thanhtoan') {
+                        showPage('thanhToanPage');
+                    } else if (page === 'donhang') {
+                        showPage('donHangPage');
+                    } else if (page === 'hoadon') {
+                        showPage('hoaDonPage');
+                    } else if (page === 'baohanh') {
+                        showPage('baoHanhPage');
+                    } else {
+                        showToast('Trang ' + page + ' chưa được triển khai', 'info');
+                    }
+
+                    closeSidebar();
+                });
             });
-        });
-
-        // Submenu item click handlers
-        document.querySelectorAll('#productSubmenu a').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const page = this.getAttribute('data-page');
-                loadPage(page);
-                closeSidebar();
-            });
-        });
-
-        // Load page function
-        function loadPage(pageKey) {
-            const url = pageUrls[pageKey];
-
-            if (url && url !== '#') {
-                // Show content area, hide welcome screen
-                welcomeScreen.classList.add('hidden');
-                contentArea.classList.remove('hidden');
-
-                // Load the page in iframe
-                contentFrame.src = url;
-            } else {
-                // For pages without URL, show welcome screen
-                welcomeScreen.classList.remove('hidden');
-                contentArea.classList.add('hidden');
-                contentFrame.src = '';
-            }
         }
 
-        // Handle iframe navigation (optional - for back/forward buttons)
-        contentFrame.addEventListener('load', function() {
-            // You can add additional logic here if needed
-            console.log('Page loaded in iframe');
-        });
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page-container').forEach(page => {
+                page.classList.remove('active');
+            });
 
-        // Close sidebar when clicking outside on mobile
-        window.addEventListener('resize', function() {
-            if (window.innerWidth > 768) {
-                closeSidebar();
-            }
-        });
+            // Show selected page
+            document.getElementById(pageId).classList.add('active');
+        }
 
-        // Initialize
-        closeSidebar();
+        function showWelcomePage() {
+            showPage('welcomePage');
+        }
+
+        // ========== UTILITY FUNCTIONS
+        function showToast(message, type = 'info') {
+            const toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container';
+
+            const toastId = 'toast-' + Date.now();
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type === 'danger' ? 'danger' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'info'} border-0`;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            toast.id = toastId;
+
+            toast.innerHTML = `
+                                <div class="d-flex">
+                                    <div class="toast-body">
+                                        <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'warning' ? 'fa-exclamation-triangle' : type === 'danger' ? 'fa-times-circle' : 'fa-info-circle'} me-2"></i>
+                                        ${message}
+                                    </div>
+                                    <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.parentElement.parentElement.remove()"></button>
+                                </div>
+                            `;
+
+            document.body.appendChild(toastContainer);
+            toastContainer.appendChild(toast);
+
+            // Auto remove after 4 seconds
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+                if (toastContainer.parentElement && toastContainer.children.length === 0) {
+                    toastContainer.remove();
+                }
+            }, 4000);
+        }
     </script>
 </body>
 </html>

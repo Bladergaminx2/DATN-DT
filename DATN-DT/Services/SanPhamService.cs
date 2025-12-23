@@ -1,41 +1,48 @@
 ﻿using DATN_DT.IRepos;
 using DATN_DT.IServices;
 using DATN_DT.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace DATN_DT.Services
 {
     public class SanPhamService : ISanPhamService
     {
-        private readonly ISanPhamRepo _ISanPhamRepo;
-        public SanPhamService(ISanPhamRepo ISanPhamRepo)
+        private readonly ISanPhamRepo _sanPhamRepo;
+        public SanPhamService(ISanPhamRepo sanPhamRepo)
         {
-            _ISanPhamRepo = ISanPhamRepo;
+            _sanPhamRepo = sanPhamRepo;
         }
-        public async Task Create(SanPham sanpham)
+
+        public async Task Create(SanPham sanPham)
         {
-            await _ISanPhamRepo.Create(sanpham);
+            await _sanPhamRepo.Create(sanPham);
         }
 
         public async Task Delete(int id)
         {
-            await _ISanPhamRepo.Delete(id);
+            await _sanPhamRepo.Delete(id);
         }
 
-        public Task<List<SanPham>> GetAllSanPhams()
+        public async Task<List<SanPham>> GetAllSanPhams()
         {
-            var response = _ISanPhamRepo.GetAllSanPhams();
-            return response;
+            return await _sanPhamRepo.GetAllSanPhams();
         }
 
-        public Task<SanPham?> GetSanPhamById(int id)
+        public async Task<SanPham?> GetSanPhamById(int id)
         {
-            var response = _ISanPhamRepo.GetSanPhamById(id);
-            return response;
+            return await _sanPhamRepo.GetSanPhamById(id);
         }
 
-        public async Task Update(SanPham sanpham)
+        public async Task Update(SanPham sanPham)
         {
-            await _ISanPhamRepo.Update(sanpham);
+            await _sanPhamRepo.Update(sanPham);
+        }
+
+        public async Task<List<ThuongHieu>> GetAllThuongHieu()
+        {
+            // Gọi Repository để lấy danh sách thương hiệu
+            return await _sanPhamRepo.GetAllThuongHieu();
         }
     }
 }

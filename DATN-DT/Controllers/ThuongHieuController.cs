@@ -125,5 +125,29 @@ namespace DATN_DT.Controllers
                 return StatusCode(500, new { message = "Lỗi khi gọi API: " + ex.Message });
             }
         }
+        // ----------------------------
+        // API: lấy danh sách thương hiệu đang hoạt động cho trang Mua hàng
+        // ----------------------------
+        [HttpGet]
+        [Route("api/thuonghieu/active")]  // URL: /api/thuonghieu/active
+        public async Task<IActionResult> GetActiveBrands()
+        {
+            try
+            {
+                var list = await _thuongHieuService.GetAllThuongHieus();
+
+                // Chỉ lấy thương hiệu có trạng thái "Còn hoạt động" (có dấu)
+                var activeBrands = list.Where(t =>
+                    t.TrangThaiThuongHieu == "Còn hoạt động")
+                    .OrderBy(t => t.TenThuongHieu)
+                    .ToList();
+
+                return Ok(activeBrands);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi tải thương hiệu: " + ex.Message });
+            }
+        }
     }
 }

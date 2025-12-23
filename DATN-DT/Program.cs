@@ -108,7 +108,58 @@ app.UseRouting();
 app.UseAuthentication(); // 🔐 BẮT BUỘC
 app.UseAuthorization();
 
+<<<<<<< HEAD
 // ================= ROUTE =================
+=======
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<MyDbContext>();
+
+    // ========== 1. TẠO ROLE ADMIN ==========
+    var roleAdmin = db.ChucVus.FirstOrDefault(r => r.TenChucVuVietHoa == "ADMIN");
+
+    if (roleAdmin == null)
+    {
+        roleAdmin = new ChucVu
+        {
+            TenChucVu = "Admin",
+            TenChucVuVietHoa = "ADMIN"
+        };
+        db.ChucVus.Add(roleAdmin);
+        db.SaveChanges();
+    }
+
+    // ========== 2. TẠO TÀI KHOẢN ADMIN ==========
+    var admin = db.NhanViens.FirstOrDefault(nv => nv.TenTaiKhoanNV == "admin");
+
+    if (admin == null)
+    {
+        string password = "admin123";  // mật khẩu mặc định (nên đổi sau)
+        string hashedPassword;
+
+        // hash SHA256
+        using (var sha = System.Security.Cryptography.SHA256.Create())
+        {
+            var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
+            hashedPassword = Convert.ToBase64String(bytes);
+        }
+
+        admin = new NhanVien
+        {
+            TenTaiKhoanNV = "admin",
+            Password = hashedPassword,
+            HoTenNhanVien = "Tài khoản quản trị",
+            IdChucVu = roleAdmin.IdChucVu,
+            TrangThaiNV = 1,
+            NgayVaoLam = DateTime.Now
+        };
+
+        db.NhanViens.Add(admin);
+        db.SaveChanges();
+    }
+}
+
+>>>>>>> origin/Update-SP/Quanly/MuaHang
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Login}/{action=Index}/{id?}"

@@ -1,7 +1,11 @@
-using DATN_DT.Data;
+﻿using DATN_DT.Data;
 using DATN_DT.IRepos;
 using DATN_DT.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Linq;
+using System;
 
 namespace DATN_DT.Repos
 {
@@ -12,59 +16,92 @@ namespace DATN_DT.Repos
         {
             _context = context;
         }
-        public async Task Create(SanPham sanpham)
+
+        public async Task Create(SanPham sanPham)
         {
-            // Không cần check ID vì ID sẽ được tự động tạo bởi database (Identity column)
-            // Chỉ cần add entity, EF sẽ tự động tạo ID mới
-            await _context.SanPhams.AddAsync(sanpham);
+            await _context.SanPhams.AddAsync(sanPham);
+            await _context.SaveChangesAsync();
         }
 
         public async Task Delete(int id)
         {
-            var sanpham = await GetSanPhamById(id);
-            if (sanpham == null)
-            {
-               throw new Exception("SanPham not found.");
-            }
-            _context.SanPhams.Remove(sanpham);
+            var sanPham = await GetSanPhamById(id);
+            if (sanPham == null) throw new KeyNotFoundException("Sản phẩm không tìm thấy!");
+            _context.SanPhams.Remove(sanPham);
+            await _context.SaveChangesAsync();
         }
 
         public async Task<List<SanPham>> GetAllSanPhams()
         {
             return await _context.SanPhams
-                .Include(s => s.ThuongHieu)
+                .Include(sp => sp.ThuongHieu)
                 .ToListAsync();
         }
 
         public async Task<SanPham?> GetSanPhamById(int id)
         {
-            return await _context.SanPhams.FindAsync(id);
+            return await _context.SanPhams
+                .Include(sp => sp.ThuongHieu)
+                .FirstOrDefaultAsync(sp => sp.IdSanPham == id);
         }
 
         public async Task SaveChanges()
         {
-           await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
         }
 
-        public async Task Update(SanPham sanpham)
+        public async Task Update(SanPham sanPham)
         {
-            var existing = await GetSanPhamById(sanpham.IdSanPham);
-            if (existing == null)
+            // TÌM SẢN PHẨM HIỆN TẠI
+            var existingSanPham = await _context.SanPhams.FindAsync(sanPham.IdSanPham);
+            if (existingSanPham == null)
+                throw new KeyNotFoundException($"Không tìm thấy sản phẩm với ID = {sanPham.IdSanPham}");
+
+            // KIỂM TRA XEM SẢN PHẨM CÓ ĐANG ĐƯỢC THEO DÕI KHÔNG
+            var trackedEntity = _context.ChangeTracker.Entries<SanPham>()
+                .FirstOrDefault(e => e.Entity.IdSanPham == sanPham.IdSanPham);
+
+            // NẾU KHÔNG ĐƯỢC THEO DÕI, ATTACH VÀO CONTEXT
+            if (trackedEntity == null)
             {
-                throw new Exception("SanPham not found.");
+                // Detach entity nếu đã tồn tại
+                var local = _context.Set<SanPham>()
+                    .Local
+                    .FirstOrDefault(entry => entry.IdSanPham == sanPham.IdSanPham);
+
+                if (local != null)
+                {
+                    _context.Entry(local).State = EntityState.Detached;
+                }
+
+                // Attach entity mới
+                _context.SanPhams.Attach(sanPham);
+                _context.Entry(sanPham).State = EntityState.Modified;
             }
-            
-            // Cập nhật các thuộc tính từ entity mới vào entity đã tồn tại
-            existing.MaSanPham = sanpham.MaSanPham;
-            existing.TenSanPham = sanpham.TenSanPham;
-            existing.IdThuongHieu = sanpham.IdThuongHieu;
-            existing.MoTa = sanpham.MoTa;
-            existing.GiaGoc = sanpham.GiaGoc;
-            existing.GiaNiemYet = sanpham.GiaNiemYet;
-            existing.VAT = sanpham.VAT;
-            existing.TrangThaiSP = sanpham.TrangThaiSP;
-            
-            _context.SanPhams.Update(existing);
+            else
+            {
+                // CẬP NHẬT TỪNG THUỘC TÍNH
+                trackedEntity.Entity.MaSanPham = sanPham.MaSanPham;
+                trackedEntity.Entity.TenSanPham = sanPham.TenSanPham;
+                trackedEntity.Entity.IdThuongHieu = sanPham.IdThuongHieu;
+                trackedEntity.Entity.MoTa = sanPham.MoTa;
+                trackedEntity.Entity.GiaGoc = sanPham.GiaGoc;
+                trackedEntity.Entity.GiaNiemYet = sanPham.GiaNiemYet;
+                trackedEntity.Entity.VAT = sanPham.VAT;
+                trackedEntity.Entity.TrangThaiSP = sanPham.TrangThaiSP;
+            }
+
+            // LƯU THAY ĐỔI
+            await _context.SaveChangesAsync();
+        }
+
+        // THÊM PHƯƠNG THỨC LẤY DANH SÁCH THƯƠNG HIỆU
+        public async Task<List<ThuongHieu>> GetAllThuongHieu()
+        {
+            return await _context.ThuongHieus
+                .Where(th => th.TrangThaiThuongHieu == "Đang hoạt động") // Sửa thành TrangThaiThuongHieu
+                .OrderBy(th => th.TenThuongHieu)
+                .ToListAsync();
         }
     }
-}       
+}
