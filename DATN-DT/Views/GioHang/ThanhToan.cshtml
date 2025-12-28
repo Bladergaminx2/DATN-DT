@@ -35,30 +35,38 @@
                 </div>
                 <div class="card-body">
                     <form id="checkoutForm">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Họ và tên *</label>
-                                    <input type="text" class="form-control" id="hoTen" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Số điện thoại *</label>
-                                    <input type="tel" class="form-control" id="soDienThoai" required>
-                                </div>
-                            </div>
-                        </div>
 
                         <div class="mb-3">
                             <label class="form-label">Email</label>
                             <input type="email" class="form-control" id="email">
                         </div>
-
                         <div class="mb-3">
-                            <label class="form-label">Địa chỉ giao hàng *</label>
-                            <textarea class="form-control" id="diaChi" rows="3" required></textarea>
+                            <label class="form-label">Địa chỉ giao hàng</label
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="btnDoiDiaChi">
+                               Đổi địa chỉ
+                            </button>
+
+                            @if (Model?.DiaChi != null)
+                            {
+                                <div class="p-3 border rounded bg-light">
+                                    <div class="fw-bold">
+                                        @Model.DiaChi.Tennguoinhan - @Model.DiaChi.sdtnguoinhan
+                                    </div>
+
+                                    <div>
+                                        @Model.DiaChi.Diachicuthe,
+                                        @Model.DiaChi.PhuongxaName,
+                                        @Model.DiaChi.QuanhuyenName,
+                                        @Model.DiaChi.ThanhphoName
+                                    </div>
+
+                                    <small class="text-muted">Địa chỉ mặc định</small>
+                                </div>
+
+                                <input type="hidden" id="diaChiId" value="@Model.DiaChi.Id" />
+                            }
                         </div>
+
 
                         <div class="mb-3">
                             <label class="form-label">Ghi chú</label>
@@ -141,12 +149,14 @@
                     </div>
                     <div class="d-flex justify-content-between mb-2">
                         <span>Phí vận chuyển:</span>
-                        <span>30.000 ₫</span>
+                        <span>@string.Format("{0:N0} ₫", Model.PhiVanChuyen)</span>
                     </div>
-                    <hr>
+
                     <div class="d-flex justify-content-between mb-3">
                         <strong>Tổng cộng:</strong>
-                        <strong class="text-danger fs-5">@string.Format("{0:N0} ₫", Model.TongTien + 30000)</strong>
+                        <strong class="text-danger fs-5">
+                            @string.Format("{0:N0} ₫", Model.TongTien + Model.PhiVanChuyen)
+                        </strong>
                     </div>
 
                     <button type="button" class="btn btn-danger w-100 btn-lg" id="btnXacNhanThanhToan">
@@ -185,69 +195,131 @@
     </div>
 </div>
 
+<div class="modal fade" id="diaChiModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Chọn địa chỉ giao hàng</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div id="diaChiList" class="list-group">
+          <!-- JS render -->
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 @section Scripts {
     <script>
-        // Biến toàn cục
-        const selectedItems = '@selectedItems';
-        const tongTien = @Model.TongTien;
+        document.addEventListener('DOMContentLoaded', () => {
 
-        // Xử lý xác nhận thanh toán
-        document.getElementById('btnXacNhanThanhToan').addEventListener('click', async function() {
-            // Validate form
-            const form = document.getElementById('checkoutForm');
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
+            const apiUrl = '@Url.Action("XacNhanThanhToan", "GioHang")';
+
+            // Lấy thẳng ID giỏ hàng chi tiết từ Model (chuẩn nhất)
+            const cartItemIds = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                            Model?.SelectedCartItems?.Select(x => x.IdGioHangChiTiet).ToList() ?? new List<int>()
+                    ));
+
+        const tongTien = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model?.TongTien ?? 0));
+
+            const btn = document.getElementById('btnXacNhanThanhToan');
+            if (!btn) return;
+
+            // Debug: nhìn ngay xem có ID chưa
+            console.log('[Checkout] cartItemIds from Model:', cartItemIds);
+
+            const diaChiIdElInit = document.getElementById('diaChiId');
+            if (!diaChiIdElInit || !diaChiIdElInit.value) {
+                btn.disabled = true;
+                btn.classList.add('disabled');
             }
 
-            // Lấy thông tin từ form
-            const thongTinThanhToan = {
-                hoTen: document.getElementById('hoTen').value,
-                soDienThoai: document.getElementById('soDienThoai').value,
-                email: document.getElementById('email').value,
-                diaChi: document.getElementById('diaChi').value,
-                ghiChu: document.getElementById('ghiChu').value,
-                phuongThucTT: document.querySelector('input[name="phuongThucTT"]:checked').value,
-                selectedCartItems: selectedItems.split(',').map(id => parseInt(id)),
-                tongTien: tongTien
-            };
+            const loadingModalEl = document.getElementById('loadingModal');
+            const loadingModal = loadingModalEl ? new bootstrap.Modal(loadingModalEl) : null;
 
-            // Hiển thị loading
-            const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
-            loadingModal.show();
-
-            try {
-                const response = await fetch('/GioHang/XacNhanThanhToan', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(thongTinThanhToan)
-                });
-
-                const result = await response.json();
-
-                loadingModal.hide();
-
-                if (result.success) {
-                    // Thành công - chuyển hướng đến trang cảm ơn
-                    window.location.href = '/GioHang/CamOn?maDon=' + result.data.maDon;
-                } else {
-                    // Thất bại - hiển thị thông báo lỗi
-                    alert('Lỗi: ' + result.message);
+            function buildErrorMessage(result) {
+                let msg = result?.Message || result?.message || 'Không xác định';
+                const errs = result?.Errors || result?.errors;
+                if (Array.isArray(errs) && errs.length > 0) {
+                    msg += '\n\n' + errs.map((e, i) => `${i + 1}. ${e}`).join('\n');
                 }
-            } catch (error) {
-                loadingModal.hide();
-                console.error('Lỗi thanh toán:', error);
-                alert('Có lỗi xảy ra khi xử lý đơn hàng. Vui lòng thử lại.');
+                return msg;
             }
-        });
 
-        // Auto-fill thông tin khách hàng nếu có
-        document.addEventListener('DOMContentLoaded', function() {
-            // Có thể thêm logic auto-fill từ thông tin đăng nhập ở đây
-            console.log('Selected Items:', selectedItems);
-            console.log('Tổng tiền:', tongTien);
+            btn.addEventListener('click', async () => {
+
+                const form = document.getElementById('checkoutForm');
+                if (form && !form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+
+                const diaChiIdEl = document.getElementById('diaChiId');
+                const diaChiId = diaChiIdEl?.value ? Number(diaChiIdEl.value) : NaN;
+                if (!Number.isFinite(diaChiId)) {
+                    alert('Bạn chưa có địa chỉ mặc định. Vui lòng thêm địa chỉ trước khi đặt hàng.');
+                    return;
+                }
+
+                // Dùng trực tiếp mảng ID từ Model
+                if (!Array.isArray(cartItemIds) || cartItemIds.length === 0) {
+                    alert('Không có sản phẩm nào được chọn để thanh toán.');
+                    return;
+                }
+
+                btn.disabled = true;
+
+                const payload = {
+                    diaChiId: diaChiId,
+                    phuongThucTT: document.querySelector('input[name="phuongThucTT"]:checked')?.value || 'COD',
+                    ghiChu: document.getElementById('ghiChu')?.value?.trim() || '',
+                    selectedCartItems: cartItemIds,
+                    email: document.getElementById('email')?.value?.trim() || '',
+                    tongTien: tongTien
+                };
+
+                console.log('[Checkout] POST', apiUrl, payload);
+
+                loadingModal?.show();
+
+                try {
+                    const res = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await res.json();
+                    loadingModal?.hide();
+
+                    console.log('[Checkout] Response', res.status, result);
+
+                    // chú ý case-sensitive (Success/Data)
+                    if (res.ok && result?.Success === true) {
+                        const maDon = result?.Data?.MaDon || result?.data?.maDon;
+                        window.location.href = '/GioHang/CamOn?maDon=' + encodeURIComponent(maDon);
+                        return;
+                    }
+
+                    alert('Lỗi: ' + buildErrorMessage(result));
+                }
+                catch (err) {
+                    loadingModal?.hide();
+                    console.error(err);
+                    alert('Có lỗi xảy ra khi xử lý đơn hàng. Vui lòng thử lại.');
+                }
+                finally {
+                    btn.disabled = false;
+                }
+            });
         });
     </script>
 }

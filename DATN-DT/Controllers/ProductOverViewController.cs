@@ -115,7 +115,7 @@ namespace DATN_DT.Controllers
                                              .FirstOrDefault()
                                          let stockQuantity = _context.TonKhos
                                              .Where(t => t.IdModelSanPham == model.IdModelSanPham)
-                                             .Sum(t => t.SoLuong) ?? 0
+                                             .Sum(t => t.SoLuong)
                                          where model.TrangThai == 1
                                          select new ProductOverviewViewModel
                                          {
@@ -152,7 +152,7 @@ namespace DATN_DT.Controllers
                                 .FirstOrDefault()
                             let stockQuantity = _context.TonKhos
                                 .Where(t => t.IdModelSanPham == model.IdModelSanPham)
-                                .Sum(t => t.SoLuong) ?? 0
+                                .Sum(t => t.SoLuong)
                             where model.TrangThai == 1
                             select new ProductOverviewViewModel
                             {
@@ -303,7 +303,7 @@ namespace DATN_DT.Controllers
             {
                 var stockQuantity = await _context.TonKhos
                     .Where(t => t.IdModelSanPham == productId)
-                    .SumAsync(t => t.SoLuong) ?? 0;
+                    .SumAsync(t => t.SoLuong);
 
                 return Ok(new { StockQuantity = stockQuantity });
             }
@@ -399,7 +399,7 @@ namespace DATN_DT.Controllers
                                           .FirstOrDefault()
                                       let stockQuantity = _context.TonKhos
                                           .Where(t => t.IdModelSanPham == model.IdModelSanPham)
-                                          .Sum(t => t.SoLuong) ?? 0
+                                          .Sum(t => t.SoLuong)
                                       where productIds.Contains(model.IdModelSanPham) && model.TrangThai == 1
                                       select new ProductOverviewViewModel
                                       {

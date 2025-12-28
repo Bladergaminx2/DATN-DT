@@ -5,10 +5,14 @@
         // ViewModels
         public class ThanhToanViewModel
         {
-            public List<CartItemViewModel> SelectedCartItems { get; set; } = new List<CartItemViewModel>();
+            public List<CartItemViewModel> SelectedCartItems { get; set; } = new();
             public decimal TongTien { get; set; }
             public string SelectedItemsString { get; set; }
+            public DiaChiDTO DiaChi { get; set; }
+
+            public int PhiVanChuyen { get; set; } // NEW (đơn vị VND)
         }
+
 
         public class CartItemViewModel
         {

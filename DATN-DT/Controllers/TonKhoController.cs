@@ -8,11 +8,9 @@ using System;
 
 namespace DATN_DT.Controllers
 {
-<<<<<<< HEAD
-    [Route("api/[controller]")]
-=======
+
     [Route("[controller]")]
->>>>>>> origin/Update-SP/Quanly/MuaHang
+
     [ApiController]
     public class TonKhoController : Controller
     {

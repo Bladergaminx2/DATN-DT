@@ -106,7 +106,7 @@ namespace DATN_DT.Controllers
                                           .FirstOrDefault()
                                       let stockQuantity = _context.TonKhos
                                           .Where(t => t.IdModelSanPham == model.IdModelSanPham)
-                                          .Sum(t => t.SoLuong) ?? 0
+                                          .Sum(t => t.SoLuong)
                                       let soldCount = _context.Imeis
                                           .Count(i => i.IdModelSanPham == model.IdModelSanPham &&
                                                      i.TrangThai == "Đã bán")
@@ -162,7 +162,7 @@ namespace DATN_DT.Controllers
                                            .ToList()
                                        let stockQuantity = _context.TonKhos
                                            .Where(t => t.IdModelSanPham == model.IdModelSanPham)
-                                           .Sum(t => t.SoLuong) ?? 0
+                                           .Sum(t => t.SoLuong)
                                        let soldCount = _context.Imeis
                                            .Count(i => i.IdModelSanPham == model.IdModelSanPham &&
                                                       i.TrangThai == "Đã bán")
@@ -221,7 +221,7 @@ namespace DATN_DT.Controllers
                                                .FirstOrDefault()
                                            let stockQuantity = _context.TonKhos
                                                .Where(t => t.IdModelSanPham == model.IdModelSanPham)
-                                               .Sum(t => t.SoLuong) ?? 0
+                                               .Sum(t => t.SoLuong)
                                            where model.TrangThai == 1 &&
                                                  stockQuantity > 0 &&
                                                  brand.IdThuongHieu == brandId &&
@@ -257,7 +257,7 @@ namespace DATN_DT.Controllers
                                       .FirstOrDefault()
                                   let stockQuantity = _context.TonKhos
                                       .Where(t => t.IdModelSanPham == model.IdModelSanPham)
-                                      .Sum(t => t.SoLuong) ?? 0
+                                      .Sum(t => t.SoLuong)
                                   where model.TrangThai == 1 && stockQuantity > 0
                                   select new
                                   {
@@ -307,7 +307,7 @@ namespace DATN_DT.Controllers
                                                     i.TrangThai == "Đã bán")
                                      let stockQuantity = _context.TonKhos
                                          .Where(t => t.IdModelSanPham == model.IdModelSanPham)
-                                         .Sum(t => t.SoLuong) ?? 0
+                                         .Sum(t => t.SoLuong)
                                      where model.TrangThai == 1 && stockQuantity > 0 && soldCount > 3
                                      orderby soldCount descending
                                      select new
@@ -364,7 +364,7 @@ namespace DATN_DT.Controllers
                 // Kiểm tra tồn kho
                 var stockQuantity = await _context.TonKhos
                     .Where(t => t.IdModelSanPham == request.ProductId)
-                    .SumAsync(t => t.SoLuong) ?? 0;
+                    .SumAsync(t => t.SoLuong);
 
                 if (stockQuantity < request.Quantity)
                 {

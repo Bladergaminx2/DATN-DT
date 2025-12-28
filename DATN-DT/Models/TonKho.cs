@@ -5,7 +5,7 @@
         public int IdTonKho { get; set; }
         public int? IdModelSanPham { get; set; }
         public int? IdKho { get; set; }
-        public int? SoLuong { get; set; }
+        public int SoLuong { get; set; }
 
 
 

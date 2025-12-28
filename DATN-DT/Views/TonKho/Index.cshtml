@@ -608,7 +608,7 @@
                 <div class="col-md-3">
                     <div class="stats-box">
                         <div class="stat-label">Tổng số lượng</div>
-                        <div class="stat-value">@Model.Sum(tk => tk.SoLuong ?? 0)</div>
+                        <div class="stat-value">@Model.Sum(tk => tk.SoLuong)</div>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -746,7 +746,7 @@
                                     </td>
                                     <td>
                                         <span class="@quantityClass">
-                                            @(item.SoLuong?.ToString() ?? "0")
+                                            @(item.SoLuong.ToString() ?? "0")
                                             @if (isSynchronized)
                                             {
                                                 <span class="synchronized-badge">✓</span>

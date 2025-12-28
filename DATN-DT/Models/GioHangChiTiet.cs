@@ -7,7 +7,7 @@
         public int IdGioHangChiTiet { get; set; }
         public int? IdGioHang { get; set; }
         public int? IdModelSanPham { get; set; }
-        public int? SoLuong { get; set; }
+        public int SoLuong { get; set; }
 
 
         // Navigation properties

@@ -298,7 +298,6 @@ namespace DATN_DT.Controllers
                         {
                             IdDonHang = donHang.IdDonHang,
                             IdModelSanPham = item.IdModelSanPham,
-                            SoLuong = item.SoLuong,
                             DonGia = donGia,
                             ThanhTien = thanhTien
                         };

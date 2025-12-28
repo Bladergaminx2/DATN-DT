@@ -64,6 +64,8 @@ namespace DATN_DT.Data
             modelBuilder.Entity<DonHang>().HasKey(e => e.IdDonHang);
             modelBuilder.Entity<DonHangChiTiet>().HasKey(e => e.IdDonHangChiTiet);
             modelBuilder.Entity<ThanhToan>().HasKey(e => e.IdThanhToan);
+            modelBuilder.Entity<HoaDon>().ToTable("HoaDon"); // hoặc "HoaDons" tùy DB
+
 
             // === QUAN HỆ CHÍNH ===
 

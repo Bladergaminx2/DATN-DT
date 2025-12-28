@@ -1,12 +1,15 @@
 ﻿using DATN_DT.Data;
 using DATN_DT.IRepos;
 using DATN_DT.IServices;
+using DATN_DT.Models;
 using DATN_DT.Repos;
 using DATN_DT.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using DATN_DT.Services.Ghn;
+using Microsoft.Extensions.Options;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -56,6 +59,9 @@ builder.Services.AddScoped<INhanVienService, NhanVienService>();
 
 builder.Services.AddScoped<IPinRepo, PinRepo>();
 builder.Services.AddScoped<IPinService, PinService>();
+
+builder.Services.Configure<GhnOptions>(builder.Configuration.GetSection("GHN"));
+builder.Services.AddHttpClient<IGhnClient, GhnClient>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
@@ -108,9 +114,7 @@ app.UseRouting();
 app.UseAuthentication(); // 🔐 BẮT BUỘC
 app.UseAuthorization();
 
-<<<<<<< HEAD
-// ================= ROUTE =================
-=======
+
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<MyDbContext>();
@@ -159,7 +163,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
->>>>>>> origin/Update-SP/Quanly/MuaHang
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Login}/{action=Index}/{id?}"
