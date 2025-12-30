@@ -1457,7 +1457,53 @@
                 document.getElementById('cartCount').textContent = count;
             }
         }
+            const el = document.getElementById('cartCount');
+            if (!el) return;
 
+            try {
+                const response = await fetch('/GioHang/GetCartCount', { cache: 'no-cache' });
+                if (!response.ok) throw new Error('Network response not ok: ' + response.status);
+
+                const result = await response.json();
+                console.log('GetCartCount response:', result);
+
+                // Normalize response to find success flag and count value
+                let success = false;
+                let countValue = null;
+
+                if (result == null) {
+                    success = false;
+                } else if (typeof result === 'number') {
+                    success = true;
+                    countValue = result;
+                } else {
+                    success = !!(result.Success ?? result.success ?? false);
+                    countValue = result.Count ?? result.count ?? result.Total ?? result.total ?? null;
+
+                    // handle wrapper like { Data: { Count: X } }
+                    if ((countValue === null || countValue === undefined) && result.Data) {
+                        countValue = result.Data.Count ?? result.Data.count ?? null;
+                    }
+                }
+
+                if (success) {
+                    const count = Number(countValue) || 0;
+                    el.textContent = count;
+                    if (count === 0) {
+                        cart = [];
+                        localStorage.removeItem('cart');
+                    }
+                } else {
+                    // Fallback: lấy từ localStorage nếu server không trả success
+                    const localCount = (cart || []).reduce((total, item) => total + (Number(item.quantity) || 0), 0);
+                    el.textContent = localCount;
+                }
+            } catch (err) {
+                console.error('Lỗi khi lấy số lượng giỏ hàng:', err);
+                const localCount = (cart || []).reduce((total, item) => total + (Number(item.quantity) || 0), 0);
+                el.textContent = localCount;
+            }
+        }
         function updateCartDisplay() {
             const cartItems = document.getElementById('cartItems');
             const cartTotal = document.getElementById('cartTotal');

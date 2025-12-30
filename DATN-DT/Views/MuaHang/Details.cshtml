@@ -966,9 +966,15 @@
                                     @(product.SoLuongTon <= 0 ? "disabled" : "")>
                                 <i class="fas fa-shopping-cart"></i> Thêm vào giỏ hàng
                             </button>
+<<<<<<< HEAD
                             <button class="btn btn-secondary" onclick="buyNow()"
                                     @(product.SoLuongTon <= 0 ? "disabled" : "")>
                                 <i class="fas fa-bolt"></i> Mua ngay
+=======
+                            <button class="btn btn-secondary" onclick="goToCartPage()"
+                            @(product.SoLuongTon <= 0 ? "disabled" : "")>
+                                <i class="fas fa-bolt"></i> Mua Hàng
+>>>>>>> 0cca94cd9f45d062951427ec206082a84d8524f8
                             </button>
                         </div>
                     </div>
@@ -1265,11 +1271,19 @@
                 // Gọi API để lấy số lượng từ database
                 const response = await fetch('/GioHang/GetCartCount');
                 const result = await response.json();
+<<<<<<< HEAD
 
                 if (result.Success) {
                     const count = result.Count || 0;
                     document.getElementById('cartCount').textContent = count;
 
+=======
+                
+                if (result.Success) {
+                    const count = result.Count || 0;
+                    document.getElementById('cartCount').textContent = count;
+                    
+>>>>>>> 0cca94cd9f45d062951427ec206082a84d8524f8
                     // Nếu giỏ hàng trống trong database, xóa localStorage để đồng bộ
                     if (count === 0) {
                         cart = [];
