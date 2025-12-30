@@ -1205,33 +1205,7 @@
             }
         }
 
-        function buyNow() {
-            const quantity = parseInt(document.getElementById('quantity').value);
-
-            if (productId <= 0) {
-                showToast('Sản phẩm không hợp lệ', 'danger');
-                return;
-            }
-
-            // Add to cart first
-            const existingItem = cart.find(item => item.id === productId);
-            if (existingItem) {
-                existingItem.quantity += quantity;
-            } else {
-                cart.push({
-                    id: productId,
-                    name: productName,
-                    price: productPrice,
-                    image: productImage,
-                    quantity: quantity
-                });
-            }
-
-            localStorage.setItem('cart', JSON.stringify(cart));
-
-            // Redirect to checkout
-            window.location.href = '/GioHang/Cart';
-        }
+       
 
         // ========== NAVIGATION
         function goToHomePage() {
