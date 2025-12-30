@@ -150,6 +150,10 @@
 </div>
 
 @section Scripts {
-    <script src="~/js/giohang.js"></script>
+    <script>
+        // Truyền URL từ Razor để đảm bảo route đúng
+        window.muaHangUrl = '@Url.Action("Index", "MuaHang")';
+    </script>
+    <script src="~/js/giohang.js?v=@DateTime.Now.Ticks"></script>
 }
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
