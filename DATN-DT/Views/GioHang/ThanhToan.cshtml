@@ -8,23 +8,268 @@
 }
 
 <style>
+    /* Hide Header */
+    header {
+        display: none !important;
+    }
+
+    /* Dark Theme Styles */
+    body {
+        background-color: #12121d;
+        color: #ffffff;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .container {
+        min-height: calc(100vh - 100px);
+        padding: 30px;
+    }
+
+    .card {
+        background-color: #36363f;
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        margin-bottom: 20px;
+    }
+
+    .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-bottom: none;
+        color: #ffffff;
+        padding: 20px;
+        border-radius: 15px 15px 0 0 !important;
+    }
+
+    .card-body {
+        background-color: #36363f;
+        color: #ffffff;
+        padding: 25px;
+    }
+
     .product-image {
         width: 80px;
         height: 80px;
         object-fit: cover;
+        border-radius: 8px;
     }
 
+    /* Form controls */
+    .form-control, .form-select, textarea {
+        background-color: #2b2b33;
+        border: 1px solid #444;
+        color: #ffffff;
+    }
+
+        .form-control:focus, .form-select:focus, textarea:focus {
+            background-color: #2b2b33;
+            border-color: #667eea;
+            color: #ffffff;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .form-control:read-only {
+            background-color: #2b2b33;
+            color: #aaa;
+        }
+
+    .form-control::placeholder {
+        color: #aaa;
+    }
+
+    .form-label {
+        color: #ffffff;
+        font-weight: 500;
+        margin-bottom: 8px;
+    }
+
+    /* User info card */
+    .bg-light {
+        background-color: #2b2b33 !important;
+        border: 1px solid #444;
+    }
+
+    /* Address display */
+    .border {
+        border-color: #444 !important;
+    }
+
+    .bg-light.border {
+        background-color: #2b2b33 !important;
+        color: #ffffff;
+    }
+
+    /* Buttons */
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        font-weight: 500;
+    }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #653a8f 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        border: none;
+        color: white;
+        font-weight: bold;
+    }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #ee5a5a 0%, #dd4a5f 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(255, 107, 107, 0.3);
+        }
+
+    .btn-outline-primary {
+        border-color: #667eea;
+        color: #667eea;
+        background-color: transparent;
+    }
+
+        .btn-outline-primary:hover {
+            background-color: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+
+    .btn-secondary {
+        background-color: #555;
+        border-color: #555;
+        color: white;
+    }
+
+        .btn-secondary:hover {
+            background-color: #666;
+            border-color: #666;
+        }
+
+    /* Radio buttons */
+    .form-check-input {
+        background-color: #2b2b33;
+        border: 2px solid #667eea;
+    }
+
+        .form-check-input:checked {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+
+    .form-check-label {
+        color: #ffffff;
+    }
+
+    /* Table */
+    .table {
+        color: #ffffff;
+        background-color: #36363f;
+    }
+
+    .table thead {
+        background-color: #2b2b33;
+        color: #ffffff;
+    }
+
+    .table tbody tr {
+        border-bottom: 1px solid #444;
+    }
+
+    .table td, .table th {
+        border-color: #444;
+    }
+
+    /* Text colors */
+    .text-danger {
+        color: #ff6b6b !important;
+    }
+
+    .text-muted {
+        color: #aaa !important;
+    }
+
+    /* Summary card */
     .summary-card {
-        background: #f8f9fa;
+        background: #36363f;
         border-radius: 10px;
         padding: 20px;
+        border: 1px solid #444;
     }
 
-    .form-control:focus {
-        border-color: #dc3545;
-        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    /* Alert */
+    .alert-success {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+    }
+
+    .alert-danger {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        border: none;
+        color: white;
+    }
+
+    /* Modal */
+    .modal-content {
+        background-color: #36363f;
+        color: #ffffff;
+        border: none;
+        border-radius: 15px;
+    }
+
+    .modal-header {
+        background-color: #2b2b33;
+        border-bottom: 1px solid #444;
+        border-radius: 15px 15px 0 0;
+    }
+
+    .modal-body {
+        background-color: #36363f;
+    }
+
+    .modal-footer {
+        background-color: #36363f;
+        border-top: 1px solid #444;
+        border-radius: 0 0 15px 15px;
+    }
+
+    .btn-close, .btn-close-white {
+        filter: invert(1);
+    }
+
+    /* Toast */
+    .toast {
+        background-color: #36363f;
+        color: #ffffff;
+        border: 1px solid #444;
+    }
+
+    /* Hide Footer */
+    footer {
+        display: none !important;
     }
 </style>
+
+<!-- Toast container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+</div>
+
+<!-- Success/Error Alert -->
+<div class="alert alert-dismissible fade d-none" id="successAlertCheckout" role="alert" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 400px; max-width: 600px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-check-circle-fill me-3 fs-3" id="alertIconCheckout"></i>
+        <div class="flex-grow-1">
+            <h5 class="alert-heading mb-1" id="alertTitleCheckout">Đặt hàng thành công!</h5>
+            <p class="mb-0" id="successMessageCheckout">Đơn hàng của bạn đã được xử lý thành công.</p>
+            <small class="text-muted" id="orderCodeCheckout"></small>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</div>
 
 <div class="container mt-4">
     <div class="row">
@@ -35,36 +280,53 @@
                 </div>
                 <div class="card-body">
                     <form id="checkoutForm">
-
-                        <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email">
+                        <!-- Thông tin người dùng -->
+                        <div class="card mb-3 bg-light">
+                            <div class="card-body">
+                                <h6 class="mb-3"><i class="bi bi-person-circle me-2"></i>Thông tin người dùng</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label"><strong>Họ và tên</strong></label>
+                                        <input type="text" class="form-control" id="hoTenKhachHang" readonly>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label"><strong>Email</strong></label>
+                                        <input type="email" class="form-control" id="email" readonly>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label"><strong>Số điện thoại</strong></label>
+                                        <input type="text" class="form-control" id="sdtKhachHang" readonly>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Địa chỉ giao hàng</label
-                            <button type="button" class="btn btn-outline-primary btn-sm" id="btnDoiDiaChi">
+                            <label class="form-label">Địa chỉ giao hàng</label>
+                            <button type="button" class="btn btn-outline-primary btn-sm mb-2" id="btnDoiDiaChi">
                                Đổi địa chỉ
                             </button>
 
-                            @if (Model?.DiaChi != null)
-                            {
-                                <div class="p-3 border rounded bg-light">
-                                    <div class="fw-bold">
-                                        @Model.DiaChi.Tennguoinhan - @Model.DiaChi.sdtnguoinhan
+                            <div id="addressDisplay">
+                                @if (Model?.DiaChi != null)
+                                {
+                                    <div class="p-3 border rounded" style="background-color: #2b2b33; border-color: #444 !important;">
+                                        <div class="fw-bold text-white">
+                                            @Model.DiaChi.Tennguoinhan - @Model.DiaChi.sdtnguoinhan
+                                        </div>
+
+                                        <div class="text-white">
+                                            @Model.DiaChi.Diachicuthe,
+                                            @Model.DiaChi.PhuongxaName,
+                                            @Model.DiaChi.QuanhuyenName,
+                                            @Model.DiaChi.ThanhphoName
+                                        </div>
+
+                                        <small class="text-muted">Địa chỉ mặc định</small>
                                     </div>
 
-                                    <div>
-                                        @Model.DiaChi.Diachicuthe,
-                                        @Model.DiaChi.PhuongxaName,
-                                        @Model.DiaChi.QuanhuyenName,
-                                        @Model.DiaChi.ThanhphoName
-                                    </div>
-
-                                    <small class="text-muted">Địa chỉ mặc định</small>
-                                </div>
-
-                                <input type="hidden" id="diaChiId" value="@Model.DiaChi.Id" />
-                            }
+                                    <input type="hidden" id="diaChiId" value="@Model.DiaChi.Id" />
+                                }
+                            </div>
                         </div>
 
 
@@ -181,45 +443,194 @@
     </div>
 </div>
 
-<!-- Modal loading -->
-<div class="modal fade" id="loadingModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
-    <div class="modal-dialog modal-sm">
+
+<!-- Modal đổi địa chỉ với thông tin người dùng -->
+<div class="modal fade" id="diaChiModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-body text-center">
-                <div class="spinner-border text-primary mb-3" role="status">
-                    <span class="visually-hidden">Loading...</span>
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-geo-alt me-2"></i>Quản lý địa chỉ giao hàng</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Thông tin người dùng -->
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="bi bi-person-circle me-2"></i>Thông tin người dùng</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong>Họ tên:</strong>
+                                <div id="userFullName">Đang tải...</div>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Email:</strong>
+                                <div id="userEmail">Đang tải...</div>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Số điện thoại:</strong>
+                                <div id="userPhone">Đang tải...</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <p>Đang xử lý đơn hàng...</p>
+
+                <!-- Danh sách địa chỉ -->
+                <div class="card">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="bi bi-house-door me-2"></i>Danh sách địa chỉ</h6>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="openAddAddressModalCheckout()">
+                            <i class="bi bi-plus-circle me-1"></i>Thêm địa chỉ mới
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="diaChiList" class="row">
+                            <div class="col-12">
+                                <p class="text-muted text-center">Đang tải địa chỉ...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="diaChiModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Chọn địa chỉ giao hàng</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-
-      <div class="modal-body">
-        <div id="diaChiList" class="list-group">
-          <!-- JS render -->
+<!-- Modal thêm địa chỉ mới -->
+<div class="modal fade" id="addAddressModalCheckout" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Thêm địa chỉ mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addAddressFormCheckout">
+                    <div class="mb-3">
+                        <label class="form-label">Tên người nhận *</label>
+                        <input type="text" class="form-control" id="addTenNguoiNhan" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Số điện thoại *</label>
+                        <input type="text" class="form-control" id="addSdtNguoiNhan" required maxlength="10">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Tỉnh/Thành phố *</label>
+                            <select class="form-select" id="addTinh" required>
+                                <option value="">Chọn Tỉnh/Thành</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Quận/Huyện *</label>
+                            <select class="form-select" id="addQuan" required>
+                                <option value="">Chọn Quận/Huyện</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Phường/Xã *</label>
+                            <select class="form-select" id="addPhuong" required>
+                                <option value="">Chọn Phường/Xã</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ cụ thể *</label>
+                        <textarea class="form-control" id="addDiaChiCuThe" rows="2" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="addNewAddressCheckout()">Thêm địa chỉ</button>
+            </div>
         </div>
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-      </div>
     </div>
-  </div>
+</div>
+
+<!-- Modal sửa địa chỉ -->
+<div class="modal fade" id="editAddressModalCheckout" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Sửa địa chỉ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editAddressFormCheckout">
+                    <input type="hidden" id="editIdCheckout">
+                    <input type="hidden" id="editTrangThaiCheckout">
+                    <div class="mb-3">
+                        <label class="form-label">Tên người nhận *</label>
+                        <input type="text" class="form-control" id="editTenNguoiNhanCheckout" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Số điện thoại *</label>
+                        <input type="text" class="form-control" id="editSdtNguoiNhanCheckout" required maxlength="10">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Tỉnh/Thành phố *</label>
+                            <select class="form-select" id="editTinhCheckout" required>
+                                <option value="">Chọn Tỉnh/Thành</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Quận/Huyện *</label>
+                            <select class="form-select" id="editQuanCheckout" required>
+                                <option value="">Chọn Quận/Huyện</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Phường/Xã *</label>
+                            <select class="form-select" id="editPhuongCheckout" required>
+                                <option value="">Chọn Phường/Xã</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ cụ thể *</label>
+                        <textarea class="form-control" id="editDiaChiCuTheCheckout" rows="2" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="updateAddressCheckout()">Cập nhật</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 
 @section Scripts {
+    <script src="~/js/thanhtoan.js" asp-append-version="true"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+
+            // Hàm load thông tin người dùng
+            async function loadUserInfoForCheckout() {
+                try {
+                    const response = await fetch('/UserProfile/GetProfileData');
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        const hoTenEl = document.getElementById('hoTenKhachHang');
+                        const emailEl = document.getElementById('email');
+                        const sdtEl = document.getElementById('sdtKhachHang');
+
+                        if (hoTenEl) hoTenEl.value = data.hoTenKhachHang || '';
+                        if (emailEl) emailEl.value = data.emailKhachHang || '';
+                        if (sdtEl) sdtEl.value = data.sdtKhachHang || '';
+                    }
+                } catch (error) {
+                    console.error('Error loading user info:', error);
+                }
+            }
 
             const apiUrl = '@Url.Action("XacNhanThanhToan", "GioHang")';
 
@@ -242,8 +653,8 @@
                 btn.classList.add('disabled');
             }
 
-            const loadingModalEl = document.getElementById('loadingModal');
-            const loadingModal = loadingModalEl ? new bootstrap.Modal(loadingModalEl) : null;
+            // Load thông tin người dùng khi trang load
+            loadUserInfoForCheckout();
 
             function buildErrorMessage(result) {
                 let msg = result?.Message || result?.message || 'Không xác định';
@@ -288,8 +699,6 @@
 
                 console.log('[Checkout] POST', apiUrl, payload);
 
-                loadingModal?.show();
-
                 try {
                     const res = await fetch(apiUrl, {
                         method: 'POST',
@@ -298,28 +707,137 @@
                     });
 
                     const result = await res.json();
-                    loadingModal?.hide();
 
                     console.log('[Checkout] Response', res.status, result);
 
-                    // chú ý case-sensitive (Success/Data)
-                    if (res.ok && result?.Success === true) {
-                        const maDon = result?.Data?.MaDon || result?.data?.maDon;
-                        window.location.href = '/GioHang/CamOn?maDon=' + encodeURIComponent(maDon);
+                    // Sửa: Kiểm tra cả Success (chữ hoa) và success (chữ thường)
+                    const isSuccess = (res.ok && (result?.Success === true || result?.success === true));
+                    
+                    if (isSuccess) {
+                        // Lấy mã đơn hàng
+                        const maDon = result?.Data?.MaDon || result?.data?.maDon || 
+                                     result?.Data?.IdHoaDon || result?.data?.idHoaDon;
+                        
+                        // Hiển thị thông báo thành công
+                        showSuccessAlert(maDon);
+                        
+                        // Cuộn lên đầu trang để người dùng thấy thông báo
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        
+                        // Reset form (tùy chọn)
+                        const form = document.getElementById('checkoutForm');
+                        if (form) {
+                            form.reset();
+                        }
+                        
+                        // Có thể thêm logic khác như làm mờ nút, clear cart items, etc.
                         return;
                     }
 
-                    alert('Lỗi: ' + buildErrorMessage(result));
+                    // Chỉ hiển thị lỗi nếu thực sự có lỗi
+                    const isError = (!res.ok || result?.Success === false || result?.success === false);
+                    if (isError) {
+                        showErrorAlert(buildErrorMessage(result));
+                    } else {
+                        // Trường hợp không rõ ràng (có thể là success nhưng không match điều kiện trên)
+                        console.warn('[Checkout] Unexpected response format:', result);
+                        showSuccessAlert(null);
+                    }
                 }
                 catch (err) {
-                    loadingModal?.hide();
                     console.error(err);
-                    alert('Có lỗi xảy ra khi xử lý đơn hàng. Vui lòng thử lại.');
+                    showErrorAlert('Có lỗi xảy ra khi xử lý đơn hàng. Vui lòng thử lại.');
                 }
                 finally {
                     btn.disabled = false;
                 }
             });
+
+            // Hàm hiển thị thông báo thành công
+            function showSuccessAlert(maDon) {
+                const alertEl = document.getElementById('successAlertCheckout');
+                const messageEl = document.getElementById('successMessageCheckout');
+                const orderCodeEl = document.getElementById('orderCodeCheckout');
+                const alertIconEl = document.getElementById('alertIconCheckout');
+                const alertTitleEl = document.getElementById('alertTitleCheckout');
+                
+                if (alertEl && messageEl) {
+                    // Đặt lại class thành success
+                    alertEl.classList.remove('alert-danger', 'd-none');
+                    alertEl.classList.add('alert-success');
+                    
+                    // Cập nhật icon và tiêu đề
+                    if (alertIconEl) {
+                        alertIconEl.className = 'bi bi-check-circle-fill me-3 fs-3 text-success';
+                    }
+                    if (alertTitleEl) {
+                        alertTitleEl.textContent = 'Đặt hàng thành công!';
+                    }
+                    
+                    // Cập nhật nội dung
+                    messageEl.textContent = 'Đơn hàng của bạn đã được xử lý thành công.';
+                    
+                    // Hiển thị mã đơn nếu có
+                    if (orderCodeEl && maDon) {
+                        orderCodeEl.textContent = 'Mã đơn hàng: ' + maDon;
+                    } else if (orderCodeEl) {
+                        orderCodeEl.textContent = '';
+                    }
+                    
+                    // Hiển thị alert với animation
+                    alertEl.classList.add('show');
+                    
+                    // Tự động ẩn sau 10 giây
+                    setTimeout(() => {
+                        if (alertEl.classList.contains('show')) {
+                            const bsAlert = new bootstrap.Alert(alertEl);
+                            bsAlert.close();
+                        }
+                    }, 10000);
+                }
+            }
+
+            // Hàm hiển thị thông báo lỗi
+            function showErrorAlert(message) {
+                const alertEl = document.getElementById('successAlertCheckout');
+                const messageEl = document.getElementById('successMessageCheckout');
+                const orderCodeEl = document.getElementById('orderCodeCheckout');
+                const alertIconEl = document.getElementById('alertIconCheckout');
+                const alertTitleEl = document.getElementById('alertTitleCheckout');
+                
+                if (alertEl && messageEl) {
+                    // Đổi thành alert-danger
+                    alertEl.classList.remove('alert-success', 'd-none');
+                    alertEl.classList.add('alert-danger');
+                    
+                    // Cập nhật icon và tiêu đề
+                    if (alertIconEl) {
+                        alertIconEl.className = 'bi bi-exclamation-triangle-fill me-3 fs-3 text-danger';
+                    }
+                    if (alertTitleEl) {
+                        alertTitleEl.textContent = 'Đặt hàng thất bại!';
+                    }
+                    
+                    // Cập nhật nội dung
+                    messageEl.textContent = message;
+                    
+                    if (orderCodeEl) orderCodeEl.textContent = '';
+                    
+                    // Hiển thị alert
+                    alertEl.classList.add('show');
+                    
+                    // Tự động ẩn sau 5 giây
+                    setTimeout(() => {
+                        if (alertEl.classList.contains('show')) {
+                            const bsAlert = new bootstrap.Alert(alertEl);
+                            bsAlert.close();
+                        }
+                    }, 5000);
+                } else {
+                    // Fallback nếu không tìm thấy element
+                    alert(message);
+                }
+            }
         });
     </script>
 }

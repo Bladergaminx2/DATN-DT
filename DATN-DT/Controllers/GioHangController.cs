@@ -765,6 +765,9 @@ namespace DATN_DT.Controllers
                 await _context.SaveChangesAsync(ct);
                 await tx.CommitAsync(ct);
 
+                // Tạo mã đơn hàng từ IdHoaDon
+                var maDon = GenerateOrderCode();
+
                 return Ok(new
                 {
                     Success = true,
@@ -772,6 +775,7 @@ namespace DATN_DT.Controllers
                     Data = new
                     {
                         IdHoaDon = hoaDon.IdHoaDon,
+                        MaDon = maDon, // Tạo mã đơn hàng từ IdHoaDon
                         TongTien = hoaDon.TongTien
                     }
                 });

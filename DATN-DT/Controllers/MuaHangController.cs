@@ -385,6 +385,100 @@ namespace DATN_DT.Controllers
                 return Json(new { success = false, message = $"Lỗi: {ex.Message}" });
             }
         }
+
+        // THÊM MỚI: API lấy sản phẩm có khuyến mãi đang hoạt động
+        [HttpGet]
+        public async Task<IActionResult> GetDiscountedProducts()
+        {
+            try
+            {
+                var now = DateTime.Now.Date;
+
+                // Lấy các khuyến mãi đang hoạt động
+                var activePromotions = await _context.KhuyenMais
+                    .Where(km => km.NgayBatDau.HasValue &&
+                                 km.NgayKetThuc.HasValue &&
+                                 km.NgayBatDau.Value.Date <= now &&
+                                 km.NgayKetThuc.Value.Date >= now &&
+                                 km.TrangThaiKM == "Đang diễn ra")
+                    .ToListAsync();
+
+                if (!activePromotions.Any())
+                {
+                    return Json(new List<object>());
+                }
+
+                var promotionIds = activePromotions.Select(km => km.IdKhuyenMai).ToList();
+
+                // Lấy các sản phẩm có khuyến mãi đang hoạt động
+                var discountedProducts = await (from mspkm in _context.ModelSanPhamKhuyenMais
+                                               where promotionIds.Contains(mspkm.IdKhuyenMai.Value)
+                                               join model in _context.ModelSanPhams on mspkm.IdModelSanPham equals model.IdModelSanPham
+                                               join product in _context.SanPhams on model.IdSanPham equals product.IdSanPham
+                                               join brand in _context.ThuongHieus on product.IdThuongHieu equals brand.IdThuongHieu
+                                               join promotion in _context.KhuyenMais on mspkm.IdKhuyenMai equals promotion.IdKhuyenMai
+                                               let firstImage = _context.AnhSanPhams
+                                                   .Where(a => a.IdModelSanPham == model.IdModelSanPham)
+                                                   .OrderBy(a => a.IdAnh)
+                                                   .FirstOrDefault()
+                                               let stockQuantity = _context.TonKhos
+                                                   .Where(t => t.IdModelSanPham == model.IdModelSanPham)
+                                                   .Sum(t => t.SoLuong)
+                                               where model.TrangThai == 1 && stockQuantity > 0
+                                               select new
+                                               {
+                                                   IdModelSanPham = model.IdModelSanPham,
+                                                   TenModel = model.TenModel ?? product.TenSanPham ?? "Không có tên",
+                                                   TenSanPham = product.TenSanPham ?? "Không có tên",
+                                                   TenThuongHieu = brand.TenThuongHieu ?? "Không có thương hiệu",
+                                                   GiaBan = model.GiaBanModel ?? 0,
+                                                   GiaGoc = model.GiaBanModel ?? 0, // Giá gốc trước giảm
+                                                   HinhAnh = firstImage != null ? firstImage.DuongDan : "/ImgResource/default-product.jpg",
+                                                   SoLuongTon = stockQuantity,
+                                                   Mau = model.Mau ?? "Không xác định",
+                                                   IdThuongHieu = brand.IdThuongHieu,
+                                                   // Thông tin khuyến mãi
+                                                   IdKhuyenMai = promotion.IdKhuyenMai,
+                                                   MaKM = promotion.MaKM,
+                                                   LoaiGiam = promotion.LoaiGiam,
+                                                   GiaTriKhuyenMai = promotion.GiaTri ?? 0,
+                                                   // Tính giá sau giảm
+                                                   GiaSauGiam = promotion.LoaiGiam == "Phần trăm"
+                                                       ? (model.GiaBanModel ?? 0) * (1 - (promotion.GiaTri ?? 0) / 100)
+                                                       : Math.Max(0, (model.GiaBanModel ?? 0) - (promotion.GiaTri ?? 0))
+                                               })
+                                              .ToListAsync();
+
+                // Tính giá sau giảm cho mỗi sản phẩm
+                var productsWithDiscount = discountedProducts.Select(p => new
+                {
+                    p.IdModelSanPham,
+                    p.TenModel,
+                    p.TenSanPham,
+                    p.TenThuongHieu,
+                    p.GiaBan,
+                    p.GiaGoc,
+                    p.HinhAnh,
+                    p.SoLuongTon,
+                    p.Mau,
+                    p.IdThuongHieu,
+                    p.IdKhuyenMai,
+                    p.MaKM,
+                    p.LoaiGiam,
+                    p.GiaTriKhuyenMai,
+                    GiaSauGiam = p.GiaSauGiam,
+                    PhanTramGiam = p.LoaiGiam == "Phần trăm"
+                        ? p.GiaTriKhuyenMai
+                        : Math.Round((p.GiaTriKhuyenMai / p.GiaBan) * 100, 1)
+                }).ToList();
+
+                return Json(productsWithDiscount);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
+        }
     }
 
 

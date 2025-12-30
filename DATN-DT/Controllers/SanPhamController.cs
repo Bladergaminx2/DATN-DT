@@ -173,6 +173,11 @@ namespace DATN_DT.Controllers
                 if (thuongHieu == null)
                     return BadRequest(new { IdThuongHieu = "Thương hiệu không tồn tại!" });
 
+                // Kiểm tra tồn tại
+                var existingSanPham = await _sanPhamService.GetSanPhamById(id);
+                if (existingSanPham == null)
+                    return NotFound(new { Message = $"Không tìm thấy sản phẩm với ID={id}!" });
+
                 // Gán ID và chuẩn hóa
                 sanPham.IdSanPham = id;
                 sanPham.MaSanPham = sanPham.MaSanPham.Trim();
@@ -188,11 +193,6 @@ namespace DATN_DT.Controllers
                 {
                     sanPham.GiaNiemYet = sanPham.GiaGoc;
                 }
-
-                // Kiểm tra tồn tại
-                var existingSanPham = await _sanPhamService.GetSanPhamById(id);
-                if (existingSanPham == null)
-                    return NotFound(new { Message = $"Không tìm thấy sản phẩm với ID={id}!" });
 
                 // Kiểm tra trùng mã sản phẩm (trừ chính nó)
                 var allSanPhams = await _sanPhamService.GetAllSanPhams();

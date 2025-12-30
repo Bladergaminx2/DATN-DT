@@ -134,11 +134,11 @@
                         <td class="discount-value">
                             @if (item.LoaiGiam == "Phần trăm")
                             {
-                                <span>@item.GiaTri%</span>
+                                <span>@(item.GiaTri.HasValue ? item.GiaTri.Value.ToString("0.##") : "0")%</span>
                             }
                             else
                             {
-                                <span>@item.GiaTri?.ToString("N0") ₫</span>
+                                <span>@(item.GiaTri?.ToString("N0") ?? "0") ₫</span>
                             }
                         </td>
                         <td>@item.LoaiGiam</td>
@@ -222,8 +222,9 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Giá Trị <span class="text-danger">*</span></label>
-                                    <input type="number" id="GiaTri" class="form-control" placeholder="Nhập giá trị giảm" min="1" />
+                                    <input type="number" id="GiaTri" class="form-control" placeholder="Nhập giá trị giảm" min="0.01" step="0.01" />
                                     <small id="errorGiaTri" class="text-danger d-none"></small>
+                                    <small class="text-muted" id="giaTriHint">Với phần trăm: 0-100, với số tiền: > 0</small>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -314,8 +315,9 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Giá Trị <span class="text-danger">*</span></label>
-                                    <input type="number" id="EditGiaTri" class="form-control" min="1" />
+                                    <input type="number" id="EditGiaTri" class="form-control" min="0.01" step="0.01" />
                                     <small id="errorEditGiaTri" class="text-danger d-none"></small>
+                                    <small class="text-muted">Với phần trăm: 0-100, với số tiền: > 0</small>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -380,16 +382,73 @@
             el.classList.remove("d-none");
         }
 
+        // Cập nhật hint và validation cho giá trị khi thay đổi loại giảm
+        function updateGiaTriValidation() {
+            const loaiGiam = document.getElementById('LoaiGiam').value;
+            const giaTriInput = document.getElementById('GiaTri');
+            const giaTriHint = document.getElementById('giaTriHint');
+            
+            if (loaiGiam === 'Phần trăm') {
+                giaTriInput.max = '100';
+                giaTriInput.min = '0.01';
+                giaTriInput.step = '0.01';
+                if (giaTriHint) giaTriHint.textContent = 'Với phần trăm: 0-100';
+            } else if (loaiGiam === 'Số tiền') {
+                giaTriInput.removeAttribute('max');
+                giaTriInput.min = '1000'; // Tối thiểu 1000đ
+                giaTriInput.step = '1000';
+                if (giaTriHint) giaTriHint.textContent = 'Với số tiền: tối thiểu 1,000₫';
+            } else {
+                giaTriInput.removeAttribute('max');
+                if (giaTriHint) giaTriHint.textContent = 'Với phần trăm: 0-100, với số tiền: > 0';
+            }
+        }
+
+        // Tương tự cho form edit
+        function updateEditGiaTriValidation() {
+            const loaiGiam = document.getElementById('EditLoaiGiam').value;
+            const giaTriInput = document.getElementById('EditGiaTri');
+            
+            if (loaiGiam === 'Phần trăm') {
+                giaTriInput.max = '100';
+                giaTriInput.min = '0.01';
+                giaTriInput.step = '0.01';
+            } else if (loaiGiam === 'Số tiền') {
+                giaTriInput.removeAttribute('max');
+                giaTriInput.min = '1000';
+                giaTriInput.step = '1000';
+            } else {
+                giaTriInput.removeAttribute('max');
+            }
+        }
+
         // --- Thêm Khuyến Mãi ---
         document.getElementById("createForm").addEventListener("submit", async (e) => {
             e.preventDefault();
+
+            // Validate giá trị theo loại giảm
+            const giaTriValue = parseFloat(GiaTri.value);
+            if (isNaN(giaTriValue) || giaTriValue <= 0) {
+                showError("errorGiaTri", "Giá trị phải lớn hơn 0!");
+                return;
+            }
+
+            if (LoaiGiam.value === "Phần trăm" && giaTriValue > 100) {
+                showError("errorGiaTri", "Giá trị phần trăm không được vượt quá 100%!");
+                return;
+            }
+
+            if (LoaiGiam.value === "Số tiền" && giaTriValue < 1000) {
+                showError("errorGiaTri", "Giá trị số tiền tối thiểu là 1,000₫!");
+                return;
+            }
 
             const km = {
                 MaKM: MaKM.value.trim(),
                 MoTaKhuyenMai: MoTaKhuyenMai.value.trim() || null,
                 LoaiGiam: LoaiGiam.value,
                 ApDungVoi: ApDungVoi.value,
-                GiaTri: parseFloat(GiaTri.value) || 0,
+                GiaTri: giaTriValue,
                 NgayBatDau: NgayBatDau.value,
                 NgayKetThuc: NgayKetThuc.value,
                 TrangThaiKM: TrangThaiKM.value
@@ -450,6 +509,23 @@
         document.getElementById("editForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
+            // Validate giá trị theo loại giảm
+            const giaTriValue = parseFloat(EditGiaTri.value);
+            if (isNaN(giaTriValue) || giaTriValue <= 0) {
+                showError("errorEditGiaTri", "Giá trị phải lớn hơn 0!");
+                return;
+            }
+
+            if (EditLoaiGiam.value === "Phần trăm" && giaTriValue > 100) {
+                showError("errorEditGiaTri", "Giá trị phần trăm không được vượt quá 100%!");
+                return;
+            }
+
+            if (EditLoaiGiam.value === "Số tiền" && giaTriValue < 1000) {
+                showError("errorEditGiaTri", "Giá trị số tiền tối thiểu là 1,000₫!");
+                return;
+            }
+
             const id = EditIdKhuyenMai.value;
             const km = {
                 IdKhuyenMai: parseInt(id),
@@ -457,7 +533,7 @@
                 MoTaKhuyenMai: EditMoTaKhuyenMai.value.trim() || null,
                 LoaiGiam: EditLoaiGiam.value,
                 ApDungVoi: EditApDungVoi.value,
-                GiaTri: parseFloat(EditGiaTri.value) || 0,
+                GiaTri: giaTriValue,
                 NgayBatDau: EditNgayBatDau.value,
                 NgayKetThuc: EditNgayKetThuc.value,
                 TrangThaiKM: EditTrangThaiKM.value
@@ -532,6 +608,15 @@
         editModal.addEventListener("hidden.bs.modal", () => {
             editForm.reset();
             document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
+        });
+
+        // Thêm event listeners cho loại giảm
+        document.getElementById('LoaiGiam').addEventListener('change', updateGiaTriValidation);
+        document.getElementById('EditLoaiGiam').addEventListener('change', updateEditGiaTriValidation);
+
+        // Khởi tạo validation khi load trang
+        document.addEventListener('DOMContentLoaded', function() {
+            updateGiaTriValidation();
         });
     </script>
 </body>
