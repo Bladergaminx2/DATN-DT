@@ -295,6 +295,48 @@ namespace DATN_DT.Controllers
             }
         }
 
+        // API để xóa IMEI
+        [HttpPost]
+        [Route("ProductOverView/DeleteImei/{id}")]
+        public async Task<IActionResult> DeleteImei(int id)
+        {
+            try
+            {
+                var imei = await _context.Imeis.FindAsync(id);
+                if (imei == null)
+                {
+                    return NotFound(new { message = "Không tìm thấy IMEI để xóa!" });
+                }
+
+                var modelSanPhamId = imei.IdModelSanPham;
+
+                // Kiểm tra IMEI có đang được sử dụng trong hóa đơn không
+                bool usedInHoaDon = await _context.HoaDonChiTiets
+                    .AnyAsync(hdct => hdct.IdImei == id);
+
+                if (usedInHoaDon)
+                {
+                    return BadRequest(new { message = "Không thể xóa IMEI này vì đã được sử dụng trong hóa đơn!" });
+                }
+
+                // Xóa IMEI
+                _context.Imeis.Remove(imei);
+                await _context.SaveChangesAsync();
+
+                // Cập nhật tồn kho
+                if (modelSanPhamId.HasValue)
+                {
+                    await UpdateProductStock(modelSanPhamId.Value);
+                }
+
+                return Ok(new { message = "Xóa IMEI thành công!" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Lỗi khi xóa IMEI: {ex.Message}" });
+            }
+        }
+
         // API để lấy số lượng tồn kho
         [HttpGet]
         public async Task<IActionResult> GetProductStock(int productId)

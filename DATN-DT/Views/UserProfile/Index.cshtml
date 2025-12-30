@@ -25,13 +25,6 @@
             max-width: 1200px;
         }
 
-        h2 {
-            text-align: center;
-            margin-bottom: 30px;
-            color: #f5f5f5;
-            font-weight: 600;
-        }
-
         .card {
             background-color: #1e1e2a;
             border: 1px solid #2b2b33;
@@ -45,7 +38,6 @@
             border-radius: 10px 10px 0 0;
             padding: 30px 20px;
             text-align: center;
-            margin-bottom: 30px;
         }
 
         .profile-avatar {
@@ -59,6 +51,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
+            position: relative;
         }
 
             .profile-avatar img {
@@ -72,21 +66,55 @@
                 color: #4a90e2;
             }
 
-        .profile-info {
-            text-align: center;
+            .profile-avatar:hover {
+                opacity: 0.8;
+            }
+
+        .avatar-upload-label {
+            display: block;
+            margin-top: 10px;
+            color: #4a90e2;
+            cursor: pointer;
+            font-size: 0.9rem;
         }
+
+            .avatar-upload-label:hover {
+                color: #357ab8;
+            }
 
         .profile-name {
-            font-size: 1.5rem;
+            color: #ffffff !important;
+            font-size: 1.8rem;
             font-weight: 600;
-            color: #fff;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
         }
 
-        .profile-role {
-            color: #4a90e2;
-            font-size: 1rem;
-            font-weight: 500;
+        .nav-tabs {
+            border-bottom: 2px solid #2b2b33;
+        }
+
+        .nav-tabs .nav-link {
+            color: #aaa;
+            border: none;
+            border-bottom: 3px solid transparent;
+            padding: 15px 25px;
+            background: transparent;
+        }
+
+            .nav-tabs .nav-link:hover {
+                color: #fff;
+                border-bottom-color: #4a90e2;
+            }
+
+            .nav-tabs .nav-link.active {
+                color: #4a90e2;
+                background: transparent;
+                border-bottom-color: #4a90e2;
+                font-weight: 600;
+            }
+
+        .tab-content {
+            padding: 30px;
         }
 
         .form-control {
@@ -104,15 +132,6 @@
                 color: white;
             }
 
-            .form-control::placeholder {
-                color: #888;
-                opacity: 1;
-            }
-
-            .form-control:focus::placeholder {
-                color: transparent;
-            }
-
         .form-label {
             display: flex;
             align-items: center;
@@ -124,71 +143,16 @@
 
         .required-star {
             color: #ff4d4d;
-            font-size: 1.1em;
-        }
-
-        .text-danger {
-            color: #ff4d4d !important;
-            font-size: 0.875em;
-            margin-top: 5px;
-            display: block;
-        }
-
-        .form-text {
-            font-size: 0.875em;
-            margin-top: 5px;
-            color: #aaa !important;
         }
 
         .btn-primary {
             background-color: #4a90e2;
-            color: white;
             border: none;
-            border-radius: 8px;
-            padding: 10px 25px;
-            font-weight: 500;
-            transition: all 0.3s;
         }
 
             .btn-primary:hover {
                 background-color: #357ab8;
-                transform: translateY(-2px);
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             }
-
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 25px;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-
-            .btn-secondary:hover {
-                background-color: #5a6268;
-                transform: translateY(-2px);
-            }
-
-        .btn-success {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 25px;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-
-            .btn-success:hover {
-                background-color: #218838;
-                transform: translateY(-2px);
-            }
-
-        .stats-section {
-            margin-top: 40px;
-        }
 
         .stats-box {
             background-color: #2b2b33;
@@ -210,22 +174,123 @@
                 font-weight: 600;
             }
 
-        .alert-success {
-            background-color: rgba(40, 167, 69, 0.2);
-            border-color: rgba(40, 167, 69, 0.5);
-            color: #d4edda;
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1050;
-            min-width: 300px;
-            display: none;
+        .order-card {
+            background-color: #2b2b33;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #4a90e2;
+            overflow: hidden;
         }
 
-        .alert-danger {
-            background-color: rgba(220, 53, 69, 0.2);
-            border-color: rgba(220, 53, 69, 0.5);
-            color: #f8d7da;
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: #2b2b33;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .order-header:hover {
+            background-color: #36363f;
+        }
+
+        .order-header * {
+            color: #ffffff !important;
+        }
+
+        .order-content {
+            padding: 20px;
+            background-color: #1e1e2a;
+            border-top: 1px solid #444;
+        }
+
+        .order-status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-waiting {
+            background-color: rgba(255, 193, 7, 0.2);
+            color: #ffc107 !important;
+        }
+
+        .status-processing {
+            background-color: rgba(0, 123, 255, 0.2);
+            color: #007bff !important;
+        }
+
+        .status-completed {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: #28a745 !important;
+        }
+
+        .order-item {
+            display: flex;
+            gap: 15px;
+            padding: 10px;
+            background-color: #2b2b33;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .order-item * {
+            color: #ffffff !important;
+        }
+
+        .order-item img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        .status-group {
+            margin-bottom: 30px;
+        }
+
+        .status-group-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #ffffff !important;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4a90e2;
+        }
+
+        .accordion-button {
+            background-color: #2b2b33;
+            color: #ffffff !important;
+            border: none;
+        }
+
+        .accordion-button:not(.collapsed) {
+            background-color: #36363f;
+            color: #ffffff !important;
+        }
+
+        .accordion-button:focus {
+            box-shadow: none;
+            border-color: #4a90e2;
+        }
+
+        .accordion-body {
+            background-color: #1e1e2a;
+            color: #ffffff !important;
+        }
+
+        .accordion-body * {
+            color: #ffffff !important;
+        }
+
+        .text-muted {
+            color: #aaa !important;
+        }
+
+        .alert {
             position: fixed;
             top: 20px;
             right: 20px;
@@ -257,111 +322,9 @@
         }
 
         @@keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-
-        .info-row {
-            padding: 12px 0;
-            border-bottom: 1px solid #2b2b33;
-        }
-
-            .info-row:last-child {
-                border-bottom: none;
-            }
-
-        .info-label {
-            color: #aaa;
-            font-weight: 500;
-        }
-
-        .info-value {
-            color: #fff;
-            font-weight: 400;
-        }
-
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            display: inline-block;
-        }
-
-        .status-active {
-            background-color: rgba(40, 167, 69, 0.2);
-            color: #28a745;
-            border: 1px solid rgba(40, 167, 69, 0.3);
-        }
-
-        .status-inactive {
-            background-color: rgba(220, 53, 69, 0.2);
-            color: #dc3545;
-            border: 1px solid rgba(220, 53, 69, 0.3);
-        }
-
-        .date-format {
-            color: #4a90e2;
-            font-weight: 500;
-        }
-
-        .modal-content {
-            background-color: #2b2b33;
-            color: white;
-            border-radius: 12px;
-            border: 1px solid #444;
-        }
-
-        .modal-header {
-            border-bottom: 1px solid #444;
-            padding: 20px;
-        }
-
-        .modal-footer {
-            border-top: 1px solid #444;
-            padding: 15px 20px;
-        }
-
-        .section-title {
-            color: #4a90e2;
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #2b2b33;
-        }
-
-        .avatar-upload {
-            position: relative;
-            display: inline-block;
-        }
-
-            .avatar-upload input[type="file"] {
-                position: absolute;
-                left: 0;
-                top: 0;
-                opacity: 0;
-                width: 100%;
-                height: 100%;
-                cursor: pointer;
-            }
-
-        .avatar-upload-label {
-            display: block;
-            margin-top: 10px;
-            color: #4a90e2;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-
-            .avatar-upload-label:hover {
-                color: #357ab8;
-            }
 
         .point-badge {
             background-color: rgba(255, 193, 7, 0.2);
@@ -369,8 +332,147 @@
             padding: 8px 15px;
             border-radius: 20px;
             font-weight: 600;
-            font-size: 1.1rem;
             display: inline-block;
+        }
+
+        .address-card {
+            background-color: #2b2b33;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #4a90e2;
+            transition: transform 0.2s;
+        }
+
+        .address-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .address-card.default {
+            border-left-color: #ffc107;
+            background-color: rgba(255, 193, 7, 0.1);
+        }
+
+        .address-card .card-title {
+            color: #fff;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .address-card .card-text {
+            color: #aaa;
+            margin-bottom: 8px;
+        }
+
+        .address-card .badge {
+            background-color: rgba(255, 193, 7, 0.3);
+            color: #ffc107;
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+        }
+
+        .modal-content {
+            background-color: #1e1e2a;
+            border: 1px solid #2b2b33;
+        }
+
+        .modal-header {
+            border-bottom: 1px solid #2b2b33;
+        }
+
+        .modal-title {
+            color: white;
+        }
+
+        .modal-footer {
+            border-top: 1px solid #2b2b33;
+        }
+
+        .btn-outline-primary {
+            border-color: #4a90e2;
+            color: #4a90e2;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: #4a90e2;
+            border-color: #4a90e2;
+            color: white;
+        }
+
+        .btn-outline-danger {
+            border-color: #dc3545;
+            color: #dc3545;
+        }
+
+        .btn-outline-danger:hover {
+            background-color: #dc3545;
+            border-color: #dc3545;
+            color: white;
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            border-color: #ffc107;
+            color: #12121d;
+        }
+
+        .btn-warning:hover {
+            background-color: #e0a800;
+            border-color: #e0a800;
+        }
+
+        .nav-pills .nav-link {
+            color: #aaa;
+            background-color: #2b2b33;
+            border: 1px solid #444;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: #4a90e2;
+            color: white;
+            border-color: #4a90e2;
+        }
+
+        .nav-pills .nav-link:hover {
+            color: #fff;
+            background-color: #357ab8;
+            border-color: #357ab8;
+        }
+
+        .order-detail-item {
+            background-color: #2b2b33;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .status-0 {
+            background-color: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
+        .status-1 {
+            background-color: rgba(0, 123, 255, 0.2);
+            color: #007bff;
+        }
+
+        .status-2 {
+            background-color: rgba(23, 162, 184, 0.2);
+            color: #17a2b8;
+        }
+
+        .status-3 {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+        }
+
+        .status-4 {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
         }
     </style>
 </head>
@@ -380,7 +482,7 @@
         <div class="spinner"></div>
     </div>
 
-    <!-- Success Alert -->
+    <!-- Alerts -->
     <div class="alert alert-success alert-dismissible fade show" id="successAlert" role="alert">
         <div class="d-flex align-items-center">
             <i class="bi bi-check-circle-fill me-2"></i>
@@ -389,7 +491,6 @@
         <button type="button" class="btn-close btn-close-white" onclick="hideAlert('successAlert')"></button>
     </div>
 
-    <!-- Error Alert -->
     <div class="alert alert-danger alert-dismissible fade show" id="errorAlert" role="alert">
         <div class="d-flex align-items-center">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>
@@ -399,21 +500,25 @@
     </div>
 
     <div class="container">
+        <!-- Back Button -->
+        <div class="mb-3">
+            <button type="button" class="btn btn-primary" onclick="goToHomePage()">
+                <i class="bi bi-arrow-left me-2"></i>Quay lại trang mua hàng
+            </button>
+        </div>
+
         <div class="card">
             <!-- Profile Header -->
             <div class="profile-header">
-                <div class="avatar-upload">
-                    <div class="profile-avatar" id="avatarContainer">
-                        <i class="bi bi-person-circle" id="avatarIcon"></i>
-                    </div>
-                    <label class="avatar-upload-label">
-                        <i class="bi bi-camera me-1"></i>Thay đổi ảnh
-                        <input type="file" id="avatarInput" accept="image/*" style="display: none;">
-                    </label>
+                <div class="profile-avatar" id="avatarContainer" onclick="document.getElementById('avatarInput').click()">
+                    <i class="bi bi-person-circle" id="avatarIcon"></i>
                 </div>
-                <div class="profile-info">
-                    <h1 class="profile-name" id="profileName">Khách hàng</h1>
-                    <div class="profile-role">Khách hàng</div>
+                <label class="avatar-upload-label" for="avatarInput">
+                    <i class="bi bi-camera me-1"></i>Thay đổi ảnh
+                </label>
+                <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+                <div class="mt-3">
+                    <h1 class="profile-name" id="profileName" style="color: #ffffff; font-size: 1.8rem; font-weight: 600; margin-bottom: 10px;">Khách hàng</h1>
                     <div class="mt-3">
                         <span class="point-badge">
                             <i class="bi bi-star-fill me-1"></i>Điểm tích lũy: <span id="diemTichLuy">0</span>
@@ -422,555 +527,428 @@
                 </div>
             </div>
 
-            <div class="card-body">
-                <form id="profileForm">
-                    <div class="row">
-                        <!-- Left Column: Personal Information -->
-                        <div class="col-md-6">
-                            <h3 class="section-title">
-                                <i class="bi bi-person-vcard me-2"></i>Thông tin cá nhân
-                            </h3>
+            <!-- Tabs Navigation -->
+            <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button" role="tab">
+                        <i class="bi bi-person-vcard me-2"></i>Thông tin cá nhân
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="account-tab" data-bs-toggle="tab" data-bs-target="#account" type="button" role="tab">
+                        <i class="bi bi-shield-lock me-2"></i>Tài khoản & Bảo mật
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="address-tab" data-bs-toggle="tab" data-bs-target="#address" type="button" role="tab">
+                        <i class="bi bi-geo-alt me-2"></i>Địa chỉ giao hàng
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button" role="tab">
+                        <i class="bi bi-clock-history me-2"></i>Lịch sử đơn hàng
+                    </button>
+                </li>
+            </ul>
 
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">
-                                            Họ và tên <span class="required-star">*</span>
-                                        </label>
-                                        <input type="text" id="HoTenKhachHang" class="form-control"
-                                               required maxlength="100" />
-                                        <div id="errorHoTenKhachHang" class="text-danger d-none"></div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">
-                                            Số điện thoại <span class="required-star">*</span>
-                                        </label>
-                                        <input type="tel" id="SdtKhachHang" class="form-control"
-                                               required maxlength="15" />
-                                        <div id="errorSdtKhachHang" class="text-danger d-none"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Email</label>
-                                <input type="email" id="EmailKhachHang" class="form-control"
-                                       maxlength="100" />
-                                <div id="errorEmailKhachHang" class="text-danger d-none"></div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Địa chỉ</label>
-                                <textarea id="DiaChiKhachHang" class="form-control" rows="3"
-                                          maxlength="500"></textarea>
-                                <div id="errorDiaChiKhachHang" class="text-danger d-none"></div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Ngày sinh</label>
-                                        <input type="date" id="NgaySinh" class="form-control" />
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Giới tính</label>
-                                        <select id="GioiTinh" class="form-control">
-                                            <option value="">Chọn giới tính</option>
-                                            <option value="Nam">Nam</option>
-                                            <option value="Nữ">Nữ</option>
-                                            <option value="Khác">Khác</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Right Column: Account Information -->
-                        <div class="col-md-6">
-                            <h3 class="section-title">
-                                <i class="bi bi-shield-lock me-2"></i>Thông tin tài khoản
-                            </h3>
-
-                            <div class="info-row">
-                                <div class="row">
-                                    <div class="col-md-4 info-label">Mã khách hàng:</div>
-                                    <div class="col-md-8 info-value" id="idKhachHang">Đang tải...</div>
-                                </div>
-                            </div>
-
-                            <div class="info-row">
-                                <div class="row">
-                                    <div class="col-md-4 info-label">Trạng thái:</div>
-                                    <div class="col-md-8 info-value">
-                                        <span class="status-badge status-active" id="trangThaiKhachHang">Hoạt động</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Change Password Section -->
-                            <div class="mt-4">
-                                <h4 class="section-title">
-                                    <i class="bi bi-key me-2"></i>Đổi mật khẩu
-                                </h4>
-
+            <!-- Tab Content -->
+            <div class="tab-content" id="profileTabContent">
+                <!-- Tab 1: Thông tin cá nhân -->
+                <div class="tab-pane fade show active" id="personal" role="tabpanel">
+                    <form id="profileForm">
+                        <div class="row">
+                            <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Mật khẩu hiện tại</label>
-                                    <input type="password" id="CurrentPassword" class="form-control" />
-                                    <div id="errorCurrentPassword" class="text-danger d-none"></div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Mật khẩu mới</label>
-                                            <input type="password" id="NewPassword" class="form-control" />
-                                            <div id="errorNewPassword" class="text-danger d-none"></div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Xác nhận mật khẩu</label>
-                                            <input type="password" id="ConfirmPassword" class="form-control" />
-                                            <div id="errorConfirmPassword" class="text-danger d-none"></div>
-                                        </div>
-                                    </div>
+                                    <label class="form-label">
+                                        Họ và tên <span class="required-star">*</span>
+                                    </label>
+                                    <input type="text" id="HoTenKhachHang" class="form-control" required maxlength="100" />
+                                    <div id="errorHoTenKhachHang" class="text-danger d-none"></div>
                                 </div>
                             </div>
-
-                            <!-- Statistics Section -->
-                            <div class="stats-section">
-                                <h4 class="section-title">
-                                    <i class="bi bi-bar-chart me-2"></i>Thống kê
-                                </h4>
-
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="stats-box">
-                                            <div class="stat-label">Tổng đơn hàng</div>
-                                            <div class="stat-value" id="totalOrders">0</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="stats-box">
-                                            <div class="stat-label">Đang xử lý</div>
-                                            <div class="stat-value" id="processingOrders">0</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="stats-box">
-                                            <div class="stat-label">Thành công</div>
-                                            <div class="stat-value" id="completedOrders">0</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="stats-box">
-                                            <div class="stat-label">Tổng chi tiêu</div>
-                                            <div class="stat-value" id="totalSpent">0 ₫</div>
-                                        </div>
-                                    </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        Số điện thoại <span class="required-star">*</span>
+                                    </label>
+                                    <input type="tel" id="SdtKhachHang" class="form-control" required maxlength="15" />
+                                    <div id="errorSdtKhachHang" class="text-danger d-none"></div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Form Buttons -->
-                    <div class="row mt-4">
-                        <div class="col-md-12">
-                            <div class="d-flex justify-content-between">
-                                <button type="button" class="btn btn-secondary" onclick="cancelChanges()">
-                                    <i class="bi bi-x-circle me-1"></i>Hủy thay đổi
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" id="EmailKhachHang" class="form-control" maxlength="100" />
+                            <div id="errorEmailKhachHang" class="text-danger d-none"></div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Ngày sinh</label>
+                                    <input type="date" id="NgaySinh" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Giới tính</label>
+                                    <select id="GioiTinh" class="form-control">
+                                        <option value="">Chọn giới tính</option>
+                                        <option value="Nam">Nam</option>
+                                        <option value="Nữ">Nữ</option>
+                                        <option value="Khác">Khác</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="button" class="btn btn-primary" onclick="saveProfile()">
+                                <i class="bi bi-save me-1"></i>Lưu thông tin
+                            </button>
+                            <button type="button" class="btn btn-secondary ms-2" onclick="cancelChanges()">
+                                <i class="bi bi-x-circle me-1"></i>Hủy
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Tab 2: Tài khoản & Bảo mật -->
+                <div class="tab-pane fade" id="account" role="tabpanel">
+                    <div class="mb-4">
+                        <h5><i class="bi bi-envelope me-2"></i>Quản lý Email</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <div class="input-group">
+                                <input type="email" id="EmailKhachHangDisplay" class="form-control" readonly style="background-color: #2b2b33; color: #aaa; cursor: not-allowed;" />
+                                <button type="button" class="btn btn-outline-primary" onclick="openChangeEmailModal()">
+                                    <i class="bi bi-pencil-square me-1"></i>Đổi email
                                 </button>
-                                <div>
-                                    <button type="button" class="btn btn-success" onclick="saveProfile()">
-                                        <i class="bi bi-save me-1"></i>Lưu thông tin
-                                    </button>
-                                    <button type="button" class="btn btn-primary ms-2" onclick="changePassword()">
-                                        <i class="bi bi-key me-1"></i>Đổi mật khẩu
-                                    </button>
-                                </div>
                             </div>
                         </div>
                     </div>
-                </form>
+
+                    <div>
+                        <h5><i class="bi bi-key me-2"></i>Đổi mật khẩu</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Mật khẩu hiện tại</label>
+                            <input type="password" id="CurrentPassword" class="form-control" />
+                            <div id="errorCurrentPassword" class="text-danger d-none"></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Mật khẩu mới</label>
+                                    <input type="password" id="NewPassword" class="form-control" />
+                                    <div id="errorNewPassword" class="text-danger d-none"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Xác nhận mật khẩu</label>
+                                    <input type="password" id="ConfirmPassword" class="form-control" />
+                                    <div id="errorConfirmPassword" class="text-danger d-none"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="changePassword()">
+                            <i class="bi bi-key me-1"></i>Đổi mật khẩu
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Địa chỉ giao hàng -->
+                <div class="tab-pane fade" id="address" role="tabpanel">
+                    <div id="addressList" class="row">
+                        <div class="col-12">
+                        <p class="text-muted">Đang tải địa chỉ...</p>
+                    </div>
+                    </div>
+                    <button type="button" class="btn btn-primary mt-3" onclick="openAddAddressModal()">
+                        <i class="bi bi-plus-circle me-1"></i>Thêm địa chỉ mới
+                    </button>
+                </div>
+
+                <!-- Tab 4: Lịch sử đơn hàng -->
+                <div class="tab-pane fade" id="orders" role="tabpanel">
+                    <!-- Filter Tabs -->
+                    <ul class="nav nav-pills mb-4" id="orderStatusTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="all-orders-tab" data-status="all" type="button">
+                                <i class="bi bi-list-ul me-1"></i>Tất cả đơn hàng
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="pending-orders-tab" data-status="0" type="button">
+                                <i class="bi bi-hourglass-split me-1"></i>Chờ xác nhận
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="confirmed-orders-tab" data-status="1" type="button">
+                                <i class="bi bi-check-circle me-1"></i>Đã xác nhận
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="shipping-orders-tab" data-status="2" type="button">
+                                <i class="bi bi-truck me-1"></i>Đang vận chuyển
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="completed-orders-tab" data-status="3" type="button">
+                                <i class="bi bi-check2-circle me-1"></i>Giao hàng thành công
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="cancelled-orders-tab" data-status="4" type="button">
+                                <i class="bi bi-x-circle me-1"></i>Hủy đơn hàng
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Orders List -->
+                    <div id="ordersList">
+                        <p class="text-muted">Đang tải đơn hàng...</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <script>
-        // ====== UTILITY FUNCTIONS ======
-        function showLoading() {
-            document.getElementById('loadingOverlay').style.display = 'flex';
-        }
+    <!-- Modal Đổi Email -->
+    <div class="modal fade" id="changeEmailModal" tabindex="-1" aria-labelledby="changeEmailModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background-color: #1e1e2a; border: 1px solid #2b2b33;">
+                <div class="modal-header" style="border-bottom: 1px solid #2b2b33;">
+                    <h5 class="modal-title" id="changeEmailModalLabel" style="color: white;">
+                        <i class="bi bi-envelope me-2"></i>Đổi email
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="changeEmailForm">
+                        <div class="mb-3">
+                            <label class="form-label">Email hiện tại</label>
+                            <input type="email" id="currentEmail" class="form-control" readonly style="background-color: #2b2b33; color: #aaa; cursor: not-allowed;" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Email mới <span class="required-star">*</span>
+                            </label>
+                            <input type="email" id="newEmail" class="form-control" placeholder="Nhập email mới" />
+                            <div id="errorNewEmail" class="text-danger d-none mt-1"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Mật khẩu xác nhận <span class="required-star">*</span>
+                            </label>
+                            <input type="password" id="confirmPasswordForEmail" class="form-control" placeholder="Nhập mật khẩu để xác nhận" />
+                            <div id="errorConfirmPasswordForEmail" class="text-danger d-none mt-1"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid #2b2b33;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" id="confirmChangeEmailBtn" onclick="confirmChangeEmail()">
+                        <i class="bi bi-check-circle me-1"></i>Xác nhận đổi email
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        function hideLoading() {
-            document.getElementById('loadingOverlay').style.display = 'none';
-        }
+    <!-- Modal Thêm địa chỉ -->
+    <div class="modal fade" id="addAddressModal" tabindex="-1" aria-labelledby="addAddressModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addAddressModalLabel">
+                        <i class="bi bi-plus-circle me-2"></i>Thêm địa chỉ mới
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addAddressForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        Tên người nhận <span class="required-star">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="tennguoinhan" required>
+                                    <div id="errorTenNguoiNhan" class="text-danger d-none mt-1"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        Số điện thoại <span class="required-star">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="sdtnguoinhan" required>
+                                    <div id="errorSdtNguoiNhan" class="text-danger d-none mt-1"></div>
+                                </div>
+                            </div>
+                        </div>
 
-        function showAlert(type, message) {
-            if (type === 'success') {
-                document.getElementById('successMessage').textContent = message;
-                document.getElementById('successAlert').style.display = 'block';
-                setTimeout(() => hideAlert('successAlert'), 5000);
-            } else {
-                document.getElementById('errorMessage').textContent = message;
-                document.getElementById('errorAlert').style.display = 'block';
-            }
-        }
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        Tỉnh/Thành phố <span class="required-star">*</span>
+                                    </label>
+                                    <select class="form-control" id="selectTinh" required>
+                                        <option value="">Chọn Tỉnh/Thành</option>
+                                    </select>
+                                    <div id="errorTinh" class="text-danger d-none mt-1"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        Quận/Huyện <span class="required-star">*</span>
+                                    </label>
+                                    <select class="form-control" id="selectQuan" required>
+                                        <option value="">Chọn Quận/Huyện</option>
+                                    </select>
+                                    <div id="errorQuan" class="text-danger d-none mt-1"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        Phường/Xã <span class="required-star">*</span>
+                                    </label>
+                                    <select class="form-control" id="selectPhuong" required>
+                                        <option value="">Chọn Phường/Xã</option>
+                                    </select>
+                                    <div id="errorPhuong" class="text-danger d-none mt-1"></div>
+                                </div>
+                            </div>
+                        </div>
 
-        function hideAlert(alertId) {
-            document.getElementById(alertId).style.display = 'none';
-        }
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Địa chỉ cụ thể <span class="required-star">*</span>
+                            </label>
+                            <textarea class="form-control" id="detailInput" rows="3" required></textarea>
+                            <div id="errorDiaChiCuThe" class="text-danger d-none mt-1"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" id="btnSaveAddress">
+                        <i class="bi bi-save me-1"></i>Lưu địa chỉ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        function showError(elementId, message) {
-            const element = document.getElementById(elementId);
-            element.textContent = message;
-            element.classList.remove('d-none');
-        }
+    <!-- Modal Sửa địa chỉ -->
+    <div class="modal fade" id="editAddressModal" tabindex="-1" aria-labelledby="editAddressModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editAddressModalLabel">
+                        <i class="bi bi-pencil-square me-2"></i>Sửa địa chỉ
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editAddressForm">
+                        <input type="hidden" id="editId">
+                        <input type="hidden" id="editTrangThai">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        Tên người nhận <span class="required-star">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="editTenNguoiNhan" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        Số điện thoại <span class="required-star">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="editSdtNguoiNhan" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        Tỉnh/Thành phố <span class="required-star">*</span>
+                                    </label>
+                                    <select class="form-control" id="editTinh" required>
+                                        <option value="">Chọn Tỉnh/Thành</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        Quận/Huyện <span class="required-star">*</span>
+                                    </label>
+                                    <select class="form-control" id="editQuan" required>
+                                        <option value="">Chọn Quận/Huyện</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        Phường/Xã <span class="required-star">*</span>
+                                    </label>
+                                    <select class="form-control" id="editPhuong" required>
+                                        <option value="">Chọn Phường/Xã</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
 
-        function hideError(elementId) {
-            const element = document.getElementById(elementId);
-            element.classList.add('d-none');
-        }
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Địa chỉ cụ thể <span class="required-star">*</span>
+                            </label>
+                            <textarea class="form-control" id="editDiaChiCuThe" rows="3" required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" id="btnUpdateAddress">
+                        <i class="bi bi-save me-1"></i>Cập nhật
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        function validatePhoneNumber(phone) {
-            const phoneRegex = /^(0|\+84)(3[2-9]|5[6|8|9]|7[0|6-9]|8[1-5]|9[0-9])\d{7}$/;
-            return phoneRegex.test(phone);
-        }
+    <!-- Modal Chi tiết hóa đơn -->
+    <div class="modal fade" id="orderDetailModal" tabindex="-1" aria-labelledby="orderDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="orderDetailModalLabel">
+                        <i class="bi bi-receipt me-2"></i>Chi tiết hóa đơn
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="orderDetailContent">
+                    <p class="text-muted">Đang tải chi tiết...</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        // ====== AVATAR UPLOAD ======
-        document.getElementById('avatarInput').addEventListener('change', function (e) {
-            const file = e.target.files[0];
-            if (file) {
-                uploadAvatar(file);
-            }
-        });
-
-        document.querySelector('.avatar-upload-label').addEventListener('click', function (e) {
-            e.preventDefault();
-            document.getElementById('avatarInput').click();
-        });
-
-        async function uploadAvatar(file) {
-            // Validate file
-            const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
-            const fileExtension = file.name.split('.').pop().toLowerCase();
-
-            if (!allowedExtensions.includes(fileExtension)) {
-                showAlert('error', 'Chỉ chấp nhận file ảnh (jpg, jpeg, png, gif)');
-                return;
-            }
-
-            if (file.size > 5 * 1024 * 1024) {
-                showAlert('error', 'Kích thước file không được vượt quá 5MB');
-                return;
-            }
-
-            showLoading();
-
-            const formData = new FormData();
-            formData.append('avatarFile', file);
-
-            try {
-                const response = await fetch('/UserProfile/UpdateAvatar', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    showAlert('success', data.message);
-                    // Update avatar image
-                    const avatarContainer = document.getElementById('avatarContainer');
-
-                    if (data.avatarUrl) {
-                        avatarContainer.innerHTML = `<img src="${data.avatarUrl}?t=${new Date().getTime()}" id="avatarImage" alt="Avatar">`;
-                    }
-                } else {
-                    showAlert('error', data.message || 'Lỗi khi upload ảnh');
-                }
-            } catch (error) {
-                showAlert('error', 'Lỗi kết nối đến server');
-            } finally {
-                hideLoading();
-            }
-        }
-
-        // ====== PROFILE FUNCTIONS ======
-        async function loadProfileData() {
-            try {
-                const response = await fetch('/UserProfile/GetProfileData');
-                const data = await response.json();
-
-                if (response.ok && data) {
-                    // Update form fields with loaded data
-                    document.getElementById('HoTenKhachHang').value = data.hoTenKhachHang || '';
-                    document.getElementById('SdtKhachHang').value = data.sdtKhachHang || '';
-                    document.getElementById('EmailKhachHang').value = data.emailKhachHang || '';
-
-                    // Update optional fields if they exist
-                    if (data.diaChiKhachHang !== undefined) {
-                        document.getElementById('DiaChiKhachHang').value = data.diaChiKhachHang || '';
-                    }
-
-                    if (data.ngaySinh !== undefined) {
-                        document.getElementById('NgaySinh').value = data.ngaySinh ? data.ngaySinh.split('T')[0] : '';
-                    }
-
-                    if (data.gioiTinh !== undefined) {
-                        document.getElementById('GioiTinh').value = data.gioiTinh || '';
-                    }
-
-                    // Update profile header
-                    document.getElementById('profileName').textContent = data.hoTenKhachHang || 'Khách hàng';
-
-                    if (data.diemTichLuy !== undefined) {
-                        document.getElementById('diemTichLuy').textContent = data.diemTichLuy || 0;
-                    }
-
-                    if (data.idKhachHang !== undefined) {
-                        document.getElementById('idKhachHang').textContent = data.idKhachHang;
-                    }
-
-                    if (data.trangThaiKhachHang !== undefined) {
-                        const statusElement = document.getElementById('trangThaiKhachHang');
-                        statusElement.textContent = data.trangThaiKhachHang;
-                        if (data.trangThaiKhachHang === "Hoạt động" || data.trangThaiKhachHang === "Active") {
-                            statusElement.className = 'status-badge status-active';
-                        } else {
-                            statusElement.className = 'status-badge status-inactive';
-                        }
-                    }
-
-                    // Update avatar if exists
-                    const avatarContainer = document.getElementById('avatarContainer');
-                    if (data.defaultImage) {
-                        avatarContainer.innerHTML = `<img src="${data.defaultImage}?t=${new Date().getTime()}" id="avatarImage" alt="Avatar">`;
-                    } else {
-                        avatarContainer.innerHTML = '<i class="bi bi-person-circle" id="avatarIcon"></i>';
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading profile data:', error);
-                showAlert('error', 'Không thể tải thông tin profile');
-            }
-        }
-
-        async function saveProfile() {
-            console.log('=== SAVE PROFILE START ===');
-
-            // Hide all errors
-            hideError('errorHoTenKhachHang');
-            hideError('errorSdtKhachHang');
-            hideError('errorEmailKhachHang');
-            hideError('errorDiaChiKhachHang');
-
-            const profileData = {
-                HoTenKhachHang: document.getElementById('HoTenKhachHang').value.trim(),
-                SdtKhachHang: document.getElementById('SdtKhachHang').value.trim(),
-                EmailKhachHang: document.getElementById('EmailKhachHang').value.trim() || null,
-                DiaChiKhachHang: document.getElementById('DiaChiKhachHang').value.trim() || null
-            };
-
-            console.log('Profile data:', profileData);
-
-            let isValid = true;
-
-            // Validate profile data
-            if (!profileData.HoTenKhachHang) {
-                showError('errorHoTenKhachHang', 'Họ và tên là bắt buộc');
-                isValid = false;
-            }
-
-            if (!profileData.SdtKhachHang) {
-                showError('errorSdtKhachHang', 'Số điện thoại là bắt buộc');
-                isValid = false;
-            } else if (!validatePhoneNumber(profileData.SdtKhachHang)) {
-                showError('errorSdtKhachHang', 'Số điện thoại không hợp lệ');
-                isValid = false;
-            }
-
-            if (!isValid) {
-                console.log('Validation failed');
-                return;
-            }
-
-            showLoading();
-
-            try {
-                const response = await fetch('/UserProfile/UpdateProfileData', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(profileData)
-                });
-
-                console.log('Profile response status:', response.status);
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    showAlert('success', data.message || 'Cập nhật thông tin thành công!');
-
-                    // Update displayed name
-                    document.getElementById('profileName').textContent = profileData.HoTenKhachHang;
-
-                    // Update other fields from response if available
-                    if (data.data) {
-                        if (data.data.DiemTichLuy !== undefined) {
-                            document.getElementById('diemTichLuy').textContent = data.data.DiemTichLuy;
-                        }
-                        if (data.data.TrangThaiKhachHang !== undefined) {
-                            const statusElement = document.getElementById('trangThaiKhachHang');
-                            statusElement.textContent = data.data.TrangThaiKhachHang;
-                            if (data.data.TrangThaiKhachHang === "Hoạt động" || data.data.TrangThaiKhachHang === "Active") {
-                                statusElement.className = 'status-badge status-active';
-                            } else {
-                                statusElement.className = 'status-badge status-inactive';
-                            }
-                        }
-                    }
-                } else {
-                    if (response.status === 400) {
-                        if (data.message) {
-                            showAlert('error', data.message);
-                        }
-                    } else if (response.status === 409) {
-                        if (data.message) {
-                            showAlert('error', data.message);
-                        }
-                    } else {
-                        showAlert('error', data.message || `Lỗi ${response.status}: ${response.statusText}`);
-                    }
-                }
-            } catch (error) {
-                console.error('Save profile error:', error);
-                showAlert('error', 'Lỗi kết nối đến server!');
-            } finally {
-                hideLoading();
-                console.log('=== SAVE PROFILE END ===');
-            }
-        }
-
-        async function changePassword() {
-            console.log('=== CHANGE PASSWORD START ===');
-
-            // Hide all errors
-            hideError('errorCurrentPassword');
-            hideError('errorNewPassword');
-            hideError('errorConfirmPassword');
-
-            const passwordData = {
-                CurrentPassword: document.getElementById('CurrentPassword').value,
-                NewPassword: document.getElementById('NewPassword').value,
-                ConfirmPassword: document.getElementById('ConfirmPassword').value
-            };
-
-            console.log('Password data:', passwordData);
-
-            let isValid = true;
-
-            // Validate password change
-            if (!passwordData.CurrentPassword) {
-                showError('errorCurrentPassword', 'Vui lòng nhập mật khẩu hiện tại');
-                isValid = false;
-            }
-
-            if (!passwordData.NewPassword) {
-                showError('errorNewPassword', 'Vui lòng nhập mật khẩu mới');
-                isValid = false;
-            } else if (passwordData.NewPassword.length < 6) {
-                showError('errorNewPassword', 'Mật khẩu mới phải có ít nhất 6 ký tự');
-                isValid = false;
-            }
-
-            if (!passwordData.ConfirmPassword) {
-                showError('errorConfirmPassword', 'Vui lòng xác nhận mật khẩu');
-                isValid = false;
-            } else if (passwordData.NewPassword !== passwordData.ConfirmPassword) {
-                showError('errorConfirmPassword', 'Mật khẩu xác nhận không khớp');
-                isValid = false;
-            }
-
-            if (!isValid) {
-                console.log('Validation failed');
-                return;
-            }
-
-            showLoading();
-
-            try {
-                const response = await fetch('/UserProfile/ChangePassword', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(passwordData)
-                });
-
-                console.log('Password response status:', response.status);
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    showAlert('success', data.message || 'Đổi mật khẩu thành công!');
-                    // Clear password fields
-                    document.getElementById('CurrentPassword').value = '';
-                    document.getElementById('NewPassword').value = '';
-                    document.getElementById('ConfirmPassword').value = '';
-                } else {
-                    if (response.status === 400) {
-                        if (data.CurrentPassword) {
-                            showError('errorCurrentPassword', data.CurrentPassword);
-                        }
-                        if (data.NewPassword) {
-                            showError('errorNewPassword', data.NewPassword);
-                        }
-                        showAlert('error', data.message || 'Đổi mật khẩu thất bại!');
-                    } else {
-                        showAlert('error', data.message || 'Lỗi khi đổi mật khẩu!');
-                    }
-                }
-            } catch (error) {
-                console.error('Change password error:', error);
-                showAlert('error', 'Lỗi kết nối đến server!');
-            } finally {
-                hideLoading();
-                console.log('=== CHANGE PASSWORD END ===');
-            }
-        }
-
-        function cancelChanges() {
-            if (confirm('Bạn có chắc chắn muốn hủy các thay đổi? Tất cả thông tin sẽ được khôi phục về giá trị ban đầu.')) {
-                loadProfileData();
-            }
-        }
-
-        // ====== INITIALIZATION ======
-        document.addEventListener('DOMContentLoaded', function () {
-            console.log('Profile page loaded');
-
-            // Load profile data on page load
-            loadProfileData();
-
-            // Auto-hide alerts after 5 seconds
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                setTimeout(() => {
-                    alert.style.display = 'none';
-                }, 5000);
-            });
-        });
-    </script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/userprofile.js" asp-append-version="true"></script>
 </body>
 </html>

@@ -727,6 +727,7 @@
         </div>
     </div>
 
+    <script src="~/js/site.js" asp-append-version="true"></script>
     <script>
         // ========== CÁC HÀM CƠ BẢN ==========
         function performSearch() {
@@ -1003,6 +1004,17 @@
             const modelId = document.getElementById('currentModelId').value;
 
             for (let file of files) {
+                // Validate image file using common validation function
+                const validationResult = validateImageFile(file, {
+                    allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+                    maxSizeInMB: 5
+                });
+
+                if (!validationResult.isValid) {
+                    alert(validationResult.error || 'File không hợp lệ');
+                    continue; // Skip this file and continue with next
+                }
+
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('idModelSanPham', modelId);
