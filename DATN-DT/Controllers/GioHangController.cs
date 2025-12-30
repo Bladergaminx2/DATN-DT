@@ -839,7 +839,6 @@ namespace DATN_DT.Controllers
             var ds = await _context.diachis
                 .AsNoTracking()
                 .Where(x => x.IdKhachHang == kh.IdKhachHang)
-                 // nếu bạn có cột này
                 // nếu bạn có cột này
                 .Select(x => new
                 {
