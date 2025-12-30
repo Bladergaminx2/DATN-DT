@@ -387,6 +387,48 @@ namespace DATN_DT.Controllers
         }
 
 
+        // API: Lấy số lượng sản phẩm trong giỏ hàng
+        [HttpGet("GetCartCount")]
+        public async Task<IActionResult> GetCartCount()
+        {
+            try
+            {
+                var khachHangEmail = GetCurrentKhachHangEmail();
+                
+                if (string.IsNullOrEmpty(khachHangEmail))
+                {
+                    // Nếu chưa đăng nhập, trả về 0
+                    return Ok(new { Success = true, Count = 0 });
+                }
+
+                var khachHang = await _context.KhachHangs
+                    .FirstOrDefaultAsync(kh => kh.EmailKhachHang == khachHangEmail);
+
+                if (khachHang == null)
+                {
+                    return Ok(new { Success = true, Count = 0 });
+                }
+
+                var gioHang = await _context.GioHangs
+                    .Include(gh => gh.GioHangChiTiets)
+                    .FirstOrDefaultAsync(gh => gh.IdKhachHang == khachHang.IdKhachHang);
+
+                if (gioHang == null || gioHang.GioHangChiTiets == null)
+                {
+                    return Ok(new { Success = true, Count = 0 });
+                }
+
+                // Tính tổng số lượng sản phẩm
+                var totalCount = gioHang.GioHangChiTiets.Sum(ghct => ghct.SoLuong);
+
+                return Ok(new { Success = true, Count = totalCount });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { Success = false, Count = 0, Message = ex.Message });
+            }
+        }
+
         // Helper: Lấy email khách hàng từ JWT token
         private string GetCurrentKhachHangEmail()
         {
