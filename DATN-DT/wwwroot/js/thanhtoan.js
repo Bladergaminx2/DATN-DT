@@ -161,13 +161,7 @@ function renderAddressListCheckout(addresses) {
             (address.provinceName || '') +
             '</p>' +
             '<div class="d-flex gap-2 flex-wrap">' +
-            '<button class="btn btn-primary btn-sm" onclick="selectAddressCheckout(' + address.id + ', ' + 
-                JSON.stringify(address.tennguoinhan || '') + ', ' + 
-                JSON.stringify(address.sdtnguoinhan || '') + ', ' + 
-                JSON.stringify(address.diachicuthe || '') + ', ' + 
-                JSON.stringify(address.wardName || '') + ', ' + 
-                JSON.stringify(address.districtName || '') + ', ' + 
-                JSON.stringify(address.provinceName || '') + ')">' +
+            '<button class="btn btn-primary btn-sm" onclick="selectAddressCheckout(' + address.id + ')">' +
             '<i class="bi bi-check-circle me-1"></i>Chọn địa chỉ này' +
             '</button>' +
             '<button class="btn btn-outline-secondary btn-sm" onclick="openEditAddressModalCheckout(' + address.id + ')">' +
@@ -186,42 +180,81 @@ function renderAddressListCheckout(addresses) {
 }
 
 // ====== SELECT ADDRESS ======
-function selectAddressCheckout(id, tennguoinhan, sdt, diachicuthe, wardName, districtName, provinceName) {
-    currentAddressId = id;
-    
-    // Update hidden field
-    const diaChiIdEl = document.getElementById('diaChiId');
-    if (diaChiIdEl) {
-        diaChiIdEl.value = id;
-    }
+async function selectAddressCheckout(id) {
+    try {
+        // Lấy thông tin địa chỉ từ danh sách
+        const response = await fetch('/DiaChi/GetByKhachHang?idKhachHang=' + currentKhachHangId);
+        if (!response.ok) {
+            throw new Error('Không thể tải thông tin địa chỉ');
+        }
+        
+        const addresses = await response.json();
+        const address = addresses.find(a => a.id === id);
+        
+        if (!address) {
+            alert('Không tìm thấy địa chỉ');
+            return;
+        }
 
-    // Update display
-    const addressDisplayEl = document.getElementById('addressDisplay');
-    if (addressDisplayEl) {
-        addressDisplayEl.innerHTML = '<div class="p-3 border rounded" style="background-color: #2b2b33; border-color: #444 !important;">' +
-            '<div class="fw-bold text-white">' + tennguoinhan + ' - ' + sdt + '</div>' +
-            '<div class="text-white">' + diachicuthe + ', ' + wardName + ', ' + districtName + ', ' + provinceName + '</div>' +
-            '<small class="text-muted">Địa chỉ giao hàng</small>' +
-            '</div>' +
-            '<input type="hidden" id="diaChiId" value="' + id + '">';
-    }
+        currentAddressId = id;
+        
+        // Update hidden field
+        const diaChiIdEl = document.getElementById('diaChiId');
+        if (diaChiIdEl) {
+            diaChiIdEl.value = id;
+        } else {
+            // Nếu chưa có thì tạo mới
+            const form = document.getElementById('checkoutForm');
+            if (form) {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.id = 'diaChiId';
+                hiddenInput.name = 'diaChiId';
+                hiddenInput.value = id;
+                form.appendChild(hiddenInput);
+            }
+        }
 
-    // Enable checkout button
-    const btnXacNhan = document.getElementById('btnXacNhanThanhToan');
-    if (btnXacNhan) {
-        btnXacNhan.disabled = false;
-        btnXacNhan.classList.remove('disabled');
-    }
+        // Update display
+        const addressDisplayEl = document.getElementById('addressDisplay');
+        if (addressDisplayEl) {
+            const fullAddress = (address.diachicuthe || '') + ', ' + 
+                               (address.wardName || '') + ', ' + 
+                               (address.districtName || '') + ', ' + 
+                               (address.provinceName || '');
+            
+            addressDisplayEl.innerHTML = '<div class="p-3 border rounded" style="background-color: #2b2b33; border-color: #444 !important;">' +
+                '<div class="fw-bold text-white">' + (address.tennguoinhan || '') + ' - ' + (address.sdtnguoinhan || '') + '</div>' +
+                '<div class="text-white">' + fullAddress + '</div>' +
+                '<small class="text-muted">Địa chỉ giao hàng</small>' +
+                '</div>';
+        }
 
-    // Close modal
-    const modalEl = document.getElementById('diaChiModal');
-    if (modalEl) {
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        if (modal) modal.hide();
-    }
+        // Enable checkout button
+        const btnXacNhan = document.getElementById('btnXacNhanThanhToan');
+        if (btnXacNhan) {
+            btnXacNhan.disabled = false;
+            btnXacNhan.classList.remove('disabled');
+        }
 
-    // Show success message
-    showToast('Đã chọn địa chỉ giao hàng', 'success');
+        // Close modal
+        const modalEl = document.getElementById('diaChiModal');
+        if (modalEl) {
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+        }
+
+        // Re-render list để highlight selected address (sau khi đóng modal)
+        setTimeout(async () => {
+            await loadAddressListCheckout();
+        }, 300);
+
+        // Show success message
+        showToast('Đã chọn địa chỉ giao hàng', 'success');
+    } catch (error) {
+        console.error('Error selecting address:', error);
+        alert('Lỗi khi chọn địa chỉ: ' + error.message);
+    }
 }
 
 // ====== OPEN ADD ADDRESS MODAL ======

@@ -14,94 +14,250 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
     <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-sidebar: #1e293b;
+            --bg-header: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            background-color: #12121d;
-            color: white;
-            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: var(--text-primary);
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
         }
 
         .container {
-            margin-top: 50px;
+            margin-top: 20px;
         }
 
         h2 {
             text-align: center;
             margin-bottom: 30px;
-            color: #f5f5f5;
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 28px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         table {
-            background-color: #1e1e2a;
-            border-radius: 10px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
             overflow: hidden;
+            box-shadow: var(--shadow-lg);
         }
 
-        th {
-            background-color: #2b2b33;
-            color: #fff;
+        .table thead th {
+            background: linear-gradient(135deg, var(--bg-header) 0%, #0f172a 100%);
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-color);
+            font-weight: 600;
+            padding: 15px;
+            text-align: center;
         }
 
-        td {
-            color: #ddd;
+        .table tbody td {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 15px;
+        }
+
+        .table tbody tr:hover {
+            background-color: rgba(99, 102, 241, 0.1);
         }
 
         .btn-create {
-            background-color: #4a90e2;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
             border: none;
-            border-radius: 10px;
-            padding: 10px 20px;
-            transition: 0.3s;
+            border-radius: 8px;
+            padding: 12px 24px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            box-shadow: var(--shadow-md);
         }
 
-            .btn-create:hover {
-                background-color: #357ab8;
-            }
+        .btn-create:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            background: linear-gradient(135deg, var(--primary-hover) 0%, #7c3aed 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning-color) 0%, #d97706 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+        }
 
         .modal-content {
-            background-color: #2b2b33;
-            color: white;
-            border-radius: 10px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 12px;
         }
 
-        .form-control {
-            background-color: #1e1e2a;
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
-            border: 1px solid #444;
+            border-bottom: 1px solid var(--border-color);
         }
 
-            .form-control:focus {
-                border-color: #4a90e2;
-                box-shadow: none;
-            }
+        .modal-footer {
+            border-top: 1px solid var(--border-color);
+            background-color: var(--bg-card);
+        }
+
+        .btn-close-white {
+            filter: invert(1);
+        }
+
+        .form-control, .form-select {
+            background-color: #1e293b;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 8px;
+            padding: 10px 15px;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: #1e293b;
+            border-color: var(--primary-color);
+            color: var(--text-primary);
+            box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .form-label {
+            color: var(--text-primary);
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
 
         .text-danger {
-            color: #ff4d4d !important;
+            color: var(--danger-color) !important;
+        }
+
+        .text-muted {
+            color: var(--text-secondary) !important;
         }
 
         .status-success {
-            color: #28a745;
-            font-weight: bold;
+            color: var(--success-color);
+            font-weight: 600;
+            padding: 4px 12px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 6px;
+            display: inline-block;
         }
-        /* Đã hoàn thành */
+
         .status-pending {
-            color: #ffc107;
-            font-weight: bold;
+            color: var(--warning-color);
+            font-weight: 600;
+            padding: 4px 12px;
+            background: rgba(245, 158, 11, 0.1);
+            border-radius: 6px;
+            display: inline-block;
         }
-        /* Đang xử lý */
+
         .status-danger {
-            color: #dc3545;
-            font-weight: bold;
+            color: var(--danger-color);
+            font-weight: 600;
+            padding: 4px 12px;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 6px;
+            display: inline-block;
         }
-        /* Từ chối */
+
         .status-info {
-            color: #17a2b8;
-            font-weight: bold;
+            color: #0ea5e9;
+            font-weight: 600;
+            padding: 4px 12px;
+            background: rgba(14, 165, 233, 0.1);
+            border-radius: 6px;
+            display: inline-block;
         }
-        /* Đang tiếp nhận */
+
         .cost-value {
-            font-weight: bold;
-            color: #ff4d4d;
+            font-weight: 700;
+            color: var(--danger-color);
+            font-size: 1.05rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border: none;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: rgba(148, 163, 184, 0.2);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(148, 163, 184, 0.3);
+            color: var(--text-primary);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
         }
     </style>
 </head>
@@ -231,9 +387,8 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Mô Tả Lỗi Khách Hàng <span class="text-danger">*</span></label>
+                            <label class="form-label">Mô Tả Lỗi Khách Hàng</label>
                             <textarea id="MoTaLoi" class="form-control" rows="3"></textarea>
-                            <small id="errorMoTaLoi" class="text-danger d-none"></small>
                         </div>
 
                         <div class="row">
@@ -241,7 +396,7 @@
                                 <div class="mb-3">
                                     <label class="form-label">Trạng Thái</label>
                                     <select id="TrangThai" class="form-control">
-                                        <option value="Đang tiếp nhận">Đang tiếp nhận</option>
+                                        <option value="Đang tiếp nhận" selected>Đang tiếp nhận</option>
                                         <option value="Đang xử lý">Đang xử lý</option>
                                         <option value="Đã hoàn thành">Đã hoàn thành</option>
                                         <option value="Từ chối bảo hành">Từ chối bảo hành</option>
@@ -251,7 +406,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Chi Phí Phát Sinh (₫)</label>
-                                    <input type="number" id="ChiPhiPhatSinh" class="form-control" value="0" min="0" />
+                                    <input type="number" id="ChiPhiPhatSinh" class="form-control" value="0" />
                                 </div>
                             </div>
                         </div>
@@ -310,8 +465,9 @@
 
                         <div class="mb-3">
                             <label class="form-label">Mô Tả Lỗi <span class="text-danger">*</span></label>
-                            <textarea id="EditMoTaLoi" class="form-control" rows="3"></textarea>
+                            <textarea id="EditMoTaLoi" class="form-control" rows="3" minlength="10" maxlength="500" placeholder="Mô tả chi tiết lỗi của sản phẩm (10-500 ký tự)"></textarea>
                             <small id="errorEditMoTaLoi" class="text-danger d-none"></small>
+                            <small class="text-muted">Tối thiểu 10 ký tự, tối đa 500 ký tự. <span id="editMoTaLoiCharCount">0</span>/500</small>
                         </div>
 
                         <div class="mb-3">
@@ -341,7 +497,7 @@
 
                         <div class="mb-3">
                             <label class="form-label">Chi Phí Phát Sinh (₫)</label>
-                            <input type="number" id="EditChiPhiPhatSinh" class="form-control" min="0" />
+                            <input type="number" id="EditChiPhiPhatSinh" class="form-control" />
                         </div>
 
                     </div>
@@ -400,6 +556,29 @@
         document.getElementById("createForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
+            // Client-side validation
+            const errors = [];
+            
+            // Validate MôTaLoi
+            const moTaLoi = MoTaLoi.value.trim();
+            if (moTaLoi.length < 10) {
+                errors.push("Mô tả lỗi phải có ít nhất 10 ký tự!");
+            }
+            if (moTaLoi.length > 500) {
+                errors.push("Mô tả lỗi không được vượt quá 500 ký tự!");
+            }
+
+            // Validate ChiPhiPhatSinh
+            const chiPhi = parseFloat(ChiPhiPhatSinh.value) || 0;
+            if (chiPhi < 0) {
+                errors.push("Chi phí phát sinh không được âm!");
+            }
+
+            if (errors.length > 0) {
+                alert(errors.join("\n"));
+                return;
+            }
+
             const bh = {
                 IdImei: parseInt(IdImei.value) || 0,
                 IdKhachHang: parseInt(IdKhachHang.value) || 0,
@@ -412,7 +591,7 @@
             };
 
             // Reset errors
-            document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
+            document.querySelectorAll("#createForm small.text-danger").forEach(e => e.classList.add("d-none"));
 
             const response = await fetch('/BaoHanh/Create', {
                 method: 'POST',
@@ -429,6 +608,8 @@
                     if (data.IdKhachHang) showError("errorIdKhachHang", data.IdKhachHang);
                     if (data.IdNhanVien) showError("errorIdNhanVien", data.IdNhanVien);
                     if (data.MoTaLoi) showError("errorMoTaLoi", data.MoTaLoi);
+                    if (data.ChiPhiPhatSinh) showError("errorChiPhiPhatSinh", data.ChiPhiPhatSinh);
+                    if (data.NgayNhan) showError("errorNgayNhan", data.NgayNhan);
                     return;
                 }
                 alert(data.message || "Không thể thêm Phiếu Bảo Hành. Vui lòng thử lại!");
@@ -452,6 +633,25 @@
                 EditXuLy.value = btn.dataset.xuly || '';
                 EditChiPhiPhatSinh.value = btn.dataset.chiphi || 0;
 
+                // Cập nhật đếm ký tự
+                const editCounter = document.getElementById('editMoTaLoiCharCount');
+                if (editCounter) {
+                    editCounter.textContent = EditMoTaLoi.value.length;
+                }
+
+                // Kiểm tra trạng thái để hiển thị ngày trả bắt buộc
+                const ngayTraRequired = document.getElementById('ngayTraRequired');
+                const ngayTraHint = document.getElementById('ngayTraHint');
+                if (EditTrangThai.value === "Đã hoàn thành") {
+                    if (ngayTraRequired) ngayTraRequired.classList.remove('d-none');
+                    if (ngayTraHint) ngayTraHint.classList.remove('d-none');
+                    EditNgayTra.setAttribute('required', 'required');
+                } else {
+                    if (ngayTraRequired) ngayTraRequired.classList.add('d-none');
+                    if (ngayTraHint) ngayTraHint.classList.add('d-none');
+                    EditNgayTra.removeAttribute('required');
+                }
+
                 new bootstrap.Modal(editModal).show();
             });
         });
@@ -459,6 +659,43 @@
         // --- Cập nhật Bảo Hành ---
         document.getElementById("editForm").addEventListener("submit", async (e) => {
             e.preventDefault();
+
+            // Client-side validation
+            const errors = [];
+            
+            // Validate MôTaLoi
+            const moTaLoi = EditMoTaLoi.value.trim();
+            if (moTaLoi.length < 10) {
+                errors.push("Mô tả lỗi phải có ít nhất 10 ký tự!");
+            }
+            if (moTaLoi.length > 500) {
+                errors.push("Mô tả lỗi không được vượt quá 500 ký tự!");
+            }
+
+            // Validate ChiPhiPhatSinh
+            const chiPhi = parseFloat(EditChiPhiPhatSinh.value) || 0;
+            if (chiPhi < 0) {
+                errors.push("Chi phí phát sinh không được âm!");
+            }
+
+            // Validate NgayTra >= NgayNhan
+            if (EditNgayNhan.value && EditNgayTra.value) {
+                const ngayNhan = new Date(EditNgayNhan.value);
+                const ngayTra = new Date(EditNgayTra.value);
+                if (ngayTra < ngayNhan) {
+                    errors.push("Ngày trả phải lớn hơn hoặc bằng ngày nhận!");
+                }
+            }
+
+            // Validate trạng thái "Đã hoàn thành" phải có NgayTra
+            if (EditTrangThai.value === "Đã hoàn thành" && !EditNgayTra.value) {
+                errors.push("Khi trạng thái là 'Đã hoàn thành', bắt buộc phải có ngày trả!");
+            }
+
+            if (errors.length > 0) {
+                alert(errors.join("\n"));
+                return;
+            }
 
             const id = EditIdBaoHanh.value;
             const bh = {
@@ -475,7 +712,7 @@
             };
 
             // Reset errors
-            document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
+            document.querySelectorAll("#editForm small.text-danger").forEach(e => e.classList.add("d-none"));
 
             const response = await fetch('/BaoHanh/Edit/' + id, {
                 method: 'POST',
@@ -492,6 +729,10 @@
                     if (data.IdKhachHang) showError("errorEditIdKhachHang", data.IdKhachHang);
                     if (data.IdNhanVien) showError("errorEditIdNhanVien", data.IdNhanVien);
                     if (data.MoTaLoi) showError("errorEditMoTaLoi", data.MoTaLoi);
+                    if (data.ChiPhiPhatSinh) showError("errorEditChiPhiPhatSinh", data.ChiPhiPhatSinh);
+                    if (data.NgayTra) showError("errorEditNgayTra", data.NgayTra);
+                    if (data.NgayNhan) showError("errorEditNgayNhan", data.NgayNhan);
+                    if (data.TrangThai) showError("errorEditTrangThai", data.TrangThai);
                     return;
                 }
                 alert(data.message || "Không thể cập nhật Phiếu Bảo Hành. Vui lòng thử lại!");
@@ -501,20 +742,91 @@
             location.reload();
         });
 
+        // --- Đếm ký tự MôTaLoi ---
+        function updateCharCount(textareaId, counterId) {
+            const textarea = document.getElementById(textareaId);
+            const counter = document.getElementById(counterId);
+            if (textarea && counter) {
+                textarea.addEventListener('input', function() {
+                    counter.textContent = this.value.length;
+                    if (this.value.length < 10) {
+                        counter.classList.add('text-danger');
+                        counter.classList.remove('text-muted');
+                    } else {
+                        counter.classList.remove('text-danger');
+                        counter.classList.add('text-muted');
+                    }
+                });
+            }
+        }
+
+        // --- Kiểm tra trạng thái để hiển thị ngày trả bắt buộc ---
+        function handleTrangThaiChange() {
+            const trangThai = document.getElementById('EditTrangThai');
+            const ngayTraRequired = document.getElementById('ngayTraRequired');
+            const ngayTraHint = document.getElementById('ngayTraHint');
+            
+            if (trangThai && ngayTraRequired && ngayTraHint) {
+                trangThai.addEventListener('change', function() {
+                    if (this.value === "Đã hoàn thành") {
+                        ngayTraRequired.classList.remove('d-none');
+                        ngayTraHint.classList.remove('d-none');
+                        document.getElementById('EditNgayTra').setAttribute('required', 'required');
+                    } else {
+                        ngayTraRequired.classList.add('d-none');
+                        ngayTraHint.classList.add('d-none');
+                        document.getElementById('EditNgayTra').removeAttribute('required');
+                    }
+                });
+            }
+        }
+
+        // --- Validate ngày trả >= ngày nhận khi edit ---
+        function validateNgayTra() {
+            const ngayNhan = document.getElementById('EditNgayNhan');
+            const ngayTra = document.getElementById('EditNgayTra');
+            const errorNgayTra = document.getElementById('errorEditNgayTra');
+            
+            if (ngayNhan && ngayTra && errorNgayTra) {
+                ngayTra.addEventListener('change', function() {
+                    if (ngayNhan.value && this.value) {
+                        const nhan = new Date(ngayNhan.value);
+                        const tra = new Date(this.value);
+                        if (tra < nhan) {
+                            showError("errorEditNgayTra", "Ngày trả phải lớn hơn hoặc bằng ngày nhận!");
+                        } else {
+                            errorNgayTra.classList.add('d-none');
+                        }
+                    }
+                });
+            }
+        }
+
         // --- Khởi tạo ---
         document.addEventListener('DOMContentLoaded', function() {
             loadDropdownData();
+            updateCharCount('MoTaLoi', 'moTaLoiCharCount');
+            updateCharCount('EditMoTaLoi', 'editMoTaLoiCharCount');
+            handleTrangThaiChange();
+            validateNgayTra();
         });
 
         // --- Reset form khi đóng modal ---
         createModal.addEventListener("hidden.bs.modal", () => {
             createForm.reset();
-            document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
+            document.querySelectorAll("#createForm small.text-danger").forEach(e => e.classList.add("d-none"));
             document.getElementById('TrangThai').value = "Đang tiếp nhận";
             document.getElementById('ChiPhiPhatSinh').value = "0";
             // Reset Ngày nhận về ngày hiện tại
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('NgayNhan').value = today;
+            // Reset char counter
+            const moTaLoiCounter = document.getElementById('moTaLoiCharCount');
+            if (moTaLoiCounter) {
+                moTaLoiCounter.textContent = "0";
+                moTaLoiCounter.classList.remove('text-danger');
+                moTaLoiCounter.classList.add('text-muted');
+            }
         });
 
         editModal.addEventListener("hidden.bs.modal", () => {

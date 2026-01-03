@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace DATN_DT.Controllers
 {
@@ -180,8 +182,17 @@ namespace DATN_DT.Controllers
                     return NotFound(new { success = false, message = "Không tìm thấy hóa đơn" });
                 }
 
-                // Cập nhật trạng thái
+                // Lấy ID nhân viên đang xử lý (nếu có)
+                var idNhanVien = GetCurrentNhanVienId();
+                
+                // Cập nhật trạng thái và lưu ID nhân viên xử lý
                 hoaDon.TrangThaiHoaDon = GetStatusName(model.TrangThai);
+                // Nếu chưa có nhân viên thì lưu, nếu đã có thì giữ nguyên (để lưu nhân viên đầu tiên tạo đơn)
+                if (!hoaDon.IdNhanVien.HasValue && idNhanVien.HasValue)
+                {
+                    hoaDon.IdNhanVien = idNhanVien;
+                }
+                
                 _context.HoaDons.Update(hoaDon);
                 await _context.SaveChangesAsync();
 
@@ -226,6 +237,27 @@ namespace DATN_DT.Controllers
                 4 => "Hủy đơn hàng",
                 _ => "Chưa xác định"
             };
+        }
+
+        // Helper method: Lấy ID nhân viên từ JWT token
+        private int? GetCurrentNhanVienId()
+        {
+            try
+            {
+                var token = Request.Cookies["jwt"];
+                if (string.IsNullOrEmpty(token)) return null;
+
+                var handler = new JwtSecurityTokenHandler();
+                var jsonToken = handler.ReadJwtToken(token);
+                var nhanVienIdClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == "IdNhanVien");
+                
+                if (nhanVienIdClaim != null && int.TryParse(nhanVienIdClaim.Value, out int nhanVienId))
+                {
+                    return nhanVienId;
+                }
+            }
+            catch { }
+            return null;
         }
     }
 

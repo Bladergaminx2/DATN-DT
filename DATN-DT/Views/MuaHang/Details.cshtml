@@ -146,10 +146,35 @@
                 transition: all 0.3s;
             }
 
-            .cart-icon:hover i, .user-icon:hover i {
+            .cart-icon:hover i,             .user-icon:hover i {
                 color: #fff;
                 background-color: #4a4a55;
                 transform: scale(1.1);
+            }
+
+            /* Avatar trong user-icon */
+            .user-icon .user-avatar {
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 2px solid #4a90e2;
+                display: none;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+
+            .user-icon:hover .user-avatar {
+                transform: scale(1.1);
+                border-color: #fff;
+            }
+
+            .user-icon.has-avatar i {
+                display: none !important;
+            }
+
+            .user-icon.has-avatar .user-avatar {
+                display: block !important;
             }
 
         .cart-count {
@@ -818,8 +843,9 @@
                 <i class="fas fa-shopping-cart"></i>
                 <span class="cart-count" id="cartCount">0</span>
             </div>
-            <div class="user-icon" onclick="goToUserProfile()">
+            <div class="user-icon" id="userIcon" onclick="goToUserProfile()">
                 <i class="fas fa-user-circle"></i>
+                <img class="user-avatar" id="userAvatar" src="" alt="User Avatar" onerror="this.style.display='none'; this.parentElement.querySelector('i').style.display='flex';">
             </div>
         </div>
     </header>
@@ -1086,6 +1112,7 @@
         // ========== INITIALIZATION
         document.addEventListener('DOMContentLoaded', function () {
             updateCartCount();
+            loadUserProfile();
 
             // Set max quantity based on stock
             const quantityInput = document.getElementById('quantity');
@@ -1316,6 +1343,174 @@
         document.getElementById('searchInput').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 searchProducts();
+            }
+        });
+
+        // ========== USER PROFILE & AVATAR MANAGEMENT
+        async function loadUserProfile() {
+            try {
+                const response = await fetch('/UserProfile/GetProfileData');
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Lưu vào localStorage để đồng bộ
+                    if (data) {
+                        localStorage.setItem('userProfile', JSON.stringify({
+                            hoTenKhachHang: data.hoTenKhachHang,
+                            emailKhachHang: data.emailKhachHang,
+                            defaultImage: data.defaultImage,
+                            diemTichLuy: data.diemTichLuy
+                        }));
+
+                        // Cập nhật avatar trong header
+                        updateUserAvatar(data.defaultImage);
+                    }
+                } else {
+                    // Fallback: Lấy từ localStorage nếu có
+                    const savedProfile = localStorage.getItem('userProfile');
+                    if (savedProfile) {
+                        const profile = JSON.parse(savedProfile);
+                        updateUserAvatar(profile.defaultImage);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user profile:', error);
+                // Fallback: Lấy từ localStorage nếu có
+                const savedProfile = localStorage.getItem('userProfile');
+                if (savedProfile) {
+                    const profile = JSON.parse(savedProfile);
+                    updateUserAvatar(profile.defaultImage);
+                }
+            }
+        }
+
+        function updateUserAvatar(avatarUrl) {
+            const userIcon = document.getElementById('userIcon');
+            const userAvatar = document.getElementById('userAvatar');
+            
+            if (!userIcon || !userAvatar) {
+                console.warn('User icon or avatar element not found');
+                return;
+            }
+
+            if (avatarUrl && avatarUrl.trim() !== '') {
+                // Cập nhật src với timestamp để tránh cache
+                const newSrc = avatarUrl + '?t=' + new Date().getTime();
+                userAvatar.src = newSrc;
+                
+                // Đặt lại display và position
+                userAvatar.style.display = 'block';
+                userAvatar.style.position = 'relative';
+                
+                userAvatar.onerror = function() {
+                    // Nếu ảnh lỗi, hiển thị lại icon mặc định
+                    this.style.display = 'none';
+                    const iconElement = userIcon.querySelector('i');
+                    if (iconElement) {
+                        iconElement.style.display = 'flex';
+                    }
+                    userIcon.classList.remove('has-avatar');
+                };
+                
+                userAvatar.onload = function() {
+                    // Ảnh load thành công, ẩn icon mặc định
+                    userIcon.classList.add('has-avatar');
+                    const iconElement = userIcon.querySelector('i');
+                    if (iconElement) {
+                        iconElement.style.display = 'none';
+                    }
+                };
+                
+                console.log('Avatar updated:', newSrc);
+            } else {
+                userIcon.classList.remove('has-avatar');
+                userAvatar.style.display = 'none';
+                // Hiển thị lại icon mặc định
+                const iconElement = userIcon.querySelector('i');
+                if (iconElement) {
+                    iconElement.style.display = 'flex';
+                }
+            }
+        }
+
+        // Lắng nghe custom event để đồng bộ khi user thay đổi profile
+        window.addEventListener('userProfileUpdated', function(e) {
+            if (e.detail && e.detail.defaultImage) {
+                updateUserAvatar(e.detail.defaultImage);
+                console.log('Avatar updated from custom event:', e.detail.defaultImage);
+            }
+        });
+
+        // Lắng nghe sự kiện storage để đồng bộ khi user thay đổi profile ở tab khác
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'userProfile') {
+                try {
+                    const profile = JSON.parse(e.newValue);
+                    updateUserAvatar(profile.defaultImage);
+                    console.log('Avatar updated from storage event:', profile.defaultImage);
+                } catch (error) {
+                    console.error('Error parsing userProfile from storage:', error);
+                }
+            }
+        });
+
+        // Đồng bộ khi quay lại từ UserProfile (sử dụng visibilitychange và focus)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                // Trang được hiển thị lại, kiểm tra localStorage
+                const savedProfile = localStorage.getItem('userProfile');
+                if (savedProfile) {
+                    try {
+                        const profile = JSON.parse(savedProfile);
+                        updateUserAvatar(profile.defaultImage);
+                        console.log('Avatar updated on visibility change:', profile.defaultImage);
+                    } catch (error) {
+                        console.error('Error parsing userProfile:', error);
+                    }
+                }
+            }
+        });
+
+        // Đồng bộ khi window focus (khi quay lại tab)
+        window.addEventListener('focus', function() {
+            loadUserProfile();
+        });
+
+        // Kiểm tra localStorage mỗi 1 giây để đồng bộ (nếu user thay đổi trong cùng tab)
+        let lastAvatarUrl = '';
+        setInterval(function() {
+            const savedProfile = localStorage.getItem('userProfile');
+            if (savedProfile) {
+                try {
+                    const profile = JSON.parse(savedProfile);
+                    const newAvatarUrl = profile.defaultImage || '';
+                    
+                    // Chỉ cập nhật nếu avatar thay đổi
+                    if (newAvatarUrl !== lastAvatarUrl) {
+                        lastAvatarUrl = newAvatarUrl;
+                        updateUserAvatar(newAvatarUrl);
+                        console.log('Avatar updated from interval check:', newAvatarUrl);
+                    }
+                } catch (error) {
+                    console.error('Error checking userProfile:', error);
+                }
+            }
+        }, 1000);
+
+        // Kiểm tra khi trang được load (có thể từ UserProfile quay lại)
+        // Sử dụng performance navigation để detect back/forward
+        if (performance.navigation.type === 1 || performance.navigation.type === 2) {
+            // Trang được reload hoặc navigate back/forward
+            setTimeout(function() {
+                loadUserProfile();
+            }, 500);
+        }
+
+        // Kiểm tra khi page show (khi quay lại từ tab khác)
+        document.addEventListener('pageshow', function(event) {
+            // Nếu trang được load từ cache (back/forward cache)
+            if (event.persisted) {
+                loadUserProfile();
             }
         });
     </script>

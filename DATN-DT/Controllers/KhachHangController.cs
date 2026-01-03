@@ -155,25 +155,98 @@ namespace DATN_DT.Controllers
             }
         }
 
-        // --- Delete: Xóa Khách hàng (Thao tác nguy hiểm, cân nhắc thay bằng thay đổi trạng thái) ---
+        // --- Delete: Xóa Khách hàng (Kiểm tra ràng buộc trước khi xóa) ---
         [HttpPost]
         [Route("KhachHang/Delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var existing = await _context.KhachHangs.FindAsync(id);
+            var existing = await _context.KhachHangs
+                .Include(kh => kh.Diachi)
+                .FirstOrDefaultAsync(kh => kh.IdKhachHang == id);
+            
             if (existing == null)
                 return NotFound(new { message = "Không tìm thấy Khách hàng để xóa!" });
 
+            // Kiểm tra ràng buộc với HoaDon
+            var hasHoaDon = await _context.HoaDons.AnyAsync(h => h.IdKhachHang == id);
+            if (hasHoaDon)
+            {
+                var hoaDonCount = await _context.HoaDons.CountAsync(h => h.IdKhachHang == id);
+                return BadRequest(new { 
+                    message = $"Không thể xóa khách hàng này! Khách hàng đã có {hoaDonCount} hóa đơn liên quan. Vui lòng xử lý các hóa đơn trước khi xóa.",
+                    hasConstraints = true,
+                    constraintType = "HoaDon",
+                    count = hoaDonCount
+                });
+            }
+
+            // Kiểm tra ràng buộc với DonHang
+            var hasDonHang = await _context.DonHangs.AnyAsync(d => d.IdKhachHang == id);
+            if (hasDonHang)
+            {
+                var donHangCount = await _context.DonHangs.CountAsync(d => d.IdKhachHang == id);
+                return BadRequest(new { 
+                    message = $"Không thể xóa khách hàng này! Khách hàng đã có {donHangCount} đơn hàng liên quan. Vui lòng xử lý các đơn hàng trước khi xóa.",
+                    hasConstraints = true,
+                    constraintType = "DonHang",
+                    count = donHangCount
+                });
+            }
+
+            // Kiểm tra ràng buộc với GioHang
+            var hasGioHang = await _context.GioHangs.AnyAsync(g => g.IdKhachHang == id);
+            if (hasGioHang)
+            {
+                var gioHangCount = await _context.GioHangs.CountAsync(g => g.IdKhachHang == id);
+                return BadRequest(new { 
+                    message = $"Không thể xóa khách hàng này! Khách hàng đã có {gioHangCount} giỏ hàng liên quan.",
+                    hasConstraints = true,
+                    constraintType = "GioHang",
+                    count = gioHangCount
+                });
+            }
+
+            // Kiểm tra ràng buộc với BaoHanh
+            var hasBaoHanh = await _context.BaoHanhs.AnyAsync(b => b.IdKhachHang == id);
+            if (hasBaoHanh)
+            {
+                var baoHanhCount = await _context.BaoHanhs.CountAsync(b => b.IdKhachHang == id);
+                return BadRequest(new { 
+                    message = $"Không thể xóa khách hàng này! Khách hàng đã có {baoHanhCount} bảo hành liên quan. Vui lòng xử lý các bảo hành trước khi xóa.",
+                    hasConstraints = true,
+                    constraintType = "BaoHanh",
+                    count = baoHanhCount
+                });
+            }
+
             try
             {
+                // Xóa các địa chỉ liên quan (Cascade delete)
+                if (existing.Diachi != null && existing.Diachi.Any())
+                {
+                    _context.diachis.RemoveRange(existing.Diachi);
+                }
+
+                // Xóa khách hàng
                 _context.KhachHangs.Remove(existing);
                 await _context.SaveChangesAsync();
+                
                 return Ok(new { message = "Xóa Khách hàng thành công!" });
             }
-            catch
+            catch (DbUpdateException ex)
             {
-                // Xử lý lỗi nếu khách hàng có ràng buộc khóa ngoại (FK) với các bảng khác
-                return StatusCode(500, new { message = "Lỗi khi xóa Khách hàng. Có thể do Khách hàng này đã phát sinh giao dịch." });
+                // Xử lý lỗi ràng buộc từ database
+                return StatusCode(500, new { 
+                    message = "Lỗi khi xóa Khách hàng. Có thể do Khách hàng này đã phát sinh giao dịch hoặc có ràng buộc dữ liệu.",
+                    error = ex.InnerException?.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { 
+                    message = "Lỗi hệ thống khi xóa Khách hàng. Vui lòng thử lại!",
+                    error = ex.Message
+                });
             }
         }
     }

@@ -60,8 +60,10 @@ function renderAddressList(addresses) {
     if (!addresses || addresses.length === 0) {
         container.innerHTML = `
             <div class="col-12">
-                <div class="alert alert-info text-center">
-                    <i class="bi bi-info-circle"></i> Chưa có địa chỉ nào. Hãy thêm địa chỉ mới!
+                <div class="empty-state">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <h4>Chưa có địa chỉ nào</h4>
+                    <p>Hãy thêm địa chỉ mới để bắt đầu!</p>
                 </div>
             </div>`;
         return;
@@ -69,38 +71,36 @@ function renderAddressList(addresses) {
 
     container.innerHTML = addresses.map(address => `
         <div class="col-md-6 mb-3">
-            <div class="card h-100 ${address.trangthai === 0 ? 'border-warning' : ''}">
-                <div class="card-body">
-                    <div class="d-flex">
-                        <div class="me-3">
-                            <i class="bi bi-house-door fs-4 ${address.trangthai === 0 ? 'text-warning' : 'text-muted'}"></i>
+            <div class="address-card ${address.trangthai === 0 ? 'default' : ''}">
+                <div class="d-flex">
+                    <div class="me-3">
+                        <i class="fas fa-home address-icon ${address.trangthai === 0 ? 'default' : ''}"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title">${address.tennguoinhan || 'N/A'}</h5>
+                            ${address.trangthai === 0 ? '<span class="badge-default"><i class="fas fa-star me-1"></i>Mặc định</span>' : ''}
                         </div>
-                        <div class="flex-grow-1">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <h5 class="card-title">${address.tennguoinhan}</h5>
-                                ${address.trangthai === 0 ? '<span class="badge bg-warning">Mặc định</span>' : ''}
-                            </div>
-                            <p class="card-text text-muted">
-                                <i class="bi bi-telephone me-2"></i>${address.sdtnguoinhan}
-                            </p>
-                            <p class="card-text">
-                                <i class="bi bi-geo-alt me-2"></i>
-                                ${address.diachicuthe}, ${address.wardName}, ${address.districtName}, ${address.provinceName}
-                            </p>
-                        </div>
+                        <p class="card-text">
+                            <i class="fas fa-phone"></i> ${address.sdtnguoinhan || 'N/A'}
+                        </p>
+                        <p class="card-text">
+                            <i class="fas fa-map-marker-alt"></i>
+                            ${address.diachicuthe || ''}, ${address.wardName || ''}, ${address.districtName || ''}, ${address.provinceName || ''}
+                        </p>
                     </div>
                 </div>
-                <div class="card-footer bg-transparent">
+                <div class="mt-3 pt-3 border-top border-secondary">
                     <div class="d-flex gap-2 justify-content-end">
-                        <button class="btn btn-outline-primary btn-sm" onclick="openEditModal(${address.id})">
-                            <i class="bi bi-pencil"></i> Sửa
+                        <button class="btn btn-action btn-edit" onclick="openEditModal(${address.id})" title="Sửa địa chỉ">
+                            <i class="fas fa-edit me-1"></i>Sửa
                         </button>
-                        <button class="btn btn-outline-danger btn-sm" onclick="deleteAddress(${address.id}, ${address.trangthai})">
-                            <i class="bi bi-trash"></i> Xóa
+                        <button class="btn btn-action btn-delete" onclick="deleteAddress(${address.id}, ${address.trangthai})" title="Xóa địa chỉ">
+                            <i class="fas fa-trash me-1"></i>Xóa
                         </button>
                         ${address.trangthai !== 0 ? `
-                        <button class="btn btn-warning btn-sm" onclick="setDefaultAddress(${address.id})">
-                            <i class="bi bi-check-circle"></i> Đặt mặc định
+                        <button class="btn btn-action btn-default" onclick="setDefaultAddress(${address.id})" title="Đặt làm địa chỉ mặc định">
+                            <i class="fas fa-check-circle me-1"></i>Đặt mặc định
                         </button>` : ''}
                     </div>
                 </div>
@@ -134,7 +134,8 @@ async function addNewAddress() {
         if (response.ok) {
             const result = await response.json();
             showSuccess('Thêm địa chỉ thành công!');
-            $('#addAddressModal').modal('hide');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addAddressModal'));
+            if (modal) modal.hide();
             resetAddForm();
             await loadAddressList();
         } else {
@@ -170,7 +171,8 @@ async function openEditModal(id) {
                 await loadDistrictsForEdit(address.thanhpho, address.quanhuyen);
                 await loadWardsForEdit(address.quanhuyen, address.phuongxa);
 
-                $('#editAddressModal').modal('show');
+                const modal = new bootstrap.Modal(document.getElementById('editAddressModal'));
+                modal.show();
             }
         }
     } catch (error) {
@@ -201,7 +203,8 @@ async function updateAddress() {
 
         if (response.ok) {
             showSuccess('Cập nhật địa chỉ thành công!');
-            $('#editAddressModal').modal('hide');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editAddressModal'));
+            if (modal) modal.hide();
             await loadAddressList();
         } else {
             const error = await response.text();
@@ -491,19 +494,16 @@ function resetAddForm() {
     document.getElementById('selectPhuong').innerHTML = '<option value="">Chọn Phường/Xã</option>';
 }
 
-// Notification functions - ĐÃ SỬA: Thay thế Swal.fire bằng các phương thức đơn giản
+// Notification functions
 function showSuccess(message) {
-    // Tạo và hiển thị toast notification
     showToast('success', 'Thành công!', message);
 }
 
 function showError(message) {
-    // Tạo và hiển thị toast notification
     showToast('error', 'Lỗi!', message);
 }
 
 function showWarning(message) {
-    // Tạo và hiển thị toast notification
     showToast('warning', 'Cảnh báo!', message);
 }
 
@@ -525,15 +525,15 @@ function showToast(type, title, message) {
         type === 'error' ? 'bg-danger' :
             'bg-warning';
 
-    const icon = type === 'success' ? 'bi-check-circle' :
-        type === 'error' ? 'bi-exclamation-circle' :
-            'bi-exclamation-triangle';
+    const icon = type === 'success' ? 'fa-check-circle' :
+        type === 'error' ? 'fa-exclamation-circle' :
+            'fa-exclamation-triangle';
 
     const toastHtml = `
         <div id="${toastId}" class="toast align-items-center text-white ${bgColor} border-0" role="alert">
             <div class="d-flex">
                 <div class="toast-body">
-                    <i class="bi ${icon} me-2"></i>
+                    <i class="fas ${icon} me-2"></i>
                     <strong>${title}</strong> ${message}
                 </div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
@@ -557,18 +557,6 @@ function showToast(type, title, message) {
     });
 }
 
-// Hoặc sử dụng alert đơn giản (nếu không muốn dùng toast)
-function showSuccess(message) {
-    alert('✅ ' + message);
-}
-
-function showError(message) {
-    alert('❌ ' + message);
-}
-
-function showWarning(message) {
-    alert('⚠️ ' + message);
-}
 
 // Loading functions
 function showLoading() {

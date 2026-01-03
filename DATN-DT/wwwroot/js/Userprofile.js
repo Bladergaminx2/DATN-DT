@@ -24,7 +24,9 @@ function showAlert(type, message) {
         var successAlertEl = document.getElementById('successAlert');
         if (successMsgEl) successMsgEl.textContent = message;
         if (successAlertEl) successAlertEl.style.display = 'block';
-        setTimeout(() => hideAlert('successAlert'), 5000);
+        setTimeout(function() {
+            hideAlert('successAlert');
+        }, 5000);
     } else {
         var errorMsgEl = document.getElementById('errorMessage');
         var errorAlertEl = document.getElementById('errorAlert');
@@ -61,8 +63,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!validationResult.isValid) {
                 showAlert('error', validationResult.error);
                 e.target.value = ''; // Reset input
-            return;
-        }
+                return;
+            }
 
             showLoading();
             const formData = new FormData();
@@ -70,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             try {
                 const response = await fetch('/UserProfile/UpdateAvatar', {
-                method: 'POST',
+                    method: 'POST',
                     body: formData
                 });
 
@@ -204,7 +206,7 @@ async function loadProfileData() {
             // Update avatar
             try {
                 var avatarContainer = document.getElementById('avatarContainer');
-            if (avatarContainer && data.defaultImage) {
+                if (avatarContainer && data.defaultImage) {
                     var timestamp = new Date().getTime();
                     var img = document.createElement('img');
                     img.src = data.defaultImage + '?t=' + timestamp;
@@ -267,13 +269,13 @@ async function saveProfile() {
 
     if (!profileData.SdtKhachHang) {
         showError('errorSdtKhachHang', 'Số điện thoại là bắt buộc');
-            return;
-        }
+        return;
+    }
 
     showLoading();
     try {
         const response = await fetch('/UserProfile/UpdateProfileData', {
-                method: 'POST',
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(profileData)
         });
@@ -440,11 +442,11 @@ async function loadOrders() {
 }
 
 function renderOrders() {
-            const ordersList = document.getElementById('ordersList');
+    const ordersList = document.getElementById('ordersList');
     if (!ordersList) {
         console.error('ordersList element not found');
-                    return;
-            }
+        return;
+    }
 
     // Filter đơn hàng theo trạng thái
     var filteredOrders = allOrdersData;
@@ -496,26 +498,29 @@ function renderOrders() {
             var headingId = 'heading' + order.idHoaDon;
 
             // Render chi tiết sản phẩm
-                var chiTietArray = order.chiTiet;
-                var itemsHtml = '';
-                if (chiTietArray) {
-                    var isArray = chiTietArray.constructor === Array;
-                    var chiTietLength = isArray ? chiTietArray.length : 0;
-                    if (chiTietLength > 0) {
-                        for (var j = 0; j < chiTietLength; j++) {
-                            var item = null;
-                            if (chiTietArray) {
-                                item = chiTietArray[j];
-                            }
-                            if (!item) continue;
-                            itemsHtml += '<div class="order-item">' +
+            var chiTietArray = order.chiTiet;
+            var itemsHtml = '';
+            if (chiTietArray) {
+                var isArray = chiTietArray.constructor === Array;
+                var chiTietLength = isArray ? chiTietArray.length : 0;
+                if (chiTietLength > 0) {
+                    for (var j = 0; j < chiTietLength; j++) {
+                        var item = null;
+                        if (chiTietArray) {
+                            item = chiTietArray[j];
+                        }
+                        if (!item) continue;
+                        itemsHtml += '<div class="order-item">' +
                                 '<img src="' + (item.hinhAnh || '/images/default-product.jpg') + '" alt="' + (item.tenSanPham || '') + '" onerror="this.src=\'/images/default-product.jpg\'">' +
                                 '<div class="flex-grow-1">' +
-                            '<div style="color: #ffffff !important;"><strong>' + (item.tenSanPham || '') + '</strong></div>' +
-                            '<div class="text-muted small" style="color: #aaa !important;">' + (item.tenModel || '') + ' - ' + (item.mau || '') + '</div>' +
-                            '<div style="color: #ffffff !important;">Số lượng: ' + (item.soLuong || 0) + ' x ' + formatMoney(item.donGia || 0) + '</div>' +
+                                '<div style="color: #ffffff !important;"><strong>' + (item.tenSanPham || '') + '</strong></div>' +
+                                '<div class="text-muted small" style="color: #aaa !important;">' + 
+                                (item.tenThuongHieu && item.tenThuongHieu !== 'N/A' ? '<strong>Thương hiệu:</strong> ' + (item.tenThuongHieu || '') + ' | ' : '') +
+                                (item.tenModel || '') + ' - ' + (item.mau || '') + 
                                 '</div>' +
-                            '<div style="color: #ffffff !important;"><strong>' + formatMoney(item.thanhTien || 0) + '</strong></div>' +
+                                '<div style="color: #ffffff !important;">Số lượng: ' + (item.soLuong || 0) + ' x ' + formatMoney(item.donGia || 0) + '</div>' +
+                                '</div>' +
+                                '<div style="color: #ffffff !important;"><strong>' + formatMoney(item.thanhTien || 0) + '</strong></div>' +
                                 '</div>';
                         }
                     }
@@ -565,7 +570,7 @@ function renderOrders() {
         ordersHtml += '</div>'; // End status-group
     }
 
-            ordersList.innerHTML = ordersHtml;
+    ordersList.innerHTML = ordersHtml;
 }
 
 function filterOrdersByStatus(status) {
@@ -607,7 +612,10 @@ function showOrderDetail(orderId) {
                 '</div>' +
                 '<div class="col-md-10">' +
                 '<h6>' + (item.tenSanPham || '') + '</h6>' +
-                '<p class="text-muted mb-1">Model: ' + (item.tenModel || '') + ' - Màu: ' + (item.mau || '') + '</p>' +
+                '<p class="text-muted mb-1">' +
+                    (item.tenThuongHieu && item.tenThuongHieu !== 'N/A' ? '<strong>Thương hiệu:</strong> ' + (item.tenThuongHieu || '') + ' | ' : '') +
+                    'Model: ' + (item.tenModel || '') + ' - Màu: ' + (item.mau || '') + 
+                '</p>' +
                 '<p class="mb-1">Số lượng: ' + (item.soLuong || 0) + '</p>' +
                 '<p class="mb-1">Đơn giá: ' + formatMoney(item.donGia || 0) + '</p>' +
                 '<p class="mb-0"><strong>Thành tiền: ' + formatMoney(item.thanhTien || 0) + '</strong></p>' +
@@ -696,8 +704,8 @@ function cancelChanges() {
 function showError(elementId, message) {
     const element = document.getElementById(elementId);
     if (element) {
-    element.textContent = message;
-    element.classList.remove('d-none');
+        element.textContent = message;
+        element.classList.remove('d-none');
     }
 }
 
@@ -1298,12 +1306,6 @@ async function confirmChangeEmail() {
         if (response.ok) {
             showAlert('success', data.message || 'Đổi email thành công!');
             
-            // Cập nhật email hiển thị
-            var emailDisplayEl = document.getElementById('EmailKhachHangDisplay');
-            var emailEl = document.getElementById('EmailKhachHang');
-            if (emailDisplayEl) emailDisplayEl.value = newEmail;
-            if (emailEl) emailEl.value = newEmail;
-            
             // Đóng modal
             var changeEmailModalEl = document.getElementById('changeEmailModal');
             if (changeEmailModalEl) {
@@ -1311,8 +1313,10 @@ async function confirmChangeEmail() {
                 if (modal) modal.hide();
             }
             
-            // Reload profile data
-            loadProfileData();
+            // Đợi một chút để cookie được cập nhật, sau đó reload profile data
+            setTimeout(function() {
+                loadProfileData();
+            }, 500);
         } else {
             showAlert('error', data.message || 'Đổi email thất bại!');
             if (data.message && data.message.includes('mật khẩu')) {

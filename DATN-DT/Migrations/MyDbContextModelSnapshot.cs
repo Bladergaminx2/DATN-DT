@@ -268,10 +268,10 @@ namespace DATN_DT.Migrations
                     b.Property<decimal?>("DonGia")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int?>("IdDonHang")
-                        .HasColumnType("int");
+                    b.Property<decimal?>("GiaKhuyenMai")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<int?>("IdKhuyenMai")
+                    b.Property<int?>("IdDonHang")
                         .HasColumnType("int");
 
                     b.Property<int?>("IdModelSanPham")
@@ -286,8 +286,6 @@ namespace DATN_DT.Migrations
                     b.HasKey("IdDonHangChiTiet");
 
                     b.HasIndex("IdDonHang");
-
-                    b.HasIndex("IdKhuyenMai");
 
                     b.HasIndex("IdModelSanPham");
 
@@ -390,13 +388,13 @@ namespace DATN_DT.Migrations
                     b.Property<decimal?>("DonGia")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<decimal?>("GiaKhuyenMai")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<int?>("IdHoaDon")
                         .HasColumnType("int");
 
                     b.Property<int?>("IdImei")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("IdKhuyenMai")
                         .HasColumnType("int");
 
                     b.Property<int?>("IdModelSanPham")
@@ -413,8 +411,6 @@ namespace DATN_DT.Migrations
                     b.HasIndex("IdHoaDon");
 
                     b.HasIndex("IdImei");
-
-                    b.HasIndex("IdKhuyenMai");
 
                     b.HasIndex("IdModelSanPham");
 
@@ -868,6 +864,102 @@ namespace DATN_DT.Migrations
                     b.ToTable("TonKhos");
                 });
 
+            modelBuilder.Entity("DATN_DT.Models.Voucher", b =>
+                {
+                    b.Property<int>("IdVoucher")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdVoucher"));
+
+                    b.Property<string>("ApDungCho")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DanhSachId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("DonHangToiThieu")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("GiaTri")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("GiamToiDa")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("LoaiGiam")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MaVoucher")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MoTa")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("NgayBatDau")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("NgayKetThuc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("SoLuongDaSuDung")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SoLuongMoiKhachHang")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SoLuongSuDung")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TenVoucher")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TrangThai")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("IdVoucher");
+
+                    b.ToTable("Vouchers");
+                });
+
+            modelBuilder.Entity("DATN_DT.Models.VoucherSuDung", b =>
+                {
+                    b.Property<int>("IdVoucherSuDung")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdVoucherSuDung"));
+
+                    b.Property<int?>("IdHoaDon")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IdKhachHang")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IdVoucher")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("NgaySuDung")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("SoTienGiam")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("IdVoucherSuDung");
+
+                    b.HasIndex("IdHoaDon");
+
+                    b.HasIndex("IdKhachHang");
+
+                    b.HasIndex("IdVoucher");
+
+                    b.ToTable("VoucherSuDungs");
+                });
+
             modelBuilder.Entity("DATN_DT.Models.AnhSanPham", b =>
                 {
                     b.HasOne("DATN_DT.Models.ModelSanPham", "ModelSanPham")
@@ -937,19 +1029,12 @@ namespace DATN_DT.Migrations
                         .HasForeignKey("IdDonHang")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("DATN_DT.Models.KhuyenMai", "KhuyenMai")
-                        .WithMany()
-                        .HasForeignKey("IdKhuyenMai")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("DATN_DT.Models.ModelSanPham", "ModelSanPham")
                         .WithMany()
                         .HasForeignKey("IdModelSanPham")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("DonHang");
-
-                    b.Navigation("KhuyenMai");
 
                     b.Navigation("ModelSanPham");
                 });
@@ -1010,11 +1095,6 @@ namespace DATN_DT.Migrations
                         .HasForeignKey("IdImei")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("DATN_DT.Models.KhuyenMai", "KhuyenMai")
-                        .WithMany()
-                        .HasForeignKey("IdKhuyenMai")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("DATN_DT.Models.ModelSanPham", "ModelSanPham")
                         .WithMany()
                         .HasForeignKey("IdModelSanPham")
@@ -1023,8 +1103,6 @@ namespace DATN_DT.Migrations
                     b.Navigation("HoaDon");
 
                     b.Navigation("Imei");
-
-                    b.Navigation("KhuyenMai");
 
                     b.Navigation("ModelSanPham");
                 });
@@ -1155,6 +1233,32 @@ namespace DATN_DT.Migrations
                     b.Navigation("ModelSanPham");
                 });
 
+            modelBuilder.Entity("DATN_DT.Models.VoucherSuDung", b =>
+                {
+                    b.HasOne("DATN_DT.Models.HoaDon", "HoaDon")
+                        .WithMany()
+                        .HasForeignKey("IdHoaDon")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("DATN_DT.Models.KhachHang", "KhachHang")
+                        .WithMany()
+                        .HasForeignKey("IdKhachHang")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DATN_DT.Models.Voucher", "Voucher")
+                        .WithMany("VoucherSuDungs")
+                        .HasForeignKey("IdVoucher")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("HoaDon");
+
+                    b.Navigation("KhachHang");
+
+                    b.Navigation("Voucher");
+                });
+
             modelBuilder.Entity("DATN_DT.Models.DonHang", b =>
                 {
                     b.Navigation("DonHangChiTiets");
@@ -1185,6 +1289,11 @@ namespace DATN_DT.Migrations
             modelBuilder.Entity("DATN_DT.Models.SanPham", b =>
                 {
                     b.Navigation("ModelSanPhams");
+                });
+
+            modelBuilder.Entity("DATN_DT.Models.Voucher", b =>
+                {
+                    b.Navigation("VoucherSuDungs");
                 });
 #pragma warning restore 612, 618
         }

@@ -1278,8 +1278,8 @@
             showLoading();
 
             try {
-                const response = await fetch(`/ManHinh/Edit?id=${currentEditId}`, {
-                    method: 'PUT',
+                const response = await fetch(`/ManHinh/Edit/${currentEditId}`, {
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'

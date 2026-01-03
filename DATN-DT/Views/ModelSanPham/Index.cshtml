@@ -705,6 +705,7 @@
                         <i class="fas fa-cloud-upload-alt"></i>
                         <h5>Kéo thả ảnh vào đây hoặc click để chọn</h5>
                         <p class="text-muted">Hỗ trợ: JPG, JPEG, PNG, GIF, WEBP (Tối đa 5MB)</p>
+                        <p class="text-warning"><small><i class="fas fa-info-circle"></i> Tối đa 6 ảnh cho mỗi model sản phẩm</small></p>
                         <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.gif,.webp" multiple style="display: none;" />
                     </div>
 
@@ -966,16 +967,89 @@
             });
         });
 
+        // Flag để tránh mở file picker tự động
+        let canOpenFilePicker = false;
+
         // Upload area click event
-        document.getElementById('uploadArea').addEventListener('click', function () {
-            document.getElementById('fileInput').click();
+        document.getElementById('uploadArea').addEventListener('click', function (e) {
+            // Đánh dấu rằng user đã click (user activation)
+            canOpenFilePicker = true;
+
+            // Tránh trigger nếu đang upload
+            if (isUploading) {
+                canOpenFilePicker = false;
+                return;
+            }
+
+            // Kiểm tra số lượng ảnh trước khi cho phép upload
+            const modelId = document.getElementById('currentModelId').value;
+            if (!modelId) {
+                alert('Vui lòng chọn model sản phẩm trước!');
+                canOpenFilePicker = false;
+                return;
+            }
+
+            // Kiểm tra số lượng ảnh hiện tại
+            fetch(`/ModelSanPham/GetImagesByModel?idModelSanPham=${modelId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(images => {
+                    const currentCount = images ? images.length : 0;
+                    if (currentCount >= 6) {
+                        alert('Đã đạt giới hạn tối đa 6 ảnh. Vui lòng xóa ảnh cũ trước khi thêm mới!');
+                        canOpenFilePicker = false;
+                        return;
+                    }
+                    // Chỉ click file input nếu có user activation và không đang upload
+                    if (canOpenFilePicker && !isUploading) {
+                        const fileInput = document.getElementById('fileInput');
+                        if (fileInput) {
+                            fileInput.click();
+                        }
+                    }
+                    canOpenFilePicker = false;
+                })
+                .catch(error => {
+                    console.error('Error checking images:', error);
+                    // Không tự động mở file picker khi có lỗi
+                    // Chỉ mở nếu có user activation và không đang upload
+                    if (canOpenFilePicker && !isUploading) {
+                        // Thử mở file picker nhưng chỉ một lần
+                        const fileInput = document.getElementById('fileInput');
+                        if (fileInput) {
+                            try {
+                                fileInput.click();
+                            } catch (err) {
+                                console.error('Cannot open file picker:', err);
+                            }
+                        }
+                    }
+                    canOpenFilePicker = false;
+                });
         });
+
+        // Flag để tránh xử lý nhiều lần
+        let isUploading = false;
 
         // File input change event
         document.getElementById('fileInput').addEventListener('change', function (e) {
-            if (e.target.files.length > 0) {
-                uploadFiles(e.target.files);
+            // Tránh xử lý nếu đang upload hoặc không có file
+            if (isUploading || !e.target.files || e.target.files.length === 0) {
+                return;
             }
+
+            // Lưu files vào biến trước khi clear
+            const files = Array.from(e.target.files);
+            
+            // Clear file input ngay để tránh trigger lại
+            e.target.value = '';
+            
+            // Upload files
+            uploadFiles(files);
         });
 
         // Drag and drop functionality
@@ -1000,47 +1074,148 @@
             }
         });
 
-        async function uploadFiles(files) {
-            const modelId = document.getElementById('currentModelId').value;
+        // Validate image file function (inline definition)
+        function validateImageFile(file, options) {
+            options = options || {};
+            const allowedExtensions = options.allowedExtensions || ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            const maxSizeInMB = options.maxSizeInMB || 5;
 
-            for (let file of files) {
-                // Validate image file using common validation function
-                const validationResult = validateImageFile(file, {
-                    allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-                    maxSizeInMB: 5
-                });
-
-                if (!validationResult.isValid) {
-                    alert(validationResult.error || 'File không hợp lệ');
-                    continue; // Skip this file and continue with next
-                }
-
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('idModelSanPham', modelId);
-
-                try {
-                    const response = await fetch('/ModelSanPham/UploadImage', {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    const result = await response.json();
-
-                    if (response.ok) {
-                        // Reload images after successful upload
-                        loadImagesForModel(modelId);
-                    } else {
-                        alert(result.message || 'Upload thất bại!');
-                    }
-                } catch (error) {
-                    console.error('Upload error:', error);
-                    alert('Lỗi khi upload ảnh!');
-                }
+            if (!file) {
+                return { isValid: false, error: 'Vui lòng chọn file ảnh' };
             }
 
-            // Clear file input
-            document.getElementById('fileInput').value = '';
+            // Validate extension
+            const fileName = file.name || '';
+            const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
+            if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
+                return { isValid: false, error: `Chỉ chấp nhận file ảnh (${allowedExtensions.join(', ')})` };
+            }
+
+            // Validate size
+            const maxSizeInBytes = maxSizeInMB * 1024 * 1024;
+            if (file.size > maxSizeInBytes) {
+                return { isValid: false, error: `Kích thước file không được vượt quá ${maxSizeInMB}MB` };
+            }
+
+            return { isValid: true, error: null };
+        }
+
+        async function uploadFiles(files) {
+            // Kiểm tra flag để tránh xử lý nhiều lần
+            if (isUploading) {
+                console.log('Đang upload, bỏ qua request mới');
+                return;
+            }
+
+            // Kiểm tra có file không
+            if (!files || files.length === 0) {
+                return;
+            }
+
+            isUploading = true;
+
+            try {
+                const modelId = document.getElementById('currentModelId').value;
+                
+                if (!modelId) {
+                    alert('Vui lòng chọn model sản phẩm trước!');
+                    isUploading = false;
+                    return;
+                }
+
+                // Kiểm tra số lượng ảnh hiện tại
+                let currentImageCount = 0;
+                try {
+                    const checkResponse = await fetch(`/ModelSanPham/GetImagesByModel?idModelSanPham=${modelId}`);
+                    const currentImages = await checkResponse.json();
+                    currentImageCount = currentImages ? currentImages.length : 0;
+                } catch (error) {
+                    console.error('Error checking current images:', error);
+                    alert('Không thể kiểm tra số lượng ảnh hiện tại. Vui lòng thử lại!');
+                    isUploading = false;
+                    return;
+                }
+
+                // Kiểm tra nếu đã có 6 ảnh
+                if (currentImageCount >= 6) {
+                    alert('Đã đạt giới hạn tối đa 6 ảnh. Vui lòng xóa ảnh cũ trước khi thêm mới!');
+                    isUploading = false;
+                    return;
+                }
+
+                // Tính số lượng ảnh có thể upload thêm
+                const remainingSlots = 6 - currentImageCount;
+                const filesToUpload = Array.from(files).slice(0, remainingSlots);
+
+                if (files.length > remainingSlots) {
+                    alert(`Chỉ có thể thêm tối đa ${remainingSlots} ảnh nữa (đã có ${currentImageCount}/6 ảnh). Đã tự động chọn ${remainingSlots} ảnh đầu tiên.`);
+                }
+
+                let uploadedCount = 0;
+                let failedCount = 0;
+
+                // Upload từng file một và đợi xong trước khi tiếp tục
+                for (let file of filesToUpload) {
+                    // Kiểm tra lại số lượng sau mỗi lần upload thành công
+                    if (currentImageCount + uploadedCount >= 6) {
+                        alert('Đã đạt giới hạn tối đa 6 ảnh. Dừng upload.');
+                        break;
+                    }
+
+                    // Validate image file
+                    const validationResult = validateImageFile(file, {
+                        allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+                        maxSizeInMB: 5
+                    });
+
+                    if (!validationResult.isValid) {
+                        alert(`${file.name}: ${validationResult.error || 'File không hợp lệ'}`);
+                        failedCount++;
+                        continue; // Skip this file and continue with next
+                    }
+
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('idModelSanPham', modelId);
+
+                    try {
+                        const response = await fetch('/ModelSanPham/UploadImage', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok) {
+                            uploadedCount++;
+                            currentImageCount++;
+                            // Reload images after successful upload
+                            await loadImagesForModel(modelId);
+                        } else {
+                            alert(`${file.name}: ${result.message || 'Upload thất bại!'}`);
+                            failedCount++;
+                        }
+                    } catch (error) {
+                        console.error('Upload error:', error);
+                        alert(`${file.name}: Lỗi khi upload ảnh!`);
+                        failedCount++;
+                    }
+                }
+
+                // Hiển thị thông báo kết quả
+                if (uploadedCount > 0) {
+                    if (failedCount > 0) {
+                        alert(`Đã upload thành công ${uploadedCount} ảnh. ${failedCount} ảnh thất bại.`);
+                    } else {
+                        alert(`Đã upload thành công ${uploadedCount} ảnh!`);
+                    }
+                } else if (failedCount > 0) {
+                    alert(`Không có ảnh nào được upload. ${failedCount} ảnh thất bại.`);
+                }
+            } finally {
+                // Reset flag sau khi xử lý xong
+                isUploading = false;
+            }
         }
 
         async function loadImagesForModel(modelId) {
@@ -1056,21 +1231,58 @@
                 if (images && images.length > 0) {
                     noImagesMessage.classList.add('d-none');
 
-                    images.forEach(image => {
+                    const uploadArea = document.getElementById('uploadArea');
+                    const isMaxReached = images.length >= 6;
+
+                    // Disable upload area nếu đã đạt 6 ảnh
+                    if (isMaxReached) {
+                        uploadArea.style.opacity = '0.5';
+                        uploadArea.style.cursor = 'not-allowed';
+                        uploadArea.style.pointerEvents = 'none';
+                        const limitText = uploadArea.querySelector('.text-warning') || uploadArea.querySelector('p:last-of-type');
+                        if (limitText) {
+                            limitText.innerHTML = '<i class="fas fa-exclamation-triangle"></i> <strong>Đã đạt giới hạn 6 ảnh!</strong> Vui lòng xóa ảnh cũ trước khi thêm mới.';
+                            limitText.className = 'text-danger';
+                        }
+                    } else {
+                        uploadArea.style.opacity = '1';
+                        uploadArea.style.cursor = 'pointer';
+                        uploadArea.style.pointerEvents = 'auto';
+                        const limitText = uploadArea.querySelector('.text-danger');
+                        if (limitText) {
+                            limitText.innerHTML = '<i class="fas fa-info-circle"></i> Tối đa 6 ảnh cho mỗi model sản phẩm';
+                            limitText.className = 'text-warning';
+                        }
+                    }
+
+                    images.forEach((image, index) => {
                         const imageItem = document.createElement('div');
                         imageItem.className = 'image-item';
+                        // Chỉ cho phép xóa nếu còn nhiều hơn 1 ảnh
+                        const canDelete = images.length > 1;
                         imageItem.innerHTML = `
                                     <img src="${image.duongDan}" alt="${image.tenFile}" />
                                     <div class="image-actions">
+                                        ${canDelete ? `
                                         <button class="btn-image-delete" onclick="deleteImage(${image.idAnh}, ${modelId})">
                                             <i class="fas fa-times"></i>
                                         </button>
+                                        ` : `
+                                        <button class="btn-image-delete" disabled title="Phải giữ lại ít nhất 1 ảnh" style="opacity: 0.5; cursor: not-allowed;">
+                                            <i class="fas fa-lock"></i>
+                                        </button>
+                                        `}
                                     </div>
                                 `;
                         gallery.appendChild(imageItem);
                     });
                 } else {
                     noImagesMessage.classList.remove('d-none');
+                    // Enable upload area nếu chưa có ảnh
+                    const uploadArea = document.getElementById('uploadArea');
+                    uploadArea.style.opacity = '1';
+                    uploadArea.style.cursor = 'pointer';
+                    uploadArea.style.pointerEvents = 'auto';
                 }
             } catch (error) {
                 console.error('Error loading images:', error);
@@ -1079,11 +1291,22 @@
         }
 
         async function deleteImage(imageId, modelId) {
-            if (!confirm('Bạn có chắc chắn muốn xóa ảnh này?')) {
-                return;
-            }
-
+            // Kiểm tra số lượng ảnh hiện tại trước khi xóa
             try {
+                const checkResponse = await fetch(`/ModelSanPham/GetImagesByModel?idModelSanPham=${modelId}`);
+                const currentImages = await checkResponse.json();
+                const currentCount = currentImages ? currentImages.length : 0;
+
+                // Không cho phép xóa nếu chỉ còn 1 ảnh
+                if (currentCount <= 1) {
+                    alert('Phải giữ lại ít nhất 1 ảnh làm ảnh mặc định. Không thể xóa ảnh cuối cùng!');
+                    return;
+                }
+
+                if (!confirm('Bạn có chắc chắn muốn xóa ảnh này?')) {
+                    return;
+                }
+
                 const response = await fetch('/ModelSanPham/DeleteImage', {
                     method: 'POST',
                     headers: {
@@ -1123,4 +1346,5 @@
         });
     </script>
 </body>
+</html>
 </html>

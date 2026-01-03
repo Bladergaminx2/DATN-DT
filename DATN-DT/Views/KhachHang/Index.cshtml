@@ -14,73 +14,96 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-sidebar: #1e293b;
+            --bg-header: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            background-color: #12121d;
-            color: white;
-            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: var(--text-primary);
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
         }
 
         .container {
-            margin-top: 30px;
-            max-width: 95%;
-        }
-
-        h2 {
-            text-align: center;
-            margin-bottom: 30px;
-            color: #f5f5f5;
-            font-weight: 600;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
         }
 
         .table-container {
-            background-color: #1e1e2a;
-            border-radius: 15px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow-lg);
         }
 
         table {
-            background-color: transparent;
+            background-color: var(--bg-card);
             border-radius: 10px;
             overflow: hidden;
             margin-bottom: 0;
         }
 
         th {
-            background-color: #2b2b33;
-            color: #fff;
+            background: linear-gradient(135deg, var(--bg-header) 0%, #0f172a 100%);
+            color: var(--text-primary);
             font-weight: 600;
-            border-bottom: 2px solid #4a90e2;
-            padding: 15px 10px;
+            border-bottom: 2px solid var(--border-color);
+            padding: 15px;
+            text-align: center;
         }
 
         td {
-            color: #ddd;
+            color: var(--text-primary);
             padding: 12px 10px;
             vertical-align: middle;
-            border-bottom: 1px solid #2b2b33;
+            border-bottom: 1px solid var(--border-color);
         }
 
         tr:hover {
-            background-color: #2b2b33;
+            background-color: rgba(99, 102, 241, 0.1);
             transition: 0.3s;
         }
 
         .btn-create {
-            background: linear-gradient(135deg, #4a90e2, #357ab8);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
             border: none;
-            border-radius: 10px;
-            padding: 12px 25px;
-            font-weight: 600;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-weight: 500;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(74, 144, 226, 0.3);
+            box-shadow: var(--shadow-md);
         }
 
             .btn-create:hover {
                 transform: translateY(-2px);
-                box-shadow: 0 4px 8px rgba(74, 144, 226, 0.4);
-                background: linear-gradient(135deg, #357ab8, #2a6495);
+                box-shadow: var(--shadow-lg);
+                background: linear-gradient(135deg, var(--primary-hover) 0%, #7c3aed 100%);
             }
 
         .btn-action {
@@ -92,42 +115,47 @@
         }
 
         .btn-edit {
-            background-color: #ffc107;
+            background: linear-gradient(135deg, var(--warning-color) 0%, #d97706 100%);
             border: none;
-            color: #000;
+            color: white;
         }
 
             .btn-edit:hover {
-                background-color: #e0a800;
+                background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
                 transform: translateY(-1px);
+                box-shadow: var(--shadow-md);
             }
 
         .btn-delete {
-            background-color: #dc3545;
+            background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
             border: none;
             color: white;
         }
 
             .btn-delete:hover {
-                background-color: #c82333;
+                background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
                 transform: translateY(-1px);
+                box-shadow: var(--shadow-md);
             }
 
         .modal-content {
-            background-color: #2b2b33;
-            color: white;
-            border-radius: 15px;
-            border: none;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 12px;
         }
 
         .modal-header {
-            border-bottom: 1px solid #444;
-            padding: 20px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px 24px;
+            color: white;
         }
 
         .modal-title {
             font-weight: 600;
-            color: #4a90e2;
+            color: white;
+            font-size: 20px;
         }
 
         .modal-body {
@@ -135,70 +163,78 @@
         }
 
         .modal-footer {
-            border-top: 1px solid #444;
+            border-top: 1px solid var(--border-color);
             padding: 20px;
+            background-color: var(--bg-card);
         }
 
-        .form-control {
-            background-color: #1e1e2a;
-            color: white;
-            border: 1px solid #444;
+        .form-control, .form-select {
+            background-color: #1e293b;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
             border-radius: 8px;
             padding: 10px 15px;
         }
 
-            .form-control:focus {
-                border-color: #4a90e2;
-                box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
-                background-color: #1e1e2a;
-                color: white;
+            .form-control:focus, .form-select:focus {
+                border-color: var(--primary-color);
+                box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+                background-color: #1e293b;
+                color: var(--text-primary);
             }
 
         .form-label {
-            font-weight: 600;
-            color: #ddd;
+            font-weight: 500;
+            color: var(--text-primary);
             margin-bottom: 8px;
         }
 
         .text-danger {
-            color: #ff4d4d !important;
+            color: var(--danger-color) !important;
             font-size: 0.875rem;
+        }
+
+        .text-muted {
+            color: var(--text-secondary) !important;
         }
 
         /* Status styles */
         .status-active {
-            color: #28a745;
-            font-weight: bold;
-            background-color: rgba(40, 167, 69, 0.1);
+            color: var(--success-color);
+            font-weight: 600;
+            background-color: rgba(16, 185, 129, 0.1);
             padding: 4px 12px;
-            border-radius: 20px;
+            border-radius: 6px;
             font-size: 0.85rem;
+            display: inline-block;
         }
 
         .status-inactive {
-            color: #dc3545;
-            font-weight: bold;
-            background-color: rgba(220, 53, 69, 0.1);
+            color: var(--danger-color);
+            font-weight: 600;
+            background-color: rgba(239, 68, 68, 0.1);
             padding: 4px 12px;
-            border-radius: 20px;
+            border-radius: 6px;
             font-size: 0.85rem;
+            display: inline-block;
         }
 
         .status-warning {
-            color: #ffc107;
-            font-weight: bold;
-            background-color: rgba(255, 193, 7, 0.1);
+            color: var(--warning-color);
+            font-weight: 600;
+            background-color: rgba(245, 158, 11, 0.1);
             padding: 4px 12px;
-            border-radius: 20px;
+            border-radius: 6px;
             font-size: 0.85rem;
+            display: inline-block;
         }
 
         .diem-tich-luy {
-            font-weight: bold;
-            color: #ffc107;
-            background-color: rgba(255, 193, 7, 0.1);
+            font-weight: 700;
+            color: var(--warning-color);
+            background-color: rgba(245, 158, 11, 0.1);
             padding: 6px 12px;
-            border-radius: 20px;
+            border-radius: 6px;
             display: inline-block;
             min-width: 80px;
         }
@@ -208,21 +244,21 @@
             height: 40px;
             border-radius: 50%;
             object-fit: cover;
-            border: 2px solid #4a90e2;
+            border: 2px solid var(--primary-color);
         }
 
         .search-box {
-            background-color: #1e1e2a;
-            border: 1px solid #444;
-            border-radius: 10px;
+            background-color: #1e293b;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
             padding: 10px 15px;
-            color: white;
+            color: var(--text-primary);
             margin-bottom: 20px;
         }
 
             .search-box:focus {
-                border-color: #4a90e2;
-                box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+                border-color: var(--primary-color);
+                box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
             }
 
         .table-responsive {
@@ -230,7 +266,7 @@
         }
 
         .btn-close-white {
-            filter: invert(1) grayscale(100%) brightness(200%);
+            filter: invert(1);
         }
 
         .action-buttons {
@@ -239,29 +275,121 @@
             justify-content: center;
         }
 
+        #alertContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 500px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border: none;
+            color: white;
+        }
+
+            .btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-md);
+            }
+
+        .btn-secondary {
+            background: rgba(148, 163, 184, 0.2);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+            .btn-secondary:hover {
+                background: rgba(148, 163, 184, 0.3);
+                color: var(--text-primary);
+            }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: #475569;
+            }
+
+        #alertContainer .alert {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            margin-bottom: 10px;
+            animation: slideInRight 0.3s ease;
+        }
+
+        @@keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border-left: 4px solid #10b981;
+        }
+
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border-left: 4px solid #ef4444;
+        }
+
         .stats-card {
-            background: linear-gradient(135deg, #2b2b33, #1e1e2a);
-            border-radius: 15px;
+            background: linear-gradient(135deg, var(--bg-card) 0%, #0f172a 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
             padding: 20px;
             margin-bottom: 20px;
-            border-left: 4px solid #4a90e2;
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid var(--primary-color);
         }
 
         .stats-number {
             font-size: 2rem;
-            font-weight: bold;
-            color: #4a90e2;
+            font-weight: 700;
+            color: var(--primary-color);
         }
 
         .stats-label {
-            color: #ddd;
+            color: var(--text-secondary);
             font-size: 0.9rem;
+            margin-top: 8px;
         }
     </style>
 </head>
 <body>
+    <!-- Alert Messages -->
+    <div id="alertContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
+
     <div class="container">
-        <h2><i class="fas fa-users me-2"></i>QUẢN LÝ KHÁCH HÀNG</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
+            <h2 style="margin: 0; font-size: 28px; font-weight: 700; background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;"><i class="fas fa-users me-2"></i>Quản Lý Khách Hàng</h2>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
+                    <i class="fas fa-plus me-2"></i>+ Thêm Khách Hàng
+                </button>
+            </div>
+        </div>
 
         <!-- Thống kê -->
         <div class="row">
@@ -295,13 +423,10 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div class="d-flex align-items-center">
                     <input type="text" id="searchInput" class="form-control search-box" placeholder="Tìm kiếm khách hàng..." style="width: 300px;">
-                    <button class="btn btn-outline-secondary ms-2" onclick="clearSearch()">
+                    <button class="btn btn-secondary ms-2" onclick="clearSearch()">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
-                    <i class="fas fa-plus me-2"></i>Thêm Khách Hàng
-                </button>
             </div>
 
             <div class="table-responsive">
@@ -677,31 +802,112 @@
         document.querySelectorAll(".btn-delete").forEach(btn => {
             btn.addEventListener("click", async () => {
                 const id = btn.dataset.id;
-                const customerName = btn.closest('tr').querySelector('td:nth-child(2)').textContent.trim();
+                const row = btn.closest('tr');
+                const customerName = row.querySelector('td:nth-child(2)').textContent.trim();
+                const customerEmail = row.querySelector('td:nth-child(4)').textContent.trim();
+                const customerSdt = row.querySelector('td:nth-child(3)').textContent.trim();
 
-                const confirmDelete = confirm(`Bạn có chắc chắn muốn xóa khách hàng "${customerName}" (ID: ${id}) không?`);
+                // Tạo modal xác nhận đẹp hơn
+                const confirmMessage = `Bạn có chắc chắn muốn xóa khách hàng này?\n\n` +
+                    `📋 Thông tin khách hàng:\n` +
+                    `• Họ tên: ${customerName}\n` +
+                    `• SĐT: ${customerSdt}\n` +
+                    `• Email: ${customerEmail || 'N/A'}\n` +
+                    `• ID: ${id}\n\n` +
+                    `⚠️ Cảnh báo: Thao tác này không thể hoàn tác!`;
 
-                if (confirmDelete) {
-                    try {
-                        const response = await fetch('/KhachHang/Delete/' + id, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                        });
+                if (!confirm(confirmMessage)) {
+                    return;
+                }
 
-                        const data = await response.json();
+                // Hiển thị loading
+                const originalHtml = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xóa...';
 
-                        if (response.ok) {
-                            alert("Xóa khách hàng thành công!");
+                try {
+                    const response = await fetch('/KhachHang/Delete/' + id, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        // Hiệu ứng xóa mượt mà
+                        row.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                        row.style.opacity = '0';
+                        row.style.transform = 'translateX(-20px)';
+                        
+                        setTimeout(() => {
+                            showAlert('Xóa khách hàng thành công!', 'success');
                             location.reload();
-                        } else {
-                            alert(data.message || "Lỗi khi xóa khách hàng. Vui lòng thử lại!");
+                        }, 300);
+                    } else {
+                        btn.disabled = false;
+                        btn.innerHTML = originalHtml;
+                        
+                        // Hiển thị lỗi chi tiết
+                        let errorMsg = data.message || "Lỗi khi xóa khách hàng. Vui lòng thử lại!";
+                        
+                        if (data.hasConstraints) {
+                            errorMsg += `\n\nKhách hàng này đã có ${data.count} ${data.constraintType} liên quan.`;
                         }
-                    } catch (error) {
-                        alert("Lỗi kết nối. Vui lòng thử lại!");
+                        
+                        showAlert(errorMsg, 'danger');
                     }
+                } catch (error) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                    showAlert("Lỗi kết nối. Vui lòng thử lại!", 'danger');
                 }
             });
         });
+
+        // Hàm hiển thị alert đẹp hơn
+        function showAlert(message, type = 'success') {
+            const alertContainer = document.getElementById('alertContainer');
+            if (!alertContainer) {
+                // Tạo container nếu chưa có
+                const container = document.createElement('div');
+                container.id = 'alertContainer';
+                container.style.position = 'fixed';
+                container.style.top = '20px';
+                container.style.right = '20px';
+                container.style.zIndex = '9999';
+                container.style.maxWidth = '500px';
+                document.body.appendChild(container);
+            }
+
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.style.minWidth = '350px';
+            alert.style.maxWidth = '500px';
+            alert.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.3)';
+            alert.style.borderRadius = '12px';
+            alert.style.border = 'none';
+            alert.innerHTML = `
+                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'}" style="font-size: 20px; margin-top: 2px;"></i>
+                    <div style="flex: 1; white-space: pre-line; line-height: 1.5;">${message}</div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" style="margin-top: 2px;"></button>
+                </div>
+            `;
+            
+            alertContainer.appendChild(alert);
+
+            // Auto remove sau 5 giây
+            setTimeout(() => {
+                if (alert.parentElement) {
+                    alert.classList.remove('show');
+                    setTimeout(() => {
+                        if (alert.parentElement) {
+                            alert.remove();
+                        }
+                    }, 300);
+                }
+            }, 5000);
+        }
 
         // --- Reset form khi đóng modal ---
         document.getElementById('createModal').addEventListener('hidden.bs.modal', () => {

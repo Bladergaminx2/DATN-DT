@@ -7,16 +7,20 @@ using System.Threading.Tasks;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 
 namespace DATN_DT.Controllers
 {
     public class UserProfileController : Controller
     {
         private readonly MyDbContext _context;
+        private readonly string _jwtKey;
 
-        public UserProfileController(MyDbContext context)
+        public UserProfileController(MyDbContext context, IConfiguration config)
         {
             _context = context;
+            _jwtKey = config["Jwt:Key"] ?? "your-secret-key-123456789";
         }
 
         // GET: Hiển thị trang profile
@@ -338,6 +342,7 @@ namespace DATN_DT.Controllers
                     .Include(h => h.HoaDonChiTiets)
                         .ThenInclude(hdct => hdct.ModelSanPham)
                             .ThenInclude(m => m.SanPham)
+                                .ThenInclude(sp => sp.ThuongHieu)
                     .Include(h => h.HoaDonChiTiets)
                         .ThenInclude(hdct => hdct.ModelSanPham)
                             .ThenInclude(m => m.AnhSanPhams)
@@ -353,11 +358,15 @@ namespace DATN_DT.Controllers
                     trangThai = h.TrangThaiHoaDon ?? "Chưa xác định",
                     tongTien = h.TongTien ?? 0,
                     phuongThucThanhToan = h.PhuongThucThanhToan ?? "COD",
+                    hoTenNguoiNhan = h.HoTenNguoiNhan ?? "N/A",
+                    sdtNguoiNhan = h.SdtKhachHang ?? "N/A",
+                    diaChiGiaoHang = "N/A", // HoaDon model doesn't have DiaChiGiaoHang property
                     soLuongSanPham = h.HoaDonChiTiets?.Count ?? 0,
                     chiTiet = h.HoaDonChiTiets?.Select(hdct => new
                     {
                         tenSanPham = hdct.ModelSanPham?.SanPham?.TenSanPham ?? "N/A",
                         tenModel = hdct.ModelSanPham?.TenModel ?? "N/A",
+                        tenThuongHieu = hdct.ModelSanPham?.SanPham?.ThuongHieu?.TenThuongHieu ?? "N/A",
                         mau = hdct.ModelSanPham?.Mau ?? "N/A",
                         soLuong = hdct.SoLuong ?? 0,
                         donGia = hdct.DonGia ?? 0,
@@ -484,7 +493,19 @@ namespace DATN_DT.Controllers
                 _context.KhachHangs.Update(khachHang);
                 await _context.SaveChangesAsync();
 
-                return Ok(new { message = "Đổi email thành công! Vui lòng đăng nhập lại với email mới." });
+                // Tạo lại JWT token với email mới
+                var newToken = GenerateJwtToken(model.NewEmail, "KhachHang", khachHang.IdKhachHang);
+                
+                // Cập nhật cookie với token mới
+                Response.Cookies.Append("jwt", newToken, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTimeOffset.Now.AddHours(3)
+                });
+
+                return Ok(new { message = "Đổi email thành công!" });
             }
             catch (Exception ex)
             {
@@ -519,6 +540,28 @@ namespace DATN_DT.Controllers
         private bool VerifyPassword(string password, string hash)
         {
             return HashPassword(password) == hash;
+        }
+
+        // Helper: Generate JWT Token
+        private string GenerateJwtToken(string email, string role, int idKhachHang)
+        {
+            var key = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtKey));
+            var creds = new Microsoft.IdentityModel.Tokens.SigningCredentials(key, Microsoft.IdentityModel.Tokens.SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim("IdKhachHang", idKhachHang.ToString()),
+                new Claim(ClaimTypes.Name, email),
+                new Claim(ClaimTypes.Role, role)
+            };
+
+            var token = new JwtSecurityToken(
+                claims: claims,
+                expires: DateTime.Now.AddHours(3),
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }
