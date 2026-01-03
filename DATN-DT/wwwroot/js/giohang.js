@@ -153,22 +153,22 @@ function renderCartItems() {
             isDisabled = soLuongTon === 0;
 
             if (soLuongTon > 0) {
-                statusText = `<small class="text-success"><i class="bi bi-check-circle"></i> Còn ${soLuongTon} sản phẩm</small>`;
+                statusText = `Còn ${soLuongTon} sản phẩm`;
             } else {
-                statusText = `<small class="text-danger"><i class="bi bi-exclamation-circle"></i> Hết hàng</small>`;
+                statusText = `Hết hàng`;
                 rowClass = 'table-warning';
             }
         } else if (isOutOfStock) {
             // Tạm hết hàng
             currentQuantity = 0;
             isDisabled = true;
-            statusText = `<small class="text-warning"><i class="bi bi-clock"></i> Tạm hết hàng</small>`;
+            statusText = `Tạm hết hàng`;
             rowClass = 'table-warning';
         } else if (isInactive) {
             // Ngừng kinh doanh
             currentQuantity = 0;
             isDisabled = true;
-            statusText = `<small class="text-danger"><i class="bi bi-exclamation-triangle"></i> Ngừng kinh doanh</small>`;
+            statusText = `Ngừng kinh doanh`;
             rowClass = 'table-secondary';
         }
 
@@ -183,20 +183,23 @@ function renderCartItems() {
                 <td>
                     <img src="${anhDaiDien}" 
                          alt="${tenSanPham}" 
-                         class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;"
-                         ${!isActive ? 'style="opacity: 0.5;"' : ''}>
+                         class="img-thumbnail"
+                         style="width: 180px !important; height: 180px !important; object-fit: cover !important; ${!isActive ? 'opacity: 0.5;' : ''}"
+                         onerror="this.src='/images/default-product.jpg'">
                 </td>
                 <td>
-                    <h6 class="mb-1 ${!isActive ? 'text-muted' : ''}">${tenSanPham}</h6>
-                    <small class="text-muted">
-                        ${item.modelSanPham.tenModel} - ${item.modelSanPham.mau}<br>
-                        ${ramText} - ${romText}<br>
-                        Thương hiệu: ${thuongHieuText}
-                    </small>
-                    ${statusText}
+                    <div class="product-info">
+                        <span class="product-name ${!isActive ? 'text-muted' : ''}">${tenSanPham}</span>
+                        <small class="text-muted">
+                            <strong>Model:</strong> ${item.modelSanPham.tenModel} - ${item.modelSanPham.mau}<br>
+                            <strong>RAM/ROM:</strong> ${ramText} - ${romText}<br>
+                            <span class="product-brand">Thương hiệu: ${thuongHieuText}</span>
+                        </small>
+                        ${statusText ? `<div class="product-status ${isActive && soLuongTon > 0 ? 'in-stock' : 'out-of-stock'}">${statusText}</div>` : ''}
+                    </div>
                 </td>
                 <td class="text-center">
-                    <strong class="${!isActive ? 'text-muted' : ''}">${formatMoney(item.modelSanPham.giaBanModel)}</strong>
+                    <strong class="price-display unit-price ${!isActive ? 'text-muted' : ''}">${formatMoney(item.modelSanPham.giaBanModel)}</strong>
                 </td>
                 <td class="text-center">
                     ${isActive ? `
@@ -229,14 +232,13 @@ function renderCartItems() {
                     `}
                 </td>
                 <td class="text-center">
-                    <strong class="item-total ${!isActive ? 'text-muted' : ''}">
+                    <strong class="price-display total-price item-total ${!isActive ? 'text-muted' : ''}">
                         ${formatMoney(currentQuantity * item.modelSanPham.giaBanModel)}
                     </strong>
                 </td>
                 <td class="text-center">
-                    <button class="btn btn-danger btn-sm btn-delete" 
+                    <button class="btn btn-danger btn-sm btn-delete btn-action" 
                             data-item-id="${item.idGioHangChiTiet}"
-                            style="width: 40px; height: 35px;" 
                             title="Xóa sản phẩm">
                         <i class="bi bi-trash"></i>
                     </button>
@@ -460,15 +462,23 @@ function updateTotal() {
 
     const totalPaymentElement = document.getElementById('totalPayment');
     const selectedCountElement = document.getElementById('selectedCount');
+    const selectedCountBtnElement = document.getElementById('selectedCountBtn');
     const btnCheckout = document.getElementById('btnCheckout');
 
     if (totalPaymentElement) totalPaymentElement.textContent = formatMoney(totalProductPrice);
     if (selectedCountElement) selectedCountElement.textContent = selectedItems.size;
+    if (selectedCountBtnElement) selectedCountBtnElement.textContent = selectedItems.size;
 
     // Enable/disable nút thanh toán
     if (btnCheckout) {
         btnCheckout.disabled = selectedItems.size === 0;
-        btnCheckout.textContent = `Thanh Toán (${selectedItems.size} sản phẩm)`;
+        const btnText = btnCheckout.innerHTML;
+        // Cập nhật số lượng trong nút mà không làm mất icon
+        if (btnText.includes('<i')) {
+            btnCheckout.innerHTML = `<i class="bi bi-credit-card me-2"></i>Thanh Toán (${selectedItems.size} sản phẩm)`;
+        } else {
+            btnCheckout.textContent = `Thanh Toán (${selectedItems.size} sản phẩm)`;
+        }
     }
 }
 

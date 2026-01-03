@@ -251,12 +251,24 @@ namespace DATN_DT.Controllers
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var claims = new[]
+            var claims = new List<Claim>
             {
-                new Claim("IdKhachHang", idkhachhang.ToString()),
                 new Claim(ClaimTypes.Name, username),
                 new Claim(ClaimTypes.Role, role)   // luôn là chữ in hoa
             };
+
+            // Thêm claim ID dựa trên role
+            var roleUpper = role?.ToUpper() ?? "";
+            if (roleUpper == "KHACHHANG" || roleUpper.Contains("KHACHHANG"))
+            {
+                // Nếu là khách hàng, chỉ thêm IdKhachHang
+                claims.Add(new Claim("IdKhachHang", idkhachhang.ToString()));
+            }
+            else
+            {
+                // Nếu là nhân viên/admin (bất kỳ role nào khác), thêm IdNhanVien
+                claims.Add(new Claim("IdNhanVien", idkhachhang.ToString()));
+            }
 
             var token = new JwtSecurityToken(
                 claims: claims,

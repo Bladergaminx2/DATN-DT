@@ -194,6 +194,13 @@ namespace DATN_DT.Controllers
                 if (modelSanPham == null)
                     return NotFound(new { message = "Không tìm thấy model sản phẩm!" });
 
+                // Kiểm tra số lượng ảnh hiện tại (tối đa 6 ảnh)
+                var currentImageCount = await _context.AnhSanPhams
+                    .CountAsync(a => a.IdModelSanPham == idModelSanPham);
+
+                if (currentImageCount >= 6)
+                    return BadRequest(new { message = "Đã đạt giới hạn tối đa 6 ảnh. Vui lòng xóa ảnh cũ trước khi thêm mới!" });
+
                 // Kiểm tra định dạng file
                 var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
                 var fileExtension = Path.GetExtension(file.FileName).ToLower();
@@ -254,6 +261,13 @@ namespace DATN_DT.Controllers
                 var anhSanPham = await _context.AnhSanPhams.FindAsync(idAnh);
                 if (anhSanPham == null)
                     return NotFound(new { message = "Không tìm thấy ảnh!" });
+
+                // Kiểm tra số lượng ảnh hiện tại (phải giữ lại ít nhất 1 ảnh)
+                var currentImageCount = await _context.AnhSanPhams
+                    .CountAsync(a => a.IdModelSanPham == anhSanPham.IdModelSanPham);
+
+                if (currentImageCount <= 1)
+                    return BadRequest(new { message = "Phải giữ lại ít nhất 1 ảnh làm ảnh mặc định. Không thể xóa ảnh cuối cùng!" });
 
                 // Xóa file vật lý
                 if (!string.IsNullOrEmpty(anhSanPham.DuongDan))

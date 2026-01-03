@@ -1,12 +1,15 @@
 using DATN_DT.Data;
 using DATN_DT.DTO;
 using DATN_DT.Models;
+using DATN_DT.Services;
 using DATN_DT.Services.Ghn;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using System.Drawing.Drawing2D;
 using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace DATN_DT.Controllers
 {
@@ -665,11 +668,15 @@ namespace DATN_DT.Controllers
                 // (Nếu bạn cần GHN convert giống trước thì gắn lại đoạn convert ở đây)
 
                 // 5) Tạo HoaDon
+                // Lấy ID nhân viên nếu có (nếu nhân viên/admin đang xử lý đơn hàng)
+                var idNhanVien = GetCurrentNhanVienId();
+                
                 var hoaDon = new HoaDon
                 {
                     IdKhachHang = khachHang.IdKhachHang,
                     HoTenNguoiNhan = khachHang.HoTenKhachHang,     // hoặc model.HoTen nếu bạn nhập ở FE
                     SdtKhachHang = khachHang.SdtKhachHang,         // hoặc model.SoDienThoai
+                    IdNhanVien = idNhanVien,                       // Lưu ID nhân viên bán hàng (null nếu khách tự đặt)
                     TrangThaiHoaDon = "Chờ thanh toán",            // COD: chờ thanh toán, chuyển khoản: tuỳ luồng
                     NgayLapHoaDon = DateTime.Now,
                     PhuongThucThanhToan = model.PhuongThucTT,
@@ -732,6 +739,11 @@ namespace DATN_DT.Controllers
                     }
 
                     var donGia = modelSp.GiaBanModel ?? 0m;
+                    
+                    // Tính giá khuyến mãi nếu có
+                    var idModelSanPham = cartItem.IdModelSanPham ?? 0;
+                    var giaKhuyenMai = await CalculatePromotionPrice(idModelSanPham, donGia, ct);
+                    var finalPrice = giaKhuyenMai ?? donGia; // Nếu có khuyến mãi thì dùng giá khuyến mãi, không thì dùng giá gốc
 
                     // 6.3 Mỗi IMEI = 1 dòng HoaDonChiTiet
                     foreach (var imei in imeis)
@@ -741,10 +753,10 @@ namespace DATN_DT.Controllers
                             IdHoaDon = hoaDon.IdHoaDon,
                             IdModelSanPham = cartItem.IdModelSanPham,
                             IdImei = imei.IdImei,
-                            //IdKhuyenMai = cartItem.IdKhuyenMai, // nếu cart có
-                            DonGia = donGia,
+                            GiaKhuyenMai = giaKhuyenMai, // Lưu giá khuyến mãi (null nếu không có)
+                            DonGia = finalPrice, // Lưu giá cuối cùng để tính thành tiền
                             SoLuong = 1,
-                            ThanhTien = donGia
+                            ThanhTien = finalPrice
                         };
 
                         _context.HoaDonChiTiets.Add(ctRow);
@@ -752,15 +764,27 @@ namespace DATN_DT.Controllers
                         // Set IMEI đã bán
                         imei.TrangThai = "Đã bán";
 
-                        tongTien += donGia;
+                        tongTien += finalPrice;
                     }
 
                     // 6.4 Xóa cart item đã thanh toán
                     _context.GioHangChiTiets.Remove(cartItem);
                 }
 
-                // 7) Update tổng tiền hóa đơn
-                hoaDon.TongTien = tongTien;
+                // 7) Xử lý voucher nếu có
+                if (model.IdVoucher.HasValue && model.SoTienGiamVoucher > 0)
+                {
+                    var voucherService = HttpContext.RequestServices.GetRequiredService<IVoucherService>();
+                    await voucherService.UseVoucherAsync(
+                        model.IdVoucher.Value,
+                        khachHang.IdKhachHang,
+                        hoaDon.IdHoaDon,
+                        model.SoTienGiamVoucher
+                    );
+                }
+
+                // 8) Update tổng tiền hóa đơn (đã trừ voucher)
+                hoaDon.TongTien = tongTien - model.SoTienGiamVoucher;
 
                 await _context.SaveChangesAsync(ct);
                 await tx.CommitAsync(ct);
@@ -820,6 +844,82 @@ namespace DATN_DT.Controllers
 
 
 
+        // Helper method: Lấy ID nhân viên từ JWT token
+        private int? GetCurrentNhanVienId()
+        {
+            try
+            {
+                var token = Request.Cookies["jwt"];
+                if (string.IsNullOrEmpty(token)) return null;
+
+                var handler = new JwtSecurityTokenHandler();
+                var jsonToken = handler.ReadJwtToken(token);
+                var nhanVienIdClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == "IdNhanVien");
+                
+                if (nhanVienIdClaim != null && int.TryParse(nhanVienIdClaim.Value, out int nhanVienId))
+                {
+                    return nhanVienId;
+                }
+            }
+            catch { }
+            return null;
+        }
+
+        // Helper method: Tính giá khuyến mãi cho sản phẩm
+        private async Task<decimal?> CalculatePromotionPrice(int idModelSanPham, decimal originalPrice, CancellationToken ct = default)
+        {
+            try
+            {
+                var now = DateTime.Now.Date;
+
+                // Tìm khuyến mãi đang hoạt động cho sản phẩm này
+                var activePromotion = await (from mspkm in _context.ModelSanPhamKhuyenMais
+                                           join km in _context.KhuyenMais on mspkm.IdKhuyenMai equals km.IdKhuyenMai
+                                           where mspkm.IdModelSanPham == idModelSanPham
+                                              && km.NgayBatDau.HasValue
+                                              && km.NgayKetThuc.HasValue
+                                              && km.NgayBatDau.Value.Date <= now
+                                              && km.NgayKetThuc.Value.Date >= now
+                                              && km.TrangThaiKM == "Đang diễn ra"
+                                           orderby km.NgayKetThuc descending // Lấy khuyến mãi gần nhất
+                                           select km)
+                                          .FirstOrDefaultAsync(ct);
+
+                if (activePromotion == null)
+                    return null;
+
+                // Tính giá sau giảm
+                decimal discountedPrice = 0;
+
+                if (activePromotion.LoaiGiam == "Phần trăm")
+                {
+                    var percent = Math.Min(100, Math.Max(0, activePromotion.GiaTri ?? 0));
+                    discountedPrice = originalPrice * (1 - percent / 100);
+                }
+                else if (activePromotion.LoaiGiam == "Số tiền")
+                {
+                    var discountAmount = Math.Min(originalPrice, Math.Max(0, activePromotion.GiaTri ?? 0));
+                    discountedPrice = originalPrice - discountAmount;
+                }
+                else
+                {
+                    return null;
+                }
+
+                // Làm tròn đến 1000 VNĐ (làm tròn xuống)
+                discountedPrice = Math.Floor(discountedPrice / 1000) * 1000;
+
+                // Đảm bảo giá không âm
+                discountedPrice = Math.Max(0, discountedPrice);
+
+                return discountedPrice;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         // Helper: Tạo mã đơn hàng
         private string GenerateOrderCode()
         {
@@ -874,6 +974,8 @@ namespace DATN_DT.Controllers
             public decimal TongTien { get; set; }
 
             public int DiaChiId { get; set; } // NEW
+            public int? IdVoucher { get; set; }
+            public decimal SoTienGiamVoucher { get; set; } = 0;
         }
 
     }

@@ -26,5 +26,6 @@
         public ROM? ROM { get; set; }
         public ICollection<AnhSanPham>? AnhSanPhams { get; set; }
         public ICollection<Imei>? Imeis { get; set; }
+        public ICollection<ModelSanPhamKhuyenMai>? ModelSanPhamKhuyenMais { get; set; }
     }
 }

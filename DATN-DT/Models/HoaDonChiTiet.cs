@@ -6,7 +6,7 @@
         public int? IdHoaDon { get; set; }
         public int? IdModelSanPham { get; set; }
         public int? IdImei { get; set; }
-        public int? IdKhuyenMai { get; set; }
+        public decimal? GiaKhuyenMai { get; set; } // Giá sản phẩm sau khi áp dụng khuyến mãi
         public decimal? DonGia { get; set; }
         public int? SoLuong { get; set; }
         public decimal? ThanhTien { get; set; }
@@ -17,6 +17,5 @@
         public HoaDon? HoaDon { get; set; }
         public ModelSanPham? ModelSanPham { get; set; }
         public Imei? Imei { get; set; }
-        public KhuyenMai? KhuyenMai { get; set; }
     }
 }

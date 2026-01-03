@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "Quản Lý Bán Hàng Offline";
+    ViewData["Title"] = "Thống Kê Bán Hàng";
     Layout = null;
 }
 
@@ -13,85 +13,302 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-sidebar: #1e293b;
+            --bg-header: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            background-color: #f5f5f5;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .card {
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 10px 10px 0 0 !important;
-            padding: 15px 20px;
-        }
-        .stat-card {
-            background: white;
-            border-radius: 10px;
+            margin: 0;
             padding: 20px;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text-primary);
+            min-height: 100vh;
         }
+
+        h2 {
+            color: var(--text-primary);
+            font-weight: 700;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border-radius: 12px 12px 0 0 !important;
+            padding: 15px 20px;
+            font-weight: 600;
+            border-bottom: none;
+        }
+
+        .card-header-online {
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+        }
+
+        .card-header-offline {
+            background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+        }
+
+        .card-body {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            padding: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-color);
+        }
+
         .stat-value {
             font-size: 2rem;
             font-weight: bold;
-            color: #667eea;
+            color: var(--primary-color);
         }
+
+        .stat-value-online {
+            color: #0ea5e9;
+        }
+
+        .stat-value-offline {
+            color: #f59e0b;
+        }
+
         .stat-label {
-            color: #666;
+            color: var(--text-secondary);
             font-size: 0.9rem;
-            margin-top: 5px;
+            margin-top: 8px;
         }
+
         .date-filter {
-            background: white;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
             padding: 20px;
-            border-radius: 10px;
+            border-radius: 12px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-lg);
         }
+
+        .form-label {
+            color: var(--text-primary);
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            background-color: #1e293b;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 8px;
+        }
+
+        .form-control:focus {
+            background-color: #1e293b;
+            border-color: var(--primary-color);
+            color: var(--text-primary);
+            box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+        }
+
+        .btn {
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: rgba(148, 163, 184, 0.2);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(148, 163, 184, 0.3);
+            color: var(--text-primary);
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning-color) 0%, #d97706 100%);
+            color: white;
+        }
+
         .btn-date-option {
             margin: 5px;
         }
-        table {
-            background: white;
+
+        .table {
+            background-color: transparent;
+            color: var(--text-primary);
+            margin-bottom: 0;
         }
+
         .table thead th {
-            background-color: #667eea;
-            color: white;
-            border: none;
+            background: linear-gradient(135deg, var(--bg-header) 0%, #0f172a 100%);
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-color);
+            font-weight: 600;
+            padding: 15px;
         }
+
+        .table tbody td {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 15px;
+        }
+
+        .table tbody tr:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+        }
+
         .chart-container {
             position: relative;
             height: 300px;
-            background: white;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
         }
-        /* CSS cho modal chi tiết hóa đơn */
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        .text-muted {
+            color: var(--text-secondary) !important;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        .modal-content {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-footer {
+            border-top: 1px solid var(--border-color);
+            background-color: var(--bg-card);
+        }
+
+        .btn-close-white {
+            filter: invert(1);
+        }
+
         #detailModal .modal-body {
             max-height: 80vh;
             overflow-y: auto;
+            background-color: var(--bg-card);
+            color: var(--text-primary);
         }
+
         #detailModal .table {
             width: 100%;
             table-layout: auto;
+            background-color: transparent;
         }
+
         #detailModal .table th,
         #detailModal .table td {
             white-space: nowrap;
             vertical-align: middle;
+            color: var(--text-primary);
         }
+
+        #detailModal .table th {
+            background: linear-gradient(135deg, var(--bg-header) 0%, #0f172a 100%);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        #detailModal .table td {
+            border-bottom: 1px solid var(--border-color);
+        }
+
         #detailModal .table th:nth-child(2),
         #detailModal .table td:nth-child(2) {
             white-space: normal;
             width: auto;
             min-width: 120px;
         }
+
         #detailModal .table img {
             max-width: 200px;
             max-height: 200px;
@@ -100,18 +317,39 @@
             object-fit: contain;
             display: block;
             margin: 0 auto;
+            border-radius: 8px;
+            border: 2px solid var(--border-color);
         }
+
         #detailModal .table td:nth-child(8) {
             white-space: normal;
             word-break: break-all;
             max-width: 200px;
             font-size: 0.85em;
         }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
     </style>
 </head>
 <body>
     <div class="container-fluid mt-4">
-        <h2 class="mb-4"><i class="fas fa-chart-line"></i> Quản Lý Bán Hàng Offline</h2>
+        <h2 class="mb-4"><i class="fas fa-chart-line"></i> Thống Kê Bán Hàng</h2>
 
         <!-- Date Filter -->
         <div class="date-filter">
@@ -138,7 +376,7 @@
                     <label class="form-label">Đến ngày:</label>
                     <input type="date" id="toDate" class="form-control" />
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-4" id="searchButtonContainer" style="display: none;">
                     <button type="button" class="btn btn-success" onclick="loadData()">
                         <i class="fas fa-search"></i> Tìm kiếm
                     </button>
@@ -149,62 +387,160 @@
             </div>
         </div>
 
-        <!-- Statistics Cards -->
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <div class="stat-card">
-                    <div class="stat-value" id="tongDoanhThu">0</div>
-                    <div class="stat-label">Tổng Doanh Thu (VNĐ)</div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="stat-card">
-                    <div class="stat-value" id="soLuongDonHang">0</div>
-                    <div class="stat-label">Số Lượng Đơn Hàng</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Chart -->
+        <!-- Tổng Doanh Thu -->
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Biểu Đồ Doanh Thu</h5>
+                <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Biểu Đồ Doanh Thu Tổng</h5>
             </div>
             <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-value" id="tongDoanhThu">0</div>
+                            <div class="stat-label">Tổng Doanh Thu (VNĐ)</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-value stat-value-online" id="tongDoanhThuOn">0</div>
+                            <div class="stat-label">Doanh Thu Online (VNĐ)</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-value stat-value-offline" id="tongDoanhThuOff">0</div>
+                            <div class="stat-label">Doanh Thu Offline (VNĐ)</div>
+                        </div>
+                    </div>
+                </div>
                 <div class="chart-container">
-                    <canvas id="revenueChart"></canvas>
+                    <canvas id="revenueChartTotal"></canvas>
                 </div>
             </div>
         </div>
 
-        <!-- Invoice Table -->
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-receipt"></i> Danh Sách Hóa Đơn</h5>
+        <!-- Bán Hàng Online và Offline -->
+        <div class="row">
+            <!-- Bán Hàng Online -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header card-header-online">
+                        <h5 class="mb-0"><i class="fas fa-shopping-cart"></i> Bán Hàng Online</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="stat-card">
+                                    <div class="stat-value stat-value-online" id="soLuongDonHangOn">0</div>
+                                    <div class="stat-label">Tổng Số Đơn</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="stat-card">
+                                    <div class="stat-value stat-value-online" id="tongDoanhThuOnCard">0</div>
+                                    <div class="stat-label">Tổng Doanh Thu</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="revenueChartOnline"></canvas>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover" id="invoiceTable">
-                        <thead>
-                            <tr>
-                                <th>STT</th>
-                                <th>Mã đơn</th>
-                                <th>Ngày đặt</th>
-                                <th>Tên khách hàng</th>
-                                <th>Số điện thoại</th>
-                                <th>Phương thức thanh toán</th>
-                                <th>Tổng tiền</th>
-                                <th>Chi tiết</th>
-                            </tr>
-                        </thead>
-                        <tbody id="invoiceTableBody">
-                            <tr>
-                                <td colspan="8" class="text-center text-muted">
-                                    <i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+
+            <!-- Bán Hàng Offline -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header card-header-offline">
+                        <h5 class="mb-0"><i class="fas fa-store"></i> Bán Hàng Offline</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="stat-card">
+                                    <div class="stat-value stat-value-offline" id="soLuongDonHangOff">0</div>
+                                    <div class="stat-label">Tổng Số Đơn</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="stat-card">
+                                    <div class="stat-value stat-value-offline" id="tongDoanhThuOffCard">0</div>
+                                    <div class="stat-label">Tổng Doanh Thu</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="revenueChartOffline"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danh Sách Hóa Đơn -->
+        <div class="row">
+            <!-- Hóa Đơn Online -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header card-header-online">
+                        <h5 class="mb-0"><i class="fas fa-receipt"></i> Danh Sách Hóa Đơn Online</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Mã đơn</th>
+                                        <th>Ngày đặt</th>
+                                        <th>Khách hàng</th>
+                                        <th>Tổng tiền</th>
+                                        <th>Chi tiết</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invoiceTableBodyOnline">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">
+                                            <i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hóa Đơn Offline -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header card-header-offline">
+                        <h5 class="mb-0"><i class="fas fa-receipt"></i> Danh Sách Hóa Đơn Offline</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Mã đơn</th>
+                                        <th>Ngày đặt</th>
+                                        <th>Khách hàng</th>
+                                        <th>Tổng tiền</th>
+                                        <th>Chi tiết</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invoiceTableBodyOffline">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">
+                                            <i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -230,9 +566,13 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        let revenueChart = null;
+        let revenueChartTotal = null;
+        let revenueChartOnline = null;
+        let revenueChartOffline = null;
         let currentFromDate = null;
         let currentToDate = null;
+        let hoaDonData = [];
+        let donHangData = [];
 
         // Khởi tạo: mặc định là hôm nay
         document.addEventListener('DOMContentLoaded', function() {
@@ -256,16 +596,21 @@
                 document.getElementById('toDate').value = formatDate(today);
                 document.getElementById('customDateRange').style.display = 'none';
                 document.getElementById('customDateRange2').style.display = 'none';
+                document.getElementById('searchButtonContainer').style.display = 'none';
+                loadData();
             } else if (option === 'yesterday') {
                 document.querySelector('[onclick="selectDateOption(\'yesterday\')"]').classList.add('active');
                 document.getElementById('fromDate').value = formatDate(yesterday);
                 document.getElementById('toDate').value = formatDate(yesterday);
                 document.getElementById('customDateRange').style.display = 'none';
                 document.getElementById('customDateRange2').style.display = 'none';
+                document.getElementById('searchButtonContainer').style.display = 'none';
+                loadData();
             } else if (option === 'custom') {
                 document.querySelector('[onclick="selectDateOption(\'custom\')"]').classList.add('active');
                 document.getElementById('customDateRange').style.display = 'block';
                 document.getElementById('customDateRange2').style.display = 'block';
+                document.getElementById('searchButtonContainer').style.display = 'block';
                 if (!document.getElementById('fromDate').value) {
                     document.getElementById('fromDate').value = formatDate(today);
                     document.getElementById('toDate').value = formatDate(today);
@@ -284,7 +629,6 @@
             return new Intl.NumberFormat('vi-VN').format(value) + ' đ';
         }
 
-        // Helper function để lấy giá trị từ object (hỗ trợ cả camelCase và PascalCase)
         function getValue(obj, ...keys) {
             if (!obj) return null;
             for (const key of keys) {
@@ -295,7 +639,6 @@
             return null;
         }
 
-        // Helper function để parse ngày từ format dd/MM/yyyy
         function parseDate(dateString) {
             if (!dateString || typeof dateString !== 'string') {
                 return new Date(0);
@@ -304,8 +647,6 @@
             if (parts.length !== 3) {
                 return new Date(0);
             }
-            // parts[0] = day, parts[1] = month, parts[2] = year
-            // Note: month is 0-indexed in JavaScript Date
             return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
         }
 
@@ -326,22 +667,32 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    // Debug: Log dữ liệu để kiểm tra
                     console.log('Data received:', data);
-                    console.log('DonHangs:', data.donHangs);
 
-                    // Cập nhật thống kê
+                    // Cập nhật thống kê tổng
                     document.getElementById('tongDoanhThu').textContent = formatCurrency(data.tongDoanhThu || 0);
-                    document.getElementById('soLuongDonHang').textContent = data.soLuongDonHang || 0;
+                    document.getElementById('tongDoanhThuOn').textContent = formatCurrency(data.tongDoanhThuOn || 0);
+                    document.getElementById('tongDoanhThuOff').textContent = formatCurrency(data.tongDoanhThuOff || 0);
+                    document.getElementById('tongDoanhThuOnCard').textContent = formatCurrency(data.tongDoanhThuOn || 0);
+                    document.getElementById('tongDoanhThuOffCard').textContent = formatCurrency(data.tongDoanhThuOff || 0);
+                    document.getElementById('soLuongDonHangOn').textContent = data.soLuongDonHangOn || 0;
+                    document.getElementById('soLuongDonHangOff').textContent = data.soLuongDonHangOff || 0;
 
                     // Cập nhật biểu đồ
-                    if (data.donHangs && Array.isArray(data.donHangs)) {
-                        updateChart(data.donHangs);
+                    if (data.hoaDons && data.donHangs) {
+                        updateTotalChart(data.hoaDons, data.donHangs);
+                        updateOnlineChart(data.hoaDons);
+                        updateOfflineChart(data.donHangs);
                     }
 
                     // Cập nhật bảng
-                    if (data.donHangs && Array.isArray(data.donHangs)) {
-                        updateTable(data.donHangs);
+                    if (data.hoaDons) {
+                        updateOnlineTable(data.hoaDons);
+                        hoaDonData = data.hoaDons;
+                    }
+                    if (data.donHangs) {
+                        updateOfflineTable(data.donHangs);
+                        donHangData = data.donHangs;
                     }
 
                     // Enable nút xuất Excel
@@ -355,128 +706,73 @@
             }
         }
 
-        function updateChart(donHangs) {
-            let ctx;
-            try {
-                ctx = document.getElementById('revenueChart').getContext('2d');
+        function updateTotalChart(hoaDons, donHangs) {
+            const ctx = document.getElementById('revenueChartTotal');
+            if (!ctx) return;
 
-                // Destroy chart nếu đã tồn tại
-                if (revenueChart) {
-                    revenueChart.destroy();
-                }
-            } catch (error) {
-                console.warn('Chart initialization error:', error);
-                return;
+            if (revenueChartTotal) {
+                revenueChartTotal.destroy();
             }
 
-            // Kiểm tra dữ liệu hợp lệ
-            if (!donHangs || !Array.isArray(donHangs) || donHangs.length === 0) {
-                // Tạo biểu đồ rỗng
-                try {
-                    revenueChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['Không có dữ liệu'],
-                        datasets: [{
-                            label: 'Doanh thu (VNĐ)',
-                            data: [0],
-                            backgroundColor: 'rgba(102, 126, 234, 0.6)',
-                            borderColor: 'rgba(102, 126, 234, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                    });
-                } catch (error) {
-                    console.warn('Chart creation error:', error);
-                }
-                return;
-            }
-
-            // Chuẩn bị dữ liệu - Nhóm theo ngày và tính tổng doanh thu
-            console.log('Preparing chart data from:', donHangs);
-            console.log('First donHang sample:', donHangs[0]);
-            
-            // Nhóm các đơn hàng theo ngày
+            // Nhóm theo ngày
             const dailyRevenue = {};
-            
-            donHangs.forEach((d, index) => {
-                const ngayDat = getValue(d, 'ngayDat', 'NgayDat');
-                const tongTien = getValue(d, 'tongTien', 'TongTien');
-                
-                let dateKey = null;
-                if (ngayDat && typeof ngayDat === 'string' && ngayDat !== 'N/A') {
-                    // Lấy phần ngày (dd/MM/yyyy)
-                    dateKey = ngayDat.split(' ')[0];
+            const dailyRevenueOn = {};
+            const dailyRevenueOff = {};
+
+            // Xử lý online
+            hoaDons.forEach(h => {
+                const ngayDat = getValue(h, 'ngayDat', 'NgayDat');
+                const tongTien = getValue(h, 'tongTien', 'TongTien') || 0;
+                const dateKey = ngayDat ? ngayDat.split(' ')[0] : null;
+                if (dateKey) {
+                    dailyRevenue[dateKey] = (dailyRevenue[dateKey] || 0) + tongTien;
+                    dailyRevenueOn[dateKey] = (dailyRevenueOn[dateKey] || 0) + tongTien;
                 }
-                
-                if (!dateKey) {
-                    console.warn(`DonHang ${index}: Không có ngày hợp lệ, bỏ qua`);
-                    return;
-                }
-                
-                // Parse giá trị tiền
-                let value = 0;
-                if (tongTien !== null && tongTien !== undefined) {
-                    value = parseFloat(tongTien);
-                    if (isNaN(value)) {
-                        value = 0;
-                    }
-                }
-                
-                // Cộng dồn vào ngày tương ứng
-                if (dailyRevenue[dateKey]) {
-                    dailyRevenue[dateKey] += value;
-                } else {
-                    dailyRevenue[dateKey] = value;
-                }
-                
-                console.log(`DonHang ${index}: NgayDat=${ngayDat}, DateKey=${dateKey}, TongTien=${tongTien}, Parsed=${value}`);
             });
-            
-            // Sắp xếp các ngày theo thứ tự thời gian
+
+            // Xử lý offline
+            donHangs.forEach(d => {
+                const ngayDat = getValue(d, 'ngayDat', 'NgayDat');
+                const tongTien = getValue(d, 'tongTien', 'TongTien') || 0;
+                const dateKey = ngayDat ? ngayDat.split(' ')[0] : null;
+                if (dateKey) {
+                    dailyRevenue[dateKey] = (dailyRevenue[dateKey] || 0) + tongTien;
+                    dailyRevenueOff[dateKey] = (dailyRevenueOff[dateKey] || 0) + tongTien;
+                }
+            });
+
             const sortedDates = Object.keys(dailyRevenue).sort((a, b) => {
-                // Chuyển đổi dd/MM/yyyy thành Date để so sánh
                 const dateA = parseDate(a);
                 const dateB = parseDate(b);
                 return dateA - dateB;
             });
-            
-            // Tạo labels và revenues từ dữ liệu đã nhóm
+
             const labels = sortedDates;
-            const revenues = sortedDates.map(date => dailyRevenue[date]);
-            
-            console.log('Daily Revenue grouped:', dailyRevenue);
-            console.log('Sorted dates:', sortedDates);
-            console.log('Labels:', labels);
-            console.log('Revenues:', revenues);
-            console.log('Max revenue:', Math.max(...revenues, 0));
+            const revenuesTotal = sortedDates.map(date => dailyRevenue[date] || 0);
+            const revenuesOn = sortedDates.map(date => dailyRevenueOn[date] || 0);
+            const revenuesOff = sortedDates.map(date => dailyRevenueOff[date] || 0);
 
-            // Tìm giá trị max để set scale phù hợp
-            const maxRevenue = revenues.length > 0 ? Math.max(...revenues) : 0;
-            const minRevenue = revenues.length > 0 ? Math.min(...revenues.filter(r => r > 0)) : 0;
-            const suggestedMax = maxRevenue > 0 ? Math.ceil(maxRevenue * 1.2) : 1000000; // Thêm 20% padding và làm tròn lên
-            
-            console.log('Chart config:', { maxRevenue, minRevenue, suggestedMax, revenuesLength: revenues.length });
-
-            try {
-                revenueChart = new Chart(ctx, {
+            revenueChartTotal = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Doanh thu (VNĐ)',
-                        data: revenues,
+                        label: 'Tổng Doanh Thu',
+                        data: revenuesTotal,
                         backgroundColor: 'rgba(102, 126, 234, 0.6)',
                         borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: 'Doanh Thu Online',
+                        data: revenuesOn,
+                        backgroundColor: 'rgba(79, 172, 254, 0.6)',
+                        borderColor: 'rgba(79, 172, 254, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: 'Doanh Thu Offline',
+                        data: revenuesOff,
+                        backgroundColor: 'rgba(250, 112, 154, 0.6)',
+                        borderColor: 'rgba(250, 112, 154, 1)',
                         borderWidth: 1
                     }]
                 },
@@ -486,20 +782,73 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            max: suggestedMax,
                             ticks: {
                                 callback: function(value) {
                                     return formatCurrency(value);
-                                },
-                                // Không set stepSize cố định, để Chart.js tự tính
-                                autoSkip: true,
-                                maxTicksLimit: 10
+                                }
                             }
-                        },
-                        x: {
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateOnlineChart(hoaDons) {
+            const ctx = document.getElementById('revenueChartOnline');
+            if (!ctx) return;
+
+            if (revenueChartOnline) {
+                revenueChartOnline.destroy();
+            }
+
+            const dailyRevenue = {};
+            hoaDons.forEach(h => {
+                const ngayDat = getValue(h, 'ngayDat', 'NgayDat');
+                const tongTien = getValue(h, 'tongTien', 'TongTien') || 0;
+                const dateKey = ngayDat ? ngayDat.split(' ')[0] : null;
+                if (dateKey) {
+                    dailyRevenue[dateKey] = (dailyRevenue[dateKey] || 0) + tongTien;
+                }
+            });
+
+            const sortedDates = Object.keys(dailyRevenue).sort((a, b) => {
+                const dateA = parseDate(a);
+                const dateB = parseDate(b);
+                return dateA - dateB;
+            });
+
+            revenueChartOnline = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedDates,
+                    datasets: [{
+                        label: 'Doanh Thu Online',
+                        data: sortedDates.map(date => dailyRevenue[date] || 0),
+                        backgroundColor: 'rgba(79, 172, 254, 0.2)',
+                        borderColor: 'rgba(79, 172, 254, 1)',
+                        borderWidth: 2,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
                             ticks: {
-                                maxRotation: 45,
-                                minRotation: 0
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                }
                             }
                         }
                     },
@@ -510,66 +859,99 @@
                                     return 'Doanh thu: ' + formatCurrency(context.parsed.y);
                                 }
                             }
-                        },
-                        legend: {
-                            display: true
                         }
                     }
                 }
-                });
-                console.log('Chart created successfully');
-            } catch (error) {
-                console.error('Chart creation error:', error);
-                console.error('Error details:', error.stack);
-            }
+            });
         }
 
-        let donHangData = [];
+        function updateOfflineChart(donHangs) {
+            const ctx = document.getElementById('revenueChartOffline');
+            if (!ctx) return;
 
-        function updateTable(donHangs) {
-            const tbody = document.getElementById('invoiceTableBody');
+            if (revenueChartOffline) {
+                revenueChartOffline.destroy();
+            }
+
+            const dailyRevenue = {};
+            donHangs.forEach(d => {
+                const ngayDat = getValue(d, 'ngayDat', 'NgayDat');
+                const tongTien = getValue(d, 'tongTien', 'TongTien') || 0;
+                const dateKey = ngayDat ? ngayDat.split(' ')[0] : null;
+                if (dateKey) {
+                    dailyRevenue[dateKey] = (dailyRevenue[dateKey] || 0) + tongTien;
+                }
+            });
+
+            const sortedDates = Object.keys(dailyRevenue).sort((a, b) => {
+                const dateA = parseDate(a);
+                const dateB = parseDate(b);
+                return dateA - dateB;
+            });
+
+            revenueChartOffline = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedDates,
+                    datasets: [{
+                        label: 'Doanh Thu Offline',
+                        data: sortedDates.map(date => dailyRevenue[date] || 0),
+                        backgroundColor: 'rgba(250, 112, 154, 0.2)',
+                        borderColor: 'rgba(250, 112, 154, 1)',
+                        borderWidth: 2,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Doanh thu: ' + formatCurrency(context.parsed.y);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateOnlineTable(hoaDons) {
+            const tbody = document.getElementById('invoiceTableBodyOnline');
             tbody.innerHTML = '';
 
-            if (donHangs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Không có dữ liệu</td></tr>';
-                donHangData = [];
+            if (hoaDons.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Không có dữ liệu</td></tr>';
                 return;
             }
 
-            donHangData = donHangs;
+            hoaDons.forEach((hoaDon, index) => {
+                const maDon = getValue(hoaDon, 'maDon', 'MaDon') || 'N/A';
+                const ngayDat = getValue(hoaDon, 'ngayDat', 'NgayDat') || 'N/A';
+                const tenKhachHang = getValue(hoaDon, 'tenKhachHang', 'TenKhachHang') || 'N/A';
+                const tongTien = getValue(hoaDon, 'tongTien', 'TongTien') || 0;
 
-            donHangs.forEach((donHang, index) => {
-                // Debug: Log từng đơn hàng
-                console.log(`DonHang ${index}:`, donHang);
-                console.log(`DonHang ${index} keys:`, Object.keys(donHang || {}));
-                
-                // Sử dụng helper function để lấy giá trị
-                const idDonHang = getValue(donHang, 'idDonHang', 'IdDonHang');
-                const maDon = getValue(donHang, 'maDon', 'MaDon') || (idDonHang ? `DH${idDonHang}` : 'N/A');
-                const ngayDat = getValue(donHang, 'ngayDat', 'NgayDat') || 'N/A';
-                const tenKhachHang = getValue(donHang, 'tenKhachHang', 'TenKhachHang') || 'Khách vãng lai';
-                const sdtKhachHang = getValue(donHang, 'sdtKhachHang', 'SdtKhachHang') || 'N/A';
-                const phuongThuc = getValue(donHang, 'phuongThucThanhToan', 'PhuongThucThanhToan') || 'Chưa xác định';
-                const tongTienRaw = getValue(donHang, 'tongTien', 'TongTien');
-                const tongTien = tongTienRaw !== null && tongTienRaw !== undefined ? (parseFloat(tongTienRaw) || 0) : 0;
-                
-                console.log(`DonHang ${index} parsed:`, { 
-                    idDonHang, maDon, ngayDat, tenKhachHang, 
-                    sdtKhachHang, phuongThuc, tongTienRaw, tongTien 
-                });
-                
                 const row = document.createElement('tr');
-                
                 row.innerHTML = `
                     <td>${index + 1}</td>
                     <td><strong>${maDon}</strong></td>
                     <td>${ngayDat}</td>
                     <td>${tenKhachHang}</td>
-                    <td>${sdtKhachHang}</td>
-                    <td>${phuongThuc}</td>
                     <td><strong class="text-success">${formatCurrency(tongTien)}</strong></td>
                     <td>
-                        <button class="btn btn-sm btn-info" onclick="showDetail(${index})">
+                        <button class="btn btn-sm btn-info" onclick="showDetailOnline(${index})">
                             <i class="fas fa-eye"></i> Xem
                         </button>
                     </td>
@@ -578,46 +960,62 @@
             });
         }
 
-        function showDetail(index) {
-            console.log('showDetail called with index:', index);
-            console.log('donHangData length:', donHangData.length);
-            console.log('donHangData:', donHangData);
-            
-            const donHang = donHangData[index];
-            if (!donHang) {
-                console.error('DonHang not found at index:', index);
-                alert('Không tìm thấy thông tin đơn hàng!');
+        function updateOfflineTable(donHangs) {
+            const tbody = document.getElementById('invoiceTableBodyOffline');
+            tbody.innerHTML = '';
+
+            if (donHangs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Không có dữ liệu</td></tr>';
                 return;
             }
 
-            console.log('DonHang selected:', donHang);
-            console.log('DonHang keys:', Object.keys(donHang || {}));
+            donHangs.forEach((donHang, index) => {
+                const maDon = getValue(donHang, 'maDon', 'MaDon') || 'N/A';
+                const ngayDat = getValue(donHang, 'ngayDat', 'NgayDat') || 'N/A';
+                const tenKhachHang = getValue(donHang, 'tenKhachHang', 'TenKhachHang') || 'N/A';
+                const tongTien = getValue(donHang, 'tongTien', 'TongTien') || 0;
 
-            // Sử dụng helper function để lấy giá trị
-            const idDonHang = getValue(donHang, 'idDonHang', 'IdDonHang');
-            const maDon = getValue(donHang, 'maDon', 'MaDon') || (idDonHang ? `DH${idDonHang}` : 'N/A');
-            const ngayDat = getValue(donHang, 'ngayDat', 'NgayDat') || 'N/A';
-            const tenKhachHang = getValue(donHang, 'tenKhachHang', 'TenKhachHang') || 'Khách vãng lai';
-            const sdtKhachHang = getValue(donHang, 'sdtKhachHang', 'SdtKhachHang') || 'N/A';
-            const phuongThuc = getValue(donHang, 'phuongThucThanhToan', 'PhuongThucThanhToan') || 'Chưa xác định';
-            const tongTienRaw = getValue(donHang, 'tongTien', 'TongTien');
-            const tongTien = tongTienRaw !== null && tongTienRaw !== undefined ? (parseFloat(tongTienRaw) || 0) : 0;
-            
-            // Lấy chi tiết sản phẩm
-            const chiTiet = getValue(donHang, 'chiTiet', 'ChiTiet');
-            console.log('ChiTiet:', chiTiet);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td><strong>${maDon}</strong></td>
+                    <td>${ngayDat}</td>
+                    <td>${tenKhachHang}</td>
+                    <td><strong class="text-success">${formatCurrency(tongTien)}</strong></td>
+                    <td>
+                        <button class="btn btn-sm btn-info" onclick="showDetailOffline(${index})">
+                            <i class="fas fa-eye"></i> Xem
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
 
-            // Lấy tên nhân viên
-            const tenNhanVien = getValue(donHang, 'tenNhanVien', 'TenNhanVien') || 'N/A';
+        function showDetailOnline(index) {
+            const hoaDon = hoaDonData[index];
+            if (!hoaDon) {
+                alert('Không tìm thấy thông tin hóa đơn!');
+                return;
+            }
+
+            const maDon = getValue(hoaDon, 'maDon', 'MaDon') || 'N/A';
+            const ngayDat = getValue(hoaDon, 'ngayDat', 'NgayDat') || 'N/A';
+            const tenKhachHang = getValue(hoaDon, 'tenKhachHang', 'TenKhachHang') || 'N/A';
+            const sdtKhachHang = getValue(hoaDon, 'sdtKhachHang', 'SdtKhachHang') || 'N/A';
+            const phuongThuc = getValue(hoaDon, 'phuongThucThanhToan', 'PhuongThucThanhToan') || 'N/A';
+            const tongTien = getValue(hoaDon, 'tongTien', 'TongTien') || 0;
+            const tenNhanVien = getValue(hoaDon, 'tenNhanVien', 'TenNhanVien') || 'N/A';
+            const chiTiet = getValue(hoaDon, 'chiTiet', 'ChiTiet') || [];
 
             let html = `
                 <div class="mb-3">
-                    <h6><strong>Thông tin đơn hàng:</strong></h6>
+                    <h6><strong>Thông tin hóa đơn:</strong></h6>
                     <p><strong>Mã đơn:</strong> ${maDon}</p>
                     <p><strong>Ngày đặt:</strong> ${ngayDat}</p>
                     <p><strong>Tên khách hàng:</strong> ${tenKhachHang}</p>
                     <p><strong>Số điện thoại:</strong> ${sdtKhachHang}</p>
-                    <p><strong>Người tạo hóa đơn:</strong> ${tenNhanVien}</p>
+                    <p><strong>Nhân viên:</strong> ${tenNhanVien}</p>
                     <p><strong>Phương thức thanh toán:</strong> ${phuongThuc}</p>
                     <p><strong>Tổng tiền:</strong> <span class="text-success">${formatCurrency(tongTien)}</span></p>
                 </div>
@@ -627,15 +1025,15 @@
                     <table class="table table-bordered">
                         <thead>
                             <tr>
-                                <th style="width: 50px;">STT</th>
-                                <th style="width: auto; min-width: 150px;">Ảnh</th>
+                                <th>STT</th>
+                                <th>Ảnh</th>
                                 <th>Tên sản phẩm</th>
-                                <th>Tên model</th>
+                                <th>Model</th>
                                 <th>RAM</th>
                                 <th>ROM</th>
                                 <th>Màu</th>
-                                <th style="max-width: 200px;">IMEI</th>
-                                <th style="width: 80px;">Số lượng</th>
+                                <th>IMEI</th>
+                                <th>Số lượng</th>
                                 <th>Đơn giá</th>
                                 <th>Thành tiền</th>
                             </tr>
@@ -643,68 +1041,135 @@
                         <tbody>
             `;
 
-            if (chiTiet && Array.isArray(chiTiet) && chiTiet.length > 0) {
+            if (Array.isArray(chiTiet) && chiTiet.length > 0) {
                 chiTiet.forEach((item, idx) => {
-                    console.log(`ChiTiet item ${idx}:`, item);
-                    
                     const tenSanPham = getValue(item, 'tenSanPham', 'TenSanPham') || 'N/A';
                     const tenModel = getValue(item, 'tenModel', 'TenModel') || 'N/A';
                     const ram = getValue(item, 'ram', 'RAM') || 'N/A';
                     const rom = getValue(item, 'rom', 'ROM') || 'N/A';
                     const mau = getValue(item, 'mau', 'Mau') || 'N/A';
                     const anhSanPham = getValue(item, 'anhSanPham', 'AnhSanPham') || '';
-                    const imeis = getValue(item, 'imeis', 'Imeis');
+                    const imeis = getValue(item, 'imeis', 'Imeis') || [];
                     const soLuong = getValue(item, 'soLuong', 'SoLuong') || 0;
-                    const donGiaRaw = getValue(item, 'donGia', 'DonGia');
-                    const donGia = donGiaRaw !== null && donGiaRaw !== undefined ? (parseFloat(donGiaRaw) || 0) : 0;
-                    const thanhTienRaw = getValue(item, 'thanhTien', 'ThanhTien');
-                    const thanhTien = thanhTienRaw !== null && thanhTienRaw !== undefined ? (parseFloat(thanhTienRaw) || 0) : 0;
-                    
-                    let imeiDisplay = 'N/A';
-                    if (imeis && Array.isArray(imeis) && imeis.length > 0) {
-                        imeiDisplay = imeis.join(', ');
-                    }
-                    
-                    // Tạo đường dẫn ảnh - tự động điều chỉnh kích thước
-                    let anhHtml = '<span class="text-muted">N/A</span>';
-                    if (anhSanPham && anhSanPham.trim() !== '') {
-                        const anhPath = anhSanPham.startsWith('/') ? anhSanPham : '/' + anhSanPham;
-                        anhHtml = `<img src="${anhPath}" alt="${tenSanPham}" class="img-fluid" style="max-width: 100px; max-height: 100px; width: auto; height: auto; object-fit: contain;" onload="this.style.width='auto'; this.style.height='auto';" />`;
-                    }
-                    
+                    const donGia = getValue(item, 'donGia', 'DonGia') || 0;
+                    const thanhTien = getValue(item, 'thanhTien', 'ThanhTien') || 0;
+
+                    const imeiDisplay = Array.isArray(imeis) && imeis.length > 0 ? imeis.join(', ') : 'N/A';
+                    const anhHtml = anhSanPham ? `<img src="${anhSanPham.startsWith('/') ? anhSanPham : '/' + anhSanPham}" alt="${tenSanPham}" class="img-fluid" style="max-width: 100px; max-height: 100px;" />` : '<span class="text-muted">N/A</span>';
+
                     html += `
                         <tr>
-                            <td style="text-align: center; vertical-align: middle;">${idx + 1}</td>
-                            <td style="text-align: center; vertical-align: middle; padding: 10px;">${anhHtml}</td>
-                            <td style="vertical-align: middle;">${tenSanPham}</td>
-                            <td style="vertical-align: middle;">${tenModel}</td>
-                            <td style="vertical-align: middle;">${ram}</td>
-                            <td style="vertical-align: middle;">${rom}</td>
-                            <td style="vertical-align: middle;">${mau}</td>
-                            <td style="font-size: 0.85em; word-break: break-all; max-width: 200px; vertical-align: middle;">${imeiDisplay}</td>
-                            <td style="text-align: center; vertical-align: middle;">${soLuong}</td>
-                            <td style="vertical-align: middle;">${formatCurrency(donGia)}</td>
-                            <td style="vertical-align: middle;"><strong>${formatCurrency(thanhTien)}</strong></td>
+                            <td>${idx + 1}</td>
+                            <td>${anhHtml}</td>
+                            <td>${tenSanPham}</td>
+                            <td>${tenModel}</td>
+                            <td>${ram}</td>
+                            <td>${rom}</td>
+                            <td>${mau}</td>
+                            <td style="font-size: 0.85em;">${imeiDisplay}</td>
+                            <td>${soLuong}</td>
+                            <td>${formatCurrency(donGia)}</td>
+                            <td><strong>${formatCurrency(thanhTien)}</strong></td>
                         </tr>
                     `;
                 });
             } else {
-                html += `
-                    <tr>
-                        <td colspan="11" class="text-center text-muted">Không có chi tiết sản phẩm</td>
-                    </tr>
-                `;
+                html += '<tr><td colspan="11" class="text-center text-muted">Không có chi tiết</td></tr>';
             }
 
-            html += `
-                        </tbody>
-                    </table>
+            html += '</tbody></table></div>';
+            document.getElementById('detailModalBody').innerHTML = html;
+            new bootstrap.Modal(document.getElementById('detailModal')).show();
+        }
+
+        function showDetailOffline(index) {
+            const donHang = donHangData[index];
+            if (!donHang) {
+                alert('Không tìm thấy thông tin đơn hàng!');
+                return;
+            }
+
+            const maDon = getValue(donHang, 'maDon', 'MaDon') || 'N/A';
+            const ngayDat = getValue(donHang, 'ngayDat', 'NgayDat') || 'N/A';
+            const tenKhachHang = getValue(donHang, 'tenKhachHang', 'TenKhachHang') || 'N/A';
+            const sdtKhachHang = getValue(donHang, 'sdtKhachHang', 'SdtKhachHang') || 'N/A';
+            const phuongThuc = getValue(donHang, 'phuongThucThanhToan', 'PhuongThucThanhToan') || 'N/A';
+            const tongTien = getValue(donHang, 'tongTien', 'TongTien') || 0;
+            const tenNhanVien = getValue(donHang, 'tenNhanVien', 'TenNhanVien') || 'N/A';
+            const chiTiet = getValue(donHang, 'chiTiet', 'ChiTiet') || [];
+
+            let html = `
+                <div class="mb-3">
+                    <h6><strong>Thông tin đơn hàng:</strong></h6>
+                    <p><strong>Mã đơn:</strong> ${maDon}</p>
+                    <p><strong>Ngày đặt:</strong> ${ngayDat}</p>
+                    <p><strong>Tên khách hàng:</strong> ${tenKhachHang}</p>
+                    <p><strong>Số điện thoại:</strong> ${sdtKhachHang}</p>
+                    <p><strong>Nhân viên:</strong> ${tenNhanVien}</p>
+                    <p><strong>Phương thức thanh toán:</strong> ${phuongThuc}</p>
+                    <p><strong>Tổng tiền:</strong> <span class="text-success">${formatCurrency(tongTien)}</span></p>
                 </div>
+                <hr>
+                <h6><strong>Chi tiết sản phẩm:</strong></h6>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Ảnh</th>
+                                <th>Tên sản phẩm</th>
+                                <th>Model</th>
+                                <th>RAM</th>
+                                <th>ROM</th>
+                                <th>Màu</th>
+                                <th>IMEI</th>
+                                <th>Số lượng</th>
+                                <th>Đơn giá</th>
+                                <th>Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
             `;
 
+            if (Array.isArray(chiTiet) && chiTiet.length > 0) {
+                chiTiet.forEach((item, idx) => {
+                    const tenSanPham = getValue(item, 'tenSanPham', 'TenSanPham') || 'N/A';
+                    const tenModel = getValue(item, 'tenModel', 'TenModel') || 'N/A';
+                    const ram = getValue(item, 'ram', 'RAM') || 'N/A';
+                    const rom = getValue(item, 'rom', 'ROM') || 'N/A';
+                    const mau = getValue(item, 'mau', 'Mau') || 'N/A';
+                    const anhSanPham = getValue(item, 'anhSanPham', 'AnhSanPham') || '';
+                    const imeis = getValue(item, 'imeis', 'Imeis') || [];
+                    const soLuong = getValue(item, 'soLuong', 'SoLuong') || 0;
+                    const donGia = getValue(item, 'donGia', 'DonGia') || 0;
+                    const thanhTien = getValue(item, 'thanhTien', 'ThanhTien') || 0;
+
+                    const imeiDisplay = Array.isArray(imeis) && imeis.length > 0 ? imeis.join(', ') : 'N/A';
+                    const anhHtml = anhSanPham ? `<img src="${anhSanPham.startsWith('/') ? anhSanPham : '/' + anhSanPham}" alt="${tenSanPham}" class="img-fluid" style="max-width: 100px; max-height: 100px;" />` : '<span class="text-muted">N/A</span>';
+
+                    html += `
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td>${anhHtml}</td>
+                            <td>${tenSanPham}</td>
+                            <td>${tenModel}</td>
+                            <td>${ram}</td>
+                            <td>${rom}</td>
+                            <td>${mau}</td>
+                            <td style="font-size: 0.85em;">${imeiDisplay}</td>
+                            <td>${soLuong}</td>
+                            <td>${formatCurrency(donGia)}</td>
+                            <td><strong>${formatCurrency(thanhTien)}</strong></td>
+                        </tr>
+                    `;
+                });
+            } else {
+                html += '<tr><td colspan="11" class="text-center text-muted">Không có chi tiết</td></tr>';
+            }
+
+            html += '</tbody></table></div>';
             document.getElementById('detailModalBody').innerHTML = html;
-            const modal = new bootstrap.Modal(document.getElementById('detailModal'));
-            modal.show();
+            new bootstrap.Modal(document.getElementById('detailModal')).show();
         }
 
         function exportExcel() {

@@ -1,0 +1,856 @@
+@model IEnumerable<DATN_DT.Models.Voucher>
+
+@{
+    ViewData["Title"] = "Quản lý Voucher";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <title>Quản lý Voucher</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-sidebar: #1e293b;
+            --bg-header: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: var(--text-primary);
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 28px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        table {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .table thead th {
+            background: linear-gradient(135deg, var(--bg-header) 0%, #0f172a 100%);
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-color);
+            font-weight: 600;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .table tbody td {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 15px;
+        }
+
+        .table tbody tr:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+        }
+
+        .btn-create {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-md);
+        }
+
+            .btn-create:hover {
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-lg);
+                background: linear-gradient(135deg, var(--primary-hover) 0%, #7c3aed 100%);
+            }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning-color) 0%, #d97706 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            transition: all 0.3s ease;
+        }
+
+            .btn-warning:hover {
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-md);
+                background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            transition: all 0.3s ease;
+        }
+
+            .btn-danger:hover {
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-md);
+                background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            }
+
+        .modal-content {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 12px;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-footer {
+            border-top: 1px solid var(--border-color);
+            background-color: var(--bg-card);
+        }
+
+        .btn-close-white {
+            filter: invert(1);
+        }
+
+        .form-control, .form-select {
+            background-color: #1e293b;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 8px;
+            padding: 10px 15px;
+        }
+
+            .form-control:focus, .form-select:focus {
+                background-color: #1e293b;
+                border-color: var(--primary-color);
+                color: var(--text-primary);
+                box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+            }
+
+        .form-control::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .form-label {
+            color: var(--text-primary);
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .text-danger {
+            color: var(--danger-color) !important;
+        }
+
+        .text-muted {
+            color: var(--text-secondary) !important;
+        }
+
+        .status-active {
+            color: var(--success-color);
+            font-weight: 600;
+            padding: 4px 12px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .status-inactive {
+            color: var(--danger-color);
+            font-weight: 600;
+            padding: 4px 12px;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .status-warning {
+            color: var(--warning-color);
+            font-weight: 600;
+            padding: 4px 12px;
+            background: rgba(245, 158, 11, 0.1);
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .discount-value {
+            font-weight: 700;
+            color: var(--primary-color);
+            font-size: 1.05rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border: none;
+            color: white;
+        }
+
+            .btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-md);
+            }
+
+        .btn-secondary {
+            background: rgba(148, 163, 184, 0.2);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+            .btn-secondary:hover {
+                background: rgba(148, 163, 184, 0.3);
+                color: var(--text-primary);
+            }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: #475569;
+            }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Quản Lý Voucher</h2>
+
+        <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
+                + Thêm Voucher
+            </button>
+        </div>
+
+        <table class="table table-hover text-center align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Mã Voucher</th>
+                    <th>Tên Voucher</th>
+                    <th>Giá Trị</th>
+                    <th>Loại Giảm</th>
+                    <th>Đơn Tối Thiểu</th>
+                    <th>Đã Dùng</th>
+                    <th>Ngày Bắt Đầu</th>
+                    <th>Ngày Kết Thúc</th>
+                    <th>Trạng Thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.IdVoucher</td>
+                        <td><strong>@item.MaVoucher</strong></td>
+                        <td>@item.TenVoucher</td>
+                        <td class="discount-value">
+                            @if (item.LoaiGiam == "PhanTram")
+                            {
+                                <span>@item.GiaTri.ToString("0.##")%</span>
+                            }
+                            else
+                            {
+                                <span>@item.GiaTri.ToString("N0") ₫</span>
+                            }
+                        </td>
+                        <td>@(item.LoaiGiam == "PhanTram" ? "Phần trăm" : "Số tiền")</td>
+                        <td>@(item.DonHangToiThieu?.ToString("N0") ?? "Không") ₫</td>
+                        <td>@item.SoLuongDaSuDung / @(item.SoLuongSuDung?.ToString() ?? "∞")</td>
+                        <td>@item.NgayBatDau.ToString("dd/MM/yyyy")</td>
+                        <td>@item.NgayKetThuc.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            @{
+                                var statusClass = "status-info";
+                                var statusText = item.TrangThai;
+                                if (item.TrangThai == "HoatDong")
+                                {
+                                    statusClass = "status-active";
+                                    statusText = "Hoạt động";
+                                }
+                                else if (item.TrangThai == "HetHan")
+                                {
+                                    statusClass = "status-inactive";
+                                    statusText = "Hết hạn";
+                                }
+                                else if (item.TrangThai == "SapDienRa")
+                                {
+                                    statusClass = "status-warning";
+                                    statusText = "Sắp diễn ra";
+                                }
+                                else if (item.TrangThai == "TamDung")
+                                {
+                                    statusClass = "status-inactive";
+                                    statusText = "Tạm dừng";
+                                }
+                            }
+                            <span class="@statusClass">
+                                @statusText
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-warning btn-edit"
+                                    data-id="@item.IdVoucher"
+                                    data-mavoucher="@item.MaVoucher"
+                                    data-tenvoucher="@item.TenVoucher"
+                                    data-mota="@item.MoTa"
+                                    data-loaigiam="@item.LoaiGiam"
+                                    data-giatri="@item.GiaTri"
+                                    data-donhangtoithieu="@item.DonHangToiThieu"
+                                    data-giamtoida="@item.GiamToiDa"
+                                    data-soluong="@item.SoLuongSuDung"
+                                    data-soluongmoikhach="@item.SoLuongMoiKhachHang"
+                                    data-batdau="@item.NgayBatDau.ToString("yyyy-MM-dd")"
+                                    data-ketthuc="@item.NgayKetThuc.ToString("yyyy-MM-dd")"
+                                    data-trangthai="@item.TrangThai">
+                                Sửa
+                            </button>
+                            <button class="btn btn-sm btn-danger btn-delete" data-id="@item.IdVoucher">
+                                Xóa
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal Thêm Voucher -->
+    <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title">Thêm Voucher</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="createForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Mã Voucher <span class="text-danger">*</span></label>
+                                    <input type="text" id="MaVoucher" class="form-control" placeholder="VD: SALE2024" />
+                                    <small id="errorMaVoucher" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Tên Voucher <span class="text-danger">*</span></label>
+                                    <input type="text" id="TenVoucher" class="form-control" placeholder="Tên voucher" />
+                                    <small id="errorTenVoucher" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Loại Giảm <span class="text-danger">*</span></label>
+                                    <select id="LoaiGiam" class="form-control">
+                                        <option value="">Chọn loại giảm</option>
+                                        <option value="PhanTram">Phần trăm (%)</option>
+                                        <option value="SoTien">Số tiền (₫)</option>
+                                    </select>
+                                    <small id="errorLoaiGiam" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Giá Trị <span class="text-danger">*</span></label>
+                                    <input type="number" id="GiaTri" class="form-control" placeholder="Nhập giá trị" min="0.01" step="0.01" />
+                                    <small id="errorGiaTri" class="text-danger d-none"></small>
+                                    <small class="text-muted" id="giaTriHint">Với phần trăm: 0-100, với số tiền: > 0</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Đơn Hàng Tối Thiểu (₫)</label>
+                                    <input type="number" id="DonHangToiThieu" class="form-control" placeholder="0 = Không giới hạn" min="0" step="1000" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Giảm Tối Đa (₫)</label>
+                                    <input type="number" id="GiamToiDa" class="form-control" placeholder="Chỉ áp dụng với phần trăm" min="0" step="1000" />
+                                    <small class="text-muted">Chỉ áp dụng khi loại giảm là phần trăm</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Số Lượng Sử Dụng</label>
+                                    <input type="number" id="SoLuongSuDung" class="form-control" placeholder="0 = Không giới hạn" min="0" />
+                                    <small class="text-muted">Tổng số lần voucher có thể được sử dụng</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Số Lượng Mỗi Khách Hàng</label>
+                                    <input type="number" id="SoLuongMoiKhachHang" class="form-control" placeholder="Để trống hoặc 0 = Không giới hạn" min="0" />
+                                    <small class="text-muted">Mỗi khách hàng có thể dùng tối đa bao nhiêu lần. Để trống hoặc 0 = không giới hạn</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Ngày Bắt Đầu <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" id="NgayBatDau" class="form-control" />
+                                    <small id="errorNgayBatDau" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Ngày Kết Thúc <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" id="NgayKetThuc" class="form-control" />
+                                    <small id="errorNgayKetThuc" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mô Tả</label>
+                            <textarea id="MoTa" class="form-control" placeholder="Mô tả voucher" rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Sửa Voucher -->
+    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chỉnh sửa Voucher</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editForm">
+                    <input type="hidden" id="EditIdVoucher" />
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Mã Voucher <span class="text-danger">*</span></label>
+                                    <input type="text" id="EditMaVoucher" class="form-control" />
+                                    <small id="errorEditMaVoucher" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Tên Voucher <span class="text-danger">*</span></label>
+                                    <input type="text" id="EditTenVoucher" class="form-control" />
+                                    <small id="errorEditTenVoucher" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Loại Giảm <span class="text-danger">*</span></label>
+                                    <select id="EditLoaiGiam" class="form-control">
+                                        <option value="PhanTram">Phần trăm (%)</option>
+                                        <option value="SoTien">Số tiền (₫)</option>
+                                    </select>
+                                    <small id="errorEditLoaiGiam" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Giá Trị <span class="text-danger">*</span></label>
+                                    <input type="number" id="EditGiaTri" class="form-control" min="0.01" step="0.01" />
+                                    <small id="errorEditGiaTri" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Đơn Hàng Tối Thiểu (₫)</label>
+                                    <input type="number" id="EditDonHangToiThieu" class="form-control" min="0" step="1000" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Giảm Tối Đa (₫)</label>
+                                    <input type="number" id="EditGiamToiDa" class="form-control" min="0" step="1000" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Số Lượng Sử Dụng</label>
+                                    <input type="number" id="EditSoLuongSuDung" class="form-control" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Số Lượng Mỗi Khách Hàng</label>
+                                    <input type="number" id="EditSoLuongMoiKhachHang" class="form-control" min="0" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Ngày Bắt Đầu <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" id="EditNgayBatDau" class="form-control" />
+                                    <small id="errorEditNgayBatDau" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Ngày Kết Thúc <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" id="EditNgayKetThuc" class="form-control" />
+                                    <small id="errorEditNgayKetThuc" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mô Tả</label>
+                            <textarea id="EditMoTa" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-warning">Cập nhật</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = msg;
+                el.classList.remove("d-none");
+            }
+        }
+
+        function hideError(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.add("d-none");
+        }
+
+        // Cập nhật validation cho giá trị
+        function updateGiaTriValidation() {
+            const loaiGiam = document.getElementById('LoaiGiam').value;
+            const giaTriInput = document.getElementById('GiaTri');
+            const giaTriHint = document.getElementById('giaTriHint');
+            
+            if (loaiGiam === 'PhanTram') {
+                giaTriInput.max = '100';
+                giaTriInput.min = '0.01';
+                giaTriInput.step = '0.01';
+                if (giaTriHint) giaTriHint.textContent = 'Với phần trăm: 0-100';
+            } else if (loaiGiam === 'SoTien') {
+                giaTriInput.removeAttribute('max');
+                giaTriInput.min = '1000';
+                giaTriInput.step = '1000';
+                if (giaTriHint) giaTriHint.textContent = 'Với số tiền: từ 1,000₫ trở lên';
+            }
+        }
+
+        // Thêm Voucher
+        document.getElementById("createForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            // Reset errors
+            document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
+
+            const MaVoucher = document.getElementById('MaVoucher');
+            const TenVoucher = document.getElementById('TenVoucher');
+            const LoaiGiam = document.getElementById('LoaiGiam');
+            const GiaTri = document.getElementById('GiaTri');
+            const NgayBatDau = document.getElementById('NgayBatDau');
+            const NgayKetThuc = document.getElementById('NgayKetThuc');
+            const MoTa = document.getElementById('MoTa');
+            const DonHangToiThieu = document.getElementById('DonHangToiThieu');
+            const GiamToiDa = document.getElementById('GiamToiDa');
+            const SoLuongSuDung = document.getElementById('SoLuongSuDung');
+            const SoLuongMoiKhachHang = document.getElementById('SoLuongMoiKhachHang');
+
+            // Validate
+            if (!MaVoucher.value.trim()) {
+                showError("errorMaVoucher", "Mã voucher không được để trống");
+                return;
+            }
+            if (!TenVoucher.value.trim()) {
+                showError("errorTenVoucher", "Tên voucher không được để trống");
+                return;
+            }
+            if (!LoaiGiam.value) {
+                showError("errorLoaiGiam", "Vui lòng chọn loại giảm");
+                return;
+            }
+            const giaTriValue = parseFloat(GiaTri.value);
+            if (isNaN(giaTriValue) || giaTriValue <= 0) {
+                showError("errorGiaTri", "Giá trị phải lớn hơn 0");
+                return;
+            }
+            if (LoaiGiam.value === "PhanTram" && giaTriValue > 100) {
+                showError("errorGiaTri", "Giá trị phần trăm không được vượt quá 100%");
+                return;
+            }
+            if (!NgayBatDau.value) {
+                showError("errorNgayBatDau", "Vui lòng chọn ngày bắt đầu");
+                return;
+            }
+            if (!NgayKetThuc.value) {
+                showError("errorNgayKetThuc", "Vui lòng chọn ngày kết thúc");
+                return;
+            }
+            if (new Date(NgayKetThuc.value) <= new Date(NgayBatDau.value)) {
+                showError("errorNgayKetThuc", "Ngày kết thúc phải sau ngày bắt đầu");
+                return;
+            }
+
+            // Xử lý SoLuongMoiKhachHang: nếu là 0 hoặc rỗng thì set null (không giới hạn)
+            const soLuongMoiKhachValue = SoLuongMoiKhachHang.value ? parseInt(SoLuongMoiKhachHang.value) : null;
+            const soLuongMoiKhachFinal = (soLuongMoiKhachValue !== null && soLuongMoiKhachValue > 0) ? soLuongMoiKhachValue : null;
+
+            const voucher = {
+                MaVoucher: MaVoucher.value.trim(),
+                TenVoucher: TenVoucher.value.trim(),
+                MoTa: MoTa.value.trim() || null,
+                LoaiGiam: LoaiGiam.value,
+                GiaTri: giaTriValue,
+                DonHangToiThieu: DonHangToiThieu.value ? parseFloat(DonHangToiThieu.value) : null,
+                GiamToiDa: GiamToiDa.value && LoaiGiam.value === "PhanTram" ? parseFloat(GiamToiDa.value) : null,
+                SoLuongSuDung: SoLuongSuDung.value ? parseInt(SoLuongSuDung.value) : null,
+                SoLuongMoiKhachHang: soLuongMoiKhachFinal,
+                NgayBatDau: new Date(NgayBatDau.value),
+                NgayKetThuc: new Date(NgayKetThuc.value),
+                TrangThai: "HoatDong"
+            };
+
+            const response = await fetch('/Voucher/Create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(voucher)
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                alert("Thêm voucher thành công!");
+                location.reload();
+            } else {
+                if (data.message) {
+                    alert(data.message);
+                } else {
+                    alert("Không thể thêm voucher. Vui lòng thử lại!");
+                }
+            }
+        });
+
+        // Sửa Voucher
+        document.querySelectorAll(".btn-edit").forEach(btn => {
+            btn.addEventListener("click", () => {
+                document.getElementById('EditIdVoucher').value = btn.dataset.id;
+                document.getElementById('EditMaVoucher').value = btn.dataset.mavoucher;
+                document.getElementById('EditTenVoucher').value = btn.dataset.tenvoucher;
+                document.getElementById('EditMoTa').value = btn.dataset.mota || '';
+                document.getElementById('EditLoaiGiam').value = btn.dataset.loaigiam;
+                document.getElementById('EditGiaTri').value = btn.dataset.giatri;
+                document.getElementById('EditDonHangToiThieu').value = btn.dataset.donhangtoithieu || '';
+                document.getElementById('EditGiamToiDa').value = btn.dataset.giamtoida || '';
+                document.getElementById('EditSoLuongSuDung').value = btn.dataset.soluong || '';
+                document.getElementById('EditSoLuongMoiKhachHang').value = btn.dataset.soluongmoikhach || '';
+                
+                // Format datetime-local
+                const batDau = new Date(btn.dataset.batdau);
+                const ketThuc = new Date(btn.dataset.ketthuc);
+                document.getElementById('EditNgayBatDau').value = batDau.toISOString().slice(0, 16);
+                document.getElementById('EditNgayKetThuc').value = ketThuc.toISOString().slice(0, 16);
+
+                new bootstrap.Modal(editModal).show();
+            });
+        });
+
+        document.getElementById("editForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
+
+            const giaTriValue = parseFloat(EditGiaTri.value);
+            if (isNaN(giaTriValue) || giaTriValue <= 0) {
+                showError("errorEditGiaTri", "Giá trị phải lớn hơn 0");
+                return;
+            }
+            if (EditLoaiGiam.value === "PhanTram" && giaTriValue > 100) {
+                showError("errorEditGiaTri", "Giá trị phần trăm không được vượt quá 100%");
+                return;
+            }
+
+            const EditIdVoucher = document.getElementById('EditIdVoucher');
+            const EditMaVoucher = document.getElementById('EditMaVoucher');
+            const EditTenVoucher = document.getElementById('EditTenVoucher');
+            const EditMoTa = document.getElementById('EditMoTa');
+            const EditLoaiGiam = document.getElementById('EditLoaiGiam');
+            const EditGiaTri = document.getElementById('EditGiaTri');
+            const EditDonHangToiThieu = document.getElementById('EditDonHangToiThieu');
+            const EditGiamToiDa = document.getElementById('EditGiamToiDa');
+            const EditSoLuongSuDung = document.getElementById('EditSoLuongSuDung');
+            const EditSoLuongMoiKhachHang = document.getElementById('EditSoLuongMoiKhachHang');
+            const EditNgayBatDau = document.getElementById('EditNgayBatDau');
+            const EditNgayKetThuc = document.getElementById('EditNgayKetThuc');
+
+            // Xử lý SoLuongMoiKhachHang: nếu là 0 hoặc rỗng thì set null (không giới hạn)
+            const editSoLuongMoiKhachValue = EditSoLuongMoiKhachHang.value ? parseInt(EditSoLuongMoiKhachHang.value) : null;
+            const editSoLuongMoiKhachFinal = (editSoLuongMoiKhachValue !== null && editSoLuongMoiKhachValue > 0) ? editSoLuongMoiKhachValue : null;
+
+            const voucher = {
+                IdVoucher: parseInt(EditIdVoucher.value),
+                MaVoucher: EditMaVoucher.value.trim(),
+                TenVoucher: EditTenVoucher.value.trim(),
+                MoTa: EditMoTa.value.trim() || null,
+                LoaiGiam: EditLoaiGiam.value,
+                GiaTri: giaTriValue,
+                DonHangToiThieu: EditDonHangToiThieu.value ? parseFloat(EditDonHangToiThieu.value) : null,
+                GiamToiDa: EditGiamToiDa.value && EditLoaiGiam.value === "PhanTram" ? parseFloat(EditGiamToiDa.value) : null,
+                SoLuongSuDung: EditSoLuongSuDung.value ? parseInt(EditSoLuongSuDung.value) : null,
+                SoLuongMoiKhachHang: editSoLuongMoiKhachFinal,
+                NgayBatDau: new Date(EditNgayBatDau.value),
+                NgayKetThuc: new Date(EditNgayKetThuc.value),
+                TrangThai: "HoatDong"
+            };
+
+            const response = await fetch('/Voucher/Update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(voucher)
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                alert("Cập nhật voucher thành công!");
+                location.reload();
+            } else {
+                alert(data.message || "Không thể cập nhật voucher. Vui lòng thử lại!");
+            }
+        });
+
+        // Xóa Voucher
+        document.querySelectorAll(".btn-delete").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const id = btn.dataset.id;
+                if (!confirm("Bạn có chắc chắn muốn xóa Voucher ID " + id + " này không?")) {
+                    return;
+                }
+
+                const response = await fetch('/Voucher/Delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ Id: parseInt(id) })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    alert("Xóa voucher thành công!");
+                    location.reload();
+                } else {
+                    alert(data.message || "Lỗi khi xóa voucher. Vui lòng thử lại!");
+                }
+            });
+        });
+
+        // Reset form
+        createModal.addEventListener("hidden.bs.modal", () => {
+            createForm.reset();
+            document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
+        });
+
+        editModal.addEventListener("hidden.bs.modal", () => {
+            editForm.reset();
+            document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
+        });
+
+        // Event listeners
+        document.getElementById('LoaiGiam')?.addEventListener('change', updateGiaTriValidation);
+    </script>
+</body>
+</html>
+
