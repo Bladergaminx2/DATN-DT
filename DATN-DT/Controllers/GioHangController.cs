@@ -394,11 +394,7 @@ namespace DATN_DT.Controllers
             try
             {
                 var khachHangEmail = GetCurrentKhachHangEmail();
-<<<<<<< HEAD
 
-=======
-                
->>>>>>> 0cca94cd9f45d062951427ec206082a84d8524f8
                 if (string.IsNullOrEmpty(khachHangEmail))
                 {
                     // Nếu chưa đăng nhập, trả về 0
