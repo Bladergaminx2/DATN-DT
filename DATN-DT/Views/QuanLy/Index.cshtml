@@ -15,120 +15,344 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
     <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-sidebar: #1e293b;
+            --bg-header: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
-            background-color: #12121d;
-            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
             overflow-x: hidden;
+            color: var(--text-primary);
         }
 
         header {
-            background-color: #36363f;
-            height: 100px;
+            background: linear-gradient(135deg, var(--bg-header) 0%, #0f172a 100%);
+            height: 70px;
             width: 100%;
             display: flex;
             align-items: center;
-            padding-left: 30px;
+            justify-content: space-between;
+            padding: 0 30px;
             gap: 20px;
             z-index: 200;
-            position: relative;
+            position: fixed;
+            top: 0;
+            left: 0;
+            box-shadow: var(--shadow-lg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
         }
 
         .menu-button {
-            width: 60px;
-            height: 60px;
-            background-color: #2b2b33;
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             border: none;
-            border-radius: 15px;
+            border-radius: 12px;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-md);
         }
 
             .menu-button:hover {
-                background-color: #4a4a55;
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-lg);
+                background: linear-gradient(135deg, var(--primary-hover) 0%, #7c3aed 100%);
+            }
+
+            .menu-button:active {
+                transform: translateY(0);
             }
 
         .menu-icon, .icon {
-            width: 28px;
-            height: 28px;
+            width: 22px;
+            height: 22px;
             filter: invert(1);
+            transition: transform 0.3s ease;
+        }
+
+        .menu-button:hover .menu-icon {
+            transform: scale(1.1);
         }
 
         header img {
-            height: 80px;
+            height: 50px;
             width: auto;
+            filter: brightness(1.1);
+            cursor: pointer;
+            transition: transform 0.3s ease, filter 0.3s ease;
         }
+
+            header img:hover {
+                transform: scale(1.05);
+                filter: brightness(1.2);
+            }
+
+        /* Account Menu */
+        .account-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+        }
+
+        .account-button {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 8px 16px;
+            color: var(--text-primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+            .account-button:hover {
+                background: rgba(99, 102, 241, 0.2);
+                border-color: var(--primary-color);
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-md);
+                color: var(--text-primary);
+            }
+
+            .account-button i {
+                font-size: 18px;
+            }
+
+        .logout-button {
+            background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 10px 20px;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+        }
+
+            .logout-button:hover {
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-lg);
+                background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+                color: white;
+            }
+
+            .logout-button:active {
+                transform: translateY(0);
+            }
+
+            .logout-button i {
+                font-size: 16px;
+            }
 
         /* Sidebar */
         .sidebar {
             position: fixed;
             top: 0;
-            left: -260px;
-            width: 250px;
-            height: 100%;
-            background-color: #2b2b33;
-            color: white;
-            padding: 30px 20px;
-            box-shadow: 3px 0 10px rgba(0, 0, 0, 0.3);
-            transition: left 0.3s ease;
+            left: -280px;
+            width: 270px;
+            height: 100vh;
+            background: linear-gradient(180deg, var(--bg-sidebar) 0%, #0f172a 100%);
+            color: var(--text-primary);
+            padding: 90px 0 30px 0;
+            box-shadow: var(--shadow-xl);
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 150;
             overflow-y: auto;
+            overflow-x: hidden;
+            border-right: 1px solid var(--border-color);
         }
+
+            .sidebar::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .sidebar::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            .sidebar::-webkit-scrollbar-thumb {
+                background: var(--border-color);
+                border-radius: 3px;
+            }
+
+            .sidebar::-webkit-scrollbar-thumb:hover {
+                background: #475569;
+            }
 
             .sidebar.active {
                 left: 0;
             }
 
             .sidebar h2 {
-                margin-top: 0;
-                font-size: 24px;
+                margin: 0;
+                font-size: 20px;
+                font-weight: 700;
                 text-align: center;
-                margin-bottom: 40px;
-                border-bottom: 2px solid #444;
-                padding-bottom: 10px;
+                margin-bottom: 30px;
+                padding: 0 20px 20px 20px;
+                border-bottom: 2px solid var(--border-color);
+                background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
             }
 
             .sidebar a {
                 display: flex;
                 align-items: center;
-                color: white;
+                color: var(--text-secondary);
                 text-decoration: none;
-                padding: 12px;
-                border-radius: 8px;
-                transition: background-color 0.3s;
-                gap: 10px;
+                padding: 14px 20px;
+                margin: 4px 12px;
+                border-radius: 12px;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                gap: 12px;
+                font-weight: 500;
+                font-size: 15px;
+                position: relative;
+                overflow: hidden;
             }
 
-                .sidebar a:hover {
-                    background-color: #444;
+            .sidebar .submenu-arrow {
+                font-size: 10px;
+                color: var(--text-secondary);
+                transition: transform 0.3s ease, color 0.3s ease;
+            }
+
+            .sidebar a:hover .submenu-arrow,
+            .sidebar a.active .submenu-arrow {
+                color: var(--text-primary);
+            }
+
+                .sidebar a::before {
+                    content: '';
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    height: 100%;
+                    width: 3px;
+                    background: linear-gradient(180deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+                    transform: scaleY(0);
+                    transition: transform 0.3s ease;
                 }
+
+                .sidebar a:hover {
+                    background: rgba(99, 102, 241, 0.1);
+                    color: var(--text-primary);
+                    transform: translateX(4px);
+                }
+
+                    .sidebar a:hover::before {
+                        transform: scaleY(1);
+                    }
+
+                .sidebar a.active {
+                    background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+                    color: var(--text-primary);
+                    font-weight: 600;
+                }
+
+                    .sidebar a.active::before {
+                        transform: scaleY(1);
+                    }
+
+            .sidebar .icon {
+                width: 20px;
+                height: 20px;
+                filter: invert(0.7);
+                transition: all 0.3s ease;
+                flex-shrink: 0;
+            }
+
+            .sidebar a:hover .icon,
+            .sidebar a.active .icon {
+                filter: invert(1);
+                transform: scale(1.1);
+            }
 
         /* Submenu */
         .submenu {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.4s ease;
-            margin-left: 25px;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-left: 32px;
+            margin-top: 4px;
         }
 
             .submenu a {
                 font-size: 14px;
-                padding: 8px 0;
+                padding: 10px 16px;
+                margin: 2px 12px;
+                border-left: 2px solid var(--border-color);
             }
 
+                .submenu a::before {
+                    display: none;
+                }
+
+                .submenu a:hover {
+                    border-left-color: var(--primary-color);
+                    transform: translateX(8px);
+                }
+
             .submenu.show {
-                max-height: 500px;
+                max-height: 1000px;
             }
 
         /* Separator cho dropdown */
         .submenu-separator {
             height: 1px;
-            background-color: #444;
-            margin: 10px 0;
-            opacity: 0.5;
+            background: linear-gradient(90deg, transparent 0%, var(--border-color) 50%, transparent 100%);
+            margin: 8px 24px;
+            opacity: 0.6;
         }
 
         /* Overlay */
@@ -138,10 +362,11 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(4px);
             opacity: 0;
             visibility: hidden;
-            transition: opacity 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 100;
         }
 
@@ -153,45 +378,219 @@
         /* Main content container */
         .main-content {
             margin-left: 0;
-            transition: margin-left 0.3s ease;
-            min-height: calc(100vh - 100px);
+            margin-top: 70px;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: calc(100vh - 70px);
             padding: 0;
             position: relative;
+            background: var(--bg-dark);
         }
 
             .main-content.sidebar-open {
-                margin-left: 250px;
+                margin-left: 270px;
             }
 
-        /* Welcome box */
-        .welcome-box {
-            background-color: #36363f;
-            color: white;
-            padding: 80px 120px;
-            border-radius: 20px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            text-align: center;
-            margin: 50px auto;
-            max-width: 800px;
+        /* Welcome Dashboard */
+        .welcome-container {
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
         }
 
-            .welcome-box h1 {
-                font-size: 42px;
+        .welcome-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+            .welcome-header h1 {
+                font-size: 48px;
+                font-weight: 800;
+                background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                margin-bottom: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 15px;
+            }
+
+            .welcome-header h1 i {
+                background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                font-size: 48px;
+            }
+
+            .welcome-header p {
+                font-size: 18px;
+                color: var(--text-secondary);
                 margin: 0;
-                letter-spacing: 1px;
+            }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, #0f172a 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .stat-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 4px;
+                background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+                transform: scaleX(0);
+                transition: transform 0.3s ease;
+            }
+
+            .stat-card:hover {
+                transform: translateY(-4px);
+                box-shadow: var(--shadow-xl);
+                border-color: var(--primary-color);
+            }
+
+                .stat-card:hover::before {
+                    transform: scaleX(1);
+                }
+
+            .stat-card .stat-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 16px;
+                background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+            }
+
+                .stat-card .stat-icon img {
+                    width: 28px;
+                    height: 28px;
+                    filter: invert(1);
+                }
+
+            .stat-card .stat-title {
+                font-size: 14px;
+                color: var(--text-secondary);
+                margin-bottom: 8px;
+                font-weight: 500;
+            }
+
+            .stat-card .stat-value {
+                font-size: 32px;
+                font-weight: 700;
+                color: var(--text-primary);
+                margin-bottom: 8px;
+            }
+
+            .stat-card .stat-description {
+                font-size: 12px;
+                color: var(--text-secondary);
+            }
+
+        .quick-actions {
+            background: linear-gradient(135deg, var(--bg-card) 0%, #0f172a 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            margin-top: 40px;
+        }
+
+            .quick-actions h2 {
+                font-size: 24px;
+                font-weight: 700;
+                margin-bottom: 24px;
+                color: var(--text-primary);
+            }
+
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .quick-action-btn {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+            .quick-action-btn:hover {
+                background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+                border-color: var(--primary-color);
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-md);
+                color: var(--text-primary);
+            }
+
+            .quick-action-btn .action-icon {
+                width: 40px;
+                height: 40px;
+                filter: invert(1);
+            }
+
+            .quick-action-btn .action-icon.fas,
+            .quick-action-btn .action-icon.far,
+            .quick-action-btn .action-icon.fab {
+                filter: none;
+                color: var(--text-primary);
+            }
+
+            .quick-action-btn .action-text {
+                font-size: 14px;
+                font-weight: 500;
             }
 
         /* Page Container */
         .page-container {
             display: none;
-            min-height: calc(100vh - 100px);
-            background-color: #12121d;
+            min-height: calc(100vh - 70px);
+            background: var(--bg-dark);
         }
 
             .page-container.active {
                 display: block;
-                animation: fadeIn 0.3s ease;
+                animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             }
+
+        @@keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
         @@keyframes fadeIn {
             from {
@@ -205,50 +604,75 @@
 
         /* Page Header */
         .page-header {
-            background-color: #36363f;
-            padding: 20px 30px;
-            border-bottom: 1px solid #444;
+            background: linear-gradient(135deg, var(--bg-header) 0%, #0f172a 100%);
+            padding: 24px 40px;
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 70px;
+            z-index: 50;
         }
 
             .page-header h2 {
-                color: #f5f5f5;
+                color: var(--text-primary);
                 margin: 0;
-                font-size: 24px;
+                font-size: 28px;
+                font-weight: 700;
+                background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
             }
 
         /* Back Button */
         .btn-back {
-            background-color: #6c757d;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
+            padding: 12px 24px;
+            border-radius: 12px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             gap: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: var(--shadow-md);
         }
 
             .btn-back:hover {
-                background-color: #5a6268;
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-lg);
+                background: linear-gradient(135deg, var(--primary-hover) 0%, #7c3aed 100%);
+            }
+
+            .btn-back:active {
+                transform: translateY(0);
+            }
+
+            .btn-back i {
+                font-size: 16px;
             }
 
         /* Iframe Container */
         .iframe-container {
             width: 100%;
-            height: calc(100vh - 160px); /* 100vh - header height - page header height */
+            height: calc(100vh - 164px); /* 100vh - header (70px) - page header (94px) */
             border: none;
             overflow: hidden;
+            background: var(--bg-dark);
+            position: relative;
         }
 
         .iframe-full {
             width: 100%;
             height: 100%;
             border: none;
+            background: var(--bg-dark);
         }
 
         /* Toast Container */
@@ -267,39 +691,133 @@
         }
 
         /* Responsive */
-        @@media (max-width: 768px) {
-            .welcome-box {
-                padding: 40px 20px;
-                margin: 20px;
+        @@media (max-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 16px;
             }
 
-                .welcome-box h1 {
-                    font-size: 28px;
-                }
+            .quick-actions-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+
+        @@media (max-width: 768px) {
+            header {
+                padding: 0 15px;
+                height: 60px;
+            }
+
+            header img {
+                height: 40px;
+            }
+
+            .menu-button {
+                width: 40px;
+                height: 40px;
+            }
+
+            .main-content {
+                margin-top: 60px;
+            }
+
+            .account-button span,
+            .logout-button span {
+                display: none;
+            }
+
+            .account-button,
+            .logout-button {
+                padding: 8px 12px;
+                min-width: 40px;
+                justify-content: center;
+            }
+
+            .header-right {
+                gap: 8px;
+            }
+
+            .welcome-container {
+                padding: 20px;
+            }
+
+            .welcome-header h1 {
+                font-size: 32px;
+            }
+
+            .welcome-header p {
+                font-size: 14px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-actions {
+                padding: 20px;
+            }
 
             .page-header {
-                padding: 15px 20px;
+                padding: 16px 20px;
                 flex-direction: column;
-                gap: 10px;
-                align-items: stretch;
+                gap: 12px;
+                align-items: flex-start;
+                top: 60px;
             }
 
                 .page-header h2 {
-                    font-size: 20px;
+                    font-size: 22px;
                 }
 
             .iframe-container {
-                height: calc(100vh - 200px);
+                height: calc(100vh - 174px);
+            }
+
+            .sidebar {
+                width: 260px;
+                left: -260px;
+            }
+
+            .main-content.sidebar-open {
+                margin-left: 260px;
+            }
+        }
+
+        @@media (max-width: 480px) {
+            .welcome-header h1 {
+                font-size: 24px;
+            }
+
+            .stat-card {
+                padding: 20px;
+            }
+
+            .quick-actions-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
     <header>
-        <button class="menu-button" id="menuBtn">
-            <img src="~/ImgResource/Icons/list-solid-full.svg" alt="Menu" class="menu-icon" />
-        </button>
-        <img src="~/ImgResource/LogoPhoneTech.png" alt="Logo PhoneTech" />
+        <div class="header-left">
+            <button class="menu-button" id="menuBtn">
+                <img src="~/ImgResource/Icons/list-solid-full.svg" alt="Menu" class="menu-icon" />
+            </button>
+            <img src="~/ImgResource/LogoPhoneTech.png" alt="Logo PhoneTech" id="logoHeader" onclick="showWelcomePage(); closeSidebar();" />
+        </div>
+        <div class="header-right">
+            <div class="account-menu">
+                <a href="/AdminProfile" class="account-button" title="Thông tin tài khoản">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Tài khoản</span>
+                </a>
+                <button class="logout-button" id="logoutBtn" title="Đăng xuất">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Đăng xuất</span>
+                </button>
+            </div>
+        </div>
     </header>
 
     <div class="sidebar" id="sidebar">
@@ -313,12 +831,14 @@
 
         <a href="#" id="productMenu">
             <img src="~/ImgResource/Icons/mobile-screen-solid-full.svg" class="icon" />Sản Phẩm
+            <span class="submenu-arrow" style="margin-left: auto; transition: transform 0.3s ease;">▶</span>
         </a>
         <div class="submenu" id="productSubmenu">
             <!-- Sử dụng iframe cho tất cả trang -->
             <a href="#" data-page="productoverview">Overview Sản Phẩm</a>
             <a href="#" data-page="modelsanpham">Model Sản Phẩm</a>
             <a href="#" data-page="sanpham">Sản Phẩm</a>
+            <a href="#" data-page="thuonghieu">Thương Hiệu</a>
 
             <div class="submenu-separator"></div>
 
@@ -339,6 +859,9 @@
         <a href="#" data-page="khuyenmai">
             <img src="~/ImgResource/Icons/percent-solid-full.svg" class="icon" />Khuyến Mãi
         </a>
+        <a href="#" data-page="voucher">
+            <i class="fas fa-ticket-alt" style="font-size: 20px; width: 20px; height: 20px; display: inline-block;"></i>Voucher
+        </a>
         <a href="#" data-page="thanhtoan">
             <img src="~/ImgResource/Icons/money-bill-solid-full.svg" class="icon" />Thanh Toán
         </a>
@@ -347,6 +870,9 @@
         </a>
         <a href="#" data-page="hoadon">
             <img src="~/ImgResource/Icons/file-invoice-dollar-solid-full.svg" class="icon" />Hóa Đơn
+        </a>
+        <a href="#" data-page="quanlybanhang">
+            <i class="fas fa-chart-line" style="font-size: 20px; width: 20px; height: 20px; display: inline-block;"></i>Thống Kê Bán Hàng
         </a>
         <a href="#" data-page="baohanh">
             <img src="~/ImgResource/Icons/screwdriver-wrench-solid-full.svg" class="icon" />Bảo Hành
@@ -359,14 +885,114 @@
     <div class="main-content" id="mainContent">
         <!-- Welcome Page (default) -->
         <div class="page-container active" id="welcomePage">
-            <div class="welcome-box">
-                <h1>Welcome to Tech Phone Management</h1>
+            <div class="welcome-container">
+                <div class="welcome-header">
+                    <h1><i class="fas fa-cogs"></i> Hệ Thống Quản Lý</h1>
+                    <p>Quản lý toàn bộ hoạt động kinh doanh của bạn một cách hiệu quả</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card" onclick="showPage('nhanVienPage'); closeSidebar();">
+                        <div class="stat-icon">
+                            <img src="~/ImgResource/Icons/id-card-regular-full.svg" alt="Nhân Viên" />
+                        </div>
+                        <div class="stat-title">Nhân Viên</div>
+                        <div class="stat-value" id="statNhanVien">--</div>
+                        <div class="stat-description">Quản lý nhân viên</div>
+                    </div>
+
+                    <div class="stat-card" onclick="showPage('khachHangPage'); closeSidebar();">
+                        <div class="stat-icon">
+                            <img src="~/ImgResource/Icons/user-regular-full.svg" alt="Khách Hàng" />
+                        </div>
+                        <div class="stat-title">Khách Hàng</div>
+                        <div class="stat-value" id="statKhachHang">--</div>
+                        <div class="stat-description">Quản lý khách hàng</div>
+                    </div>
+
+                    <div class="stat-card" onclick="showPage('sanPhamPage'); closeSidebar();">
+                        <div class="stat-icon">
+                            <img src="~/ImgResource/Icons/mobile-screen-solid-full.svg" alt="Sản Phẩm" />
+                        </div>
+                        <div class="stat-title">Sản Phẩm</div>
+                        <div class="stat-value" id="statSanPham">--</div>
+                        <div class="stat-description">Quản lý sản phẩm</div>
+                    </div>
+
+                    <div class="stat-card" onclick="showPage('hoaDonPage'); closeSidebar();">
+                        <div class="stat-icon">
+                            <img src="~/ImgResource/Icons/file-invoice-dollar-solid-full.svg" alt="Hóa Đơn" />
+                        </div>
+                        <div class="stat-title">Hóa Đơn</div>
+                        <div class="stat-value" id="statHoaDon">--</div>
+                        <div class="stat-description">Quản lý hóa đơn</div>
+                    </div>
+
+                    <div class="stat-card" onclick="showPage('voucherPage'); closeSidebar();">
+                        <div class="stat-icon">
+                            <i class="fas fa-ticket-alt" style="font-size: 28px; color: var(--primary-color);"></i>
+                        </div>
+                        <div class="stat-title">Voucher</div>
+                        <div class="stat-value" id="statVoucher">--</div>
+                        <div class="stat-description">Quản lý voucher</div>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <h2>⚡ Truy cập nhanh</h2>
+                    <div class="quick-actions-grid">
+                        <a href="#" class="quick-action-btn" data-page="nhanvien" onclick="event.preventDefault(); showPage('nhanVienPage'); closeSidebar();">
+                            <img src="~/ImgResource/Icons/id-card-regular-full.svg" class="action-icon" alt="Nhân Viên" />
+                            <span class="action-text">Nhân Viên</span>
+                        </a>
+                        <a href="#" class="quick-action-btn" data-page="khachhang" onclick="event.preventDefault(); showPage('khachHangPage'); closeSidebar();">
+                            <img src="~/ImgResource/Icons/user-regular-full.svg" class="action-icon" alt="Khách Hàng" />
+                            <span class="action-text">Khách Hàng</span>
+                        </a>
+                        <a href="#" class="quick-action-btn" data-page="sanpham" onclick="event.preventDefault(); showPage('sanPhamPage'); closeSidebar();">
+                            <img src="~/ImgResource/Icons/mobile-screen-solid-full.svg" class="action-icon" alt="Sản Phẩm" />
+                            <span class="action-text">Sản Phẩm</span>
+                        </a>
+                        <a href="#" class="quick-action-btn" data-page="thuonghieu" onclick="event.preventDefault(); showPage('thuongHieuPage'); closeSidebar();">
+                            <i class="fas fa-certificate action-icon" style="font-size: 24px; width: 24px; height: 24px; display: inline-block;"></i>
+                            <span class="action-text">Thương Hiệu</span>
+                        </a>
+                        <a href="#" class="quick-action-btn" data-page="khuyenmai" onclick="event.preventDefault(); showPage('khuyenMaiPage'); closeSidebar();">
+                            <img src="~/ImgResource/Icons/percent-solid-full.svg" class="action-icon" alt="Khuyến Mãi" />
+                            <span class="action-text">Khuyến Mãi</span>
+                        </a>
+                        <a href="#" class="quick-action-btn" data-page="voucher" onclick="event.preventDefault(); showPage('voucherPage'); closeSidebar();">
+                            <i class="fas fa-ticket-alt action-icon" style="font-size: 24px; width: 24px; height: 24px; display: inline-block;"></i>
+                            <span class="action-text">Voucher</span>
+                        </a>
+                        <a href="#" class="quick-action-btn" data-page="donhang" onclick="event.preventDefault(); showPage('donHangPage'); closeSidebar();">
+                            <img src="~/ImgResource/Icons/boxes-packing-solid-full.svg" class="action-icon" alt="Đơn Hàng" />
+                            <span class="action-text">Đơn Hàng</span>
+                        </a>
+                        <a href="#" class="quick-action-btn" data-page="hoadon" onclick="event.preventDefault(); showPage('hoaDonPage'); closeSidebar();">
+                            <img src="~/ImgResource/Icons/file-invoice-dollar-solid-full.svg" class="action-icon" alt="Hóa Đơn" />
+                            <span class="action-text">Hóa Đơn</span>
+                        </a>
+                        <a href="#" class="quick-action-btn" data-page="baohanh" onclick="event.preventDefault(); showPage('baoHanhPage'); closeSidebar();">
+                            <img src="~/ImgResource/Icons/screwdriver-wrench-solid-full.svg" class="action-icon" alt="Bảo Hành" />
+                            <span class="action-text">Bảo Hành</span>
+                        </a>
+                        <a href="#" class="quick-action-btn" data-page="tonkho" onclick="event.preventDefault(); showPage('tonKhoPage'); closeSidebar();">
+                            <img src="~/ImgResource/Icons/boxes-packing-solid-full.svg" class="action-icon" alt="Tồn Kho" />
+                            <span class="action-text">Tồn Kho</span>
+                        </a>
+                        <a href="#" class="quick-action-btn" data-page="quanlybanhang" onclick="event.preventDefault(); showPage('quanlybanhangPage'); closeSidebar();">
+                            <i class="fas fa-chart-line action-icon" style="font-size: 24px; width: 24px; height: 24px; display: inline-block;"></i>
+                            <span class="action-text">Thống Kê</span>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- ========== THÊM CÁC TRANG MỚI Ở ĐÂY ========== -->
         <!-- Nhân Viên Page -->
-        <div class="page-container" id="nhanvienPage">
+        <div class="page-container" id="nhanVienPage">
             <div class="page-header">
                 <h2>Nhân Viên</h2>
                 <button class="btn btn-back" onclick="showWelcomePage()">
@@ -374,12 +1000,12 @@
                 </button>
             </div>
             <div class="iframe-container">
-                <iframe src="/NhanVien" class="iframe-full" id="nhanvienFrame"></iframe>
+                <iframe src="/NhanVien" class="iframe-full" id="nhanVienFrame"></iframe>
             </div>
         </div>
 
         <!-- Khách Hàng Page -->
-        <div class="page-container" id="khachhangPage">
+        <div class="page-container" id="khachHangPage">
             <div class="page-header">
                 <h2>Khách Hàng</h2>
                 <button class="btn btn-back" onclick="showWelcomePage()">
@@ -387,7 +1013,7 @@
                 </button>
             </div>
             <div class="iframe-container">
-                <iframe src="/KhachHang" class="iframe-full" id="khachhangFrame"></iframe>
+                <iframe src="/KhachHang" class="iframe-full" id="khachHangFrame"></iframe>
             </div>
         </div>
 
@@ -454,6 +1080,19 @@
             </div>
             <div class="iframe-container">
                 <iframe src="/SanPham" class="iframe-full" id="sanPhamFrame"></iframe>
+            </div>
+        </div>
+
+        <!-- Thương Hiệu Page -->
+        <div class="page-container" id="thuongHieuPage">
+            <div class="page-header">
+                <h2>Thương Hiệu</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/ThuongHieu" class="iframe-full" id="thuongHieuFrame"></iframe>
             </div>
         </div>
 
@@ -587,6 +1226,19 @@
             </div>
         </div>
 
+        <!-- Voucher Page -->
+        <div class="page-container" id="voucherPage">
+            <div class="page-header">
+                <h2>Voucher</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/Voucher" class="iframe-full" id="voucherFrame"></iframe>
+            </div>
+        </div>
+
         <!-- Thanh Toán Page -->
         <div class="page-container" id="thanhToanPage">
             <div class="page-header">
@@ -626,6 +1278,19 @@
             </div>
         </div>
 
+        <!-- Thống Kê Bán Hàng Page -->
+        <div class="page-container" id="quanlybanhangPage">
+            <div class="page-header">
+                <h2>Thống Kê Bán Hàng</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/QuanLyBanHang" class="iframe-full" id="quanlybanhangFrame"></iframe>
+            </div>
+        </div>
+
         <!-- Bảo Hành Page -->
         <div class="page-container" id="baoHanhPage">
             <div class="page-header">
@@ -638,13 +1303,128 @@
                 <iframe src="/BaoHanh" class="iframe-full" id="baoHanhFrame"></iframe>
             </div>
         </div>
+
+        <!-- Nhân Viên Page -->
+        <div class="page-container" id="nhanVienPage">
+            <div class="page-header">
+                <h2>Nhân Viên</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/NhanVien" class="iframe-full" id="nhanVienFrame"></iframe>
+            </div>
+        </div>
+
+        <!-- Khách Hàng Page -->
+        <div class="page-container" id="khachHangPage">
+            <div class="page-header">
+                <h2>Khách Hàng</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/KhachHang" class="iframe-full" id="khachHangFrame"></iframe>
+            </div>
+        </div>
     </div>
 
     <script>
         // ========== INITIALIZATION
         document.addEventListener('DOMContentLoaded', function () {
             setupMenuNavigation();
+            loadDashboardStats();
         });
+
+        // ========== LOAD DASHBOARD STATS
+        async function loadDashboardStats() {
+            try {
+                const response = await fetch('/QuanLy/GetStats');
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    // Animate counter
+                    animateCounter('statNhanVien', result.data.nhanVien);
+                    animateCounter('statKhachHang', result.data.khachHang);
+                    animateCounter('statSanPham', result.data.sanPham);
+                    animateCounter('statHoaDon', result.data.hoaDon);
+                    animateCounter('statVoucher', result.data.voucher || 0);
+                } else {
+                    console.error('Failed to load stats:', result.message);
+                    // Keep showing "--" if error
+                }
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+                // Keep showing "--" if error
+            }
+        }
+
+        // ========== ANIMATE COUNTER
+        function animateCounter(elementId, targetValue) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+
+            const duration = 1000; // 1 second
+            const steps = 30;
+            const increment = targetValue / steps;
+            const stepDuration = duration / steps;
+            let currentValue = 0;
+
+            const timer = setInterval(function() {
+                currentValue += increment;
+                if (currentValue >= targetValue) {
+                    element.textContent = formatNumber(targetValue);
+                    clearInterval(timer);
+                } else {
+                    element.textContent = formatNumber(Math.floor(currentValue));
+                }
+            }, stepDuration);
+        }
+
+        // ========== FORMAT NUMBER
+        function formatNumber(num) {
+            return new Intl.NumberFormat('vi-VN').format(num);
+        }
+
+        // ========== LOGOUT FUNCTION
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async function() {
+                if (!confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/Login/Logout', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        // Xóa tất cả dữ liệu ứng dụng
+                        localStorage.clear();
+                        sessionStorage.clear();
+
+                        // Redirect về trang login
+                        window.location.href = result.redirectUrl || '/Login';
+                    } else {
+                        alert('Đăng xuất thất bại, vui lòng thử lại.');
+                    }
+                } catch (error) {
+                    console.error('Error logging out:', error);
+                    // Vẫn redirect về login nếu có lỗi
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    window.location.href = '/Login';
+                }
+            });
+        }
 
         // ========== SIDEBAR FUNCTIONS
         const sidebar = document.getElementById("sidebar");
@@ -688,10 +1468,33 @@
         }
 
         // Toggle product submenu
-        productMenu.addEventListener("click", (e) => {
-            e.preventDefault();
-            productSubmenu.classList.toggle("show");
-        });
+        if (productMenu && productSubmenu) {
+            productMenu.addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                productSubmenu.classList.toggle("show");
+                
+                // Rotate arrow icon if exists
+                const arrow = productMenu.querySelector('.submenu-arrow');
+                if (arrow) {
+                    arrow.style.transform = productSubmenu.classList.contains("show") ? "rotate(90deg)" : "rotate(0deg)";
+                }
+            });
+        }
+
+        // Add active state to menu items
+        function setActiveMenuItem(pageId) {
+            // Remove all active states
+            document.querySelectorAll('.sidebar a').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Find and activate current page
+            const activeLink = document.querySelector(`.sidebar a[data-page="${pageId}"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+        }
 
         // ========== PAGE NAVIGATION - CẬP NHẬT PHẦN NÀY
         function setupMenuNavigation() {
@@ -704,15 +1507,17 @@
 
                     // Thêm các trang mới vào đây
                     if (page === 'nhanvien') {
-                        showPage('nhanvienPage');
+                        showPage('nhanVienPage');
                     } else if (page === 'khachhang') {
-                        showPage('khachhangPage');
+                        showPage('khachHangPage');
                     } else if (page === 'productoverview') {
                         showPage('productOverviewPage');
                     } else if (page === 'modelsanpham') {
                         showPage('modelSanPhamPage');
                     } else if (page === 'sanpham') {
                         showPage('sanPhamPage');
+                    } else if (page === 'thuonghieu') {
+                        showPage('thuongHieuPage');
                     } else if (page === 'manhinh') {
                         showPage('manHinhPage');
                     } else if (page === 'cameratruoc') {
@@ -733,12 +1538,16 @@
                         showPage('imeiPage');
                     } else if (page === 'khuyenmai') {
                         showPage('khuyenMaiPage');
+                    } else if (page === 'voucher') {
+                        showPage('voucherPage');
                     } else if (page === 'thanhtoan') {
                         showPage('thanhToanPage');
                     } else if (page === 'donhang') {
                         showPage('donHangPage');
                     } else if (page === 'hoadon') {
                         showPage('hoaDonPage');
+                    } else if (page === 'quanlybanhang') {
+                        showPage('quanlybanhangPage');
                     } else if (page === 'baohanh') {
                         showPage('baoHanhPage');
                     } else {
@@ -757,7 +1566,41 @@
             });
 
             // Show selected page
-            document.getElementById(pageId).classList.add('active');
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) {
+                targetPage.classList.add('active');
+            }
+            
+            // Update active menu item
+            const pageMapping = {
+                'nhanvienPage': 'nhanvien',
+                'khachhangPage': 'khachhang',
+                'productOverviewPage': 'productoverview',
+                'modelSanPhamPage': 'modelsanpham',
+                'sanPhamPage': 'sanpham',
+                'thuongHieuPage': 'thuonghieu',
+                'manHinhPage': 'manhinh',
+                'cameraTruocPage': 'cameratruoc',
+                'cameraSauPage': 'camerasau',
+                'pinPage': 'pin',
+                'ramPage': 'ram',
+                'romPage': 'rom',
+                'tonKhoPage': 'tonkho',
+                'khoPage': 'kho',
+                'imeiPage': 'imei',
+                'khuyenMaiPage': 'khuyenmai',
+                'voucherPage': 'voucher',
+                'thanhToanPage': 'thanhtoan',
+                'donHangPage': 'donhang',
+                'hoaDonPage': 'hoadon',
+                'quanlybanhangPage': 'quanlybanhang',
+                'baoHanhPage': 'baohanh'
+            };
+            
+            const pageKey = pageMapping[pageId];
+            if (pageKey) {
+                setActiveMenuItem(pageKey);
+            }
         }
 
         function showWelcomePage() {

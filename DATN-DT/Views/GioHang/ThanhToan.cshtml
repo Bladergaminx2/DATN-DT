@@ -8,69 +8,719 @@
 }
 
 <style>
+    /* Hide Header */
+    header {
+        display: none !important;
+    }
+
+    /* Dark Theme Styles */
+    body {
+        background-color: #12121d;
+        color: #ffffff;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .container {
+        min-height: calc(100vh - 100px);
+        padding: 30px;
+    }
+
+    .card {
+        background-color: #36363f;
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        margin-bottom: 20px;
+    }
+
+    .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-bottom: none;
+        color: #ffffff;
+        padding: 20px;
+        border-radius: 15px 15px 0 0 !important;
+    }
+
+    .card-body {
+        background-color: #36363f;
+        color: #ffffff;
+        padding: 25px;
+    }
+
     .product-image {
         width: 80px;
         height: 80px;
         object-fit: cover;
+        border-radius: 8px;
     }
 
+    /* Form controls */
+    .form-control, .form-select, textarea {
+        background-color: #2b2b33;
+        border: 1px solid #444;
+        color: #ffffff;
+    }
+
+        .form-control:focus, .form-select:focus, textarea:focus {
+            background-color: #2b2b33;
+            border-color: #667eea;
+            color: #ffffff;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .form-control:read-only {
+            background-color: #2b2b33;
+            color: #aaa;
+        }
+
+    .form-control::placeholder {
+        color: #aaa;
+    }
+
+    .form-label {
+        color: #ffffff;
+        font-weight: 500;
+        margin-bottom: 8px;
+    }
+
+    /* User info card */
+    .bg-light {
+        background-color: #2b2b33 !important;
+        border: 1px solid #444;
+    }
+
+    /* Address display */
+    .border {
+        border-color: #444 !important;
+    }
+
+    .bg-light.border {
+        background-color: #2b2b33 !important;
+        color: #ffffff;
+    }
+
+    /* Buttons */
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        font-weight: 500;
+    }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #653a8f 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        border: none;
+        color: white;
+        font-weight: bold;
+    }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #ee5a5a 0%, #dd4a5f 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(255, 107, 107, 0.3);
+        }
+
+    .btn-outline-primary {
+        border-color: #667eea;
+        color: #667eea;
+        background-color: transparent;
+    }
+
+        .btn-outline-primary:hover {
+            background-color: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+
+    .btn-secondary {
+        background-color: #555;
+        border-color: #555;
+        color: white;
+    }
+
+        .btn-secondary:hover {
+            background-color: #666;
+            border-color: #666;
+        }
+
+    /* Radio buttons */
+    .form-check-input {
+        background-color: #2b2b33;
+        border: 2px solid #667eea;
+    }
+
+        .form-check-input:checked {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+
+    .form-check-label {
+        color: #ffffff;
+    }
+
+    /* Table */
+    .table {
+        color: #ffffff;
+        background-color: #36363f;
+    }
+
+    .table thead {
+        background-color: #2b2b33;
+        color: #ffffff;
+    }
+
+    .table tbody tr {
+        border-bottom: 1px solid #444;
+    }
+
+    .table td, .table th {
+        border-color: #444;
+    }
+
+    /* Text colors */
+    .text-danger {
+        color: #ff6b6b !important;
+    }
+
+    .text-muted {
+        color: #aaa !important;
+    }
+
+    /* Summary card */
     .summary-card {
-        background: #f8f9fa;
+        background: #36363f;
         border-radius: 10px;
         padding: 20px;
+        border: 1px solid #444;
     }
 
-    .form-control:focus {
+    /* Alert */
+    .alert-success {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+    }
+
+    .alert-danger {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        border: none;
+        color: white;
+    }
+
+    /* Modal */
+    .modal-content {
+        background-color: #36363f;
+        color: #ffffff;
+        border: none;
+        border-radius: 15px;
+    }
+
+    .modal-header {
+        background-color: #2b2b33;
+        border-bottom: 1px solid #444;
+        border-radius: 15px 15px 0 0;
+    }
+
+    .modal-body {
+        background-color: #36363f;
+    }
+
+    .modal-footer {
+        background-color: #36363f;
+        border-top: 1px solid #444;
+        border-radius: 0 0 15px 15px;
+    }
+
+    .btn-close, .btn-close-white {
+        filter: invert(1);
+    }
+
+    /* Toast */
+    .toast {
+        background-color: #36363f;
+        color: #ffffff;
+        border: 1px solid #444;
+    }
+
+    /* Hide Footer */
+    footer {
+        display: none !important;
+    }
+
+    /* Progress Bar Styles */
+    .checkout-progress {
+        background-color: #2b2b33;
+        border-radius: 10px;
+        padding: 20px 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        margin-top: 20px;
+    }
+
+    .progress-steps::before {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background-color: #444;
+        z-index: 0;
+    }
+
+    .progress-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        z-index: 1;
+        flex: 1;
+        cursor: default;
+    }
+
+    .progress-step-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #444;
+        color: #aaa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        margin-bottom: 10px;
+        transition: all 0.3s ease;
+        border: 3px solid #444;
+    }
+
+    .progress-step.active .progress-step-icon {
+        background-color: #dc3545;
+        color: #ffffff;
         border-color: #dc3545;
-        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+        box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.2);
+    }
+
+    .progress-step.completed .progress-step-icon {
+        background-color: #28a745;
+        color: #ffffff;
+        border-color: #28a745;
+    }
+
+    .progress-step-label {
+        font-size: 12px;
+        color: #aaa;
+        text-align: center;
+        margin-top: 5px;
+        font-weight: 500;
+    }
+
+    .progress-step.active .progress-step-label {
+        color: #dc3545;
+        font-weight: 600;
+    }
+
+    .progress-step.completed .progress-step-label {
+        color: #28a745;
+    }
+
+    .progress-line {
+        position: absolute;
+        top: 20px;
+        left: 0;
+        height: 3px;
+        background-color: #28a745;
+        z-index: 1;
+        transition: width 0.3s ease;
+    }
+
+    .back-link {
+        color: #667eea;
+        text-decoration: none;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        margin-bottom: 15px;
+        transition: color 0.3s ease;
+    }
+
+    .back-link:hover {
+        color: #5568d3;
+        text-decoration: underline;
+    }
+
+    .back-link i {
+        margin-right: 5px;
+    }
+
+    /* Voucher Detail Modal Styles */
+    .voucher-detail-container {
+        padding: 10px;
+    }
+
+    .voucher-header {
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        color: white;
+    }
+
+    .voucher-code-badge {
+        background-color: rgba(255, 255, 255, 0.2);
+        padding: 10px 20px;
+        border-radius: 10px;
+        display: inline-block;
+        color: white;
+    }
+
+    .voucher-discount-section .card {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border: none;
+        color: white;
+    }
+
+    .discount-amount {
+        margin-bottom: 10px;
+    }
+
+    .discount-value {
+        font-size: 48px;
+        font-weight: 700;
+        color: white;
+    }
+
+    .discount-type {
+        font-size: 24px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.9);
+        margin-left: 10px;
+    }
+
+    .voucher-info-section {
+        background-color: #2b2b33;
+        padding: 20px;
+        border-radius: 10px;
+    }
+
+    .info-item {
+        padding: 10px;
+        background-color: #36363f;
+        border-radius: 8px;
+    }
+
+    .info-item label {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 12px;
+    }
+
+    .info-value {
+        color: #ffffff;
+        font-weight: 500;
+        font-size: 16px;
+    }
+
+    .voucher-conditions-section {
+        background-color: #2b2b33;
+        padding: 20px;
+        border-radius: 10px;
+    }
+
+    .conditions-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .condition-item {
+        padding: 12px 15px;
+        background-color: #36363f;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+        display: flex;
+        align-items: center;
+    }
+
+    .condition-item i {
+        margin-right: 10px;
+        color: #667eea;
+        font-size: 18px;
+    }
+
+    .condition-item span {
+        color: #ffffff;
+        flex: 1;
+    }
+
+    /* Voucher List Modal Styles */
+    .voucher-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 15px;
+        padding: 20px;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .voucher-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .voucher-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .voucher-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
+
+    .voucher-code {
+        background-color: rgba(255, 255, 255, 0.2);
+        padding: 8px 15px;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 18px;
+    }
+
+    .voucher-discount-badge {
+        background-color: rgba(255, 255, 255, 0.3);
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .voucher-title {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+    .voucher-description {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-bottom: 15px;
+        min-height: 40px;
+    }
+
+    .voucher-info-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        margin-bottom: 8px;
+        opacity: 0.9;
+    }
+
+    .voucher-info-label {
+        font-weight: 500;
+    }
+
+    .voucher-info-value {
+        font-weight: 600;
+    }
+
+    .voucher-conditions-preview {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid rgba(255, 255, 255, 0.3);
+        font-size: 12px;
+    }
+
+    .voucher-condition-tag {
+        display: inline-block;
+        background-color: rgba(255, 255, 255, 0.2);
+        padding: 4px 10px;
+        border-radius: 12px;
+        margin-right: 8px;
+        margin-bottom: 5px;
+    }
+
+    .no-vouchers {
+        text-align: center;
+        padding: 60px 20px;
+        color: #aaa;
+    }
+
+    .no-vouchers i {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.5;
     }
 </style>
 
+<!-- Toast container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+</div>
+
+<!-- Success/Error Alert -->
+<div class="alert alert-dismissible fade d-none" id="successAlertCheckout" role="alert" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 400px; max-width: 600px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-check-circle-fill me-3 fs-3" id="alertIconCheckout"></i>
+        <div class="flex-grow-1">
+            <h5 class="alert-heading mb-1" id="alertTitleCheckout">Đặt hàng thành công!</h5>
+            <p class="mb-0" id="successMessageCheckout">Đơn hàng của bạn đã được xử lý thành công.</p>
+            <small class="text-muted" id="orderCodeCheckout"></small>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</div>
+
 <div class="container mt-4">
+    <!-- Progress Bar -->
+    <div class="checkout-progress">
+        <a href="/GioHang/Cart" class="back-link">
+            <i class="bi bi-arrow-left"></i> Trở về
+        </a>
+        <div class="progress-steps">
+            <div class="progress-line" style="width: 50%;"></div>
+            <div class="progress-step completed">
+                <div class="progress-step-icon">
+                    <i class="bi bi-cart"></i>
+                </div>
+                <div class="progress-step-label">Chọn sản phẩm</div>
+            </div>
+            <div class="progress-step completed">
+                <div class="progress-step-icon">
+                    <i class="bi bi-file-text"></i>
+                </div>
+                <div class="progress-step-label">Thông tin đặt hàng</div>
+            </div>
+            <div class="progress-step active">
+                <div class="progress-step-icon">
+                    <i class="bi bi-tag"></i>
+                </div>
+                <div class="progress-step-label">Phiếu giảm giá</div>
+            </div>
+            <div class="progress-step">
+                <div class="progress-step-icon">
+                    <i class="bi bi-credit-card"></i>
+                </div>
+                <div class="progress-step-label">Thanh toán</div>
+            </div>
+            <div class="progress-step">
+                <div class="progress-step-icon">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div class="progress-step-label">Hoàn tất đặt hàng</div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0"><i class="bi bi-cart-check me-2"></i>Thông Tin Thanh Toán</h4>
+                    <h4 class="mb-0"><i class="bi bi-cart-check me-2"></i>Thông Tin Đặt Hàng</h4>
                 </div>
                 <div class="card-body">
                     <form id="checkoutForm">
-
-                        <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email">
+                        <!-- Thông tin người dùng -->
+                        <div class="card mb-3 bg-light">
+                            <div class="card-body">
+                                <h6 class="mb-3"><i class="bi bi-person-circle me-2"></i>Thông tin người dùng</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label"><strong>Họ và tên</strong></label>
+                                        <input type="text" class="form-control" id="hoTenKhachHang" readonly>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label"><strong>Email</strong></label>
+                                        <input type="email" class="form-control" id="email" readonly>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label"><strong>Số điện thoại</strong></label>
+                                        <input type="text" class="form-control" id="sdtKhachHang" readonly>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Địa chỉ giao hàng</label
-                            <button type="button" class="btn btn-outline-primary btn-sm" id="btnDoiDiaChi">
+                            <label class="form-label">Địa chỉ giao hàng</label>
+                            <button type="button" class="btn btn-outline-primary btn-sm mb-2" id="btnDoiDiaChi">
                                Đổi địa chỉ
                             </button>
 
-                            @if (Model?.DiaChi != null)
-                            {
-                                <div class="p-3 border rounded bg-light">
-                                    <div class="fw-bold">
-                                        @Model.DiaChi.Tennguoinhan - @Model.DiaChi.sdtnguoinhan
+                            <div id="addressDisplay">
+                                @if (Model?.DiaChi != null)
+                                {
+                                    <div class="p-3 border rounded" style="background-color: #2b2b33; border-color: #444 !important;">
+                                        <div class="fw-bold text-white">
+                                            @Model.DiaChi.Tennguoinhan - @Model.DiaChi.sdtnguoinhan
+                                        </div>
+
+                                        <div class="text-white">
+                                            @Model.DiaChi.Diachicuthe,
+                                            @Model.DiaChi.PhuongxaName,
+                                            @Model.DiaChi.QuanhuyenName,
+                                            @Model.DiaChi.ThanhphoName
+                                        </div>
+
+                                        <small class="text-muted">Địa chỉ mặc định</small>
                                     </div>
 
-                                    <div>
-                                        @Model.DiaChi.Diachicuthe,
-                                        @Model.DiaChi.PhuongxaName,
-                                        @Model.DiaChi.QuanhuyenName,
-                                        @Model.DiaChi.ThanhphoName
-                                    </div>
-
-                                    <small class="text-muted">Địa chỉ mặc định</small>
-                                </div>
-
-                                <input type="hidden" id="diaChiId" value="@Model.DiaChi.Id" />
-                            }
+                                    <input type="hidden" id="diaChiId" value="@Model.DiaChi.Id" />
+                                }
+                            </div>
                         </div>
 
 
                         <div class="mb-3">
                             <label class="form-label">Ghi chú</label>
                             <textarea class="form-control" id="ghiChu" rows="2" placeholder="Ghi chú cho đơn hàng..."></textarea>
+                        </div>
+
+                        <!-- Voucher Section -->
+                        <div class="mb-3">
+                            <label class="form-label">Mã giảm giá / Voucher</label>
+                            <div class="mb-2">
+                                <button type="button" class="btn btn-outline-primary w-100" id="btnThemVoucher">
+                                    <i class="bi bi-plus-circle me-2"></i>Thêm voucher
+                                </button>
+                            </div>
+                            <div id="voucherInfo" class="d-none alert alert-success mb-2" style="background-color: rgba(16, 185, 129, 0.1); border-color: #10b981; color: #10b981;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong id="voucherName"></strong>
+                                        <br>
+                                        <small>Mã: <span id="voucherCode"></span> - Giảm: <span id="voucherDiscount"></span></small>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-link text-danger p-0" id="btnXoaVoucher">
+                                        <i class="bi bi-x-circle"></i> Xóa
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="voucherError" class="d-none alert alert-danger mb-2" style="background-color: rgba(239, 68, 68, 0.1); border-color: #ef4444; color: #ef4444;">
+                                <small id="voucherErrorMessage"></small>
+                            </div>
+                            <input type="hidden" id="selectedVoucherId" />
+                            <input type="hidden" id="selectedVoucherDiscount" value="0" />
                         </div>
 
                         <div class="mb-3">
@@ -147,6 +797,10 @@
                         <span>Tạm tính:</span>
                         <span>@string.Format("{0:N0} ₫", Model.TongTien)</span>
                     </div>
+                    <div class="d-flex justify-content-between mb-2" id="voucherDiscountRow" style="display: none !important;">
+                        <span>Giảm giá voucher:</span>
+                        <span class="text-success" id="voucherDiscountAmount">-0 ₫</span>
+                    </div>
                     <div class="d-flex justify-content-between mb-2">
                         <span>Phí vận chuyển:</span>
                         <span>@string.Format("{0:N0} ₫", Model.PhiVanChuyen)</span>
@@ -154,7 +808,7 @@
 
                     <div class="d-flex justify-content-between mb-3">
                         <strong>Tổng cộng:</strong>
-                        <strong class="text-danger fs-5">
+                        <strong class="text-danger fs-5" id="tongCong">
                             @string.Format("{0:N0} ₫", Model.TongTien + Model.PhiVanChuyen)
                         </strong>
                     </div>
@@ -181,54 +835,303 @@
     </div>
 </div>
 
-<!-- Modal loading -->
-<div class="modal fade" id="loadingModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
-    <div class="modal-dialog modal-sm">
+
+<!-- Modal đổi địa chỉ với thông tin người dùng -->
+<div class="modal fade" id="diaChiModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-body text-center">
-                <div class="spinner-border text-primary mb-3" role="status">
-                    <span class="visually-hidden">Loading...</span>
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-geo-alt me-2"></i>Quản lý địa chỉ giao hàng</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Thông tin người dùng -->
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="bi bi-person-circle me-2"></i>Thông tin người dùng</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong>Họ tên:</strong>
+                                <div id="userFullName">Đang tải...</div>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Email:</strong>
+                                <div id="userEmail">Đang tải...</div>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Số điện thoại:</strong>
+                                <div id="userPhone">Đang tải...</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <p>Đang xử lý đơn hàng...</p>
+
+                <!-- Danh sách địa chỉ -->
+                <div class="card">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="bi bi-house-door me-2"></i>Danh sách địa chỉ</h6>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="openAddAddressModalCheckout()">
+                            <i class="bi bi-plus-circle me-1"></i>Thêm địa chỉ mới
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="diaChiList" class="row">
+                            <div class="col-12">
+                                <p class="text-muted text-center">Đang tải địa chỉ...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="diaChiModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Chọn địa chỉ giao hàng</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-
-      <div class="modal-body">
-        <div id="diaChiList" class="list-group">
-          <!-- JS render -->
+<!-- Modal thêm địa chỉ mới -->
+<div class="modal fade" id="addAddressModalCheckout" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Thêm địa chỉ mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addAddressFormCheckout">
+                    <div class="mb-3">
+                        <label class="form-label">Tên người nhận *</label>
+                        <input type="text" class="form-control" id="addTenNguoiNhan" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Số điện thoại *</label>
+                        <input type="text" class="form-control" id="addSdtNguoiNhan" required maxlength="10">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Tỉnh/Thành phố *</label>
+                            <select class="form-select" id="addTinh" required>
+                                <option value="">Chọn Tỉnh/Thành</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Quận/Huyện *</label>
+                            <select class="form-select" id="addQuan" required>
+                                <option value="">Chọn Quận/Huyện</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Phường/Xã *</label>
+                            <select class="form-select" id="addPhuong" required>
+                                <option value="">Chọn Phường/Xã</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ cụ thể *</label>
+                        <textarea class="form-control" id="addDiaChiCuThe" rows="2" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="addNewAddressCheckout()">Thêm địa chỉ</button>
+            </div>
         </div>
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-      </div>
     </div>
-  </div>
+</div>
+
+<!-- Modal danh sách voucher -->
+<div class="modal fade" id="voucherListModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-ticket-perforated me-2"></i>Danh Sách Voucher</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="voucherListContainer" class="row g-3">
+                    <div class="col-12 text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal chi tiết voucher -->
+<div class="modal fade" id="voucherDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-ticket-perforated me-2"></i>Chi Tiết Voucher</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="voucher-detail-container">
+                    <!-- Header với mã voucher -->
+                    <div class="voucher-header text-center mb-4">
+                        <div class="voucher-code-badge">
+                            <i class="bi bi-ticket-perforated me-2"></i>
+                            <span id="modalVoucherCode" class="fw-bold fs-4"></span>
+                        </div>
+                        <h4 class="mt-3 mb-2" id="modalVoucherName"></h4>
+                        <p class="text-muted mb-0" id="modalVoucherMoTa"></p>
+                    </div>
+
+                    <!-- Thông tin giảm giá -->
+                    <div class="voucher-discount-section mb-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <div class="discount-amount" id="modalDiscountAmount">
+                                    <span class="discount-value" id="modalDiscountValue"></span>
+                                    <span class="discount-type" id="modalDiscountType"></span>
+                                </div>
+                                <div class="discount-applied mt-2">
+                                    <small class="text-muted">Bạn sẽ được giảm: </small>
+                                    <strong class="text-success fs-5" id="modalSoTienGiam"></strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thông tin thời gian -->
+                    <div class="voucher-info-section mb-4">
+                        <h6 class="mb-3"><i class="bi bi-calendar-event me-2"></i>Thời gian áp dụng</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="info-item">
+                                    <label class="text-muted small">Ngày bắt đầu:</label>
+                                    <div class="info-value" id="modalNgayBatDau"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="info-item">
+                                    <label class="text-muted small">Ngày kết thúc:</label>
+                                    <div class="info-value" id="modalNgayKetThuc"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Điều kiện sử dụng -->
+                    <div class="voucher-conditions-section">
+                        <h6 class="mb-3"><i class="bi bi-info-circle me-2"></i>Điều kiện sử dụng</h6>
+                        <div class="conditions-list" id="modalConditions">
+                            <!-- Điều kiện sẽ được render bằng JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="btnXacNhanVoucher">
+                    <i class="bi bi-check-circle me-1"></i>Xác nhận áp dụng
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal sửa địa chỉ -->
+<div class="modal fade" id="editAddressModalCheckout" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Sửa địa chỉ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editAddressFormCheckout">
+                    <input type="hidden" id="editIdCheckout">
+                    <input type="hidden" id="editTrangThaiCheckout">
+                    <div class="mb-3">
+                        <label class="form-label">Tên người nhận *</label>
+                        <input type="text" class="form-control" id="editTenNguoiNhanCheckout" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Số điện thoại *</label>
+                        <input type="text" class="form-control" id="editSdtNguoiNhanCheckout" required maxlength="10">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Tỉnh/Thành phố *</label>
+                            <select class="form-select" id="editTinhCheckout" required>
+                                <option value="">Chọn Tỉnh/Thành</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Quận/Huyện *</label>
+                            <select class="form-select" id="editQuanCheckout" required>
+                                <option value="">Chọn Quận/Huyện</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Phường/Xã *</label>
+                            <select class="form-select" id="editPhuongCheckout" required>
+                                <option value="">Chọn Phường/Xã</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ cụ thể *</label>
+                        <textarea class="form-control" id="editDiaChiCuTheCheckout" rows="2" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="updateAddressCheckout()">Cập nhật</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 
 @section Scripts {
+    <script src="~/js/thanhtoan.js" asp-append-version="true"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+
+            // Hàm load thông tin người dùng
+            async function loadUserInfoForCheckout() {
+                try {
+                    const response = await fetch('/UserProfile/GetProfileData');
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        const hoTenEl = document.getElementById('hoTenKhachHang');
+                        const emailEl = document.getElementById('email');
+                        const sdtEl = document.getElementById('sdtKhachHang');
+
+                        if (hoTenEl) hoTenEl.value = data.hoTenKhachHang || '';
+                        if (emailEl) emailEl.value = data.emailKhachHang || '';
+                        if (sdtEl) sdtEl.value = data.sdtKhachHang || '';
+                    }
+                } catch (error) {
+                    console.error('Error loading user info:', error);
+                }
+            }
 
             const apiUrl = '@Url.Action("XacNhanThanhToan", "GioHang")';
 
             // Lấy thẳng ID giỏ hàng chi tiết từ Model (chuẩn nhất)
-            const cartItemIds = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-                            Model?.SelectedCartItems?.Select(x => x.IdGioHangChiTiet).ToList() ?? new List<int>()
-                    ));
-
-        const tongTien = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model?.TongTien ?? 0));
+            @{
+                var cartItemIdsList = Model?.SelectedCartItems?.Select(x => x.IdGioHangChiTiet).ToList() ?? new List<int>();
+                var cartItemIdsJson = System.Text.Json.JsonSerializer.Serialize(cartItemIdsList);
+                var tongTienJson = System.Text.Json.JsonSerializer.Serialize(Model?.TongTien ?? 0);
+            }
+            const cartItemIds = @Html.Raw(cartItemIdsJson);
+            const tongTien = @Html.Raw(tongTienJson);
 
             const btn = document.getElementById('btnXacNhanThanhToan');
             if (!btn) return;
@@ -242,8 +1145,378 @@
                 btn.classList.add('disabled');
             }
 
-            const loadingModalEl = document.getElementById('loadingModal');
-            const loadingModal = loadingModalEl ? new bootstrap.Modal(loadingModalEl) : null;
+            // Load thông tin người dùng khi trang load
+            loadUserInfoForCheckout();
+
+            // ========== VOUCHER HANDLING ==========
+            const tongTienGoc = @Html.Raw(tongTienJson);
+            const phiVanChuyen = @Model.PhiVanChuyen;
+            let voucherDiscount = 0;
+            let voucherId = null;
+
+            // Mở modal danh sách voucher
+            document.getElementById('btnThemVoucher')?.addEventListener('click', async function() {
+                const modal = new bootstrap.Modal(document.getElementById('voucherListModal'));
+                modal.show();
+                await loadVoucherList();
+            });
+
+            // Load danh sách voucher
+            async function loadVoucherList() {
+                const container = document.getElementById('voucherListContainer');
+                container.innerHTML = '<div class="col-12 text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Đang tải...</span></div></div>';
+
+                try {
+                    const response = await fetch('/Voucher/GetActiveVouchers');
+                    const result = await response.json();
+
+                    if (result.success && result.data && result.data.length > 0) {
+                        voucherListData = result.data;
+                        container.innerHTML = '';
+                        result.data.forEach((voucher, index) => {
+                            const voucherCard = createVoucherCard(voucher, index);
+                            container.appendChild(voucherCard);
+                        });
+                    } else {
+                        container.innerHTML = `
+                            <div class="col-12">
+                                <div class="no-vouchers">
+                                    <i class="bi bi-ticket-perforated"></i>
+                                    <h5>Hiện tại không có voucher nào</h5>
+                                    <p class="text-muted">Vui lòng quay lại sau</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('Error loading vouchers:', error);
+                    container.innerHTML = `
+                        <div class="col-12">
+                            <div class="alert alert-danger">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                Có lỗi xảy ra khi tải danh sách voucher
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            // Lưu danh sách voucher để truy cập
+            let voucherListData = [];
+
+            // Tạo card voucher
+            function createVoucherCard(voucher, index) {
+                const col = document.createElement('div');
+                col.className = 'col-md-6 col-lg-4';
+
+                const discountText = voucher.loaiGiam === 'PhanTram' 
+                    ? `${voucher.giaTri}%` 
+                    : `${voucher.giaTri.toLocaleString('vi-VN')} ₫`;
+
+                const conditions = [];
+                if (voucher.donHangToiThieu && voucher.donHangToiThieu > 0) {
+                    conditions.push(`Đơn tối thiểu: ${voucher.donHangToiThieu.toLocaleString('vi-VN')} ₫`);
+                }
+                if (voucher.soLuongMoiKhachHang && voucher.soLuongMoiKhachHang > 0) {
+                    conditions.push(`${voucher.soLuongMoiKhachHang} lần/KH`);
+                } else {
+                    conditions.push('Không giới hạn');
+                }
+
+                const ngayBatDau = new Date(voucher.ngayBatDau);
+                const ngayKetThuc = new Date(voucher.ngayKetThuc);
+
+                col.innerHTML = `
+                    <div class="voucher-card" data-voucher-index="${index}">
+                        <div class="voucher-card-header">
+                            <div class="voucher-code">${voucher.maVoucher}</div>
+                            <div class="voucher-discount-badge">${discountText}</div>
+                        </div>
+                        <div class="voucher-title">${voucher.tenVoucher}</div>
+                        <div class="voucher-description">${voucher.moTa || 'Không có mô tả'}</div>
+                        <div class="voucher-info-row">
+                            <span class="voucher-info-label">Bắt đầu:</span>
+                            <span class="voucher-info-value">${ngayBatDau.toLocaleDateString('vi-VN')}</span>
+                        </div>
+                        <div class="voucher-info-row">
+                            <span class="voucher-info-label">Kết thúc:</span>
+                            <span class="voucher-info-value">${ngayKetThuc.toLocaleDateString('vi-VN')}</span>
+                        </div>
+                        <div class="voucher-conditions-preview">
+                            ${conditions.map(c => `<span class="voucher-condition-tag">${c}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+
+                // Thêm event listener
+                const card = col.querySelector('.voucher-card');
+                card.addEventListener('click', () => selectVoucher(voucher));
+
+                return col;
+            }
+
+            // Chọn voucher từ danh sách
+            async function selectVoucher(voucher) {
+                // Đóng modal danh sách
+                const listModal = bootstrap.Modal.getInstance(document.getElementById('voucherListModal'));
+                if (listModal) listModal.hide();
+
+                // Validate voucher
+                try {
+                    const response = await fetch('/Voucher/ValidateVoucher', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            maVoucher: voucher.maVoucher,
+                            tongTienDonHang: tongTienGoc,
+                            danhSachIdSanPham: cartItemIds
+                        })
+                    });
+
+                    if (!response.ok) {
+                        let errorData;
+                        try {
+                            errorData = await response.json();
+                        } catch (e) {
+                            errorData = { message: `Lỗi ${response.status}: ${response.statusText}` };
+                        }
+                        showVoucherError(errorData.message || `Lỗi ${response.status}: ${response.statusText}`);
+                        return;
+                    }
+
+                    const result = await response.json();
+                    if (result.success) {
+                        // Hiển thị modal chi tiết voucher với dữ liệu đã validate
+                        showVoucherDetailModal(result.data);
+                    } else {
+                        showVoucherError(result.message || 'Voucher không hợp lệ');
+                    }
+                } catch (error) {
+                    console.error('Error validating voucher:', error);
+                    showVoucherError('Có lỗi xảy ra khi kiểm tra voucher: ' + error.message);
+                }
+            }
+
+            // Xóa voucher
+            document.getElementById('btnXoaVoucher')?.addEventListener('click', function() {
+                voucherDiscount = 0;
+                voucherId = null;
+                document.getElementById('maVoucher').value = '';
+                document.getElementById('voucherInfo').classList.add('d-none');
+                document.getElementById('voucherError').classList.add('d-none');
+                document.getElementById('selectedVoucherId').value = '';
+                document.getElementById('selectedVoucherDiscount').value = '0';
+                updateTotalWithVoucher();
+            });
+
+            // Hàm hiển thị lỗi voucher
+            function showVoucherError(message) {
+                const errorDiv = document.getElementById('voucherError');
+                const errorMessage = document.getElementById('voucherErrorMessage');
+                if (errorDiv && errorMessage) {
+                    errorMessage.textContent = message;
+                    errorDiv.classList.remove('d-none');
+                }
+            }
+
+            // Hàm hiển thị modal chi tiết voucher
+            function showVoucherDetailModal(voucherData) {
+                // Điền thông tin vào modal
+                document.getElementById('modalVoucherCode').textContent = voucherData.maVoucher;
+                document.getElementById('modalVoucherName').textContent = voucherData.tenVoucher;
+                document.getElementById('modalVoucherMoTa').textContent = voucherData.moTa || 'Không có mô tả';
+                
+                // Hiển thị giảm giá
+                if (voucherData.loaiGiam === 'PhanTram') {
+                    document.getElementById('modalDiscountValue').textContent = voucherData.giaTri + '%';
+                    document.getElementById('modalDiscountType').textContent = 'Giảm theo phần trăm';
+                } else {
+                    document.getElementById('modalDiscountValue').textContent = voucherData.giaTri.toLocaleString('vi-VN') + ' ₫';
+                    document.getElementById('modalDiscountType').textContent = 'Giảm theo số tiền';
+                }
+                
+                document.getElementById('modalSoTienGiam').textContent = voucherData.soTienGiam.toLocaleString('vi-VN') + ' ₫';
+                
+                // Hiển thị ngày tháng
+                const ngayBatDau = new Date(voucherData.ngayBatDau);
+                const ngayKetThuc = new Date(voucherData.ngayKetThuc);
+                document.getElementById('modalNgayBatDau').textContent = ngayBatDau.toLocaleDateString('vi-VN', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                document.getElementById('modalNgayKetThuc').textContent = ngayKetThuc.toLocaleDateString('vi-VN', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                // Hiển thị điều kiện
+                const conditionsList = document.getElementById('modalConditions');
+                conditionsList.innerHTML = '';
+                
+                // Điều kiện đơn hàng tối thiểu
+                if (voucherData.donHangToiThieu && voucherData.donHangToiThieu > 0) {
+                    const conditionItem = document.createElement('div');
+                    conditionItem.className = 'condition-item';
+                    conditionItem.innerHTML = `
+                        <i class="bi bi-cart-check"></i>
+                        <span>Đơn hàng tối thiểu: <strong>${voucherData.donHangToiThieu.toLocaleString('vi-VN')} ₫</strong></span>
+                    `;
+                    conditionsList.appendChild(conditionItem);
+                }
+                
+                // Giảm tối đa (nếu có)
+                if (voucherData.giamToiDa && voucherData.giamToiDa > 0) {
+                    const conditionItem = document.createElement('div');
+                    conditionItem.className = 'condition-item';
+                    conditionItem.innerHTML = `
+                        <i class="bi bi-tag"></i>
+                        <span>Giảm tối đa: <strong>${voucherData.giamToiDa.toLocaleString('vi-VN')} ₫</strong></span>
+                    `;
+                    conditionsList.appendChild(conditionItem);
+                }
+                
+                // Số lượng sử dụng tổng
+                if (voucherData.soLuongSuDung && voucherData.soLuongSuDung > 0) {
+                    const conditionItem = document.createElement('div');
+                    conditionItem.className = 'condition-item';
+                    conditionItem.innerHTML = `
+                        <i class="bi bi-people"></i>
+                        <span>Tổng số lần sử dụng: <strong>${voucherData.soLuongSuDung}</strong> (Đã dùng: ${voucherData.soLuongDaSuDung || 0})</span>
+                    `;
+                    conditionsList.appendChild(conditionItem);
+                }
+                
+                // Số lượng mỗi khách hàng
+                if (voucherData.soLuongMoiKhachHang && voucherData.soLuongMoiKhachHang > 0) {
+                    const conditionItem = document.createElement('div');
+                    conditionItem.className = 'condition-item';
+                    conditionItem.innerHTML = `
+                        <i class="bi bi-person-check"></i>
+                        <span>Mỗi khách hàng được sử dụng tối đa: <strong>${voucherData.soLuongMoiKhachHang} lần</strong></span>
+                    `;
+                    conditionsList.appendChild(conditionItem);
+                } else {
+                    const conditionItem = document.createElement('div');
+                    conditionItem.className = 'condition-item';
+                    conditionItem.innerHTML = `
+                        <i class="bi bi-person-check"></i>
+                        <span>Mỗi khách hàng: <strong>Không giới hạn số lần sử dụng</strong></span>
+                    `;
+                    conditionsList.appendChild(conditionItem);
+                }
+                
+                // Áp dụng cho
+                if (voucherData.apDungCho) {
+                    let apDungText = '';
+                    switch(voucherData.apDungCho) {
+                        case 'TatCa':
+                            apDungText = 'Tất cả sản phẩm';
+                            break;
+                        case 'SanPham':
+                            apDungText = 'Sản phẩm cụ thể';
+                            break;
+                        case 'DanhMuc':
+                            apDungText = 'Danh mục sản phẩm';
+                            break;
+                        case 'ThuongHieu':
+                            apDungText = 'Thương hiệu cụ thể';
+                            break;
+                        default:
+                            apDungText = voucherData.apDungCho;
+                    }
+                    const conditionItem = document.createElement('div');
+                    conditionItem.className = 'condition-item';
+                    conditionItem.innerHTML = `
+                        <i class="bi bi-box-seam"></i>
+                        <span>Áp dụng cho: <strong>${apDungText}</strong></span>
+                    `;
+                    conditionsList.appendChild(conditionItem);
+                }
+                
+                // Lưu dữ liệu voucher để áp dụng khi xác nhận
+                window.pendingVoucherData = voucherData;
+                
+                // Hiển thị modal
+                const modal = new bootstrap.Modal(document.getElementById('voucherDetailModal'));
+                modal.show();
+            }
+            
+            // Xác nhận áp dụng voucher
+            document.getElementById('btnXacNhanVoucher')?.addEventListener('click', function() {
+                if (!window.pendingVoucherData) return;
+                
+                const data = window.pendingVoucherData;
+                voucherDiscount = data.soTienGiam;
+                voucherId = data.idVoucher;
+                
+                // Hiển thị thông tin voucher trong form
+                document.getElementById('voucherName').textContent = data.tenVoucher;
+                document.getElementById('voucherCode').textContent = data.maVoucher;
+                const discountText = data.loaiGiam === 'PhanTram' 
+                    ? `${data.giaTri}%` 
+                    : `${data.giaTri.toLocaleString('vi-VN')} ₫`;
+                document.getElementById('voucherDiscount').textContent = discountText;
+                
+                document.getElementById('voucherInfo').classList.remove('d-none');
+                document.getElementById('voucherError').classList.add('d-none');
+                
+                const selectedVoucherIdEl = document.getElementById('selectedVoucherId');
+                const selectedVoucherDiscountEl = document.getElementById('selectedVoucherDiscount');
+                
+                if (selectedVoucherIdEl) selectedVoucherIdEl.value = voucherId;
+                if (selectedVoucherDiscountEl) selectedVoucherDiscountEl.value = voucherDiscount;
+                
+                // Đóng modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('voucherDetailModal'));
+                if (modal) modal.hide();
+                
+                // Cập nhật tổng tiền
+                updateTotalWithVoucher();
+                
+                // Xóa dữ liệu tạm
+                window.pendingVoucherData = null;
+            });
+
+            // Xóa voucher
+            document.getElementById('btnXoaVoucher')?.addEventListener('click', function() {
+                voucherDiscount = 0;
+                voucherId = null;
+                document.getElementById('voucherInfo').classList.add('d-none');
+                document.getElementById('voucherError').classList.add('d-none');
+                
+                const selectedVoucherIdEl = document.getElementById('selectedVoucherId');
+                const selectedVoucherDiscountEl = document.getElementById('selectedVoucherDiscount');
+                
+                if (selectedVoucherIdEl) selectedVoucherIdEl.value = '';
+                if (selectedVoucherDiscountEl) selectedVoucherDiscountEl.value = '0';
+                
+                updateTotalWithVoucher();
+            });
+
+            // Hàm cập nhật tổng tiền với voucher
+            function updateTotalWithVoucher() {
+                const tongTien = tongTienGoc - voucherDiscount + phiVanChuyen;
+                const tongCongEl = document.getElementById('tongCong');
+                const voucherDiscountRow = document.getElementById('voucherDiscountRow');
+                const voucherDiscountAmount = document.getElementById('voucherDiscountAmount');
+                
+                if (tongCongEl) {
+                    tongCongEl.textContent = tongTien.toLocaleString('vi-VN') + ' ₫';
+                }
+                
+                if (voucherDiscount > 0) {
+                    if (voucherDiscountRow) voucherDiscountRow.style.display = 'flex';
+                    if (voucherDiscountAmount) voucherDiscountAmount.textContent = `-${voucherDiscount.toLocaleString('vi-VN')} ₫`;
+                } else {
+                    if (voucherDiscountRow) voucherDiscountRow.style.display = 'none';
+                }
+            }
 
             function buildErrorMessage(result) {
                 let msg = result?.Message || result?.message || 'Không xác định';
@@ -264,8 +1537,8 @@
 
                 const diaChiIdEl = document.getElementById('diaChiId');
                 const diaChiId = diaChiIdEl?.value ? Number(diaChiIdEl.value) : NaN;
-                if (!Number.isFinite(diaChiId)) {
-                    alert('Bạn chưa có địa chỉ mặc định. Vui lòng thêm địa chỉ trước khi đặt hàng.');
+                if (!Number.isFinite(diaChiId) || diaChiId <= 0) {
+                    alert('Vui lòng chọn địa chỉ giao hàng trước khi đặt hàng.');
                     return;
                 }
 
@@ -283,12 +1556,12 @@
                     ghiChu: document.getElementById('ghiChu')?.value?.trim() || '',
                     selectedCartItems: cartItemIds,
                     email: document.getElementById('email')?.value?.trim() || '',
-                    tongTien: tongTien
+                    tongTien: tongTienGoc - voucherDiscount + phiVanChuyen,
+                    idVoucher: voucherId ? parseInt(voucherId) : null,
+                    soTienGiamVoucher: voucherDiscount
                 };
 
                 console.log('[Checkout] POST', apiUrl, payload);
-
-                loadingModal?.show();
 
                 try {
                     const res = await fetch(apiUrl, {
@@ -298,28 +1571,137 @@
                     });
 
                     const result = await res.json();
-                    loadingModal?.hide();
 
                     console.log('[Checkout] Response', res.status, result);
 
-                    // chú ý case-sensitive (Success/Data)
-                    if (res.ok && result?.Success === true) {
-                        const maDon = result?.Data?.MaDon || result?.data?.maDon;
-                        window.location.href = '/GioHang/CamOn?maDon=' + encodeURIComponent(maDon);
+                    // Sửa: Kiểm tra cả Success (chữ hoa) và success (chữ thường)
+                    const isSuccess = (res.ok && (result?.Success === true || result?.success === true));
+                    
+                    if (isSuccess) {
+                        // Lấy mã đơn hàng
+                        const maDon = result?.Data?.MaDon || result?.data?.maDon || 
+                                     result?.Data?.IdHoaDon || result?.data?.idHoaDon;
+                        
+                        // Hiển thị thông báo thành công
+                        showSuccessAlert(maDon);
+                        
+                        // Cuộn lên đầu trang để người dùng thấy thông báo
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        
+                        // Reset form (tùy chọn)
+                        const form = document.getElementById('checkoutForm');
+                        if (form) {
+                            form.reset();
+                        }
+                        
+                        // Có thể thêm logic khác như làm mờ nút, clear cart items, etc.
                         return;
                     }
 
-                    alert('Lỗi: ' + buildErrorMessage(result));
+                    // Chỉ hiển thị lỗi nếu thực sự có lỗi
+                    const isError = (!res.ok || result?.Success === false || result?.success === false);
+                    if (isError) {
+                        showErrorAlert(buildErrorMessage(result));
+                    } else {
+                        // Trường hợp không rõ ràng (có thể là success nhưng không match điều kiện trên)
+                        console.warn('[Checkout] Unexpected response format:', result);
+                        showSuccessAlert(null);
+                    }
                 }
                 catch (err) {
-                    loadingModal?.hide();
                     console.error(err);
-                    alert('Có lỗi xảy ra khi xử lý đơn hàng. Vui lòng thử lại.');
+                    showErrorAlert('Có lỗi xảy ra khi xử lý đơn hàng. Vui lòng thử lại.');
                 }
                 finally {
                     btn.disabled = false;
                 }
             });
+
+            // Hàm hiển thị thông báo thành công
+            function showSuccessAlert(maDon) {
+                const alertEl = document.getElementById('successAlertCheckout');
+                const messageEl = document.getElementById('successMessageCheckout');
+                const orderCodeEl = document.getElementById('orderCodeCheckout');
+                const alertIconEl = document.getElementById('alertIconCheckout');
+                const alertTitleEl = document.getElementById('alertTitleCheckout');
+                
+                if (alertEl && messageEl) {
+                    // Đặt lại class thành success
+                    alertEl.classList.remove('alert-danger', 'd-none');
+                    alertEl.classList.add('alert-success');
+                    
+                    // Cập nhật icon và tiêu đề
+                    if (alertIconEl) {
+                        alertIconEl.className = 'bi bi-check-circle-fill me-3 fs-3 text-success';
+                    }
+                    if (alertTitleEl) {
+                        alertTitleEl.textContent = 'Đặt hàng thành công!';
+                    }
+                    
+                    // Cập nhật nội dung
+                    messageEl.textContent = 'Đơn hàng của bạn đã được xử lý thành công.';
+                    
+                    // Hiển thị mã đơn nếu có
+                    if (orderCodeEl && maDon) {
+                        orderCodeEl.textContent = 'Mã đơn hàng: ' + maDon;
+                    } else if (orderCodeEl) {
+                        orderCodeEl.textContent = '';
+                    }
+                    
+                    // Hiển thị alert với animation
+                    alertEl.classList.add('show');
+                    
+                    // Tự động ẩn sau 10 giây
+                    setTimeout(() => {
+                        if (alertEl.classList.contains('show')) {
+                            const bsAlert = new bootstrap.Alert(alertEl);
+                            bsAlert.close();
+                        }
+                    }, 10000);
+                }
+            }
+
+            // Hàm hiển thị thông báo lỗi
+            function showErrorAlert(message) {
+                const alertEl = document.getElementById('successAlertCheckout');
+                const messageEl = document.getElementById('successMessageCheckout');
+                const orderCodeEl = document.getElementById('orderCodeCheckout');
+                const alertIconEl = document.getElementById('alertIconCheckout');
+                const alertTitleEl = document.getElementById('alertTitleCheckout');
+                
+                if (alertEl && messageEl) {
+                    // Đổi thành alert-danger
+                    alertEl.classList.remove('alert-success', 'd-none');
+                    alertEl.classList.add('alert-danger');
+                    
+                    // Cập nhật icon và tiêu đề
+                    if (alertIconEl) {
+                        alertIconEl.className = 'bi bi-exclamation-triangle-fill me-3 fs-3 text-danger';
+                    }
+                    if (alertTitleEl) {
+                        alertTitleEl.textContent = 'Đặt hàng thất bại!';
+                    }
+                    
+                    // Cập nhật nội dung
+                    messageEl.textContent = message;
+                    
+                    if (orderCodeEl) orderCodeEl.textContent = '';
+                    
+                    // Hiển thị alert
+                    alertEl.classList.add('show');
+                    
+                    // Tự động ẩn sau 5 giây
+                    setTimeout(() => {
+                        if (alertEl.classList.contains('show')) {
+                            const bsAlert = new bootstrap.Alert(alertEl);
+                            bsAlert.close();
+                        }
+                    }, 5000);
+                } else {
+                    // Fallback nếu không tìm thấy element
+                    alert(message);
+                }
+            }
         });
     </script>
 }

@@ -248,6 +248,7 @@ namespace DATN_DT.Controllers
         // Phương thức lấy TẤT CẢ ModelSanPham từ database (sản phẩm thịnh hành)
         private async Task<List<dynamic>> GetAllModelSanPhamFromDatabase()
         {
+            var now = DateTime.Now;
             var products = await (from model in _context.ModelSanPhams
                                   join product in _context.SanPhams on model.IdSanPham equals product.IdSanPham
                                   join brand in _context.ThuongHieus on product.IdThuongHieu equals brand.IdThuongHieu
@@ -258,6 +259,17 @@ namespace DATN_DT.Controllers
                                   let stockQuantity = _context.TonKhos
                                       .Where(t => t.IdModelSanPham == model.IdModelSanPham)
                                       .Sum(t => t.SoLuong)
+                                  // Lấy khuyến mãi đang active cho sản phẩm
+                                  let activePromotion = (from mskm in _context.ModelSanPhamKhuyenMais
+                                                        join km in _context.KhuyenMais on mskm.IdKhuyenMai equals km.IdKhuyenMai
+                                                        where mskm.IdModelSanPham == model.IdModelSanPham
+                                                              && km.TrangThaiKM == "Đang diễn ra"
+                                                              && km.NgayBatDau.HasValue
+                                                              && km.NgayKetThuc.HasValue
+                                                              && km.NgayBatDau.Value <= now
+                                                              && km.NgayKetThuc.Value >= now
+                                                        orderby km.NgayKetThuc descending
+                                                        select km).FirstOrDefault()
                                   where model.TrangThai == 1 && stockQuantity > 0
                                   select new
                                   {
@@ -266,6 +278,7 @@ namespace DATN_DT.Controllers
                                       TenSanPham = product.TenSanPham ?? "Không có tên",
                                       TenThuongHieu = brand.TenThuongHieu ?? "Không có thương hiệu",
                                       GiaBan = model.GiaBanModel ?? 0,
+                                      GiaGoc = product.GiaGoc ?? model.GiaBanModel ?? 0,
                                       HinhAnh = firstImage != null ? firstImage.DuongDan : "/ImgResource/default-product.jpg",
                                       SoLuongTon = stockQuantity,
                                       Mau = model.Mau ?? "Không xác định",
@@ -273,32 +286,74 @@ namespace DATN_DT.Controllers
                                       SoldCount = _context.Imeis
                                           .Count(i => i.IdModelSanPham == model.IdModelSanPham &&
                                                      i.TrangThai == "Đã bán"),
-                                      IdThuongHieu = brand.IdThuongHieu
+                                      IdThuongHieu = brand.IdThuongHieu,
+                                      // Thông tin khuyến mãi
+                                      KhuyenMai = activePromotion != null ? new
+                                      {
+                                          IdKhuyenMai = activePromotion.IdKhuyenMai,
+                                          LoaiGiam = activePromotion.LoaiGiam,
+                                          GiaTri = activePromotion.GiaTri ?? 0
+                                      } : null
                                   })
                                  .ToListAsync();
 
-            // Xác định sản phẩm hot: nếu đã bán hơn 3 sản phẩm
-            var productsWithHot = products.Select(p => new
+            // Tính giá sau khuyến mãi và phần trăm giảm
+            var productsWithPromotion = products.Select(p =>
             {
-                p.IdModelSanPham,
-                p.TenModel,
-                p.TenSanPham,
-                p.TenThuongHieu,
-                p.GiaBan,
-                p.HinhAnh,
-                p.SoLuongTon,
-                p.Mau,
-                p.SoldCount,
-                IsHot = p.SoldCount > 3, // Nếu đã bán hơn 3 sản phẩm thì là HOT
-                p.IdThuongHieu
+                decimal giaGoc = p.GiaGoc > 0 ? p.GiaGoc : p.GiaBan;
+                decimal giaSauGiam = p.GiaBan;
+                decimal phanTramGiam = 0;
+                bool hasPromotion = p.KhuyenMai != null;
+
+                if (hasPromotion && p.KhuyenMai.GiaTri > 0)
+                {
+                    if (p.KhuyenMai.LoaiGiam == "PhanTram")
+                    {
+                        // Giảm theo phần trăm
+                        phanTramGiam = (decimal)p.KhuyenMai.GiaTri;
+                        giaSauGiam = giaGoc * (1 - phanTramGiam / 100);
+                    }
+                    else if (p.KhuyenMai.LoaiGiam == "SoTien")
+                    {
+                        // Giảm theo số tiền
+                        decimal soTienGiam = (decimal)p.KhuyenMai.GiaTri;
+                        giaSauGiam = giaGoc - soTienGiam;
+                        if (giaSauGiam < 0) giaSauGiam = 0;
+                        // Tính phần trăm giảm để hiển thị
+                        if (giaGoc > 0)
+                        {
+                            phanTramGiam = (soTienGiam / giaGoc) * 100;
+                        }
+                    }
+                }
+
+                return new
+                {
+                    p.IdModelSanPham,
+                    p.TenModel,
+                    p.TenSanPham,
+                    p.TenThuongHieu,
+                    GiaBan = giaSauGiam, // Giá sau khuyến mãi (hoặc giá gốc nếu không có khuyến mãi)
+                    GiaGoc = hasPromotion ? (decimal?)null : giaGoc, // Chỉ trả về giá gốc nếu không có khuyến mãi
+                    p.HinhAnh,
+                    p.SoLuongTon,
+                    p.Mau,
+                    p.SoldCount,
+                    IsHot = p.SoldCount > 3,
+                    p.IdThuongHieu,
+                    HasPromotion = hasPromotion,
+                    PhanTramGiam = Math.Round(phanTramGiam, 0),
+                    SoTienGiam = hasPromotion ? (giaGoc - giaSauGiam) : 0
+                };
             }).ToList();
 
-            return productsWithHot.Cast<dynamic>().ToList();
+            return productsWithPromotion.Cast<dynamic>().ToList();
         }
 
         // Phương thức lấy ModelSanPham hot nhất (6 sản phẩm bán chạy nhất)
         private async Task<List<dynamic>> GetHotModelSanPhamBasedOnSoldImei()
         {
+            var now = DateTime.Now;
             var hotProducts = await (from model in _context.ModelSanPhams
                                      join product in _context.SanPhams on model.IdSanPham equals product.IdSanPham
                                      join brand in _context.ThuongHieus on product.IdThuongHieu equals brand.IdThuongHieu
@@ -308,19 +363,91 @@ namespace DATN_DT.Controllers
                                      let stockQuantity = _context.TonKhos
                                          .Where(t => t.IdModelSanPham == model.IdModelSanPham)
                                          .Sum(t => t.SoLuong)
+                                     let firstImage = _context.AnhSanPhams
+                                         .Where(a => a.IdModelSanPham == model.IdModelSanPham)
+                                         .OrderBy(a => a.IdAnh)
+                                         .FirstOrDefault()
+                                     // Lấy khuyến mãi đang active
+                                     let activePromotion = (from mskm in _context.ModelSanPhamKhuyenMais
+                                                           join km in _context.KhuyenMais on mskm.IdKhuyenMai equals km.IdKhuyenMai
+                                                           where mskm.IdModelSanPham == model.IdModelSanPham
+                                                                 && km.TrangThaiKM == "Đang diễn ra"
+                                                                 && km.NgayBatDau.HasValue
+                                                                 && km.NgayKetThuc.HasValue
+                                                                 && km.NgayBatDau.Value <= now
+                                                                 && km.NgayKetThuc.Value >= now
+                                                           orderby km.NgayKetThuc descending
+                                                           select km).FirstOrDefault()
                                      where model.TrangThai == 1 && stockQuantity > 0 && soldCount > 3
                                      orderby soldCount descending
                                      select new
                                      {
                                          IdModelSanPham = model.IdModelSanPham,
                                          TenModel = model.TenModel ?? product.TenSanPham ?? "Không có tên",
+                                         TenSanPham = product.TenSanPham ?? "Không có tên",
                                          TenThuongHieu = brand.TenThuongHieu ?? "Không có thương hiệu",
                                          GiaBan = model.GiaBanModel ?? 0,
+                                         GiaGoc = product.GiaGoc ?? model.GiaBanModel ?? 0,
+                                         HinhAnh = firstImage != null ? firstImage.DuongDan : "/ImgResource/default-product.jpg",
+                                         Mau = model.Mau ?? "Không xác định",
                                          SoldCount = soldCount,
-                                         IsHot = true // Đây là sản phẩm hot
+                                         IsHot = true,
+                                         KhuyenMai = activePromotion != null ? new
+                                         {
+                                             IdKhuyenMai = activePromotion.IdKhuyenMai,
+                                             LoaiGiam = activePromotion.LoaiGiam,
+                                             GiaTri = activePromotion.GiaTri ?? 0
+                                         } : null
                                      })
                                     .Take(6) // Lấy 6 sản phẩm hot nhất (bán chạy nhất)
                                     .ToListAsync();
+
+            // Tính giá sau khuyến mãi
+            var hotProductsWithPromotion = hotProducts.Select(p =>
+            {
+                decimal giaGoc = p.GiaGoc > 0 ? p.GiaGoc : p.GiaBan;
+                decimal giaSauGiam = p.GiaBan;
+                decimal phanTramGiam = 0;
+                bool hasPromotion = p.KhuyenMai != null;
+
+                if (hasPromotion && p.KhuyenMai.GiaTri > 0)
+                {
+                    if (p.KhuyenMai.LoaiGiam == "PhanTram")
+                    {
+                        phanTramGiam = (decimal)p.KhuyenMai.GiaTri;
+                        giaSauGiam = giaGoc * (1 - phanTramGiam / 100);
+                    }
+                    else if (p.KhuyenMai.LoaiGiam == "SoTien")
+                    {
+                        decimal soTienGiam = (decimal)p.KhuyenMai.GiaTri;
+                        giaSauGiam = giaGoc - soTienGiam;
+                        if (giaSauGiam < 0) giaSauGiam = 0;
+                        if (giaGoc > 0)
+                        {
+                            phanTramGiam = (soTienGiam / giaGoc) * 100;
+                        }
+                    }
+                }
+
+                return new
+                {
+                    p.IdModelSanPham,
+                    p.TenModel,
+                    p.TenSanPham,
+                    p.TenThuongHieu,
+                    GiaBan = giaSauGiam,
+                    GiaGoc = giaGoc,
+                    p.HinhAnh,
+                    p.Mau,
+                    p.SoldCount,
+                    p.IsHot,
+                    HasPromotion = hasPromotion,
+                    PhanTramGiam = Math.Round(phanTramGiam, 0),
+                    SoTienGiam = giaGoc - giaSauGiam
+                };
+            }).ToList();
+
+            return hotProductsWithPromotion.Cast<dynamic>().ToList();
 
             return hotProducts.Cast<dynamic>().ToList();
         }
@@ -333,6 +460,256 @@ namespace DATN_DT.Controllers
             {
                 var products = await GetAllModelSanPhamFromDatabase();
                 return Json(products);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
+        }
+
+        // API: Lọc và sắp xếp sản phẩm
+        [HttpGet]
+        public async Task<IActionResult> FilterProducts(
+            decimal? minPrice = null,
+            decimal? maxPrice = null,
+            int? brandId = null,
+            int? ramId = null,
+            int? romId = null,
+            string? sortBy = null) // "price_asc", "price_desc"
+        {
+            try
+            {
+                var now = DateTime.Now.Date;
+                
+                var query = from model in _context.ModelSanPhams
+                           join product in _context.SanPhams on model.IdSanPham equals product.IdSanPham
+                           join brand in _context.ThuongHieus on product.IdThuongHieu equals brand.IdThuongHieu
+                           join ram in _context.RAMs on model.IdRAM equals ram.IdRAM into r
+                           from ram in r.DefaultIfEmpty()
+                           join rom in _context.ROMs on model.IdROM equals rom.IdROM into roms
+                           from rom in roms.DefaultIfEmpty()
+                           let firstImage = _context.AnhSanPhams
+                               .Where(a => a.IdModelSanPham == model.IdModelSanPham)
+                               .OrderBy(a => a.IdAnh)
+                               .FirstOrDefault()
+                           let stockQuantity = _context.TonKhos
+                               .Where(t => t.IdModelSanPham == model.IdModelSanPham)
+                               .Sum(t => t.SoLuong)
+                           let soldCount = _context.Imeis
+                               .Count(i => i.IdModelSanPham == model.IdModelSanPham && i.TrangThai == "Đã bán")
+                           // Lấy khuyến mãi active
+                           let activePromotion = _context.ModelSanPhamKhuyenMais
+                               .Where(mspkm => mspkm.IdModelSanPham == model.IdModelSanPham)
+                               .Select(mspkm => mspkm.KhuyenMai)
+                               .Where(km => km != null 
+                                   && km.NgayBatDau.HasValue 
+                                   && km.NgayKetThuc.HasValue
+                                   && now >= km.NgayBatDau.Value.Date
+                                   && now <= km.NgayKetThuc.Value.Date)
+                               .FirstOrDefault()
+                           where model.TrangThai == 1 && stockQuantity > 0
+                           // Áp dụng bộ lọc
+                           where (!minPrice.HasValue || model.GiaBanModel >= minPrice.Value)
+                           where (!maxPrice.HasValue || model.GiaBanModel <= maxPrice.Value)
+                           where (!brandId.HasValue || brand.IdThuongHieu == brandId.Value)
+                           where (!ramId.HasValue || model.IdRAM == ramId.Value)
+                           where (!romId.HasValue || model.IdROM == romId.Value)
+                           select new
+                           {
+                               IdModelSanPham = model.IdModelSanPham,
+                               TenModel = model.TenModel ?? product.TenSanPham ?? "Không có tên",
+                               TenSanPham = product.TenSanPham ?? "Không có tên",
+                               TenThuongHieu = brand.TenThuongHieu ?? "Không có thương hiệu",
+                               GiaBan = model.GiaBanModel ?? 0,
+                               HinhAnh = firstImage != null ? firstImage.DuongDan : "/ImgResource/default-product.jpg",
+                               SoLuongTon = stockQuantity,
+                               Mau = model.Mau ?? "Không xác định",
+                               SoldCount = soldCount,
+                               IsHot = soldCount > 3,
+                               IdThuongHieu = brand.IdThuongHieu,
+                               IdRAM = model.IdRAM,
+                               IdROM = model.IdROM,
+                               DungLuongRAM = ram != null ? ram.DungLuongRAM : (string?)null,
+                               DungLuongROM = rom != null ? rom.DungLuongROM : (string?)null,
+                               // Thông tin khuyến mãi
+                               KhuyenMai = activePromotion != null ? new
+                               {
+                                   LoaiGiam = activePromotion.LoaiGiam,
+                                   GiaTri = activePromotion.GiaTri
+                               } : null
+                           };
+
+                // Sắp xếp
+                if (sortBy == "price_asc")
+                {
+                    query = query.OrderBy(p => p.GiaBan);
+                }
+                else if (sortBy == "price_desc")
+                {
+                    query = query.OrderByDescending(p => p.GiaBan);
+                }
+                else
+                {
+                    // Mặc định: sắp xếp theo Id
+                    query = query.OrderByDescending(p => p.IdModelSanPham);
+                }
+
+                var products = await query.ToListAsync();
+
+                // Tính giá sau giảm và đảm bảo >= 0
+                var productsWithPrice = products.Select(p =>
+                {
+                    decimal giaSauGiam = p.GiaBan;
+                    bool hasPromotion = false;
+
+                    if (p.KhuyenMai != null)
+                    {
+                        giaSauGiam = CalculateDiscountedPrice(
+                            p.GiaBan,
+                            p.KhuyenMai.LoaiGiam,
+                            p.KhuyenMai.GiaTri);
+                        hasPromotion = true;
+                    }
+
+                    // Đảm bảo giá không âm (quan trọng!)
+                    giaSauGiam = Math.Max(0, giaSauGiam);
+
+                    return new
+                    {
+                        p.IdModelSanPham,
+                        p.TenModel,
+                        p.TenSanPham,
+                        p.TenThuongHieu,
+                        GiaBan = p.GiaBan,
+                        GiaSauGiam = giaSauGiam,
+                        DisplayPrice = hasPromotion ? giaSauGiam : p.GiaBan, // Giá để sắp xếp
+                        HasPromotion = hasPromotion,
+                        p.HinhAnh,
+                        p.SoLuongTon,
+                        p.Mau,
+                        p.SoldCount,
+                        p.IsHot,
+                        p.IdThuongHieu,
+                        p.IdRAM,
+                        p.IdROM,
+                        p.DungLuongRAM,
+                        p.DungLuongROM
+                    };
+                }).ToList();
+
+                // Sắp xếp lại theo DisplayPrice nếu có sortBy
+                if (sortBy == "price_asc")
+                {
+                    productsWithPrice = productsWithPrice.OrderBy(p => p.DisplayPrice).ToList();
+                }
+                else if (sortBy == "price_desc")
+                {
+                    productsWithPrice = productsWithPrice.OrderByDescending(p => p.DisplayPrice).ToList();
+                }
+
+                // Loại bỏ DisplayPrice trước khi trả về
+                var result = productsWithPrice.Select(p => new
+                {
+                    p.IdModelSanPham,
+                    p.TenModel,
+                    p.TenSanPham,
+                    p.TenThuongHieu,
+                    p.GiaBan,
+                    p.GiaSauGiam,
+                    p.HasPromotion,
+                    p.HinhAnh,
+                    p.SoLuongTon,
+                    p.Mau,
+                    p.SoldCount,
+                    p.IsHot,
+                    p.IdThuongHieu,
+                    p.IdRAM,
+                    p.IdROM,
+                    p.DungLuongRAM,
+                    p.DungLuongROM
+                }).ToList();
+
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
+        }
+
+        // Helper: Tính giá sau giảm (đảm bảo >= 0)
+        private decimal CalculateDiscountedPrice(decimal originalPrice, string? discountType, decimal? discountValue)
+        {
+            if (discountValue == null || discountValue <= 0 || string.IsNullOrWhiteSpace(discountType))
+                return Math.Max(0, originalPrice);
+
+            decimal discountedPrice = 0;
+
+            if (discountType == "Phần trăm")
+            {
+                var percent = Math.Min(100, Math.Max(0, discountValue.Value));
+                discountedPrice = originalPrice * (1 - percent / 100);
+            }
+            else if (discountType == "Số tiền")
+            {
+                var discountAmount = Math.Min(originalPrice, Math.Max(0, discountValue.Value));
+                discountedPrice = originalPrice - discountAmount;
+            }
+            else
+            {
+                discountedPrice = originalPrice;
+            }
+
+            // Làm tròn đến 1000 VNĐ
+            discountedPrice = Math.Floor(discountedPrice / 1000) * 1000;
+
+            // Đảm bảo giá không âm
+            return Math.Max(0, discountedPrice);
+        }
+
+        // API: Lấy danh sách RAM để lọc
+        [HttpGet]
+        public async Task<IActionResult> GetRAMs()
+        {
+            try
+            {
+                var rams = await _context.RAMs
+                    .ToListAsync();
+                
+                var sortedRams = rams.OrderBy(r => {
+                    if (string.IsNullOrEmpty(r.DungLuongRAM)) return int.MaxValue;
+                    var match = System.Text.RegularExpressions.Regex.Match(r.DungLuongRAM, @"\d+");
+                    return match.Success ? int.Parse(match.Value) : int.MaxValue;
+                }).Select(r => new { 
+                    IdRAM = r.IdRAM, 
+                    DungLuongRAM = r.DungLuongRAM ?? "N/A"
+                }).ToList();
+                return Json(sortedRams);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
+        }
+
+        // API: Lấy danh sách ROM để lọc
+        [HttpGet]
+        public async Task<IActionResult> GetROMs()
+        {
+            try
+            {
+                var roms = await _context.ROMs
+                    .ToListAsync();
+                
+                var sortedROMs = roms.OrderBy(r => {
+                    if (string.IsNullOrEmpty(r.DungLuongROM)) return int.MaxValue;
+                    var match = System.Text.RegularExpressions.Regex.Match(r.DungLuongROM, @"\d+");
+                    return match.Success ? int.Parse(match.Value) : int.MaxValue;
+                }).Select(r => new { 
+                    IdROM = r.IdROM, 
+                    DungLuongROM = r.DungLuongROM ?? "N/A"
+                }).ToList();
+                return Json(sortedROMs);
             }
             catch (Exception ex)
             {
@@ -384,6 +761,134 @@ namespace DATN_DT.Controllers
             {
                 return Json(new { success = false, message = $"Lỗi: {ex.Message}" });
             }
+        }
+
+        // THÊM MỚI: API lấy sản phẩm có khuyến mãi đang hoạt động
+        [HttpGet]
+        public async Task<IActionResult> GetDiscountedProducts()
+        {
+            try
+            {
+                var now = DateTime.Now.Date;
+
+                // Lấy các khuyến mãi đang hoạt động
+                var activePromotions = await _context.KhuyenMais
+                    .Where(km => km.NgayBatDau.HasValue &&
+                                 km.NgayKetThuc.HasValue &&
+                                 km.NgayBatDau.Value.Date <= now &&
+                                 km.NgayKetThuc.Value.Date >= now &&
+                                 km.TrangThaiKM == "Đang diễn ra")
+                    .ToListAsync();
+
+                if (!activePromotions.Any())
+                {
+                    return Json(new List<object>());
+                }
+
+                var promotionIds = activePromotions.Select(km => km.IdKhuyenMai).ToList();
+
+                // Lấy các sản phẩm có khuyến mãi đang hoạt động
+                var discountedProducts = await (from mspkm in _context.ModelSanPhamKhuyenMais
+                                               where promotionIds.Contains(mspkm.IdKhuyenMai.Value)
+                                               join model in _context.ModelSanPhams on mspkm.IdModelSanPham equals model.IdModelSanPham
+                                               join product in _context.SanPhams on model.IdSanPham equals product.IdSanPham
+                                               join brand in _context.ThuongHieus on product.IdThuongHieu equals brand.IdThuongHieu
+                                               join promotion in _context.KhuyenMais on mspkm.IdKhuyenMai equals promotion.IdKhuyenMai
+                                               let firstImage = _context.AnhSanPhams
+                                                   .Where(a => a.IdModelSanPham == model.IdModelSanPham)
+                                                   .OrderBy(a => a.IdAnh)
+                                                   .FirstOrDefault()
+                                               let stockQuantity = _context.TonKhos
+                                                   .Where(t => t.IdModelSanPham == model.IdModelSanPham)
+                                                   .Sum(t => t.SoLuong)
+                                               where model.TrangThai == 1 && stockQuantity > 0
+                                               select new
+                                               {
+                                                   IdModelSanPham = model.IdModelSanPham,
+                                                   TenModel = model.TenModel ?? product.TenSanPham ?? "Không có tên",
+                                                   TenSanPham = product.TenSanPham ?? "Không có tên",
+                                                   TenThuongHieu = brand.TenThuongHieu ?? "Không có thương hiệu",
+                                                   GiaBan = model.GiaBanModel ?? 0,
+                                                   GiaGoc = model.GiaBanModel ?? 0, // Giá gốc trước giảm
+                                                   HinhAnh = firstImage != null ? firstImage.DuongDan : "/ImgResource/default-product.jpg",
+                                                   SoLuongTon = stockQuantity,
+                                                   Mau = model.Mau ?? "Không xác định",
+                                                   IdThuongHieu = brand.IdThuongHieu,
+                                                   // Thông tin khuyến mãi
+                                                   IdKhuyenMai = promotion.IdKhuyenMai,
+                                                   MaKM = promotion.MaKM,
+                                                   LoaiGiam = promotion.LoaiGiam,
+                                                   GiaTriKhuyenMai = promotion.GiaTri ?? 0,
+                                                   // Tính giá sau giảm (làm tròn đến 1000 VNĐ)
+                                                   GiaSauGiam = CalculateDiscountedPrice(
+                                                       model.GiaBanModel ?? 0,
+                                                       promotion.LoaiGiam ?? "Phần trăm",
+                                                       promotion.GiaTri ?? 0)
+                                               })
+                                              .ToListAsync();
+
+                // Tính giá sau giảm cho mỗi sản phẩm
+                var productsWithDiscount = discountedProducts.Select(p => new
+                {
+                    p.IdModelSanPham,
+                    p.TenModel,
+                    p.TenSanPham,
+                    p.TenThuongHieu,
+                    p.GiaBan,
+                    p.GiaGoc,
+                    p.HinhAnh,
+                    p.SoLuongTon,
+                    p.Mau,
+                    p.IdThuongHieu,
+                    p.IdKhuyenMai,
+                    p.MaKM,
+                    p.LoaiGiam,
+                    p.GiaTriKhuyenMai,
+                    GiaSauGiam = p.GiaSauGiam,
+                    PhanTramGiam = p.LoaiGiam == "Phần trăm"
+                        ? p.GiaTriKhuyenMai
+                        : Math.Round((p.GiaTriKhuyenMai / p.GiaBan) * 100, 1)
+                }).ToList();
+
+                return Json(productsWithDiscount);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
+        }
+
+        // VẤN ĐỀ 3: Helper: Tính giá sau giảm (làm tròn đến 1000 VNĐ, đảm bảo >= 0)
+        private decimal CalculateDiscountedPrice(decimal originalPrice, string discountType, decimal discountValue)
+        {
+            if (discountValue <= 0 || string.IsNullOrWhiteSpace(discountType))
+                return originalPrice;
+
+            decimal discountedPrice = 0;
+
+            if (discountType == "Phần trăm")
+            {
+                // Giảm theo phần trăm (đảm bảo không vượt quá 100%)
+                var percent = Math.Min(100, Math.Max(0, discountValue));
+                discountedPrice = originalPrice * (1 - percent / 100);
+            }
+            else if (discountType == "Số tiền")
+            {
+                // Giảm theo số tiền (đảm bảo không vượt quá giá gốc)
+                var discountAmount = Math.Min(originalPrice, Math.Max(0, discountValue));
+                discountedPrice = originalPrice - discountAmount;
+            }
+            else
+            {
+                // Mặc định không giảm
+                discountedPrice = originalPrice;
+            }
+
+            // Làm tròn đến 1000 VNĐ (làm tròn xuống)
+            discountedPrice = Math.Floor(discountedPrice / 1000) * 1000;
+
+            // Đảm bảo giá không âm
+            return Math.Max(0, discountedPrice);
         }
     }
 

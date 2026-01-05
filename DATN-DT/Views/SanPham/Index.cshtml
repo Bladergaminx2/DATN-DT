@@ -1043,11 +1043,11 @@
                                     <label class="form-label">VAT (%)</label>
                                     <div class="input-group">
                                         <input type="number" id="createVAT" class="form-control"
-                                               placeholder="VD: 10"
-                                               min="0" max="100" step="0.1" value="10" />
+                                               value="10" readonly
+                                               style="background-color: #2b2b33; cursor: not-allowed;" />
                                         <span class="input-group-text">%</span>
                                     </div>
-                                    <small class="form-text">Thuế giá trị gia tăng</small>
+                                    <small class="form-text text-info">VAT được cố định ở 10%</small>
                                 </div>
                             </div>
                         </div>
@@ -1162,11 +1162,11 @@
                                     <label class="form-label">VAT (%)</label>
                                     <div class="input-group">
                                         <input type="number" id="editVAT" class="form-control"
-                                               placeholder="VD: 10"
-                                               min="0" max="100" step="0.1" />
+                                               value="10" readonly
+                                               style="background-color: #2b2b33; cursor: not-allowed;" />
                                         <span class="input-group-text">%</span>
                                     </div>
-                                    <small class="form-text">Thuế giá trị gia tăng</small>
+                                    <small class="form-text text-info">VAT được cố định ở 10%</small>
                                 </div>
                             </div>
                         </div>
@@ -1394,21 +1394,21 @@
         // ====== TÍNH GIÁ NIÊM YẾT ======
         function setupPriceCalculation() {
             document.getElementById('createGiaGoc').addEventListener('input', updateCreatePrice);
-            document.getElementById('createVAT').addEventListener('input', updateCreatePrice);
+            // VAT không cần event listener vì đã cố định ở 10%
             document.getElementById('editGiaGoc').addEventListener('input', updateEditPrice);
-            document.getElementById('editVAT').addEventListener('input', updateEditPrice);
+            // VAT không cần event listener vì đã cố định ở 10%
         }
 
         function updateCreatePrice() {
             const giaGoc = parseFloat(document.getElementById('createGiaGoc').value) || 0;
-            const vat = parseFloat(document.getElementById('createVAT').value) || 0;
+            const vat = 10; // VAT luôn cố định ở 10%
             const giaNiemYet = tinhGiaNiemYet(giaGoc, vat);
             document.getElementById('createGiaNiemYetPreview').textContent = formatCurrency(giaNiemYet);
         }
 
         function updateEditPrice() {
             const giaGoc = parseFloat(document.getElementById('editGiaGoc').value) || 0;
-            const vat = parseFloat(document.getElementById('editVAT').value) || 0;
+            const vat = 10; // VAT luôn cố định ở 10%
             const giaNiemYet = tinhGiaNiemYet(giaGoc, vat);
             document.getElementById('editGiaNiemYetPreview').textContent = formatCurrency(giaNiemYet);
         }
@@ -1451,7 +1451,7 @@
                 IdThuongHieu: parseInt(document.getElementById('createIdThuongHieu').value) || 0,
                 MoTa: document.getElementById('createMoTa').value.trim(),
                 GiaGoc: parseFloat(document.getElementById('createGiaGoc').value) || 0,
-                VAT: parseFloat(document.getElementById('createVAT').value) || 0,
+                VAT: 10, // VAT luôn cố định ở 10%
                 TrangThaiSP: document.getElementById('createTrangThaiSP').value
             };
 
@@ -1589,7 +1589,7 @@
             document.getElementById('editIdThuongHieu').value = idThuongHieu;
             document.getElementById('editMoTa').value = moTa;
             document.getElementById('editGiaGoc').value = giaGoc;
-            document.getElementById('editVAT').value = vat;
+            document.getElementById('editVAT').value = 10; // VAT luôn cố định ở 10%
             document.getElementById('editTrangThaiSP').value = trangThai;
 
             hideError('errorEditMaSanPham');
@@ -1634,7 +1634,7 @@
                 IdThuongHieu: parseInt(document.getElementById('editIdThuongHieu').value) || 0,
                 MoTa: document.getElementById('editMoTa').value.trim(),
                 GiaGoc: parseFloat(document.getElementById('editGiaGoc').value) || 0,
-                VAT: parseFloat(document.getElementById('editVAT').value) || 0,
+                VAT: 10, // VAT luôn cố định ở 10%
                 TrangThaiSP: document.getElementById('editTrangThaiSP').value
             };
 

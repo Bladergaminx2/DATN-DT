@@ -35,6 +35,9 @@ namespace DATN_DT.Data
         public DbSet<DonHangChiTiet> DonHangChiTiets { get; set; }
         public DbSet<ThanhToan> ThanhToans { get; set; }
         public DbSet<DiaChi> diachis { get; set; }
+        public DbSet<ModelSanPhamKhuyenMai> ModelSanPhamKhuyenMais { get; set; }
+        public DbSet<Voucher> Vouchers { get; set; }
+        public DbSet<VoucherSuDung> VoucherSuDungs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -64,6 +67,9 @@ namespace DATN_DT.Data
             modelBuilder.Entity<DonHang>().HasKey(e => e.IdDonHang);
             modelBuilder.Entity<DonHangChiTiet>().HasKey(e => e.IdDonHangChiTiet);
             modelBuilder.Entity<ThanhToan>().HasKey(e => e.IdThanhToan);
+            modelBuilder.Entity<ModelSanPhamKhuyenMai>().HasKey(e => e.IdModelSanPhamKhuyenMai);
+            modelBuilder.Entity<Voucher>().HasKey(e => e.IdVoucher);
+            modelBuilder.Entity<VoucherSuDung>().HasKey(e => e.IdVoucherSuDung);
             modelBuilder.Entity<HoaDon>().ToTable("HoaDon"); // hoặc "HoaDons" tùy DB
 
 
@@ -207,12 +213,6 @@ namespace DATN_DT.Data
                 .HasForeignKey(d => d.IdModelSanPham)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<DonHangChiTiet>()
-                .HasOne(d => d.KhuyenMai)
-                .WithMany()
-                .HasForeignKey(d => d.IdKhuyenMai)
-                .OnDelete(DeleteBehavior.Restrict);
-
             // GioHang -> KhachHang
             modelBuilder.Entity<GioHang>()
                 .HasOne(g => g.KhachHang)
@@ -265,12 +265,6 @@ namespace DATN_DT.Data
                 .HasForeignKey(h => h.IdImei)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<HoaDonChiTiet>()
-                .HasOne(h => h.KhuyenMai)
-                .WithMany()
-                .HasForeignKey(h => h.IdKhuyenMai)
-                .OnDelete(DeleteBehavior.Restrict);
-
             // Imei -> ModelSanPham
             modelBuilder.Entity<Imei>()
                 .HasOne(i => i.ModelSanPham)
@@ -290,6 +284,38 @@ namespace DATN_DT.Data
          .WithOne(d => d.KhachHang)
          .HasForeignKey(d => d.IdKhachHang)
          .OnDelete(DeleteBehavior.Cascade);
+
+            // ModelSanPhamKhuyenMai relationships
+            modelBuilder.Entity<ModelSanPhamKhuyenMai>()
+                .HasOne(m => m.ModelSanPham)
+                .WithMany(msp => msp.ModelSanPhamKhuyenMais)
+                .HasForeignKey(m => m.IdModelSanPham)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ModelSanPhamKhuyenMai>()
+                .HasOne(m => m.KhuyenMai)
+                .WithMany()
+                .HasForeignKey(m => m.IdKhuyenMai)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Voucher relationships
+            modelBuilder.Entity<VoucherSuDung>()
+                .HasOne(v => v.Voucher)
+                .WithMany(v => v.VoucherSuDungs)
+                .HasForeignKey(v => v.IdVoucher)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<VoucherSuDung>()
+                .HasOne(v => v.KhachHang)
+                .WithMany()
+                .HasForeignKey(v => v.IdKhachHang)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<VoucherSuDung>()
+                .HasOne(v => v.HoaDon)
+                .WithMany()
+                .HasForeignKey(v => v.IdHoaDon)
+                .OnDelete(DeleteBehavior.SetNull);
 
             base.OnModelCreating(modelBuilder);
         }

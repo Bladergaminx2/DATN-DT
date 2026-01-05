@@ -40,31 +40,9 @@ namespace DATN_DT.Controllers
             if (baoHanh == null)
                 return BadRequest(new { message = "Dữ liệu không hợp lệ!" });
 
-            var errors = new Dictionary<string, string>();
-
-            // Validation
-            if (baoHanh.IdImei == null || baoHanh.IdImei == 0)
-                errors["IdImei"] = "Phải chọn Imei bảo hành!";
-            if (baoHanh.IdKhachHang == null || baoHanh.IdKhachHang == 0)
-                errors["IdKhachHang"] = "Phải chọn Khách Hàng!";
-            if (baoHanh.IdNhanVien == null || baoHanh.IdNhanVien == 0)
-                errors["IdNhanVien"] = "Phải chọn Nhân Viên tiếp nhận!";
-            if (string.IsNullOrWhiteSpace(baoHanh.MoTaLoi))
-                errors["MoTaLoi"] = "Phải mô tả lỗi chi tiết!";
-
-            baoHanh.NgayNhan ??= DateTime.Now; // Ngày nhận mặc định là hôm nay
-            baoHanh.TrangThai ??= "Đang tiếp nhận"; // Trạng thái mặc định
-
-            if (errors.Count > 0)
-                return BadRequest(errors);
-
             try
             {
-                // Chuẩn hóa dữ liệu
-                baoHanh.MoTaLoi = baoHanh.MoTaLoi.Trim();
-                baoHanh.XuLy = baoHanh.XuLy?.Trim();
-                baoHanh.TrangThai = baoHanh.TrangThai.Trim();
-
+                baoHanh.NgayNhan ??= DateTime.Now;
                 _context.BaoHanhs.Add(baoHanh);
                 await _context.SaveChangesAsync();
 
@@ -72,7 +50,6 @@ namespace DATN_DT.Controllers
             }
             catch (Exception ex)
             {
-                // Log exception (ex)
                 return StatusCode(500, new { message = "Lỗi khi thêm Phiếu Bảo Hành. Vui lòng thử lại!" });
             }
         }
@@ -86,36 +63,20 @@ namespace DATN_DT.Controllers
             if (baoHanh == null)
                 return BadRequest(new { message = "Dữ liệu không hợp lệ!" });
 
-            var errors = new Dictionary<string, string>();
-
-            // Validation
-            if (baoHanh.IdImei == null || baoHanh.IdImei == 0)
-                errors["IdImei"] = "Phải chọn Imei bảo hành!";
-            if (baoHanh.IdKhachHang == null || baoHanh.IdKhachHang == 0)
-                errors["IdKhachHang"] = "Phải chọn Khách Hàng!";
-            if (baoHanh.IdNhanVien == null || baoHanh.IdNhanVien == 0)
-                errors["IdNhanVien"] = "Phải chọn Nhân Viên tiếp nhận!";
-            if (string.IsNullOrWhiteSpace(baoHanh.MoTaLoi))
-                errors["MoTaLoi"] = "Phải mô tả lỗi chi tiết!";
-
-            if (errors.Count > 0)
-                return BadRequest(errors);
-
             var existing = await _context.BaoHanhs.FindAsync(id);
             if (existing == null)
                 return NotFound(new { message = "Không tìm thấy Phiếu Bảo Hành!" });
 
             try
             {
-                // Cập nhật thông tin
                 existing.IdImei = baoHanh.IdImei;
                 existing.IdKhachHang = baoHanh.IdKhachHang;
                 existing.IdNhanVien = baoHanh.IdNhanVien;
                 existing.NgayNhan = baoHanh.NgayNhan;
-                existing.NgayTra = baoHanh.NgayTra; // Cần thiết lập khi hoàn thành
-                existing.TrangThai = baoHanh.TrangThai?.Trim();
-                existing.MoTaLoi = baoHanh.MoTaLoi.Trim();
-                existing.XuLy = baoHanh.XuLy?.Trim();
+                existing.NgayTra = baoHanh.NgayTra;
+                existing.TrangThai = baoHanh.TrangThai;
+                existing.MoTaLoi = baoHanh.MoTaLoi;
+                existing.XuLy = baoHanh.XuLy;
                 existing.ChiPhiPhatSinh = baoHanh.ChiPhiPhatSinh;
 
                 _context.BaoHanhs.Update(existing);
@@ -129,13 +90,19 @@ namespace DATN_DT.Controllers
             }
         }
 
-        // --- API: Lấy danh sách Imei (Imei có thể được liên kết với Model Sản phẩm) ---
+        // --- API: Lấy danh sách Imei ---
         [HttpGet]
         public async Task<IActionResult> GetImeis()
         {
             var list = await _context.Imeis
-                .Select(i => new { i.IdImei, DisplayText = i.MaImei + (i.IdModelSanPham.HasValue ? $" ({i.IdModelSanPham})" : "") })
+                .Select(i => new 
+                { 
+                    i.IdImei, 
+                    DisplayText = i.MaImei
+                })
+                .OrderBy(i => i.DisplayText)
                 .ToListAsync();
+            
             return Ok(list);
         }
 

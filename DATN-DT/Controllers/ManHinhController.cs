@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 namespace DATN_DT.Controllers
 {
-    [Route("api/[controller]")]
     public class ManHinhController : Controller
     {
         private readonly IManHinhService _manHinhService;
@@ -27,6 +26,7 @@ namespace DATN_DT.Controllers
 
         // ===== CREATE =====
         [HttpPost]
+        [Route("ManHinh/Create")]
         [Consumes("application/json")]
         public async Task<IActionResult> Create([FromBody] ManHinh? manHinh)
         {
@@ -67,7 +67,8 @@ namespace DATN_DT.Controllers
         }
 
         // ===== EDIT =====
-        [HttpPut]
+        [HttpPost]
+        [Route("ManHinh/Edit/{id}")]
         [Consumes("application/json")]
         public async Task<IActionResult> Edit(int id, [FromBody] ManHinh? manHinh)
         {
@@ -114,6 +115,7 @@ namespace DATN_DT.Controllers
 
         // ===== DELETE =====
         [HttpDelete]
+        [Route("ManHinh/Delete")]
         public async Task<IActionResult> Delete(int id)
         {
             await _manHinhService.Delete(id);

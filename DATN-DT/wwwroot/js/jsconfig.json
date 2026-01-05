@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "module": "none",
+    "moduleResolution": "node",
+    "checkJs": false,
+    "allowJs": true,
+    "lib": ["ES5", "DOM"],
+    "noEmit": true,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "jsx": "preserve"
+  },
+  "exclude": ["node_modules", "bin", "obj"],
+  "include": ["**/*.js"]
+}
+

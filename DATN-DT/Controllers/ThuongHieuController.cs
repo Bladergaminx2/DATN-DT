@@ -3,13 +3,12 @@ using DATN_DT.Models;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Net.Http.Json;
 
 namespace DATN_DT.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
     public class ThuongHieuController : Controller
     {
         private readonly IThuongHieuService _thuongHieuService;
@@ -24,6 +23,7 @@ namespace DATN_DT.Controllers
         // ----------------------------
         // GET: danh sách thương hiệu
         // ----------------------------
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
             var list = await _thuongHieuService.GetAllThuongHieus();
@@ -34,6 +34,7 @@ namespace DATN_DT.Controllers
         // POST: tạo thương hiệu
         // ----------------------------
         [HttpPost]
+        [Route("ThuongHieu/Create")]
         [Consumes("application/json")]
         public async Task<IActionResult> Create([FromBody] ThuongHieu? th)
         {
@@ -102,10 +103,18 @@ namespace DATN_DT.Controllers
 
         // ===== TEST HTTPCLIENT =====
         [HttpDelete]
+        [Route("ThuongHieu/Delete")]
         public async Task<IActionResult> Delete(int id)
         {
-            await _thuongHieuService.DeleteThuongHieu(id);
-            return Ok(new { message = "Xoá RAM thành công!" });
+            try
+            {
+                await _thuongHieuService.DeleteThuongHieu(id);
+                return Ok(new { message = "Xóa thương hiệu thành công!" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi xóa thương hiệu: " + ex.Message });
+            }
         }
 
         // ----------------------------

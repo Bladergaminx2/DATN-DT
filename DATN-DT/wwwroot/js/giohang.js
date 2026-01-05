@@ -20,20 +20,59 @@ function showAlert(type, message) {
     }
 }
 
+// Đồng bộ localStorage lên database
+async function syncLocalStorageToDatabase() {
+    try {
+        const localCart = JSON.parse(localStorage.getItem('cart')) || [];
+        if (localCart.length === 0) return;
+
+        // Đồng bộ từng sản phẩm trong localStorage lên database
+        for (const item of localCart) {
+            try {
+                const response = await fetch('/GioHang/AddToCart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        IdModelSanPham: item.id,
+                        Quantity: item.quantity
+                    })
+                });
+
+                const result = await response.json();
+                if (result.Success) {
+                    console.log(`Đã đồng bộ sản phẩm ${item.id} lên database`);
+                }
+            } catch (error) {
+                console.error(`Lỗi đồng bộ sản phẩm ${item.id}:`, error);
+            }
+        }
+
+        // Xóa localStorage sau khi đồng bộ thành công
+        localStorage.removeItem('cart');
+    } catch (error) {
+        console.error('Lỗi đồng bộ localStorage:', error);
+    }
+}
+
 // Load giỏ hàng
 async function loadCart() {
     try {
         showLoading();
 
+        // Đồng bộ localStorage lên database trước khi load
+        await syncLocalStorageToDatabase();
+
         const response = await fetch('/GioHang/GetGioHangByKhachHang');
         const result = await response.json();
 
-        if (result.success) {
-            cartData = result.data.gioHangChiTiets || [];
+        if (result.Success || result.success) {
+            cartData = (result.data || result.Data || {}).gioHangChiTiets || [];
             renderCartItems();
             updateTotal();
         } else {
-            showAlert('error', result.message);
+            showAlert('error', result.Message || result.message || 'Không thể tải giỏ hàng');
         }
     } catch (error) {
         console.error('Lỗi load giỏ hàng:', error);
@@ -105,26 +144,34 @@ function renderCartItems() {
         if (isActive) {
             // Đang kinh doanh - kiểm tra tồn kho
             maxQuantity = Math.min(soLuongTon, 99);
-            currentQuantity = Math.min(item.soLuong, maxQuantity);
+            // Sửa: Cập nhật số lượng trong cartData nếu vượt quá tồn kho
+            if (item.soLuong > maxQuantity) {
+                item.soLuong = maxQuantity;
+                item.thanhTien = maxQuantity * item.modelSanPham.giaBanModel;
+                // Đánh dấu cần cập nhật database
+                item._needsUpdate = true;
+                item._newQuantity = maxQuantity;
+            }
+            currentQuantity = item.soLuong;
             isDisabled = soLuongTon === 0;
 
             if (soLuongTon > 0) {
-                statusText = `<small class="text-success"><i class="bi bi-check-circle"></i> Còn ${soLuongTon} sản phẩm</small>`;
+                statusText = `Còn ${soLuongTon} sản phẩm`;
             } else {
-                statusText = `<small class="text-danger"><i class="bi bi-exclamation-circle"></i> Hết hàng</small>`;
+                statusText = `Hết hàng`;
                 rowClass = 'table-warning';
             }
         } else if (isOutOfStock) {
             // Tạm hết hàng
             currentQuantity = 0;
             isDisabled = true;
-            statusText = `<small class="text-warning"><i class="bi bi-clock"></i> Tạm hết hàng</small>`;
+            statusText = `Tạm hết hàng`;
             rowClass = 'table-warning';
         } else if (isInactive) {
             // Ngừng kinh doanh
             currentQuantity = 0;
             isDisabled = true;
-            statusText = `<small class="text-danger"><i class="bi bi-exclamation-triangle"></i> Ngừng kinh doanh</small>`;
+            statusText = `Ngừng kinh doanh`;
             rowClass = 'table-secondary';
         }
 
@@ -139,20 +186,23 @@ function renderCartItems() {
                 <td>
                     <img src="${anhDaiDien}" 
                          alt="${tenSanPham}" 
-                         class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;"
-                         ${!isActive ? 'style="opacity: 0.5;"' : ''}>
+                         class="img-thumbnail"
+                         style="width: 180px !important; height: 180px !important; object-fit: cover !important; ${!isActive ? 'opacity: 0.5;' : ''}"
+                         onerror="this.src='/images/default-product.jpg'">
                 </td>
                 <td>
-                    <h6 class="mb-1 ${!isActive ? 'text-muted' : ''}">${tenSanPham}</h6>
-                    <small class="text-muted">
-                        ${item.modelSanPham.tenModel} - ${item.modelSanPham.mau}<br>
-                        ${ramText} - ${romText}<br>
-                        Thương hiệu: ${thuongHieuText}
-                    </small>
-                    ${statusText}
+                    <div class="product-info">
+                        <span class="product-name ${!isActive ? 'text-muted' : ''}">${tenSanPham}</span>
+                        <small class="text-muted">
+                            <strong>Model:</strong> ${item.modelSanPham.tenModel} - ${item.modelSanPham.mau}<br>
+                            <strong>RAM/ROM:</strong> ${ramText} - ${romText}<br>
+                            <span class="product-brand">Thương hiệu: ${thuongHieuText}</span>
+                        </small>
+                        ${statusText ? `<div class="product-status ${isActive && soLuongTon > 0 ? 'in-stock' : 'out-of-stock'}">${statusText}</div>` : ''}
+                    </div>
                 </td>
                 <td class="text-center">
-                    <strong class="${!isActive ? 'text-muted' : ''}">${formatMoney(item.modelSanPham.giaBanModel)}</strong>
+                    <strong class="price-display unit-price ${!isActive ? 'text-muted' : ''}">${formatMoney(item.modelSanPham.giaBanModel)}</strong>
                 </td>
                 <td class="text-center">
                     ${isActive ? `
@@ -178,21 +228,20 @@ function renderCartItems() {
                             </button>
                         </div>
                         ${soLuongTon > 0 && currentQuantity >= maxQuantity ?
-                    `<small class="text-warning d-block mt-1">Đã đạt số lượng tối đa</small>` : ''
-                }
+                            `<small class="text-warning d-block mt-1">Đã đạt số lượng tối đa</small>` : ''
+                        }
                     ` : `
                         <span class="text-muted">Không khả dụng</span>
                     `}
                 </td>
                 <td class="text-center">
-                    <strong class="item-total ${!isActive ? 'text-muted' : ''}">
+                    <strong class="price-display total-price item-total ${!isActive ? 'text-muted' : ''}">
                         ${formatMoney(currentQuantity * item.modelSanPham.giaBanModel)}
                     </strong>
                 </td>
                 <td class="text-center">
-                    <button class="btn btn-danger btn-sm btn-delete" 
+                    <button class="btn btn-danger btn-sm btn-delete btn-action" 
                             data-item-id="${item.idGioHangChiTiet}"
-                            style="width: 40px; height: 35px;" 
                             title="Xóa sản phẩm">
                         <i class="bi bi-trash"></i>
                     </button>
@@ -202,6 +251,29 @@ function renderCartItems() {
     }).join('');
 
     attachEventListeners();
+    
+    // Tự động cập nhật số lượng trong database nếu có item vượt quá tồn kho
+    cartData.forEach(async (item) => {
+        if (item._needsUpdate && item._newQuantity !== undefined) {
+            try {
+                await fetch('/GioHang/UpdateQuantity', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        cartItemId: item.idGioHangChiTiet,
+                        quantity: item._newQuantity
+                    })
+                });
+                // Xóa flag sau khi cập nhật
+                delete item._needsUpdate;
+                delete item._newQuantity;
+            } catch (error) {
+                console.error(`Lỗi cập nhật số lượng cho item ${item.idGioHangChiTiet}:`, error);
+            }
+        }
+    });
 }
 
 // Gắn sự kiện
@@ -393,15 +465,23 @@ function updateTotal() {
 
     const totalPaymentElement = document.getElementById('totalPayment');
     const selectedCountElement = document.getElementById('selectedCount');
+    const selectedCountBtnElement = document.getElementById('selectedCountBtn');
     const btnCheckout = document.getElementById('btnCheckout');
 
     if (totalPaymentElement) totalPaymentElement.textContent = formatMoney(totalProductPrice);
     if (selectedCountElement) selectedCountElement.textContent = selectedItems.size;
+    if (selectedCountBtnElement) selectedCountBtnElement.textContent = selectedItems.size;
 
     // Enable/disable nút thanh toán
     if (btnCheckout) {
         btnCheckout.disabled = selectedItems.size === 0;
-        btnCheckout.textContent = `Thanh Toán (${selectedItems.size} sản phẩm)`;
+        const btnText = btnCheckout.innerHTML;
+        // Cập nhật số lượng trong nút mà không làm mất icon
+        if (btnText.includes('<i')) {
+            btnCheckout.innerHTML = `<i class="bi bi-credit-card me-2"></i>Thanh Toán (${selectedItems.size} sản phẩm)`;
+        } else {
+            btnCheckout.textContent = `Thanh Toán (${selectedItems.size} sản phẩm)`;
+        }
     }
 }
 
@@ -416,10 +496,24 @@ async function handleCheckout() {
         // Lấy danh sách sản phẩm đã chọn
         const selectedProducts = cartData.filter(item => selectedItems.has(item.idGioHangChiTiet));
 
-        // Kiểm tra lại trạng thái sản phẩm
-        const invalidProducts = selectedProducts.filter(item =>
-            item.modelSanPham.trangThai !== 1 || item.soLuongTon < item.soLuong
-        );
+        // Kiểm tra lại trạng thái sản phẩm - lấy số lượng thực tế từ input
+        const invalidProducts = [];
+        for (const item of selectedProducts) {
+            // Lấy số lượng thực tế từ input
+            const quantityInput = document.querySelector(`input[data-item-id="${item.idGioHangChiTiet}"]`);
+            const actualQuantity = quantityInput ? parseInt(quantityInput.value) : item.soLuong;
+            
+            // Kiểm tra trạng thái và tồn kho
+            if (item.modelSanPham.trangThai !== 1) {
+                invalidProducts.push(item);
+            } else {
+                // Sửa: So sánh với số lượng thực tế từ input, không phải từ cartData
+                const soLuongTon = item.soLuongTon || 0;
+                if (soLuongTon < actualQuantity) {
+                    invalidProducts.push(item);
+                }
+            }
+        }
 
         if (invalidProducts.length > 0) {
             showAlert('error', 'Một số sản phẩm đã thay đổi trạng thái hoặc hết hàng. Vui lòng kiểm tra lại giỏ hàng.');

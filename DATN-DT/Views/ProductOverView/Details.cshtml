@@ -963,14 +963,11 @@
                     }
                                             </td>
                                             <td>
-                                                <button class="btn btn-warning btn-sm" onclick="openEditModal(
+                                                <button class="btn btn-danger btn-sm" onclick="confirmDeleteImei(
                                                     ${imei.idImei},
-                                                    '${escapeHtml(imei.maImei)}',
-                                                    ${imei.idModelSanPham},
-                                                    '${escapeHtml(imei.moTa || '')}',
-                                                    '${escapeHtml(imei.trangThai)}'
+                                                    '${escapeHtml(imei.maImei)}'
                                                 )">
-                                                    <i class="fas fa-edit"></i> Sửa
+                                                    <i class="fas fa-trash"></i> Xóa
                                                 </button>
                                             </td>
                                         `;
@@ -1244,6 +1241,55 @@
             const element = document.getElementById(elementId);
             element.textContent = message;
             element.classList.remove('d-none');
+        }
+
+        // ========== DELETE IMEI ==========
+        function confirmDeleteImei(imeiId, maImei) {
+            if (confirm(`Bạn có chắc chắn muốn xóa IMEI "${maImei}"?`)) {
+                deleteImei(imeiId);
+            }
+        }
+
+        async function deleteImei(imeiId) {
+            try {
+                const response = await fetch(`/ProductOverView/DeleteImei/${imeiId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showAlert(result.message || 'Xóa IMEI thành công!', 'success');
+                    
+                    // Xóa dòng khỏi bảng ngay lập tức
+                    const row = document.querySelector(`tr[data-imei-id="${imeiId}"]`);
+                    if (row) {
+                        row.style.transition = 'opacity 0.3s';
+                        row.style.opacity = '0';
+                        setTimeout(() => {
+                            row.remove();
+                            // Tải lại danh sách và tổng quan
+                            loadImeiData();
+                            loadImeiOverview();
+                        }, 300);
+                    } else {
+                        // Nếu không tìm thấy dòng, tải lại toàn bộ
+                        loadImeiData();
+                        loadImeiOverview();
+                    }
+
+                    // Gửi thông báo cập nhật cho trang Index
+                    notifyIndexPageAboutImeiUpdate();
+                } else {
+                    showAlert(result.message || 'Lỗi khi xóa IMEI!', 'danger');
+                }
+            } catch (error) {
+                console.error('Error deleting IMEI:', error);
+                showAlert('Lỗi khi xóa IMEI: ' + error.message, 'danger');
+            }
         }
 
         // ========== UTILITY FUNCTIONS ==========

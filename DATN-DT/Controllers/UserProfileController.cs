@@ -4,16 +4,23 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Cryptography;
+using System.Text;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 
 namespace DATN_DT.Controllers
 {
     public class UserProfileController : Controller
     {
         private readonly MyDbContext _context;
+        private readonly string _jwtKey;
 
-        public UserProfileController(MyDbContext context)
+        public UserProfileController(MyDbContext context, IConfiguration config)
         {
             _context = context;
+            _jwtKey = config["Jwt:Key"] ?? "your-secret-key-123456789";
         }
 
         // GET: Hiển thị trang profile
@@ -29,21 +36,46 @@ namespace DATN_DT.Controllers
         {
             try
             {
-                var khachHangId = GetCurrentKhachHangId();
-                if (khachHangId == null)
+                var email = GetCurrentKhachHangEmail();
+                if (string.IsNullOrEmpty(email))
                 {
                     return Unauthorized(new { message = "Không tìm thấy thông tin người dùng" });
                 }
 
                 var khachHang = await _context.KhachHangs
-                    .FirstOrDefaultAsync(k => k.IdKhachHang == khachHangId);
+                    .FirstOrDefaultAsync(k => k.EmailKhachHang == email);
 
                 if (khachHang == null)
                 {
                     return NotFound(new { message = "Không tìm thấy thông tin khách hàng" });
                 }
 
-                return Ok(khachHang);
+                // Tính thống kê đơn hàng
+                var hoaDons = await _context.HoaDons
+                    .Where(h => h.IdKhachHang == khachHang.IdKhachHang)
+                    .ToListAsync();
+
+                var totalOrders = hoaDons.Count;
+                var processingOrders = hoaDons.Count(h => h.TrangThaiHoaDon == "Chờ thanh toán" || h.TrangThaiHoaDon == "Đang xử lý");
+                var completedOrders = hoaDons.Count(h => h.TrangThaiHoaDon == "Đã thanh toán" || h.TrangThaiHoaDon == "Thành công");
+                var totalSpent = hoaDons.Where(h => h.TrangThaiHoaDon == "Đã thanh toán" || h.TrangThaiHoaDon == "Thành công")
+                    .Sum(h => h.TongTien ?? 0);
+
+                return Ok(new
+                {
+                    idKhachHang = khachHang.IdKhachHang,
+                    hoTenKhachHang = khachHang.HoTenKhachHang,
+                    sdtKhachHang = khachHang.SdtKhachHang,
+                    emailKhachHang = khachHang.EmailKhachHang,
+                    defaultImage = khachHang.DefaultImage,
+                    diemTichLuy = khachHang.DiemTichLuy ?? 0,
+                    trangThaiKhachHang = khachHang.TrangThaiKhachHang == 1 ? "Hoạt động" : "Không hoạt động",
+                    // Thống kê
+                    totalOrders = totalOrders,
+                    processingOrders = processingOrders,
+                    completedOrders = completedOrders,
+                    totalSpent = totalSpent
+                });
             }
             catch (Exception ex)
             {
@@ -59,14 +91,14 @@ namespace DATN_DT.Controllers
         {
             try
             {
-                var khachHangId = GetCurrentKhachHangId();
-                if (khachHangId == null)
+                var email = GetCurrentKhachHangEmail();
+                if (string.IsNullOrEmpty(email))
                 {
                     return Unauthorized(new { message = "Không tìm thấy thông tin người dùng" });
                 }
 
                 var existingKhachHang = await _context.KhachHangs
-                    .FirstOrDefaultAsync(k => k.IdKhachHang == khachHangId);
+                    .FirstOrDefaultAsync(k => k.EmailKhachHang == email);
 
                 if (existingKhachHang == null)
                 {
@@ -87,7 +119,7 @@ namespace DATN_DT.Controllers
                 // Kiểm tra trùng số điện thoại
                 bool sdtExists = await _context.KhachHangs.AnyAsync(k =>
                     k.SdtKhachHang == model.SdtKhachHang &&
-                    k.IdKhachHang != khachHangId);
+                    k.IdKhachHang != existingKhachHang.IdKhachHang);
 
                 if (sdtExists)
                 {
@@ -99,7 +131,7 @@ namespace DATN_DT.Controllers
                 {
                     bool emailExists = await _context.KhachHangs.AnyAsync(k =>
                         k.EmailKhachHang == model.EmailKhachHang &&
-                        k.IdKhachHang != khachHangId);
+                        k.IdKhachHang != existingKhachHang.IdKhachHang);
 
                     if (emailExists)
                     {
@@ -152,14 +184,14 @@ namespace DATN_DT.Controllers
         {
             try
             {
-                var khachHangId = GetCurrentKhachHangId();
-                if (khachHangId == null)
+                var email = GetCurrentKhachHangEmail();
+                if (string.IsNullOrEmpty(email))
                 {
                     return Unauthorized(new { message = "Không tìm thấy thông tin người dùng" });
                 }
 
                 var existingKhachHang = await _context.KhachHangs
-                    .FirstOrDefaultAsync(k => k.IdKhachHang == khachHangId);
+                    .FirstOrDefaultAsync(k => k.EmailKhachHang == email);
 
                 if (existingKhachHang == null)
                 {
@@ -214,7 +246,7 @@ namespace DATN_DT.Controllers
                     }
 
                     // Tạo tên file duy nhất
-                    var fileName = $"avatar_{khachHangId}_{DateTime.Now:yyyyMMddHHmmss}{fileExtension}";
+                    var fileName = $"avatar_{existingKhachHang.IdKhachHang}_{DateTime.Now:yyyyMMddHHmmss}{fileExtension}";
                     var filePath = Path.Combine(uploadsFolder, fileName);
 
                     // Lưu file mới
@@ -246,15 +278,290 @@ namespace DATN_DT.Controllers
             }
         }
 
-        // Helper: Lấy ID khách hàng từ JWT token
-        private int? GetCurrentKhachHangId()
+        // Helper: Lấy email khách hàng từ JWT token
+        private string GetCurrentKhachHangEmail()
         {
-            var idClaim = User.FindFirstValue("IdKhachHang"); // Hoặc ClaimTypes.NameIdentifier tùy vào cách bạn lưu
-            if (int.TryParse(idClaim, out int khachHangId))
+            // Thử lấy từ cookie JWT
+            var token = Request.Cookies["jwt"];
+            if (!string.IsNullOrEmpty(token))
             {
-                return khachHangId;
+                try
+                {
+                    var handler = new JwtSecurityTokenHandler();
+                    var jsonToken = handler.ReadJwtToken(token);
+                    var emailClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name || c.Type == "Email");
+                    if (emailClaim != null)
+                    {
+                        return emailClaim.Value;
+                    }
+                }
+                catch { }
             }
-            return null;
+            
+            // Fallback: Lấy từ User claims
+            return User.FindFirstValue(ClaimTypes.Name) ?? User.FindFirstValue("Email");
+        }
+
+        // Helper: Lấy ID khách hàng từ JWT token
+        private async Task<int?> GetCurrentKhachHangIdAsync()
+        {
+            var email = GetCurrentKhachHangEmail();
+            if (string.IsNullOrEmpty(email))
+            {
+                return null;
+            }
+
+            var khachHang = await _context.KhachHangs
+                .FirstOrDefaultAsync(k => k.EmailKhachHang == email);
+            
+            return khachHang?.IdKhachHang;
+        }
+
+        // GET: Lấy danh sách đơn hàng của khách hàng
+        [HttpGet]
+        [Route("UserProfile/GetOrders")]
+        public async Task<IActionResult> GetOrders()
+        {
+            try
+            {
+                var email = GetCurrentKhachHangEmail();
+                if (string.IsNullOrEmpty(email))
+                {
+                    return Unauthorized(new { success = false, message = "Không tìm thấy thông tin người dùng" });
+                }
+
+                var khachHang = await _context.KhachHangs
+                    .FirstOrDefaultAsync(k => k.EmailKhachHang == email);
+
+                if (khachHang == null)
+                {
+                    return NotFound(new { success = false, message = "Không tìm thấy thông tin khách hàng" });
+                }
+
+                var hoaDons = await _context.HoaDons
+                    .Include(h => h.HoaDonChiTiets)
+                        .ThenInclude(hdct => hdct.ModelSanPham)
+                            .ThenInclude(m => m.SanPham)
+                                .ThenInclude(sp => sp.ThuongHieu)
+                    .Include(h => h.HoaDonChiTiets)
+                        .ThenInclude(hdct => hdct.ModelSanPham)
+                            .ThenInclude(m => m.AnhSanPhams)
+                    .Where(h => h.IdKhachHang == khachHang.IdKhachHang)
+                    .OrderByDescending(h => h.NgayLapHoaDon)
+                    .ToListAsync();
+
+                var orders = hoaDons.Select(h => new
+                {
+                    idHoaDon = h.IdHoaDon,
+                    maDon = $"HD{h.IdHoaDon:D6}",
+                    ngayLap = h.NgayLapHoaDon?.ToString("dd/MM/yyyy HH:mm"),
+                    trangThai = h.TrangThaiHoaDon ?? "Chưa xác định",
+                    tongTien = h.TongTien ?? 0,
+                    phuongThucThanhToan = h.PhuongThucThanhToan ?? "COD",
+                    hoTenNguoiNhan = h.HoTenNguoiNhan ?? "N/A",
+                    sdtNguoiNhan = h.SdtKhachHang ?? "N/A",
+                    diaChiGiaoHang = "N/A", // HoaDon model doesn't have DiaChiGiaoHang property
+                    soLuongSanPham = h.HoaDonChiTiets?.Count ?? 0,
+                    chiTiet = h.HoaDonChiTiets?.Select(hdct => new
+                    {
+                        tenSanPham = hdct.ModelSanPham?.SanPham?.TenSanPham ?? "N/A",
+                        tenModel = hdct.ModelSanPham?.TenModel ?? "N/A",
+                        tenThuongHieu = hdct.ModelSanPham?.SanPham?.ThuongHieu?.TenThuongHieu ?? "N/A",
+                        mau = hdct.ModelSanPham?.Mau ?? "N/A",
+                        soLuong = hdct.SoLuong ?? 0,
+                        donGia = hdct.DonGia ?? 0,
+                        thanhTien = hdct.ThanhTien ?? 0,
+                        hinhAnh = hdct.ModelSanPham?.AnhSanPhams?.FirstOrDefault()?.DuongDan ?? "/images/default-product.jpg"
+                    }).ToList()
+                }).ToList();
+
+                return Ok(new { success = true, data = orders });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Lỗi server: " + ex.Message });
+            }
+        }
+
+        // POST: Đổi mật khẩu
+        [HttpPost]
+        [Route("UserProfile/ChangePassword")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordModel model)
+        {
+            try
+            {
+                var email = GetCurrentKhachHangEmail();
+                if (string.IsNullOrEmpty(email))
+                {
+                    return Unauthorized(new { message = "Không tìm thấy thông tin người dùng" });
+                }
+
+                var khachHang = await _context.KhachHangs
+                    .FirstOrDefaultAsync(k => k.EmailKhachHang == email);
+
+                if (khachHang == null)
+                {
+                    return NotFound(new { message = "Không tìm thấy thông tin khách hàng" });
+                }
+
+                // Kiểm tra mật khẩu hiện tại
+                if (!VerifyPassword(model.CurrentPassword, khachHang.Password))
+                {
+                    return BadRequest(new { message = "Mật khẩu hiện tại không đúng" });
+                }
+
+                // Kiểm tra mật khẩu mới
+                if (string.IsNullOrWhiteSpace(model.NewPassword) || model.NewPassword.Length < 6)
+                {
+                    return BadRequest(new { message = "Mật khẩu mới phải có ít nhất 6 ký tự" });
+                }
+
+                if (model.NewPassword != model.ConfirmPassword)
+                {
+                    return BadRequest(new { message = "Mật khẩu xác nhận không khớp" });
+                }
+
+                // Cập nhật mật khẩu mới
+                khachHang.Password = HashPassword(model.NewPassword);
+                _context.KhachHangs.Update(khachHang);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Đổi mật khẩu thành công!" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi server: " + ex.Message });
+            }
+        }
+
+        // POST: Đổi email
+        [HttpPost]
+        [Route("UserProfile/ChangeEmail")]
+        public async Task<IActionResult> ChangeEmail([FromBody] ChangeEmailModel model)
+        {
+            try
+            {
+                var email = GetCurrentKhachHangEmail();
+                if (string.IsNullOrEmpty(email))
+                {
+                    return Unauthorized(new { message = "Không tìm thấy thông tin người dùng" });
+                }
+
+                var khachHang = await _context.KhachHangs
+                    .FirstOrDefaultAsync(k => k.EmailKhachHang == email);
+
+                if (khachHang == null)
+                {
+                    return NotFound(new { message = "Không tìm thấy thông tin khách hàng" });
+                }
+
+                // Kiểm tra mật khẩu xác nhận
+                if (!VerifyPassword(model.ConfirmPassword, khachHang.Password))
+                {
+                    return BadRequest(new { message = "Mật khẩu xác nhận không đúng" });
+                }
+
+                // Kiểm tra email mới
+                if (string.IsNullOrWhiteSpace(model.NewEmail))
+                {
+                    return BadRequest(new { message = "Email mới không được để trống" });
+                }
+
+                // Validate email format
+                if (!System.Text.RegularExpressions.Regex.IsMatch(model.NewEmail, @"^[^\s@]+@[^\s@]+\.[^\s@]+$"))
+                {
+                    return BadRequest(new { message = "Email không hợp lệ" });
+                }
+
+                // Kiểm tra email mới có khác email hiện tại không
+                if (model.NewEmail == email)
+                {
+                    return BadRequest(new { message = "Email mới phải khác email hiện tại" });
+                }
+
+                // Kiểm tra email đã tồn tại chưa
+                var existingEmail = await _context.KhachHangs
+                    .FirstOrDefaultAsync(k => k.EmailKhachHang == model.NewEmail);
+
+                if (existingEmail != null)
+                {
+                    return BadRequest(new { message = "Email này đã được sử dụng bởi tài khoản khác" });
+                }
+
+                // Cập nhật email mới
+                khachHang.EmailKhachHang = model.NewEmail;
+                _context.KhachHangs.Update(khachHang);
+                await _context.SaveChangesAsync();
+
+                // Tạo lại JWT token với email mới
+                var newToken = GenerateJwtToken(model.NewEmail, "KhachHang", khachHang.IdKhachHang);
+                
+                // Cập nhật cookie với token mới
+                Response.Cookies.Append("jwt", newToken, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTimeOffset.Now.AddHours(3)
+                });
+
+                return Ok(new { message = "Đổi email thành công!" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi server: " + ex.Message });
+            }
+        }
+
+        // Model cho đổi mật khẩu
+        public class ChangePasswordModel
+        {
+            public string CurrentPassword { get; set; }
+            public string NewPassword { get; set; }
+            public string ConfirmPassword { get; set; }
+        }
+
+        // Model cho đổi email
+        public class ChangeEmailModel
+        {
+            public string NewEmail { get; set; }
+            public string ConfirmPassword { get; set; }
+        }
+
+        // Helper: Hash password
+        private string HashPassword(string password)
+        {
+            using var sha = SHA256.Create();
+            var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
+            return Convert.ToBase64String(bytes);
+        }
+
+        // Helper: Verify password
+        private bool VerifyPassword(string password, string hash)
+        {
+            return HashPassword(password) == hash;
+        }
+
+        // Helper: Generate JWT Token
+        private string GenerateJwtToken(string email, string role, int idKhachHang)
+        {
+            var key = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtKey));
+            var creds = new Microsoft.IdentityModel.Tokens.SigningCredentials(key, Microsoft.IdentityModel.Tokens.SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim("IdKhachHang", idKhachHang.ToString()),
+                new Claim(ClaimTypes.Name, email),
+                new Claim(ClaimTypes.Role, role)
+            };
+
+            var token = new JwtSecurityToken(
+                claims: claims,
+                expires: DateTime.Now.AddHours(3),
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }

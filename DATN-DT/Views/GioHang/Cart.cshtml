@@ -3,6 +3,189 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 <style>
+    /* Hide Header */
+    header {
+        display: none !important;
+    }
+
+    /* Dark Theme Styles */
+    body {
+        background-color: #12121d;
+        color: #ffffff;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .container {
+        min-height: calc(100vh - 100px);
+        padding: 30px;
+    }
+
+    h2 {
+        color: #ffffff;
+        font-weight: bold;
+    }
+
+    .card {
+        background-color: #36363f;
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .card-header {
+        background-color: #2b2b33;
+        border-bottom: 1px solid #444;
+        color: #ffffff;
+        padding: 20px;
+    }
+
+    .card-body {
+        background-color: #36363f;
+        color: #ffffff;
+    }
+
+    .table {
+        color: #ffffff;
+        background-color: #36363f;
+    }
+
+    .table thead {
+        background-color: #2b2b33 !important;
+        color: #ffffff !important;
+    }
+
+    .table thead th {
+        background-color: #2b2b33 !important;
+        color: #ffffff !important;
+        border-color: #444 !important;
+        font-weight: 700 !important;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 18px 15px !important;
+    }
+
+        .table thead th,
+        .table thead th * {
+            color: #ffffff !important;
+            background-color: #2b2b33 !important;
+        }
+
+    .table tbody tr {
+        border-bottom: 2px solid #444;
+        transition: all 0.3s ease;
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(102, 126, 234, 0.1);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .table td, .table th {
+        border-color: #444;
+        padding: 20px 15px;
+        color: #ffffff !important;
+        vertical-align: middle;
+    }
+
+    /* Tăng padding cho cột ảnh */
+    .table td:has(img),
+    .table td:has(.img-thumbnail) {
+        padding: 25px 20px !important;
+        width: 220px !important;
+        min-width: 220px !important;
+    }
+
+    .table td *,
+    .table th * {
+        color: inherit !important;
+    }
+
+    /* Override Bootstrap table classes for dark theme */
+    .table-secondary {
+        background-color: #2b2b33 !important;
+        color: #ffffff !important;
+    }
+
+        .table-secondary td,
+        .table-secondary th {
+            color: #ffffff !important;
+        }
+
+    .table-warning {
+        background-color: #3a3a44 !important;
+        color: #ffffff !important;
+    }
+
+        .table-warning td,
+        .table-warning th {
+            color: #ffffff !important;
+        }
+
+    /* Ensure all text in table is visible */
+    .table td h6,
+    .table td strong,
+    .table td span,
+    .table td small {
+        color: #ffffff !important;
+    }
+
+    .table td h6.text-muted,
+    .table td strong.text-muted,
+    .table td span.text-muted {
+        color: #aaa !important;
+    }
+
+    /* Input và form controls */
+    .form-control, .form-select {
+        background-color: #2b2b33;
+        border: 1px solid #444;
+        color: #ffffff;
+    }
+
+    .form-control:focus, .form-select:focus {
+        background-color: #2b2b33;
+        border-color: #667eea;
+        color: #ffffff;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+
+    .form-control::placeholder {
+        color: #aaa;
+    }
+
+    .quantity-control .form-control {
+        background-color: #2b2b33;
+        border: 1px solid #444;
+        color: #ffffff;
+    }
+
+    .quantity-control .btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 1px solid #667eea;
+        background-color: #2b2b33;
+        color: #667eea;
+    }
+
+        .quantity-control .btn:hover {
+            background-color: #667eea;
+            color: white;
+        }
+
+        .quantity-control .btn:focus {
+            box-shadow: none;
+        }
+
     .quantity-control .quantity-input {
         -moz-appearance: textfield;
     }
@@ -13,42 +196,34 @@
             margin: 0;
         }
 
-    .quantity-control .form-control {
-        border: 1px solid #dee2e6;
-    }
-
-    .quantity-control .btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        border: 1px solid #6c757d;
-        background-color: white;
-        color: #6c757d;
-    }
-
-        .quantity-control .btn:hover {
-            background-color: #6c757d;
-            color: white;
-        }
-
-        .quantity-control .btn:focus {
-            box-shadow: none;
-        }
-
     .table td {
         vertical-align: middle;
     }
 
-    .btn-checkout:disabled {
-        cursor: not-allowed;
-        opacity: 0.6;
+    /* Buttons */
+    .btn-checkout {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        font-weight: bold;
+        padding: 12px 24px;
     }
 
-    /* Style cho nút xóa */
+        .btn-checkout:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #653a8f 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-checkout:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+            background: #555;
+        }
+
     .btn-delete {
         border: 1px solid #dc3545;
-        background-color: white;
+        background-color: #2b2b33;
         color: #dc3545;
         display: flex;
         align-items: center;
@@ -60,14 +235,571 @@
             color: white;
         }
 
+    .btn-danger {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        border: none;
+    }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #ee5a5a 0%, #dd4a5f 100%);
+        }
+
+    .btn-outline-primary {
+        border-color: #667eea;
+        color: #667eea;
+    }
+
+        .btn-outline-primary:hover {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+
+    /* Checkbox - Override Bootstrap và tất cả styles */
+    input[type="checkbox"],
+    input[type="checkbox"].item-checkbox,
+    input[type="checkbox"]#selectAll,
+    .form-check-input {
+        width: 20px !important;
+        height: 20px !important;
+        cursor: pointer !important;
+        background-color: #2b2b33 !important;
+        border: 2px solid #667eea !important;
+        border-radius: 4px !important;
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        position: relative !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        vertical-align: middle !important;
+    }
+
+        input[type="checkbox"]:checked,
+        input[type="checkbox"].item-checkbox:checked,
+        input[type="checkbox"]#selectAll:checked,
+        .form-check-input:checked {
+            background-color: #667eea !important;
+            border-color: #667eea !important;
+            background-image: none !important;
+        }
+
+        input[type="checkbox"]:checked::after,
+        input[type="checkbox"].item-checkbox:checked::after,
+        input[type="checkbox"]#selectAll:checked::after,
+        .form-check-input:checked::after {
+            content: '✓' !important;
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            color: white !important;
+            font-size: 14px !important;
+            font-weight: bold !important;
+            line-height: 1 !important;
+        }
+
+        input[type="checkbox"]:focus,
+        input[type="checkbox"].item-checkbox:focus,
+        input[type="checkbox"]#selectAll:focus,
+        .form-check-input:focus {
+            outline: none !important;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.25) !important;
+            border-color: #667eea !important;
+        }
+
+        input[type="checkbox"]:disabled,
+        input[type="checkbox"].item-checkbox:disabled,
+        input[type="checkbox"]#selectAll:disabled,
+        .form-check-input:disabled {
+            opacity: 0.5 !important;
+            cursor: not-allowed !important;
+            background-color: #1a1a1a !important;
+            border-color: #555 !important;
+        }
+
+        input[type="checkbox"]:disabled:checked,
+        input[type="checkbox"].item-checkbox:disabled:checked,
+        input[type="checkbox"]#selectAll:disabled:checked,
+        .form-check-input:disabled:checked {
+            background-color: #444 !important;
+            border-color: #555 !important;
+        }
+
+    /* Text colors */
+    .text-danger {
+        color: #ff6b6b !important;
+    }
+
+    .text-muted {
+        color: #aaa !important;
+    }
+
+    /* Modal */
+    .modal-content {
+        background-color: #36363f;
+        color: #ffffff;
+        border: none;
+    }
+
+    .modal-header {
+        background-color: #2b2b33;
+        border-bottom: 1px solid #444;
+    }
+
+    .modal-body {
+        background-color: #36363f;
+    }
+
+    .modal-footer {
+        background-color: #36363f;
+        border-top: 1px solid #444;
+    }
+
+    .btn-close {
+        filter: invert(1);
+    }
+
+    /* Spinner */
+    .spinner-border {
+        color: #667eea;
+    }
+
     /* Bootstrap icon size */
     .bi-trash {
         width: 16px;
         height: 16px;
     }
+
+    /* Sticky summary card */
+    .sticky-top {
+        position: sticky;
+        top: 20px;
+    }
+
+    /* Hide Footer */
+    footer {
+        display: none !important;
+    }
+
+    /* Table light class override */
+    .table-light {
+        background-color: #2b2b33 !important;
+        color: #ffffff !important;
+    }
+
+        .table-light th,
+        .table-light td {
+            background-color: #2b2b33 !important;
+            color: #ffffff !important;
+            border-color: #444 !important;
+        }
+
+        .table-light thead th {
+            background-color: #2b2b33 !important;
+            color: #ffffff !important;
+        }
+
+    /* Ensure all links and buttons in table are visible */
+    .table a,
+    .table .btn {
+        color: inherit !important;
+    }
+
+    /* Global text color for cart container */
+    .card-body,
+    .table-responsive,
+    #cartItems {
+        color: #ffffff !important;
+    }
+
+    /* Force white text for all child elements */
+    #cartItems tr td {
+        color: #ffffff !important;
+    }
+
+        #cartItems tr td * {
+            color: #ffffff !important;
+        }
+
+    /* Exception for muted text */
+    #cartItems .text-muted,
+    #cartItems .text-muted * {
+        color: #aaa !important;
+    }
+
+    /* Exception for success text */
+    #cartItems .text-success,
+    #cartItems .text-success * {
+        color: #28a745 !important;
+    }
+
+    /* Exception for warning text */
+    #cartItems .text-warning,
+    #cartItems .text-warning * {
+        color: #ffc107 !important;
+    }
+
+    /* Exception for danger text */
+    #cartItems .text-danger,
+    #cartItems .text-danger * {
+        color: #ff6b6b !important;
+    }
+
+    /* Buttons in table */
+    #cartItems .btn-secondary {
+        background-color: #2b2b33 !important;
+        border-color: #667eea !important;
+        color: #ffffff !important;
+    }
+
+        #cartItems .btn-secondary:hover:not(:disabled) {
+            background-color: #667eea !important;
+            color: #ffffff !important;
+        }
+
+        #cartItems .btn-secondary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+    /* Progress Bar Styles */
+    .checkout-progress {
+        background-color: #2b2b33;
+        border-radius: 10px;
+        padding: 20px 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        margin-top: 20px;
+    }
+
+    .progress-steps::before {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background-color: #444;
+        z-index: 0;
+    }
+
+    .progress-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        z-index: 1;
+        flex: 1;
+        cursor: default;
+    }
+
+    .progress-step-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #444;
+        color: #aaa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        margin-bottom: 10px;
+        transition: all 0.3s ease;
+        border: 3px solid #444;
+    }
+
+    .progress-step.active .progress-step-icon {
+        background-color: #dc3545;
+        color: #ffffff;
+        border-color: #dc3545;
+        box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.2);
+    }
+
+    .progress-step.completed .progress-step-icon {
+        background-color: #28a745;
+        color: #ffffff;
+        border-color: #28a745;
+    }
+
+    .progress-step-label {
+        font-size: 12px;
+        color: #aaa;
+        text-align: center;
+        margin-top: 5px;
+        font-weight: 500;
+    }
+
+    .progress-step.active .progress-step-label {
+        color: #dc3545;
+        font-weight: 600;
+    }
+
+    .progress-step.completed .progress-step-label {
+        color: #28a745;
+    }
+
+    .progress-line {
+        position: absolute;
+        top: 20px;
+        left: 0;
+        height: 3px;
+        background-color: #28a745;
+        z-index: 1;
+        transition: width 0.3s ease;
+    }
+
+    .back-link {
+        color: #667eea;
+        text-decoration: none;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        margin-bottom: 15px;
+        transition: color 0.3s ease;
+    }
+
+    .back-link:hover {
+        color: #5568d3;
+        text-decoration: underline;
+    }
+
+    .back-link i {
+        margin-right: 5px;
+    }
+
+    /* Improved card styling */
+    .card-header {
+        padding: 20px 25px !important;
+    }
+
+    .card-header h5 {
+        font-weight: 700;
+        font-size: 18px;
+        letter-spacing: 0.3px;
+    }
+
+    .card-body {
+        padding: 25px !important;
+    }
+
+    /* Product image in table - Lớn hơn và rõ ràng hơn */
+    .table img,
+    .table .img-thumbnail {
+        width: 180px !important;
+        height: 180px !important;
+        min-width: 180px !important;
+        min-height: 180px !important;
+        max-width: 180px !important;
+        max-height: 180px !important;
+        object-fit: cover !important;
+        border-radius: 12px !important;
+        border: 3px solid rgba(102, 126, 234, 0.3) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+        transition: all 0.3s ease !important;
+        background-color: #2b2b33 !important;
+    }
+
+    .table img:hover,
+    .table .img-thumbnail:hover {
+        transform: scale(1.05) !important;
+        border-color: rgba(102, 126, 234, 0.6) !important;
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
+    }
+
+    /* Product info styling - Cải thiện typography */
+    .product-info {
+        padding-left: 15px;
+    }
+
+    .product-info h6 {
+        font-weight: 700;
+        margin-bottom: 8px;
+        font-size: 16px;
+        color: #ffffff;
+        line-height: 1.4;
+    }
+
+    .product-info .product-name {
+        font-size: 18px;
+        font-weight: 700;
+        color: #ffffff;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .product-info small {
+        display: block;
+        line-height: 1.8;
+        font-size: 13px;
+        color: #aaa;
+        margin-bottom: 4px;
+    }
+
+    .product-info .product-brand {
+        color: #667eea;
+        font-weight: 600;
+    }
+
+    .product-info .product-status {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-top: 8px;
+    }
+
+    .product-info .product-status.in-stock {
+        background-color: rgba(40, 167, 69, 0.2);
+        color: #28a745;
+        border: 1px solid rgba(40, 167, 69, 0.3);
+    }
+
+    .product-info .product-status.out-of-stock {
+        background-color: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.3);
+    }
+
+    /* Empty cart message */
+    .empty-cart {
+        padding: 60px 20px;
+        text-align: center;
+    }
+
+    .empty-cart i {
+        font-size: 64px;
+        color: #667eea;
+        margin-bottom: 20px;
+    }
+
+    /* Summary card improvements */
+    .summary-highlight {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        border: 1px solid rgba(102, 126, 234, 0.3);
+    }
+
+    /* Price display improvements */
+    .price-display {
+        font-size: 18px;
+        font-weight: 700;
+        color: #ffffff;
+    }
+
+    .price-display.unit-price {
+        color: #667eea;
+    }
+
+    .price-display.total-price {
+        color: #dc3545;
+        font-size: 20px;
+    }
+
+    /* Quantity control improvements */
+    .quantity-control {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .quantity-control .btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 16px;
+    }
+
+    .quantity-control .form-control {
+        width: 70px;
+        text-align: center;
+        font-weight: 700;
+        font-size: 16px;
+        border-radius: 8px;
+    }
+
+    /* Action buttons improvements */
+    .btn-action {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .btn-action:hover {
+        transform: scale(1.1);
+    }
+
+    /* Responsive improvements */
+    @@media (max-width: 768px) {
+        .table img,
+        .table .img-thumbnail {
+            width: 120px !important;
+            height: 120px !important;
+            min-width: 120px !important;
+            min-height: 120px !important;
+            max-width: 120px !important;
+            max-height: 120px !important;
+        }
+
+        .product-info .product-name {
+            font-size: 16px;
+        }
+    }
 </style>
 
 <div class="container mt-4">
+    <!-- Progress Bar -->
+    <div class="checkout-progress">
+        <a href="/MuaHang" class="back-link">
+            <i class="bi bi-arrow-left"></i> Trở về
+        </a>
+        <div class="progress-steps">
+            <div class="progress-line" style="width: 0%;"></div>
+            <div class="progress-step active">
+                <div class="progress-step-icon">
+                    <i class="bi bi-cart"></i>
+                </div>
+                <div class="progress-step-label">Chọn sản phẩm</div>
+            </div>
+            <div class="progress-step">
+                <div class="progress-step-icon">
+                    <i class="bi bi-file-text"></i>
+                </div>
+                <div class="progress-step-label">Thông tin đặt hàng</div>
+            </div>
+            <div class="progress-step">
+                <div class="progress-step-icon">
+                    <i class="bi bi-tag"></i>
+                </div>
+                <div class="progress-step-label">Phiếu giảm giá</div>
+            </div>
+            <div class="progress-step">
+                <div class="progress-step-icon">
+                    <i class="bi bi-credit-card"></i>
+                </div>
+                <div class="progress-step-label">Thanh toán</div>
+            </div>
+            <div class="progress-step">
+                <div class="progress-step-icon">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div class="progress-step-label">Hoàn tất đặt hàng</div>
+            </div>
+        </div>
+    </div>
+
     <h2 class="mb-4">Giỏ Hàng Của Bạn</h2>
 
     <div class="row">
@@ -79,17 +811,17 @@
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
-                            <thead class="table-light">
+                            <thead>
                                 <tr>
-                                    <th width="50" class="text-center">
-                                        <input type="checkbox" id="selectAll">
+                                    <th width="50" class="text-center" style="color: #ffffff !important; background-color: #2b2b33 !important;">
+                                        <input type="checkbox" id="selectAll" style="color: #ffffff !important;">
                                     </th>
-                                    <th width="80">Ảnh</th>
-                                    <th>Sản Phẩm</th>
-                                    <th width="120" class="text-center">Đơn Giá</th>
-                                    <th width="150" class="text-center">Số Lượng</th>
-                                    <th width="120" class="text-center">Thành Tiền</th>
-                                    <th width="80" class="text-center">Thao Tác</th>
+                                    <th width="80" style="color: #ffffff !important; background-color: #2b2b33 !important;">Ảnh</th>
+                                    <th style="color: #ffffff !important; background-color: #2b2b33 !important;">Sản Phẩm</th>
+                                    <th width="120" class="text-center" style="color: #ffffff !important; background-color: #2b2b33 !important;">Đơn Giá</th>
+                                    <th width="150" class="text-center" style="color: #ffffff !important; background-color: #2b2b33 !important;">Số Lượng</th>
+                                    <th width="120" class="text-center" style="color: #ffffff !important; background-color: #2b2b33 !important;">Thành Tiền</th>
+                                    <th width="80" class="text-center" style="color: #ffffff !important; background-color: #2b2b33 !important;">Thao Tác</th>
                                 </tr>
                             </thead>
                             <tbody id="cartItems">
@@ -111,17 +843,29 @@
 
         <div class="col-md-4">
             <div class="card sticky-top" style="top: 20px;">
-                <div class="card-header">
-                    <h5 class="mb-0">Tổng Thanh Toán</h5>
+                <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <h5 class="mb-0 text-white"><i class="bi bi-calculator me-2"></i>Tổng Thanh Toán</h5>
                 </div>
                 <div class="card-body">
-                    <div class="d-flex justify-content-between mb-3">
-                        <strong>Tổng tiền:</strong>
-                        <strong id="totalPayment" class="text-danger fs-5">0 ₫</strong>
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-3" style="background-color: #2b2b33; border-radius: 8px;">
+                        <strong class="fs-6">Tổng tiền:</strong>
+                        <strong id="totalPayment" class="text-danger fs-4 fw-bold">0 ₫</strong>
                     </div>
-                    <button id="btnCheckout" class="btn btn-danger w-100" disabled>
-                        Thanh Toán (<span id="selectedCount">0</span> sản phẩm)
+                    <div class="mb-3">
+                        <small class="text-muted d-block mb-2">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Đã chọn <span id="selectedCount" class="fw-bold">0</span> sản phẩm
+                        </small>
+                    </div>
+                    <button id="btnCheckout" class="btn btn-danger w-100 btn-lg" disabled style="font-weight: 600; padding: 12px;">
+                        <i class="bi bi-credit-card me-2"></i>
+                        Thanh Toán (<span id="selectedCountBtn">0</span> sản phẩm)
                     </button>
+                    <div class="text-center mt-3">
+                        <a href="/MuaHang" class="text-muted text-decoration-none" style="font-size: 14px;">
+                            <i class="bi bi-arrow-left me-1"></i>Tiếp tục mua sắm
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

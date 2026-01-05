@@ -1,0 +1,712 @@
+@{
+    ViewData["Title"] = "Quản lý Hóa Đơn";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <title>Quản lý Hóa Đơn</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-sidebar: #1e293b;
+            --bg-header: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: var(--text-primary) !important;
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 14px;
+            min-height: 100vh;
+        }
+        
+        * {
+            color: inherit;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--text-primary) !important;
+            font-weight: 700;
+            font-size: 28px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .table-container {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow-lg);
+            color: var(--text-primary) !important;
+        }
+        
+        .table-container * {
+            color: var(--text-primary) !important;
+        }
+        
+        .text-muted {
+            color: var(--text-secondary) !important;
+        }
+
+        table {
+            background-color: transparent;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 0;
+        }
+
+        th {
+            background: linear-gradient(135deg, var(--bg-header) 0%, #0f172a 100%) !important;
+            color: var(--text-primary) !important;
+            font-weight: 600;
+            font-size: 14px;
+            border-bottom: 2px solid var(--border-color);
+            padding: 15px 10px;
+        }
+
+        td {
+            color: var(--text-primary) !important;
+            background-color: var(--bg-card) !important;
+            padding: 14px 10px;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+            font-weight: 400;
+        }
+        
+        td strong {
+            color: var(--text-primary) !important;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+        }
+
+        tr {
+            background-color: var(--bg-card) !important;
+        }
+
+        tr:hover {
+            background-color: rgba(99, 102, 241, 0.1) !important;
+            transition: 0.3s;
+        }
+        
+        tr:hover td {
+            background-color: rgba(99, 102, 241, 0.1) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .btn-action {
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            margin: 2px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .d-flex.gap-2 {
+            gap: 8px;
+        }
+
+        .btn-view {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border: none;
+            color: white;
+        }
+
+        .btn-view:hover {
+            background: linear-gradient(135deg, var(--primary-hover) 0%, #7c3aed 100%);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-update-status {
+            background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
+            border: none;
+            color: white;
+        }
+
+        .btn-update-status:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .modal-content {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 12px;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px;
+            color: white;
+        }
+
+        .modal-title {
+            font-weight: 600;
+            color: white;
+        }
+
+        .modal-body {
+            padding: 20px;
+            color: var(--text-primary);
+        }
+
+        .modal-body * {
+            color: var(--text-primary);
+        }
+
+        .modal-footer {
+            border-top: 1px solid var(--border-color);
+            padding: 20px;
+            background-color: var(--bg-card);
+        }
+
+        .form-control, .form-select {
+            background-color: #1e293b;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 8px;
+            padding: 10px 15px;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+            background-color: #1e293b;
+            color: var(--text-primary);
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: var(--text-primary) !important;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .form-control::placeholder {
+            color: var(--text-secondary) !important;
+            opacity: 1;
+        }
+
+        .filter-container {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px !important;
+            font-weight: 600 !important;
+            display: inline-block;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .status-0 {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+
+        .status-1 {
+            background-color: rgba(99, 102, 241, 0.1);
+            color: var(--primary-color);
+        }
+
+        .status-2 {
+            background-color: rgba(14, 165, 233, 0.1);
+            color: #0ea5e9;
+        }
+
+        .status-3 {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-4 {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+
+        .invoice-item {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .invoice-item * {
+            color: var(--text-primary);
+        }
+
+        .invoice-detail-row {
+            display: flex;
+            gap: 15px;
+            padding: 10px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .invoice-detail-row img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        .nav-pills .nav-link {
+            color: var(--text-secondary);
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: #4a90e2;
+            color: white;
+            border-color: #4a90e2;
+        }
+
+        .nav-pills .nav-link:hover {
+            color: #fff;
+            background-color: #357ab8;
+            border-color: #357ab8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2><i class="bi bi-receipt me-2"></i>Quản lý Hóa Đơn</h2>
+
+        <!-- Filter Section -->
+        <div class="filter-container">
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Tìm kiếm</label>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Mã đơn, tên khách hàng, SĐT...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Từ ngày</label>
+                    <input type="date" id="fromDate" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Đến ngày</label>
+                    <input type="date" id="toDate" class="form-control">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-primary w-100" onclick="loadInvoices()">
+                        <i class="bi bi-search me-1"></i>Tìm kiếm
+                    </button>
+                </div>
+            </div>
+
+            <!-- Status Filter Tabs -->
+            <ul class="nav nav-pills" id="statusFilterTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="all-tab" data-status="" type="button">
+                        <i class="bi bi-list-ul me-1"></i>Tất cả
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="status0-tab" data-status="0" type="button">
+                        <i class="bi bi-hourglass-split me-1"></i>Chờ xác nhận
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="status1-tab" data-status="1" type="button">
+                        <i class="bi bi-check-circle me-1"></i>Đã xác nhận
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="status2-tab" data-status="2" type="button">
+                        <i class="bi bi-truck me-1"></i>Đang vận chuyển
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="status3-tab" data-status="3" type="button">
+                        <i class="bi bi-check2-circle me-1"></i>Giao hàng thành công
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="status4-tab" data-status="4" type="button">
+                        <i class="bi bi-x-circle me-1"></i>Hủy đơn hàng
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Table Container -->
+        <div class="table-container">
+            <div id="invoicesTableContainer">
+                <p class="text-center text-muted">Đang tải dữ liệu...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Chi tiết Hóa đơn -->
+    <div class="modal fade" id="invoiceDetailModal" tabindex="-1" aria-labelledby="invoiceDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="invoiceDetailModalLabel">
+                        <i class="bi bi-receipt me-2"></i>Chi tiết Hóa đơn
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="invoiceDetailContent">
+                    <p class="text-muted">Đang tải chi tiết...</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cập nhật trạng thái -->
+    <div class="modal fade" id="updateStatusModal" tabindex="-1" aria-labelledby="updateStatusModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updateStatusModalLabel">
+                        <i class="bi bi-pencil-square me-2"></i>Cập nhật trạng thái
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="currentInvoiceId">
+                    <div class="mb-3">
+                        <label class="form-label">Trạng thái mới</label>
+                        <select id="newStatus" class="form-control">
+                            <option value="0">Chờ xác nhận</option>
+                            <option value="1">Đã xác nhận</option>
+                            <option value="2">Đang vận chuyển</option>
+                            <option value="3">Giao hàng thành công</option>
+                            <option value="4">Hủy đơn hàng</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" onclick="confirmUpdateStatus()">
+                        <i class="bi bi-check-circle me-1"></i>Cập nhật
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var currentStatusFilter = null;
+
+        // Format tiền
+        function formatMoney(amount) {
+            return new Intl.NumberFormat('vi-VN').format(amount) + ' ₫';
+        }
+
+        // Lấy tên trạng thái từ số
+        function getStatusName(statusNum) {
+            switch (statusNum) {
+                case 0: return 'Chờ xác nhận';
+                case 1: return 'Đã xác nhận';
+                case 2: return 'Đang vận chuyển';
+                case 3: return 'Giao hàng thành công';
+                case 4: return 'Hủy đơn hàng';
+                default: return 'Không xác định';
+            }
+        }
+
+        // Load danh sách hóa đơn
+        async function loadInvoices() {
+            try {
+                var search = document.getElementById('searchInput').value;
+                var fromDate = document.getElementById('fromDate').value;
+                var toDate = document.getElementById('toDate').value;
+                var status = currentStatusFilter;
+
+                var url = '/HoaDon/GetInvoices?';
+                if (status !== null) url += 'status=' + status + '&';
+                if (search) url += 'search=' + encodeURIComponent(search) + '&';
+                if (fromDate) url += 'fromDate=' + encodeURIComponent(fromDate) + '&';
+                if (toDate) url += 'toDate=' + encodeURIComponent(toDate) + '&';
+
+                const response = await fetch(url);
+                const result = await response.json();
+
+                var container = document.getElementById('invoicesTableContainer');
+                if (!result.success) {
+                    container.innerHTML = '<p class="text-center text-danger" style="color: #dc3545 !important;">Lỗi: ' + (result.message || 'Không thể tải dữ liệu') + '</p>';
+                    return;
+                }
+
+                // Debug: Log dữ liệu
+                console.log('Invoices data:', result.data);
+                
+                var html = '<table class="table table-hover" style="width: 100%;">' +
+                    '<thead>' +
+                    '<tr>' +
+                    '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Mã đơn</th>' +
+                    '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Khách hàng</th>' +
+                    '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Nhân viên</th>' +
+                    '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Ngày lập</th>' +
+                    '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Trạng thái</th>' +
+                    '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Tổng tiền</th>' +
+                    '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Số lượng SP</th>' +
+                    '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Thao tác</th>' +
+                    '</tr>' +
+                    '</thead>' +
+                    '<tbody>';
+
+                if (!result.data || result.data.length === 0) {
+                    html += '<tr><td colspan="8" class="text-center" style="color: #b0b0b0 !important; font-size: 15px !important; padding: 30px !important;"><i class="bi bi-inbox me-2"></i>Không có hóa đơn nào.</td></tr>';
+                } else {
+                    for (var i = 0; i < result.data.length; i++) {
+                        var invoice = result.data[i];
+                        
+                        // Debug: Log từng invoice
+                        console.log('Invoice ' + i + ':', invoice);
+                        
+                        var statusClass = 'status-' + (invoice.trangThaiSo !== undefined ? invoice.trangThaiSo : 0);
+                        var statusName = getStatusName(invoice.trangThaiSo !== undefined ? invoice.trangThaiSo : 0);
+                        
+                        // Đảm bảo hiển thị đầy đủ thông tin
+                        var maDon = invoice.maDon || (invoice.idHoaDon ? 'HD' + String(invoice.idHoaDon).padStart(6, '0') : 'N/A');
+                        var hoTen = invoice.hoTenKhachHang || 'N/A';
+                        var sdt = invoice.sdtKhachHang || '';
+                        var hoTenNhanVien = invoice.hoTenNhanVien || 'N/A';
+                        var ngayLap = invoice.ngayLap || 'N/A';
+                        var tongTien = invoice.tongTien !== undefined && invoice.tongTien !== null ? invoice.tongTien : 0;
+                        var soLuongSP = invoice.soLuongSanPham !== undefined && invoice.soLuongSanPham !== null ? invoice.soLuongSanPham : 0;
+
+                        html += '<tr>' +
+                            '<td style="color: #ffffff !important; font-size: 14px !important;"><strong style="color: #ffffff !important; font-weight: 600 !important;">' + maDon + '</strong></td>' +
+                            '<td style="color: #ffffff !important; font-size: 14px !important;">' +
+                            '<div style="font-weight: 600; color: #ffffff !important; margin-bottom: 4px;">' + hoTen + '</div>' +
+                            (sdt ? '<small style="color: #b0b0b0 !important; font-size: 12px !important;"><i class="bi bi-telephone me-1"></i>' + sdt + '</small>' : '') +
+                            '</td>' +
+                            '<td style="color: #f1f5f9 !important; font-size: 14px !important;">' +
+                            (hoTenNhanVien !== 'N/A' ? '<span style="color: #667eea !important; font-weight: 500;"><i class="bi bi-person-badge me-1"></i>' + hoTenNhanVien + '</span>' : '<span class="text-muted">Chưa có</span>') +
+                            '</td>' +
+                            '<td style="color: #f1f5f9 !important; font-size: 14px !important;">' + ngayLap + '</td>' +
+                            '<td style="font-size: 14px !important;"><span class="status-badge ' + statusClass + '">' + statusName + '</span></td>' +
+                            '<td style="font-size: 14px !important;"><strong style="color: #28a745 !important; font-weight: 600 !important; font-size: 14px !important;">' + formatMoney(tongTien) + '</strong></td>' +
+                            '<td style="font-size: 14px !important;"><span class="badge bg-secondary" style="font-size: 12px !important;">' + soLuongSP + '</span></td>' +
+                            '<td>' +
+                            '<div class="d-flex gap-2 flex-wrap">' +
+                            '<button class="btn btn-view btn-action" onclick="showInvoiceDetail(' + invoice.idHoaDon + ')">' +
+                            '<i class="bi bi-eye me-1"></i>Chi tiết</button>' +
+                            '<button class="btn btn-update-status btn-action" onclick="openUpdateStatusModal(' + invoice.idHoaDon + ', ' + (invoice.trangThaiSo !== undefined ? invoice.trangThaiSo : 0) + ')">' +
+                            '<i class="bi bi-pencil me-1"></i>Đổi trạng thái</button>' +
+                            '</div>' +
+                            '</td>' +
+                            '</tr>';
+                    }
+                }
+
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading invoices:', error);
+                document.getElementById('invoicesTableContainer').innerHTML =
+                    '<p class="text-center text-danger">Lỗi khi tải danh sách hóa đơn.</p>';
+            }
+        }
+
+        // Xem chi tiết hóa đơn
+        async function showInvoiceDetail(id) {
+            try {
+                const response = await fetch('/HoaDon/GetInvoiceDetail?id=' + id);
+                const result = await response.json();
+
+                if (!result.success || !result.data) {
+                    alert('Không tìm thấy chi tiết hóa đơn');
+                    return;
+                }
+
+                var invoice = result.data;
+                var statusClass = 'status-' + invoice.trangThaiSo;
+                var statusName = getStatusName(invoice.trangThaiSo);
+
+                var chiTietHtml = '';
+                if (invoice.chiTiet && invoice.chiTiet.length > 0) {
+                    for (var i = 0; i < invoice.chiTiet.length; i++) {
+                        var item = invoice.chiTiet[i];
+                        chiTietHtml += '<div class="invoice-detail-row">' +
+                            '<img src="' + (item.hinhAnh || '/images/default-product.jpg') + '" alt="' + (item.tenSanPham || '') + '" ' +
+                            'onerror="this.src=\'/images/default-product.jpg\'">' +
+                            '<div class="flex-grow-1">' +
+                            '<h6 style="color: #ffffff !important;">' + (item.tenSanPham || '') + '</h6>' +
+                            '<p class="text-muted mb-1" style="color: #aaa !important;">Model: ' + (item.tenModel || '') + ' - Màu: ' + (item.mau || '') + '</p>' +
+                            '<p class="mb-1" style="color: #ffffff !important;">Số lượng: ' + (item.soLuong || 0) + '</p>' +
+                            '<p class="mb-1" style="color: #ffffff !important;">Đơn giá: ' + formatMoney(item.donGia || 0) + '</p>' +
+                            '<p class="mb-0" style="color: #ffffff !important;"><strong>Thành tiền: ' + formatMoney(item.thanhTien || 0) + '</strong></p>' +
+                            '</div>' +
+                            '</div>';
+                    }
+                }
+
+                var detailHtml = '<div class="invoice-item">' +
+                    '<h6>Thông tin hóa đơn</h6>' +
+                    '<p class="mb-1" style="color: #ffffff !important;"><strong>Mã đơn:</strong> ' + (invoice.maDon || '') + '</p>' +
+                    '<p class="mb-1" style="color: #ffffff !important;"><strong>Ngày lập:</strong> ' + (invoice.ngayLap || '') + '</p>' +
+                    '<p class="mb-1" style="color: #ffffff !important;"><strong>Trạng thái:</strong> <span class="status-badge ' + statusClass + '">' + statusName + '</span></p>' +
+                    '<p class="mb-1" style="color: #ffffff !important;"><strong>Phương thức thanh toán:</strong> ' + (invoice.phuongThucThanhToan || 'COD') + '</p>' +
+                    '<p class="mb-1" style="color: #ffffff !important;"><strong>Tổng tiền:</strong> <strong class="text-primary">' + formatMoney(invoice.tongTien || 0) + '</strong></p>' +
+                    '</div>' +
+                    '<div class="invoice-item">' +
+                    '<h6>Thông tin khách hàng</h6>' +
+                    '<p class="mb-1" style="color: #ffffff !important;"><strong>Họ tên:</strong> ' + (invoice.hoTenKhachHang || '') + '</p>' +
+                    '<p class="mb-1" style="color: #ffffff !important;"><strong>SĐT:</strong> ' + (invoice.sdtKhachHang || '') + '</p>' +
+                    '<p class="mb-1" style="color: #ffffff !important;"><strong>Email:</strong> ' + (invoice.emailKhachHang || '') + '</p>' +
+                    '</div>' +
+                    '<div class="invoice-item">' +
+                    '<h6>Thông tin nhân viên</h6>' +
+                    '<p class="mb-1" style="color: #ffffff !important;"><strong>Nhân viên bán hàng:</strong> ' + 
+                    ((invoice.hoTenNhanVien && invoice.hoTenNhanVien !== 'N/A') ? '<span style="color: #667eea !important;"><i class="bi bi-person-badge me-1"></i>' + invoice.hoTenNhanVien + '</span>' : '<span class="text-muted">Chưa có</span>') + '</p>' +
+                    '</div>' +
+                    '<div class="invoice-item">' +
+                    '<h6>Chi tiết sản phẩm</h6>' +
+                    chiTietHtml +
+                    '</div>';
+
+                document.getElementById('invoiceDetailContent').innerHTML = detailHtml;
+
+                var modal = new bootstrap.Modal(document.getElementById('invoiceDetailModal'));
+                modal.show();
+            } catch (error) {
+                console.error('Error loading invoice detail:', error);
+                alert('Lỗi khi tải chi tiết hóa đơn');
+            }
+        }
+
+        // Mở modal cập nhật trạng thái
+        function openUpdateStatusModal(id, currentStatus) {
+            document.getElementById('currentInvoiceId').value = id;
+            document.getElementById('newStatus').value = currentStatus;
+
+            var modal = new bootstrap.Modal(document.getElementById('updateStatusModal'));
+            modal.show();
+        }
+
+        // Xác nhận cập nhật trạng thái
+        async function confirmUpdateStatus() {
+            var id = document.getElementById('currentInvoiceId').value;
+            var newStatus = parseInt(document.getElementById('newStatus').value);
+
+            if (!id || isNaN(newStatus)) {
+                alert('Dữ liệu không hợp lệ');
+                return;
+            }
+
+            try {
+                const response = await fetch('/HoaDon/UpdateStatus?id=' + id, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ TrangThai: newStatus })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(result.message || 'Cập nhật trạng thái thành công!');
+                    var modal = bootstrap.Modal.getInstance(document.getElementById('updateStatusModal'));
+                    if (modal) modal.hide();
+                    loadInvoices();
+                } else {
+                    alert(result.message || 'Cập nhật trạng thái thất bại!');
+                }
+            } catch (error) {
+                console.error('Error updating status:', error);
+                alert('Lỗi khi cập nhật trạng thái');
+            }
+        }
+
+        // Filter theo trạng thái
+        function filterByStatus(status) {
+            currentStatusFilter = status === '' ? null : parseInt(status);
+
+            // Update active tab
+            var tabs = document.querySelectorAll('#statusFilterTabs .nav-link');
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+                if (tabs[i].getAttribute('data-status') === status) {
+                    tabs[i].classList.add('active');
+                }
+            }
+
+            loadInvoices();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function () {
+            loadInvoices();
+
+            // Setup status filter tabs
+            var statusTabs = document.querySelectorAll('#statusFilterTabs .nav-link');
+            for (var i = 0; i < statusTabs.length; i++) {
+                statusTabs[i].addEventListener('click', function (e) {
+                    var status = this.getAttribute('data-status');
+                    filterByStatus(status);
+                });
+            }
+
+            // Search on Enter
+            document.getElementById('searchInput').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    loadInvoices();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+

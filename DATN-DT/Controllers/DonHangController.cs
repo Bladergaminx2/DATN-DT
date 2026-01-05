@@ -202,6 +202,61 @@ namespace DATN_DT.Controllers
             return null;
         }
 
+        // Helper method: Tính giá khuyến mãi cho sản phẩm
+        private async Task<decimal?> CalculatePromotionPrice(int idModelSanPham, decimal originalPrice)
+        {
+            try
+            {
+                var now = DateTime.Now.Date;
+
+                // Tìm khuyến mãi đang hoạt động cho sản phẩm này
+                var activePromotion = await (from mspkm in _context.ModelSanPhamKhuyenMais
+                                           join km in _context.KhuyenMais on mspkm.IdKhuyenMai equals km.IdKhuyenMai
+                                           where mspkm.IdModelSanPham == idModelSanPham
+                                              && km.NgayBatDau.HasValue
+                                              && km.NgayKetThuc.HasValue
+                                              && km.NgayBatDau.Value.Date <= now
+                                              && km.NgayKetThuc.Value.Date >= now
+                                              && km.TrangThaiKM == "Đang diễn ra"
+                                           orderby km.NgayKetThuc descending // Lấy khuyến mãi gần nhất
+                                           select km)
+                                          .FirstOrDefaultAsync();
+
+                if (activePromotion == null)
+                    return null;
+
+                // Tính giá sau giảm
+                decimal discountedPrice = 0;
+
+                if (activePromotion.LoaiGiam == "Phần trăm")
+                {
+                    var percent = Math.Min(100, Math.Max(0, activePromotion.GiaTri ?? 0));
+                    discountedPrice = originalPrice * (1 - percent / 100);
+                }
+                else if (activePromotion.LoaiGiam == "Số tiền")
+                {
+                    var discountAmount = Math.Min(originalPrice, Math.Max(0, activePromotion.GiaTri ?? 0));
+                    discountedPrice = originalPrice - discountAmount;
+                }
+                else
+                {
+                    return null;
+                }
+
+                // Làm tròn đến 1000 VNĐ (làm tròn xuống)
+                discountedPrice = Math.Floor(discountedPrice / 1000) * 1000;
+
+                // Đảm bảo giá không âm
+                discountedPrice = Math.Max(0, discountedPrice);
+
+                return discountedPrice;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         // POST: Order/Create
         [HttpPost]
         public async Task<IActionResult> Create(OrderCreateModel orderModel)
@@ -289,7 +344,12 @@ namespace DATN_DT.Controllers
                         if (model == null) continue;
 
                         var donGia = model.GiaBanModel ?? 0;
-                        var thanhTien = donGia * item.SoLuong;
+                        
+                        // Tính giá khuyến mãi nếu có
+                        var idModelSanPham = item.IdModelSanPham;
+                        var giaKhuyenMai = await CalculatePromotionPrice(idModelSanPham, donGia);
+                        var finalPrice = giaKhuyenMai ?? donGia; // Nếu có khuyến mãi thì dùng giá khuyến mãi, không thì dùng giá gốc
+                        var thanhTien = finalPrice * item.SoLuong;
 
                         tongTien += thanhTien;
 
@@ -298,7 +358,8 @@ namespace DATN_DT.Controllers
                         {
                             IdDonHang = donHang.IdDonHang,
                             IdModelSanPham = item.IdModelSanPham,
-                            DonGia = donGia,
+                            GiaKhuyenMai = giaKhuyenMai, // Lưu giá khuyến mãi (null nếu không có)
+                            DonGia = finalPrice, // Lưu giá cuối cùng để tính thành tiền
                             ThanhTien = thanhTien
                         };
 
