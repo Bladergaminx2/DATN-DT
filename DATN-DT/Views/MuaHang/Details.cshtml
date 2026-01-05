@@ -20,7 +20,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
     <style>
-        /* GIỮ NGUYÊN MÀU SẮC VÀ BIẾN NHƯ TRANG INDEX */
         :root {
             --primary-color: #667eea;
             --secondary-color: #764ba2;
@@ -40,7 +39,6 @@
             overflow-x: hidden;
         }
 
-        /* Header Styles - GIỐNG NHƯ TRANG INDEX */
         header {
             background-color: var(--card-bg);
             height: 100px;
@@ -146,35 +144,10 @@
                 transition: all 0.3s;
             }
 
-            .cart-icon:hover i,             .user-icon:hover i {
+            .cart-icon:hover i, .user-icon:hover i {
                 color: #fff;
                 background-color: #4a4a55;
                 transform: scale(1.1);
-            }
-
-            /* Avatar trong user-icon */
-            .user-icon .user-avatar {
-                width: 60px;
-                height: 60px;
-                border-radius: 50%;
-                object-fit: cover;
-                border: 2px solid #4a90e2;
-                display: none;
-                cursor: pointer;
-                transition: all 0.3s;
-            }
-
-            .user-icon:hover .user-avatar {
-                transform: scale(1.1);
-                border-color: #fff;
-            }
-
-            .user-icon.has-avatar i {
-                display: none !important;
-            }
-
-            .user-icon.has-avatar .user-avatar {
-                display: block !important;
             }
 
         .cart-count {
@@ -194,7 +167,6 @@
             border: 2px solid #36363f;
         }
 
-        /* Main Content - ĐIỀU CHỈNH ĐỂ GIỐNG INDEX */
         .main-content {
             min-height: calc(100vh - 100px);
             padding: 30px;
@@ -221,7 +193,6 @@
             font-size: 16px;
         }
 
-        /* Product Detail Container - Liền một khối */
         .product-detail-container {
             background-color: var(--card-bg);
             border-radius: 20px;
@@ -236,7 +207,6 @@
             gap: 0;
         }
 
-        /* Hình ảnh sản phẩm - Cột trái */
         .product-images-section {
             padding: 40px;
             background-color: rgba(0, 0, 0, 0.1);
@@ -280,7 +250,6 @@
                 transform: scale(1.08);
             }
 
-        /* Thông tin sản phẩm - Cột phải */
         .product-info-section {
             padding: 40px;
         }
@@ -380,7 +349,6 @@
             font-size: 16px;
         }
 
-        /* Color Selection - MÀU CHỮ TRẮNG */
         .color-selection {
             margin-bottom: 25px;
         }
@@ -416,7 +384,6 @@
                 transform: translateY(-2px);
             }
 
-        /* Quantity Selector - MÀU CHỮ TRẮNG */
         .quantity-selector {
             display: flex;
             align-items: center;
@@ -504,7 +471,6 @@
                 transform: translateY(-3px);
             }
 
-        /* Thông số kỹ thuật - Nằm ngay dưới 2 cột, cùng container */
         .specifications-section {
             padding: 40px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -545,7 +511,6 @@
             font-size: 16px;
         }
 
-        /* Phần Mô tả sản phẩm (nằm dưới cùng, cùng container) */
         .description-section {
             padding: 40px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -818,15 +783,12 @@
     </style>
 </head>
 <body>
-    <!-- Header - GIỐNG NHƯ TRANG INDEX -->
     <header>
         <div class="header-left">
-            <!-- Logo -->
             <div class="logo" onclick="goToHomePage()">
                 <img src="~/ImgResource/LogoPhoneTech.png" alt="Logo PhoneTech" />
             </div>
 
-            <!-- Search Box ở giữa -->
             <div class="search-container">
                 <div class="search-box">
                     <input type="text" placeholder="Tìm kiếm sản phẩm..." id="searchInput">
@@ -843,9 +805,8 @@
                 <i class="fas fa-shopping-cart"></i>
                 <span class="cart-count" id="cartCount">0</span>
             </div>
-            <div class="user-icon" id="userIcon" onclick="goToUserProfile()">
+            <div class="user-icon" onclick="goToUserProfile()">
                 <i class="fas fa-user-circle"></i>
-                <img class="user-avatar" id="userAvatar" src="" alt="User Avatar" onerror="this.style.display='none'; this.parentElement.querySelector('i').style.display='flex';">
             </div>
         </div>
     </header>
@@ -875,11 +836,8 @@
         }
         else
         {
-            <!-- Product Detail Container - Tất cả trong một khối -->
             <div class="product-detail-container">
-                <!-- Grid 2 cột trên cùng -->
                 <div class="product-detail-grid">
-                    <!-- Hình ảnh sản phẩm - Cột trái -->
                     <div class="product-images-section">
                         @if (product.AnhSanPhams != null && (product.AnhSanPhams as IEnumerable<dynamic>).Any())
                         {
@@ -905,9 +863,7 @@
                         }
                     </div>
 
-                    <!-- Thông tin sản phẩm - Cột phải -->
                     <div class="product-info-section">
-                        <!-- Product Title & Brand -->
                         <h1 class="product-title">@product.TenModel</h1>
                         <div class="product-brand">
                             <i class="fas fa-tag"></i> @product.TenThuongHieu
@@ -917,7 +873,6 @@
                             }
                         </div>
 
-                        <!-- Price Section -->
                         <div class="price-section">
                             <div class="d-flex align-items-center flex-wrap">
                                 <span class="current-price">
@@ -941,7 +896,6 @@
                             }
                         </div>
 
-                        <!-- Stock Information -->
                         <div class="stock-info">
                             <div class="stock-badge @(product.SoLuongTon > 0 ? "in-stock" : "out-of-stock")">
                                 <i class="fas fa-@(product.SoLuongTon > 0 ? "check-circle" : "times-circle")"></i>
@@ -959,7 +913,6 @@
                             </div>
                         </div>
 
-                        <!-- Color Selection - MÀU CHỮ TRẮNG -->
                         <div class="color-selection">
                             <span class="color-label">Màu sắc:</span>
                             <div class="color-options">
@@ -969,7 +922,6 @@
                             </div>
                         </div>
 
-                        <!-- Quantity Selector - MÀU CHỮ TRẮNG -->
                         <div class="quantity-selector">
                             <span class="quantity-label">Số lượng:</span>
                             <div class="quantity-controls">
@@ -978,30 +930,27 @@
                                 </button>
                                 <input type="number" class="quantity-input" id="quantity"
                                        value="1" min="1" max="@product.SoLuongTon"
-                                       @(product.SoLuongTon <= 0 ? "disabled" : "")>
+                                @(product.SoLuongTon <= 0 ? "disabled" : "")>
                                 <button class="quantity-btn" onclick="changeQuantity(1)"
-                                        @(product.SoLuongTon <= 0 ? "disabled" : "")>
+                                @(product.SoLuongTon <= 0 ? "disabled" : "")>
                                     <i class="fas fa-plus"></i>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Action Buttons -->
                         <div class="action-buttons">
                             <button class="btn btn-primary" onclick="addToCart()"
-                                    @(product.SoLuongTon <= 0 ? "disabled" : "")>
+                            @(product.SoLuongTon <= 0 ? "disabled" : "")>
                                 <i class="fas fa-shopping-cart"></i> Thêm vào giỏ hàng
                             </button>
                             <button class="btn btn-secondary" onclick="goToCartPage()"
->>>>>>> 0cca94cd9f45d062951427ec206082a84d8524f8
-                                    @(product.SoLuongTon <= 0 ? "disabled" : "")>
+                            @(product.SoLuongTon <= 0 ? "disabled" : "")>
                                 <i class="fas fa-bolt"></i> Mua hàng
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Thông số kỹ thuật - Nằm ngay dưới 2 cột, cùng container -->
                 <div class="specifications-section">
                     <h3 class="section-title">
                         <i class="fas fa-microchip"></i> Thông số kỹ thuật
@@ -1055,7 +1004,6 @@
                     </div>
                 </div>
 
-                <!-- Phần Mô tả sản phẩm (nằm dưới cùng, cùng container) -->
                 <div class="description-section">
                     <h3 class="section-title"><i class="fas fa-info-circle"></i> Mô tả sản phẩm</h3>
                     <div class="description-content">
@@ -1071,7 +1019,6 @@
                 </div>
             </div>
 
-            <!-- Suggested Products -->
             @if (suggestedProducts != null && suggestedProducts.Any())
             {
                 <div class="suggested-products">
@@ -1113,7 +1060,6 @@
         // ========== INITIALIZATION
         document.addEventListener('DOMContentLoaded', function () {
             updateCartCount();
-            loadUserProfile();
 
             // Set max quantity based on stock
             const quantityInput = document.getElementById('quantity');
@@ -1222,7 +1168,7 @@
             }
         }
 
-
+        
 
         // ========== NAVIGATION
         function goToHomePage() {
@@ -1318,174 +1264,6 @@
         document.getElementById('searchInput').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 searchProducts();
-            }
-        });
-
-        // ========== USER PROFILE & AVATAR MANAGEMENT
-        async function loadUserProfile() {
-            try {
-                const response = await fetch('/UserProfile/GetProfileData');
-                if (response.ok) {
-                    const data = await response.json();
-                    
-                    // Lưu vào localStorage để đồng bộ
-                    if (data) {
-                        localStorage.setItem('userProfile', JSON.stringify({
-                            hoTenKhachHang: data.hoTenKhachHang,
-                            emailKhachHang: data.emailKhachHang,
-                            defaultImage: data.defaultImage,
-                            diemTichLuy: data.diemTichLuy
-                        }));
-
-                        // Cập nhật avatar trong header
-                        updateUserAvatar(data.defaultImage);
-                    }
-                } else {
-                    // Fallback: Lấy từ localStorage nếu có
-                    const savedProfile = localStorage.getItem('userProfile');
-                    if (savedProfile) {
-                        const profile = JSON.parse(savedProfile);
-                        updateUserAvatar(profile.defaultImage);
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading user profile:', error);
-                // Fallback: Lấy từ localStorage nếu có
-                const savedProfile = localStorage.getItem('userProfile');
-                if (savedProfile) {
-                    const profile = JSON.parse(savedProfile);
-                    updateUserAvatar(profile.defaultImage);
-                }
-            }
-        }
-
-        function updateUserAvatar(avatarUrl) {
-            const userIcon = document.getElementById('userIcon');
-            const userAvatar = document.getElementById('userAvatar');
-            
-            if (!userIcon || !userAvatar) {
-                console.warn('User icon or avatar element not found');
-                return;
-            }
-
-            if (avatarUrl && avatarUrl.trim() !== '') {
-                // Cập nhật src với timestamp để tránh cache
-                const newSrc = avatarUrl + '?t=' + new Date().getTime();
-                userAvatar.src = newSrc;
-                
-                // Đặt lại display và position
-                userAvatar.style.display = 'block';
-                userAvatar.style.position = 'relative';
-                
-                userAvatar.onerror = function() {
-                    // Nếu ảnh lỗi, hiển thị lại icon mặc định
-                    this.style.display = 'none';
-                    const iconElement = userIcon.querySelector('i');
-                    if (iconElement) {
-                        iconElement.style.display = 'flex';
-                    }
-                    userIcon.classList.remove('has-avatar');
-                };
-                
-                userAvatar.onload = function() {
-                    // Ảnh load thành công, ẩn icon mặc định
-                    userIcon.classList.add('has-avatar');
-                    const iconElement = userIcon.querySelector('i');
-                    if (iconElement) {
-                        iconElement.style.display = 'none';
-                    }
-                };
-                
-                console.log('Avatar updated:', newSrc);
-            } else {
-                userIcon.classList.remove('has-avatar');
-                userAvatar.style.display = 'none';
-                // Hiển thị lại icon mặc định
-                const iconElement = userIcon.querySelector('i');
-                if (iconElement) {
-                    iconElement.style.display = 'flex';
-                }
-            }
-        }
-
-        // Lắng nghe custom event để đồng bộ khi user thay đổi profile
-        window.addEventListener('userProfileUpdated', function(e) {
-            if (e.detail && e.detail.defaultImage) {
-                updateUserAvatar(e.detail.defaultImage);
-                console.log('Avatar updated from custom event:', e.detail.defaultImage);
-            }
-        });
-
-        // Lắng nghe sự kiện storage để đồng bộ khi user thay đổi profile ở tab khác
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'userProfile') {
-                try {
-                    const profile = JSON.parse(e.newValue);
-                    updateUserAvatar(profile.defaultImage);
-                    console.log('Avatar updated from storage event:', profile.defaultImage);
-                } catch (error) {
-                    console.error('Error parsing userProfile from storage:', error);
-                }
-            }
-        });
-
-        // Đồng bộ khi quay lại từ UserProfile (sử dụng visibilitychange và focus)
-        document.addEventListener('visibilitychange', function() {
-            if (!document.hidden) {
-                // Trang được hiển thị lại, kiểm tra localStorage
-                const savedProfile = localStorage.getItem('userProfile');
-                if (savedProfile) {
-                    try {
-                        const profile = JSON.parse(savedProfile);
-                        updateUserAvatar(profile.defaultImage);
-                        console.log('Avatar updated on visibility change:', profile.defaultImage);
-                    } catch (error) {
-                        console.error('Error parsing userProfile:', error);
-                    }
-                }
-            }
-        });
-
-        // Đồng bộ khi window focus (khi quay lại tab)
-        window.addEventListener('focus', function() {
-            loadUserProfile();
-        });
-
-        // Kiểm tra localStorage mỗi 1 giây để đồng bộ (nếu user thay đổi trong cùng tab)
-        let lastAvatarUrl = '';
-        setInterval(function() {
-            const savedProfile = localStorage.getItem('userProfile');
-            if (savedProfile) {
-                try {
-                    const profile = JSON.parse(savedProfile);
-                    const newAvatarUrl = profile.defaultImage || '';
-                    
-                    // Chỉ cập nhật nếu avatar thay đổi
-                    if (newAvatarUrl !== lastAvatarUrl) {
-                        lastAvatarUrl = newAvatarUrl;
-                        updateUserAvatar(newAvatarUrl);
-                        console.log('Avatar updated from interval check:', newAvatarUrl);
-                    }
-                } catch (error) {
-                    console.error('Error checking userProfile:', error);
-                }
-            }
-        }, 1000);
-
-        // Kiểm tra khi trang được load (có thể từ UserProfile quay lại)
-        // Sử dụng performance navigation để detect back/forward
-        if (performance.navigation.type === 1 || performance.navigation.type === 2) {
-            // Trang được reload hoặc navigate back/forward
-            setTimeout(function() {
-                loadUserProfile();
-            }, 500);
-        }
-
-        // Kiểm tra khi page show (khi quay lại từ tab khác)
-        document.addEventListener('pageshow', function(event) {
-            // Nếu trang được load từ cache (back/forward cache)
-            if (event.persisted) {
-                loadUserProfile();
             }
         });
     </script>
