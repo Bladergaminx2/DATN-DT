@@ -307,6 +307,9 @@
         <a href="#" data-page="nhanvien">
             <img src="~/ImgResource/Icons/id-card-regular-full.svg" class="icon" />Nhân Viên
         </a>
+        <a href="#" data-page="chucvu">
+            <img src="~/ImgResource/Icons/id-card-regular-full.svg" class="icon" />Chức Vụ
+        </a>
         <a href="#" data-page="khachhang">
             <img src="~/ImgResource/Icons/user-regular-full.svg" class="icon" />Khách Hàng
         </a>
@@ -705,6 +708,8 @@
                     // Thêm các trang mới vào đây
                     if (page === 'nhanvien') {
                         showPage('nhanvienPage');
+                    } else if (page === 'chucvu') {
+                        showPage('chucvuPage');
                     } else if (page === 'khachhang') {
                         showPage('khachhangPage');
                     } else if (page === 'productoverview') {

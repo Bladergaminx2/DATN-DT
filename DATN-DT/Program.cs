@@ -60,6 +60,9 @@ builder.Services.AddScoped<INhanVienService, NhanVienService>();
 builder.Services.AddScoped<IPinRepo, PinRepo>();
 builder.Services.AddScoped<IPinService, PinService>();
 
+builder.Services.AddScoped<IChucVuRepo, ChucVuRepo>();
+builder.Services.AddScoped<IChucVuService, ChucVuService>();
+
 builder.Services.Configure<GhnOptions>(builder.Configuration.GetSection("GHN"));
 builder.Services.AddHttpClient<IGhnClient, GhnClient>();
 
