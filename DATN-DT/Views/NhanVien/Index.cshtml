@@ -1,11 +1,12 @@
 ﻿@model IEnumerable<DATN_DT.Models.NhanVien>
+@inject DATN_DT.IServices.INhanVienService _nhanVienService
 
 @{
     ViewData["Title"] = "Quản lý Nhân Viên";
     Layout = null;
 
-    // Lấy danh sách chức vụ từ ViewBag (được truyền từ controller)
-    var chucVus = ViewBag.ChucVus as List<DATN_DT.Models.ChucVu> ?? new List<DATN_DT.Models.ChucVu>();
+    // Lấy danh sách chức vụ trừ admin trực tiếp từ service
+    var chucVus = await _nhanVienService.GetChucVusExceptAdmin();
 }
 
 <!DOCTYPE html>

@@ -19,8 +19,6 @@ namespace DATN_DT.Controllers
         public async Task<IActionResult> Index()
         {
             var nhanVienList = await _nhanVienService.GetAllNhanViens();
-            var chucVus = await _nhanVienService.GetChucVusExceptAdmin();
-            ViewBag.ChucVus = chucVus;
             return View(nhanVienList);
         }
 
