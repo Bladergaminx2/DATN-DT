@@ -2213,6 +2213,7 @@
 
         async function updateCartCount() {
 <<<<<<< HEAD
+<<<<<<< HEAD
             try {
                 // Gọi API để lấy số lượng từ database
                 const response = await fetch('/GioHang/GetCartCount');
@@ -2345,13 +2346,24 @@
             }
         }
 =======
+=======
+>>>>>>> ae927b697f2045b8b1f3206a1bfd74aedf69d4f3
             const el = document.getElementById('cartCount');
-            if (!el) return;
->>>>>>> 0cca94cd9f45d062951427ec206082a84d8524f8
+            if (!el) {
+                // Retry nếu element chưa tồn tại (có thể DOM chưa load xong)
+                setTimeout(() => updateCartCount(), 100);
+                return;
+            }
 
             try {
-                const response = await fetch('/GioHang/GetCartCount', { cache: 'no-cache' });
-                if (!response.ok) throw new Error('Network response not ok: ' + response.status);
+                const response = await fetch('/GioHang/GetCartCount', { 
+                    cache: 'no-cache',
+                    credentials: 'include' // Đảm bảo gửi cookie/session
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Network response not ok: ' + response.status);
+                }
 
                 const result = await response.json();
                 console.log('GetCartCount response:', result);
@@ -2378,6 +2390,8 @@
                 if (success) {
                     const count = Number(countValue) || 0;
                     el.textContent = count;
+                    console.log('Cart count updated to:', count);
+                    
                     if (count === 0) {
                         cart = [];
                         localStorage.removeItem('cart');
@@ -2386,6 +2400,7 @@
                     // Fallback: lấy từ localStorage nếu server không trả success
                     const localCount = (cart || []).reduce((total, item) => total + (Number(item.quantity) || 0), 0);
                     el.textContent = localCount;
+                    console.log('Using localStorage count:', localCount);
                 }
             } catch (err) {
                 console.error('Lỗi khi lấy số lượng giỏ hàng:', err);

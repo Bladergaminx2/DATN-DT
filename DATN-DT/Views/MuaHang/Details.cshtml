@@ -992,11 +992,10 @@
                                     @(product.SoLuongTon <= 0 ? "disabled" : "")>
                                 <i class="fas fa-shopping-cart"></i> Thêm vào giỏ hàng
                             </button>
-
                             <button class="btn btn-secondary" onclick="goToCartPage()"
-                            @(product.SoLuongTon <= 0 ? "disabled" : "")>
-                                <i class="fas fa-bolt"></i> Mua Hàng
 >>>>>>> 0cca94cd9f45d062951427ec206082a84d8524f8
+                                    @(product.SoLuongTon <= 0 ? "disabled" : "")>
+                                <i class="fas fa-bolt"></i> Mua hàng
                             </button>
                         </div>
                     </div>
@@ -1166,21 +1165,21 @@
             }
 
             try {
-                // Call API to add to cart (GioHang/AddToCart để lưu vào database)
-                const response = await fetch('/GioHang/AddToCart', {
+                // Call API to add to cart
+                const response = await fetch('/MuaHang/AddToCart', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        IdModelSanPham: productId,
+                        ProductId: productId,
                         Quantity: quantity
                     })
                 });
 
                 const result = await response.json();
 
-                if (result.Success) {
+                if (result.success) {
                     // Add to local cart for UI updates
                     const existingItem = cart.find(item => item.id === productId);
                     if (existingItem) {
@@ -1197,18 +1196,13 @@
 
                     localStorage.setItem('cart', JSON.stringify(cart));
                     updateCartCount();
-                    showToast(result.Message || 'Đã thêm vào giỏ hàng thành công', 'success');
+                    showToast(result.message, 'success');
                 } else {
-                    // Thất bại: Hiển thị thông báo lỗi
-                    if (response.status === 401) {
-                        showToast('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng', 'warning');
-                    } else {
-                        showToast(result.Message || 'Không thể thêm sản phẩm vào giỏ hàng', 'danger');
-                    }
+                    showToast(result.message, 'danger');
                 }
             } catch (error) {
                 console.error('Error adding to cart:', error);
-                // Fallback: Add to local cart only (tạm thời)
+                // Fallback: Add to local cart only
                 const existingItem = cart.find(item => item.id === productId);
                 if (existingItem) {
                     existingItem.quantity += quantity;
@@ -1224,11 +1218,11 @@
 
                 localStorage.setItem('cart', JSON.stringify(cart));
                 updateCartCount();
-                showToast('Đã thêm vào giỏ hàng (tạm thời). Vui lòng đăng nhập để đồng bộ.', 'warning');
+                showToast('Đã thêm vào giỏ hàng thành công!', 'success');
             }
         }
 
-       
+
 
         // ========== NAVIGATION
         function goToHomePage() {
@@ -1263,43 +1257,9 @@
             element.classList.add('selected');
         }
 
-        async function updateCartCount() {
-            try {
-                // Gọi API để lấy số lượng từ database
-                const response = await fetch('/GioHang/GetCartCount');
-                const result = await response.json();
-<<<<<<< HEAD
-
-                if (result.Success) {
-                    const count = result.Count || 0;
-                    document.getElementById('cartCount').textContent = count;
-
-=======
-                
-                if (result.Success) {
-                    const count = result.Count || 0;
-                    document.getElementById('cartCount').textContent = count;
-                    
->>>>>>> 0cca94cd9f45d062951427ec206082a84d8524f8
-                    // Nếu giỏ hàng trống trong database, xóa localStorage để đồng bộ
-                    if (count === 0) {
-                        cart = [];
-                        localStorage.removeItem('cart');
-                    } else {
-                        // Đồng bộ localStorage với database (cập nhật cart từ API nếu cần)
-                        // Tạm thời giữ localStorage để UI nhanh, nhưng số lượng hiển thị luôn từ database
-                    }
-                } else {
-                    // Fallback: Đếm từ localStorage nếu API thất bại (chỉ khi API không thành công)
-                    const count = cart.reduce((total, item) => total + item.quantity, 0);
-                    document.getElementById('cartCount').textContent = count;
-                }
-            } catch (error) {
-                console.error('Lỗi khi lấy số lượng giỏ hàng:', error);
-                // Fallback: Đếm từ localStorage nếu có lỗi kết nối
-                const count = cart.reduce((total, item) => total + item.quantity, 0);
-                document.getElementById('cartCount').textContent = count;
-            }
+        function updateCartCount() {
+            const count = cart.reduce((total, item) => total + item.quantity, 0);
+            document.getElementById('cartCount').textContent = count;
         }
 
         function formatPrice(price) {
