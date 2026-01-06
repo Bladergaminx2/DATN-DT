@@ -9,6 +9,8 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Hosting;
 
 namespace DATN_DT.Controllers
 {
@@ -16,11 +18,15 @@ namespace DATN_DT.Controllers
     {
         private readonly MyDbContext _context;
         private readonly string _jwtKey;
+        private readonly ILogger<UserProfileController> _logger;
+        private readonly IWebHostEnvironment _environment;
 
-        public UserProfileController(MyDbContext context, IConfiguration config)
+        public UserProfileController(MyDbContext context, IConfiguration config, ILogger<UserProfileController> logger, IWebHostEnvironment environment)
         {
             _context = context;
             _jwtKey = config["Jwt:Key"] ?? "your-secret-key-123456789";
+            _logger = logger;
+            _environment = environment;
         }
 
         // GET: Hiển thị trang profile
@@ -36,52 +42,65 @@ namespace DATN_DT.Controllers
         {
             try
             {
+                // ===== 1. Auth =====
                 var email = GetCurrentKhachHangEmail();
                 if (string.IsNullOrEmpty(email))
-                {
-                    return Unauthorized(new { message = "Không tìm thấy thông tin người dùng" });
-                }
+                    return Unauthorized(new { message = "Không xác thực được người dùng" });
 
                 var khachHang = await _context.KhachHangs
-                    .FirstOrDefaultAsync(k => k.EmailKhachHang == email);
+                    .FirstOrDefaultAsync(x => x.EmailKhachHang == email);
 
                 if (khachHang == null)
-                {
-                    return NotFound(new { message = "Không tìm thấy thông tin khách hàng" });
-                }
+                    return NotFound(new { message = "Không tìm thấy khách hàng" });
 
-                // Tính thống kê đơn hàng
+                // ===== 2. Orders statistic =====
                 var hoaDons = await _context.HoaDons
-                    .Where(h => h.IdKhachHang == khachHang.IdKhachHang)
+                    .Where(x => x.IdKhachHang == khachHang.IdKhachHang)
                     .ToListAsync();
 
                 var totalOrders = hoaDons.Count;
-                var processingOrders = hoaDons.Count(h => h.TrangThaiHoaDon == "Chờ thanh toán" || h.TrangThaiHoaDon == "Đang xử lý");
-                var completedOrders = hoaDons.Count(h => h.TrangThaiHoaDon == "Đã thanh toán" || h.TrangThaiHoaDon == "Thành công");
-                var totalSpent = hoaDons.Where(h => h.TrangThaiHoaDon == "Đã thanh toán" || h.TrangThaiHoaDon == "Thành công")
-                    .Sum(h => h.TongTien ?? 0);
+                var processingOrders = hoaDons.Count(x =>
+                    x.TrangThaiHoaDon == "Chờ thanh toán" ||
+                    x.TrangThaiHoaDon == "Đang xử lý");
 
+                var completedOrders = hoaDons.Count(x =>
+                    x.TrangThaiHoaDon == "Đã thanh toán" ||
+                    x.TrangThaiHoaDon == "Thành công");
+
+                var totalSpent = hoaDons
+                    .Where(x => x.TrangThaiHoaDon == "Đã thanh toán" || x.TrangThaiHoaDon == "Thành công")
+                    .Sum(x => x.TongTien ?? 0);
+
+                // ===== 3. Avatar URL =====
+                var avatarUrl = string.IsNullOrEmpty(khachHang.DefaultImage)
+                    ? "/images/default-avatar.png"
+                    : $"/Storage/Avatars/{khachHang.DefaultImage}";
+
+                // ===== 4. Response =====
                 return Ok(new
                 {
                     idKhachHang = khachHang.IdKhachHang,
                     hoTenKhachHang = khachHang.HoTenKhachHang,
                     sdtKhachHang = khachHang.SdtKhachHang,
                     emailKhachHang = khachHang.EmailKhachHang,
-                    defaultImage = khachHang.DefaultImage,
+                    avatarUrl = avatarUrl,
                     diemTichLuy = khachHang.DiemTichLuy ?? 0,
                     trangThaiKhachHang = khachHang.TrangThaiKhachHang == 1 ? "Hoạt động" : "Không hoạt động",
-                    // Thống kê
-                    totalOrders = totalOrders,
-                    processingOrders = processingOrders,
-                    completedOrders = completedOrders,
-                    totalSpent = totalSpent
+
+                    // statistics
+                    totalOrders,
+                    processingOrders,
+                    completedOrders,
+                    totalSpent
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Lỗi server: " + ex.Message });
+                _logger.LogError(ex, "GetProfileData error");
+                return StatusCode(500, new { message = "Lỗi server khi lấy thông tin cá nhân" });
             }
         }
+    
 
         // POST: Cập nhật profile
         // POST: API cập nhật thông tin profile
@@ -177,104 +196,91 @@ namespace DATN_DT.Controllers
             public string DiaChiKhachHang { get; set; }
         }
 
-        // POST: Cập nhật ảnh đại diện
         [HttpPost]
-        [Route("UserProfile/UpdateAvatar")]
         public async Task<IActionResult> UpdateAvatar(IFormFile avatarFile)
         {
             try
             {
+                if (avatarFile == null || avatarFile.Length == 0)
+                    return BadRequest(new { message = "Vui lòng chọn ảnh" });
+
+                // Validate user
                 var email = GetCurrentKhachHangEmail();
                 if (string.IsNullOrEmpty(email))
+                    return Unauthorized(new { message = "Không xác thực được người dùng" });
+
+                var khachHang = await _context.KhachHangs
+                    .FirstOrDefaultAsync(x => x.EmailKhachHang == email);
+
+                if (khachHang == null)
+                    return NotFound(new { message = "Không tìm thấy khách hàng" });
+
+                // Kiểm tra định dạng file
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+                var fileExtension = Path.GetExtension(avatarFile.FileName).ToLower();
+                if (!allowedExtensions.Contains(fileExtension))
+                    return BadRequest(new { message = "Chỉ chấp nhận file ảnh (jpg, jpeg, png, gif, webp)!" });
+
+                // Kiểm tra kích thước file (tối đa 5MB)
+                if (avatarFile.Length > 5 * 1024 * 1024)
+                    return BadRequest(new { message = "Kích thước file không được vượt quá 5MB!" });
+
+                // Tạo thư mục lưu trữ nếu chưa tồn tại
+                var uploadsFolder = Path.Combine(_environment.WebRootPath, "Storage", "Avatars");
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                // Tạo tên file unique
+                var fileName = $"avatar_{khachHang.IdKhachHang}_{Guid.NewGuid():N}{fileExtension}";
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                // Lưu file
+                using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    return Unauthorized(new { message = "Không tìm thấy thông tin người dùng" });
+                    await avatarFile.CopyToAsync(stream);
                 }
 
-                var existingKhachHang = await _context.KhachHangs
-                    .FirstOrDefaultAsync(k => k.EmailKhachHang == email);
+                // Tạo đường dẫn tương đối để lưu trong database và trả về
+                var relativePath = $"/Storage/Avatars/{fileName}";
 
-                if (existingKhachHang == null)
+                // Xóa file cũ nếu có
+                if (!string.IsNullOrEmpty(khachHang.DefaultImage))
                 {
-                    return NotFound(new { message = "Không tìm thấy thông tin khách hàng" });
-                }
-
-                if (avatarFile != null && avatarFile.Length > 0)
-                {
-                    // Kiểm tra định dạng file
-                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-                    var fileExtension = Path.GetExtension(avatarFile.FileName).ToLowerInvariant();
-
-                    if (!allowedExtensions.Contains(fileExtension))
+                    try
                     {
-                        return BadRequest(new { message = "Chỉ chấp nhận file ảnh (jpg, jpeg, png, gif)" });
-                    }
-
-                    // Kiểm tra kích thước file (max 5MB)
-                    if (avatarFile.Length > 5 * 1024 * 1024)
-                    {
-                        return BadRequest(new { message = "Kích thước file không được vượt quá 5MB" });
-                    }
-
-                    // Tạo thư mục nếu chưa tồn tại
-                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "avatars");
-                    if (!Directory.Exists(uploadsFolder))
-                    {
-                        Directory.CreateDirectory(uploadsFolder);
-                    }
-
-                    // XÓA ẢNH CŨ NẾU CÓ (trừ ảnh mặc định)
-                    if (!string.IsNullOrEmpty(existingKhachHang.DefaultImage) &&
-                        !existingKhachHang.DefaultImage.Contains("default-avatar"))
-                    {
-                        try
+                        // Nếu DefaultImage là đường dẫn đầy đủ, chỉ lấy tên file
+                        var oldFileName = Path.GetFileName(khachHang.DefaultImage);
+                        if (string.IsNullOrEmpty(oldFileName))
                         {
-                            var oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot",
-                                existingKhachHang.DefaultImage.TrimStart('/'));
-
-                            if (System.IO.File.Exists(oldImagePath))
+                            // Nếu không có extension, có thể là tên file cũ
+                            oldFileName = khachHang.DefaultImage;
+                        }
+                        
+                        if (!string.IsNullOrEmpty(oldFileName))
+                        {
+                            var oldFilePath = Path.Combine(uploadsFolder, oldFileName);
+                            if (System.IO.File.Exists(oldFilePath))
                             {
-                                System.IO.File.Delete(oldImagePath);
-                                Console.WriteLine($"Đã xóa ảnh cũ: {oldImagePath}");
+                                System.IO.File.Delete(oldFilePath);
                             }
                         }
-                        catch (Exception deleteEx)
-                        {
-                            // Log lỗi nhưng vẫn tiếp tục xử lý upload ảnh mới
-                            Console.WriteLine($"Lỗi khi xóa ảnh cũ: {deleteEx.Message}");
-                            // Không throw exception để tiếp tục upload ảnh mới
-                        }
                     }
-
-                    // Tạo tên file duy nhất
-                    var fileName = $"avatar_{existingKhachHang.IdKhachHang}_{DateTime.Now:yyyyMMddHHmmss}{fileExtension}";
-                    var filePath = Path.Combine(uploadsFolder, fileName);
-
-                    // Lưu file mới
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await avatarFile.CopyToAsync(stream);
-                    }
-
-                    // Cập nhật đường dẫn ảnh trong database
-                    var avatarUrl = $"/images/avatars/{fileName}";
-                    existingKhachHang.DefaultImage = avatarUrl;
-                    _context.KhachHangs.Update(existingKhachHang);
-                    await _context.SaveChangesAsync();
-
-                    return Ok(new
-                    {
-                        message = "Cập nhật ảnh đại diện thành công!",
-                        avatarUrl = avatarUrl
-                    });
+                    catch { }
                 }
-                else
+
+                // Cập nhật database - lưu tên file (không lưu đường dẫn đầy đủ)
+                khachHang.DefaultImage = fileName;
+                await _context.SaveChangesAsync();
+
+                return Ok(new
                 {
-                    return BadRequest(new { message = "Vui lòng chọn ảnh để upload" });
-                }
+                    message = "Cập nhật avatar thành công",
+                    avatarUrl = relativePath
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Lỗi server: " + ex.Message });
+                return StatusCode(500, new { message = $"Lỗi khi upload avatar: {ex.Message}" });
             }
         }
 
@@ -345,7 +351,24 @@ namespace DATN_DT.Controllers
                                 .ThenInclude(sp => sp.ThuongHieu)
                     .Include(h => h.HoaDonChiTiets)
                         .ThenInclude(hdct => hdct.ModelSanPham)
+                            .ThenInclude(m => m.RAM)
+                    .Include(h => h.HoaDonChiTiets)
+                        .ThenInclude(hdct => hdct.ModelSanPham)
+                            .ThenInclude(m => m.ROM)
+                    .Include(h => h.HoaDonChiTiets)
+                        .ThenInclude(hdct => hdct.ModelSanPham)
+                            .ThenInclude(m => m.ManHinh)
+                    .Include(h => h.HoaDonChiTiets)
+                        .ThenInclude(hdct => hdct.ModelSanPham)
+                            .ThenInclude(m => m.CameraTruoc)
+                    .Include(h => h.HoaDonChiTiets)
+                        .ThenInclude(hdct => hdct.ModelSanPham)
+                            .ThenInclude(m => m.CameraSau)
+                    .Include(h => h.HoaDonChiTiets)
+                        .ThenInclude(hdct => hdct.ModelSanPham)
                             .ThenInclude(m => m.AnhSanPhams)
+                    .Include(h => h.HoaDonChiTiets)
+                        .ThenInclude(hdct => hdct.Imei)
                     .Where(h => h.IdKhachHang == khachHang.IdKhachHang)
                     .OrderByDescending(h => h.NgayLapHoaDon)
                     .ToListAsync();
@@ -365,13 +388,23 @@ namespace DATN_DT.Controllers
                     chiTiet = h.HoaDonChiTiets?.Select(hdct => new
                     {
                         tenSanPham = hdct.ModelSanPham?.SanPham?.TenSanPham ?? "N/A",
-                        tenModel = hdct.ModelSanPham?.TenModel ?? "N/A",
                         tenThuongHieu = hdct.ModelSanPham?.SanPham?.ThuongHieu?.TenThuongHieu ?? "N/A",
                         mau = hdct.ModelSanPham?.Mau ?? "N/A",
+                        ram = hdct.ModelSanPham?.RAM?.DungLuongRAM ?? "N/A",
+                        rom = hdct.ModelSanPham?.ROM?.DungLuongROM ?? "N/A",
+                        manHinh = hdct.ModelSanPham?.ManHinh != null 
+                            ? $"{hdct.ModelSanPham.ManHinh.KichThuoc ?? ""} {hdct.ModelSanPham.ManHinh.CongNgheManHinh ?? ""}".Trim()
+                            : "N/A",
+                        cameraTruoc = hdct.ModelSanPham?.CameraTruoc?.DoPhanGiaiCamTruoc ?? "N/A",
+                        cameraSau = hdct.ModelSanPham?.CameraSau?.DoPhanGiaiCamSau ?? "N/A",
                         soLuong = hdct.SoLuong ?? 0,
                         donGia = hdct.DonGia ?? 0,
                         thanhTien = hdct.ThanhTien ?? 0,
-                        hinhAnh = hdct.ModelSanPham?.AnhSanPhams?.FirstOrDefault()?.DuongDan ?? "/images/default-product.jpg"
+                        giaKhuyenMai = hdct.GiaKhuyenMai,
+                        hinhAnh = hdct.ModelSanPham?.AnhSanPhams?.FirstOrDefault()?.DuongDan ?? "/images/default-product.jpg",
+                        idImei = hdct.IdImei,
+                        maImei = hdct.Imei?.MaImei ?? "N/A",
+                        trangThaiImei = hdct.Imei?.TrangThai ?? "N/A"
                     }).ToList()
                 }).ToList();
 
@@ -431,6 +464,115 @@ namespace DATN_DT.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Lỗi server: " + ex.Message });
+            }
+        }
+
+        // POST: Hủy đơn hàng
+        [HttpPost]
+        [Route("UserProfile/CancelOrder")]
+        public async Task<IActionResult> CancelOrder([FromQuery] int id)
+        {
+            try
+            {
+                var email = GetCurrentKhachHangEmail();
+                if (string.IsNullOrEmpty(email))
+                {
+                    return Unauthorized(new { success = false, message = "Không tìm thấy thông tin người dùng" });
+                }
+
+                var khachHang = await _context.KhachHangs
+                    .FirstOrDefaultAsync(k => k.EmailKhachHang == email);
+
+                if (khachHang == null)
+                {
+                    return NotFound(new { success = false, message = "Không tìm thấy thông tin khách hàng" });
+                }
+
+                // Lấy hóa đơn với chi tiết và IMEI
+                var hoaDon = await _context.HoaDons
+                    .Include(h => h.HoaDonChiTiets)
+                        .ThenInclude(hdct => hdct.Imei)
+                    .Include(h => h.HoaDonChiTiets)
+                        .ThenInclude(hdct => hdct.ModelSanPham)
+                    .FirstOrDefaultAsync(h => h.IdHoaDon == id && h.IdKhachHang == khachHang.IdKhachHang);
+
+                if (hoaDon == null)
+                {
+                    return NotFound(new { success = false, message = "Không tìm thấy hóa đơn" });
+                }
+
+                // Kiểm tra trạng thái - chỉ cho phép hủy đơn ở trạng thái "Chờ xác nhận" (status = 0)
+                var currentStatus = hoaDon.TrangThaiHoaDon ?? "";
+                var statusNumber = GetStatusNumber(currentStatus);
+                var lowerStatus = currentStatus.ToLower();
+                
+                // Debug: Log trạng thái để kiểm tra
+                Console.WriteLine($"CancelOrder - Order ID: {id}, Current Status: '{currentStatus}', Status Number: {statusNumber}");
+                
+                // Kiểm tra nếu đã bị hủy rồi
+                if (statusNumber == 4 || lowerStatus.Contains("hủy"))
+                {
+                    return BadRequest(new { success = false, message = "Đơn hàng này đã bị hủy trước đó" });
+                }
+                
+                // Cho phép hủy nếu:
+                // 1. Status number = 0 (Chờ xác nhận)
+                // 2. Hoặc trạng thái chứa "chờ xác nhận" hoặc "chờ" (fallback cho trường hợp không xác định được status number)
+                var canCancel = statusNumber == 0 || 
+                               lowerStatus.Contains("chờ xác nhận") || 
+                               (lowerStatus.Contains("chờ") && lowerStatus.Contains("xác nhận")) ||
+                               lowerStatus.Contains("pending");
+                
+                if (!canCancel)
+                {
+                    return BadRequest(new { success = false, message = $"Chỉ có thể hủy đơn hàng ở trạng thái 'Chờ xác nhận'. Trạng thái hiện tại: '{currentStatus}'" });
+                }
+
+                using var transaction = await _context.Database.BeginTransactionAsync();
+                try
+                {
+                    // 1. Trả lại IMEI về "Còn hàng"
+                    var modelIdsToRefresh = new HashSet<int>();
+                    foreach (var chiTiet in hoaDon.HoaDonChiTiets ?? new List<HoaDonChiTiet>())
+                    {
+                        if (chiTiet.IdImei.HasValue && chiTiet.Imei != null)
+                        {
+                            chiTiet.Imei.TrangThai = "Còn hàng";
+                            _context.Imeis.Update(chiTiet.Imei);
+                            
+                            // Lưu IdModelSanPham để refresh tồn kho sau
+                            if (chiTiet.IdModelSanPham.HasValue)
+                            {
+                                modelIdsToRefresh.Add(chiTiet.IdModelSanPham.Value);
+                            }
+                        }
+                    }
+
+                    // 2. Refresh tồn kho cho các model đã được trả lại
+                    var tonKhoRepo = new Repos.TonKhoRepo(_context);
+                    foreach (var modelId in modelIdsToRefresh)
+                    {
+                        await tonKhoRepo.RefreshTonKhoForModel(modelId);
+                    }
+
+                    // 3. Cập nhật trạng thái hóa đơn thành "Hủy đơn hàng"
+                    hoaDon.TrangThaiHoaDon = "Hủy đơn hàng";
+                    _context.HoaDons.Update(hoaDon);
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    return Ok(new { success = true, message = "Hủy đơn hàng thành công! Số lượng sản phẩm đã được trả lại vào kho." });
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    return StatusCode(500, new { success = false, message = "Lỗi server: " + ex.Message });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Lỗi server: " + ex.Message });
             }
         }
 
@@ -540,6 +682,28 @@ namespace DATN_DT.Controllers
         private bool VerifyPassword(string password, string hash)
         {
             return HashPassword(password) == hash;
+        }
+
+        // Helper: Chuyển đổi trạng thái từ string/số sang số
+        private int GetStatusNumber(string? trangThai)
+        {
+            if (string.IsNullOrEmpty(trangThai))
+                return -1;
+
+            // Nếu là số dạng string
+            if (int.TryParse(trangThai, out int statusNum))
+                return statusNum;
+
+            // Map từ string sang số
+            var lower = trangThai.ToLower();
+            // Kiểm tra "chờ xác nhận" trước (vì nó chứa cả "chờ" và "xác nhận")
+            if (lower.Contains("chờ xác nhận") || (lower.Contains("chờ") && lower.Contains("xác nhận")) || lower.Contains("pending") || lower == "0") return 0;
+            if ((lower.Contains("xác nhận") && !lower.Contains("chờ")) || lower.Contains("confirmed") || lower == "1") return 1;
+            if (lower.Contains("vận chuyển") || lower.Contains("shipping") || lower == "2") return 2;
+            if (lower.Contains("thành công") || lower.Contains("completed") || lower == "3") return 3;
+            if (lower.Contains("hủy") || lower.Contains("cancel") || lower == "4") return 4;
+
+            return -1;
         }
 
         // Helper: Generate JWT Token

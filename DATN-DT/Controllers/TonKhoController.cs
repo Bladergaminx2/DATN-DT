@@ -15,10 +15,12 @@ namespace DATN_DT.Controllers
     public class TonKhoController : Controller
     {
         private readonly ITonKhoService _tonKhoService;
+        private readonly IModelSanPhamStatusService _statusService;
 
-        public TonKhoController(ITonKhoService tonKhoService)
+        public TonKhoController(ITonKhoService tonKhoService, IModelSanPhamStatusService statusService)
         {
             _tonKhoService = tonKhoService;
+            _statusService = statusService;
         }
 
         // ===== GET: TonKho/Index =====
@@ -533,6 +535,61 @@ namespace DATN_DT.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { Error = ex.Message });
+            }
+        }
+
+        // ===== CẬP NHẬT TRẠNG THÁI SẢN PHẨM DỰA TRÊN TỒN KHO =====
+        [HttpPost]
+        [Route("UpdateProductStatus/{idModelSanPham:int}")]
+        [Produces("application/json")]
+        public async Task<IActionResult> UpdateProductStatus(int idModelSanPham)
+        {
+            try
+            {
+                var updatedCount = await _statusService.UpdateStatusBasedOnStock(idModelSanPham);
+                
+                return Ok(new
+                {
+                    Message = updatedCount > 0 ? "Đã cập nhật trạng thái sản phẩm!" : "Trạng thái sản phẩm không thay đổi.",
+                    Success = true,
+                    IdModelSanPham = idModelSanPham,
+                    Updated = updatedCount > 0
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    Message = "Lỗi khi cập nhật trạng thái sản phẩm!",
+                    Error = ex.Message
+                });
+            }
+        }
+
+        // ===== CẬP NHẬT TRẠNG THÁI TẤT CẢ SẢN PHẨM =====
+        [HttpPost]
+        [Route("UpdateAllProductStatuses")]
+        [Produces("application/json")]
+        public async Task<IActionResult> UpdateAllProductStatuses()
+        {
+            try
+            {
+                var updatedCount = await _statusService.UpdateAllStatusesBasedOnStock();
+                
+                return Ok(new
+                {
+                    Message = $"Đã cập nhật trạng thái cho {updatedCount} sản phẩm!",
+                    Success = true,
+                    UpdatedCount = updatedCount
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    Message = "Lỗi khi cập nhật trạng thái sản phẩm!",
+                    Error = ex.Message
+                });
             }
         }
     }

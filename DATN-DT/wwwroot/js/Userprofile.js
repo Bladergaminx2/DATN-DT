@@ -46,86 +46,1030 @@ function formatMoney(amount) {
     return new Intl.NumberFormat('vi-VN').format(amount) + ' \u20AB';
 }
 
-// ====== AVATAR UPLOAD ======
+// ====== AVATAR UPLOAD & CROP ======
+// Cấu hình nghiệp vụ
+const AVATAR_CONFIG = {
+    aspectType: 'circle', // circle / square / free
+    minSize: 256, // Kích thước tối thiểu (px)
+    maxSize: 1024, // Kích thước tối đa (px)
+    quality: 0.95, // Chất lượng JPEG (0-1)
+    allowedFormats: ['jpg', 'jpeg', 'png', 'webp'],
+    maxFileSize: 5 * 1024 * 1024, // 5MB
+    zoomMin: 0.5,
+    zoomMax: 3.0
+};
+
+// Helper function: Update avatar display
+function updateAvatarDisplay(avatarUrl) {
+    var avatarContainer = document.getElementById('avatarContainer');
+    if (!avatarContainer) return;
+    
+    if (avatarUrl) {
+        var timestamp = new Date().getTime();
+        var img = document.createElement('img');
+        img.src = avatarUrl + '?t=' + timestamp;
+        img.alt = 'Avatar';
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        img.onerror = function() {
+            this.onerror = null;
+            // Fallback to default avatar
+            var defaultImg = '/images/default-avatar.png';
+            if (this.src !== defaultImg) {
+                this.src = defaultImg;
+            }
+        };
+        avatarContainer.innerHTML = '';
+        avatarContainer.appendChild(img);
+        
+        // Hide default icon
+        const avatarIcon = document.getElementById('avatarIcon');
+        if (avatarIcon) avatarIcon.style.display = 'none';
+    } else {
+        // Show default icon if no avatar
+        avatarContainer.innerHTML = '<i class="bi bi-person-circle" id="avatarIcon"></i>';
+        const avatarIcon = document.getElementById('avatarIcon');
+        if (avatarIcon) avatarIcon.style.display = 'block';
+    }
+}
+
+let avatarCropData = {
+    image: null,
+    originalFile: null, // Lưu file gốc để reset
+    zoom: 1,
+    rotation: 0,
+    offsetX: 0,
+    offsetY: 0,
+    isDragging: false,
+    startX: 0,
+    startY: 0,
+    startOffsetX: 0,
+    startOffsetY: 0,
+    originalImage: null,
+    originalState: null // Lưu state ban đầu để reset
+};
+
 document.addEventListener('DOMContentLoaded', function() {
-    var avatarInput = document.getElementById('avatarInput');
-    if (avatarInput) {
-        avatarInput.addEventListener('change', async function (e) {
-            var file = e.target.files[0];
-            if (!file) return;
+    // Xử lý tự động mở tab "Lịch sử đơn hàng" khi có query parameter payment
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment');
+    const maDon = urlParams.get('maDon');
+    
+    if (paymentStatus) {
+        // Tự động mở tab "Lịch sử đơn hàng" (tab thứ 4)
+        const ordersTab = document.getElementById('orders-tab');
+        if (ordersTab) {
+            // Đợi một chút để đảm bảo DOM đã sẵn sàng
+            setTimeout(() => {
+                // Sử dụng Bootstrap tab API để switch tab
+                const tab = new bootstrap.Tab(ordersTab);
+                tab.show();
+                
+                // Đảm bảo loadOrders được gọi sau khi tab được hiển thị
+                ordersTab.addEventListener('shown.bs.tab', function onTabShown() {
+                    // Gỡ listener để tránh gọi nhiều lần
+                    ordersTab.removeEventListener('shown.bs.tab', onTabShown);
+                    
+                    // Load đơn hàng
+                    if (typeof loadOrders === 'function') {
+                        loadOrders();
+                    } else {
+                        // Nếu hàm loadOrders chưa tồn tại, gọi trực tiếp API
+                        loadOrdersFromAPI();
+                    }
+                }, { once: true });
+                
+                // Trigger event manually nếu tab đã active
+                if (ordersTab.classList.contains('active')) {
+                    ordersTab.dispatchEvent(new Event('shown.bs.tab'));
+                }
+            }, 100);
+            
+            // Hiển thị thông báo nếu có
+            if (paymentStatus === 'success') {
+                const message = maDon ? `Thanh toán thành công cho đơn hàng ${maDon}!` : 'Thanh toán thành công!';
+                setTimeout(() => {
+                    showAlert('success', message);
+                }, 800);
+            } else if (paymentStatus === 'cancelled') {
+                const message = maDon ? `Bạn đã hủy thanh toán cho đơn hàng ${maDon}.` : 'Bạn đã hủy thanh toán.';
+                setTimeout(() => {
+                    showAlert('error', message);
+                }, 800);
+            }
+            
+            // Xóa query parameter để tránh reload lại tab
+            setTimeout(() => {
+                const newUrl = window.location.pathname;
+                window.history.replaceState({}, '', newUrl);
+            }, 1000);
+        }
+    }
+    
+    try {
+        var avatarInput = document.getElementById('avatarInput');
+        if (avatarInput) {
+            // Flag để tránh xử lý nhiều lần
+            var isUploadingAvatar = false;
+            
+            avatarInput.addEventListener('change', function (e) {
+                // Tránh xử lý nếu đang upload hoặc không có file
+                if (isUploadingAvatar || !e.target.files || e.target.files.length === 0) {
+                    e.target.value = '';
+                    return;
+                }
 
-            // Sử dụng hàm validate chung
-            var validationResult = validateImageFile(file, {
-                allowedExtensions: ['jpg', 'jpeg', 'png', 'gif'],
-                maxSizeInMB: 5
+                try {
+                    var file = e.target.files[0];
+                    if (!file) {
+                        e.target.value = '';
+                        return;
+                    }
+
+                    // Validate ảnh
+                    const validationResult = validateAvatarFile(file);
+                    if (!validationResult.isValid) {
+                        showAlert('error', validationResult.error);
+                        e.target.value = '';
+                        return;
+                    }
+
+                    // Set flag để tránh xử lý lại
+                    isUploadingAvatar = true;
+                    
+                    // Clear input ngay để tránh trigger lại
+                    e.target.value = '';
+                    
+                    // Upload trực tiếp không qua crop (async, không await để không block)
+                    uploadAvatarDirectly(file).finally(function() {
+                        // Reset flag sau khi upload xong (thành công hoặc thất bại)
+                        setTimeout(function() {
+                            isUploadingAvatar = false;
+                        }, 1000);
+                    });
+                } catch (error) {
+                    console.error('Error in avatar input change:', error);
+                    showAlert('error', 'Lỗi khi xử lý file ảnh. Vui lòng thử lại.');
+                    if (e && e.target) e.target.value = '';
+                    isUploadingAvatar = false;
+                }
             });
+        }
+    } catch (error) {
+        console.error('Error in DOMContentLoaded for avatar:', error);
+        // 🔹 QUAN TRỌNG: Đảm bảo code vẫn tiếp tục hoạt động
+        // Không có exception nào làm dừng toàn bộ ứng dụng
+    }
+});
 
-            if (!validationResult.isValid) {
-                showAlert('error', validationResult.error);
-                e.target.value = ''; // Reset input
+// 🔹 Bước 1: Validate ảnh
+function validateAvatarFile(file) {
+    // Kiểm tra file tồn tại
+    if (!file) {
+        return { isValid: false, error: 'Vui lòng chọn file ảnh' };
+    }
+
+    // Kiểm tra định dạng
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    if (!AVATAR_CONFIG.allowedFormats.includes(fileExtension)) {
+        return { 
+            isValid: false, 
+            error: `Chỉ chấp nhận file ảnh: ${AVATAR_CONFIG.allowedFormats.join(', ')}` 
+        };
+    }
+
+    // Kiểm tra kích thước file
+    if (file.size > AVATAR_CONFIG.maxFileSize) {
+        return { 
+            isValid: false, 
+            error: `Kích thước file không được vượt quá ${(AVATAR_CONFIG.maxFileSize / 1024 / 1024).toFixed(0)}MB` 
+        };
+    }
+
+    return { isValid: true };
+}
+
+// Upload ảnh trực tiếp (không qua crop)
+async function uploadAvatarDirectly(file) {
+    // Validate file trước khi upload
+    if (!file) {
+        showAlert('error', 'Không có file để upload');
+        return;
+    }
+    
+    // Kiểm tra file size trước khi xử lý
+    if (file.size > 5 * 1024 * 1024) {
+        showAlert('error', 'Kích thước file không được vượt quá 5MB');
+        return;
+    }
+    
+    showLoading();
+    
+    try {
+        const formData = new FormData();
+        formData.append('avatarFile', file);
+
+        // Tạo AbortController để có thể cancel request nếu timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 giây timeout
+
+        let response;
+        try {
+            response = await fetch('/UserProfile/UpdateAvatar', {
+                method: 'POST',
+                body: formData,
+                credentials: 'include', // Đảm bảo gửi cookie
+                signal: controller.signal // Thêm signal để có thể abort
+            });
+            clearTimeout(timeoutId);
+        } catch (fetchError) {
+            clearTimeout(timeoutId);
+            if (fetchError.name === 'AbortError') {
+                throw new Error('Upload ảnh quá lâu. Vui lòng thử lại với file nhỏ hơn.');
+            }
+            throw new Error('Lỗi kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+        }
+
+        if (!response.ok) {
+            let errorMessage = 'Lỗi khi upload ảnh';
+            try {
+                const errorText = await response.text();
+                if (errorText) {
+                    try {
+                        const errorData = JSON.parse(errorText);
+                        errorMessage = errorData.message || errorMessage;
+                    } catch {
+                        // Nếu không parse được JSON, sử dụng text gốc
+                        errorMessage = errorText.length > 200 ? 'Lỗi không xác định từ server' : errorText;
+                    }
+                }
+            } catch (parseError) {
+                console.error('Error parsing error response:', parseError);
+                // Sử dụng message mặc định
+            }
+            throw new Error(errorMessage);
+        }
+
+        let data;
+        try {
+            const responseText = await response.text();
+            if (!responseText) {
+                throw new Error('Empty response from server');
+            }
+            data = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error('Error parsing response:', parseError);
+            throw new Error('Lỗi khi xử lý phản hồi từ server');
+        }
+
+        if (data.avatarUrl) {
+            showAlert('success', data.message || 'Cập nhật ảnh đại diện thành công!');
+            
+            // Update avatar display
+            updateAvatarDisplay(data.avatarUrl);
+            
+            // Đồng bộ với localStorage
+            const savedProfile = localStorage.getItem('userProfile');
+            let profile = savedProfile ? JSON.parse(savedProfile) : {};
+            profile.defaultImage = data.avatarUrl;
+            profile.avatarUrl = data.avatarUrl; // Lưu cả avatarUrl để tương thích
+            localStorage.setItem('userProfile', JSON.stringify(profile));
+            
+            // Trigger event
+            sessionStorage.setItem('avatarUpdated', Date.now().toString());
+            window.dispatchEvent(new CustomEvent('userProfileUpdated', {
+                detail: { defaultImage: data.avatarUrl, avatarUrl: data.avatarUrl }
+            }));
+            
+            console.log('Avatar updated and synced to localStorage:', data.avatarUrl);
+        } else {
+            // Nếu không có avatarUrl trong response, vẫn hiển thị thông báo thành công
+            showAlert('success', data.message || 'Cập nhật ảnh đại diện thành công!');
+            // Reload profile data để lấy avatar mới
+            setTimeout(() => {
+                loadProfileData();
+            }, 500);
+        }
+    } catch (error) {
+        console.error('Error uploading avatar:', error);
+        
+        // Hiển thị thông báo lỗi chi tiết hơn
+        let errorMessage = 'Lỗi khi upload ảnh';
+        if (error && error.message) {
+            errorMessage = error.message;
+        } else if (error && typeof error === 'string') {
+            errorMessage = error;
+        }
+        
+        showAlert('error', errorMessage);
+    } finally {
+        // 🔹 QUAN TRỌNG: Luôn ẩn loading, ngay cả khi có lỗi
+        try {
+            hideLoading();
+        } catch (loadingError) {
+            console.error('Error hiding loading:', loadingError);
+            // Không throw, chỉ log
+        }
+    }
+}
+
+// 🔹 Bước 1: Load ảnh và mở modal (DEPRECATED - không dùng nữa)
+function openAvatarCropModal(file) {
+    showLoading();
+    
+    const reader = new FileReader();
+    reader.onerror = function() {
+        hideLoading();
+        showAlert('error', 'Lỗi khi đọc file ảnh');
+    };
+    
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onerror = function() {
+            hideLoading();
+            showAlert('error', 'Không thể load ảnh. Vui lòng chọn file ảnh hợp lệ.');
+        };
+        
+        img.onload = function() {
+            // Kiểm tra kích thước ảnh
+            if (img.width < AVATAR_CONFIG.minSize || img.height < AVATAR_CONFIG.minSize) {
+                hideLoading();
+                showAlert('error', `Kích thước ảnh tối thiểu: ${AVATAR_CONFIG.minSize}x${AVATAR_CONFIG.minSize}px`);
                 return;
             }
 
-            showLoading();
-            const formData = new FormData();
-            formData.append('avatarFile', file);
+            // Lưu state ban đầu
+            avatarCropData.originalFile = file;
+            avatarCropData.originalImage = img;
+            avatarCropData.image = img;
+            avatarCropData.zoom = 1;
+            avatarCropData.rotation = 0;
+            avatarCropData.offsetX = 0;
+            avatarCropData.offsetY = 0;
+            
+            // Lưu original state để reset
+            avatarCropData.originalState = {
+                zoom: 1,
+                rotation: 0,
+                offsetX: 0,
+                offsetY: 0
+            };
 
-            try {
-                const response = await fetch('/UserProfile/UpdateAvatar', {
-                    method: 'POST',
-                    body: formData
-                });
+            hideLoading();
 
-                const data = await response.json();
-
-                if (response.ok) {
-                    showAlert('success', data.message || 'Cập nhật ảnh đại diện thành công!');
-                    var avatarContainer = document.getElementById('avatarContainer');
-                    if (avatarContainer && data.avatarUrl) {
-                        var timestamp = new Date().getTime();
-                        var img = document.createElement('img');
-                        img.src = data.avatarUrl + '?t=' + timestamp;
-                        img.alt = 'Avatar';
-                        img.onerror = function() {
-                            this.onerror = null;
-                            var defaultImg = '/images/default-product.jpg';
-                            if (this.src !== defaultImg) {
-                                this.src = defaultImg;
-                            }
-                        };
-                        avatarContainer.innerHTML = '';
-                        avatarContainer.appendChild(img);
-                        
-                        // Đồng bộ với localStorage và MuaHang/Index
-                        const savedProfile = localStorage.getItem('userProfile');
-                        let profile = savedProfile ? JSON.parse(savedProfile) : {};
-                        profile.defaultImage = data.avatarUrl;
-                        
-                        // Lưu lại vào localStorage
-                        localStorage.setItem('userProfile', JSON.stringify(profile));
-                        
-                        // Đánh dấu trong sessionStorage để MuaHang biết cần reload
-                        sessionStorage.setItem('avatarUpdated', Date.now().toString());
-                        
-                        // Trigger custom event để các tab khác có thể lắng nghe
-                        window.dispatchEvent(new CustomEvent('userProfileUpdated', {
-                            detail: { defaultImage: data.avatarUrl }
-                        }));
-                        
-                        console.log('Avatar updated and synced to localStorage:', data.avatarUrl);
-                    }
-                } else {
-                    showAlert('error', data.message || 'Lỗi khi upload ảnh');
-                }
-            } catch (error) {
-                showAlert('error', 'Lỗi kết nối đến server');
-            } finally {
-                hideLoading();
-                e.target.value = ''; // Reset input
+            // Mở modal
+            const modalEl = document.getElementById('avatarCropModal');
+            if (!modalEl) {
+                showAlert('error', 'Không tìm thấy modal edit ảnh');
+                return;
             }
-        });
+
+            const modal = new bootstrap.Modal(modalEl);
+            
+            // 🔹 QUAN TRỌNG: Setup cancel handler - KHÔNG upload khi đóng modal
+            // Event này được trigger khi modal đóng (Cancel, X, hoặc backdrop click)
+            modalEl.addEventListener('hidden.bs.modal', function onHidden() {
+                // Cleanup khi đóng modal - HỦY mọi thay đổi, KHÔNG upload
+                cleanupAvatarCrop();
+                modalEl.removeEventListener('hidden.bs.modal', onHidden);
+            }, { once: true });
+            
+            // Đảm bảo Cancel button cũng cleanup (backup)
+            const cancelBtn = modalEl.querySelector('[data-bs-dismiss="modal"]');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function() {
+                    // Đảm bảo cleanup khi click Cancel
+                    cleanupAvatarCrop();
+                }, { once: true });
+            }
+
+            modal.show();
+
+            // Render image sau khi modal hiển thị hoàn toàn
+            modalEl.addEventListener('shown.bs.modal', function onShown() {
+                setTimeout(() => {
+                    renderAvatarCrop();
+                }, 100);
+                modalEl.removeEventListener('shown.bs.modal', onShown);
+            }, { once: true });
+        };
+        
+        img.src = e.target.result;
+    };
+    
+    reader.readAsDataURL(file);
+}
+
+// 🔹 Cleanup khi đóng modal (Cancel hoặc X) - KHÔNG upload
+// Hàm này được gọi khi:
+// - User click Cancel
+// - User click X (close button)
+// - User click backdrop
+// - Modal đóng bằng bất kỳ cách nào trừ Apply
+function cleanupAvatarCrop() {
+    // Reset tất cả data - HỦY mọi thay đổi
+    avatarCropData.image = null;
+    avatarCropData.originalFile = null;
+    avatarCropData.originalImage = null;
+    avatarCropData.zoom = 1;
+    avatarCropData.rotation = 0;
+    avatarCropData.offsetX = 0;
+    avatarCropData.offsetY = 0;
+    avatarCropData.originalState = null;
+    
+    // Clear canvas
+    const canvas = document.getElementById('avatarCropCanvas');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        canvas.style.display = 'none';
     }
-});
+    
+    // Reset zoom slider nếu có
+    const zoomSlider = document.getElementById('avatarZoomSlider');
+    if (zoomSlider) {
+        zoomSlider.value = 1;
+    }
+    
+    // 🔹 QUAN TRỌNG: Không có request upload nào ở đây
+    // Tất cả thay đổi đã bị hủy, không upload lên server
+}
+
+// Setup controls cho crop
+// 🔹 QUAN TRỌNG: Hàm này cần được gọi lại sau khi modal đóng để đảm bảo controls hoạt động
+// Sử dụng named functions để có thể remove listeners nếu cần
+let zoomHandler = null;
+let rotateHandler = null;
+let resetHandler = null;
+let applyHandler = null;
+
+function setupAvatarCropControls() {
+    try {
+        // Setup controls - sử dụng named functions để có thể remove nếu cần
+    
+        // Zoom slider
+        const zoomSlider = document.getElementById('avatarZoomSlider');
+        if (zoomSlider) {
+            // Remove old listener nếu có
+            if (zoomHandler) {
+                zoomSlider.removeEventListener('input', zoomHandler);
+            }
+            
+            zoomSlider.min = AVATAR_CONFIG.zoomMin;
+            zoomSlider.max = AVATAR_CONFIG.zoomMax;
+            zoomSlider.value = 1;
+            
+            // Create named handler
+            zoomHandler = function() {
+                try {
+                    avatarCropData.zoom = parseFloat(this.value);
+                    // 🔹 Bước 3: Preview tạm thời sau mỗi thao tác
+                    renderAvatarCrop();
+                } catch (error) {
+                    console.error('Error in zoom:', error);
+                }
+            };
+            
+            zoomSlider.addEventListener('input', zoomHandler);
+        }
+
+        // Rotate button - xoay 90°
+        const rotateBtn = document.getElementById('avatarRotateBtn');
+        if (rotateBtn) {
+            // Remove old listener nếu có
+            if (rotateHandler) {
+                rotateBtn.removeEventListener('click', rotateHandler);
+            }
+            
+            rotateHandler = function() {
+                try {
+                    avatarCropData.rotation = (avatarCropData.rotation + 90) % 360;
+                    // 🔹 Bước 3: Preview tạm thời
+                    renderAvatarCrop();
+                } catch (error) {
+                    console.error('Error rotating:', error);
+                }
+            };
+            
+            rotateBtn.addEventListener('click', rotateHandler);
+        }
+
+        // Reset button - quay về ảnh ban đầu
+        const resetBtn = document.getElementById('avatarResetBtn');
+        if (resetBtn) {
+            // Remove old listener nếu có
+            if (resetHandler) {
+                resetBtn.removeEventListener('click', resetHandler);
+            }
+            
+            resetHandler = function() {
+                try {
+                    if (avatarCropData.originalState) {
+                        avatarCropData.zoom = avatarCropData.originalState.zoom;
+                        avatarCropData.rotation = avatarCropData.originalState.rotation;
+                        avatarCropData.offsetX = avatarCropData.originalState.offsetX;
+                        avatarCropData.offsetY = avatarCropData.originalState.offsetY;
+                    } else {
+                        avatarCropData.zoom = 1;
+                        avatarCropData.rotation = 0;
+                        avatarCropData.offsetX = 0;
+                        avatarCropData.offsetY = 0;
+                    }
+                    const currentSlider = document.getElementById('avatarZoomSlider');
+                    if (currentSlider) currentSlider.value = avatarCropData.zoom;
+                    // 🔹 Bước 3: Preview tạm thời
+                    renderAvatarCrop();
+                } catch (error) {
+                    console.error('Error resetting:', error);
+                }
+            };
+            
+            resetBtn.addEventListener('click', resetHandler);
+        }
+
+        // Apply button
+        const applyBtn = document.getElementById('avatarApplyBtn');
+        if (applyBtn) {
+            // Remove old listener nếu có
+            if (applyHandler) {
+                applyBtn.removeEventListener('click', applyHandler);
+            }
+            
+            applyHandler = async function() {
+                try {
+                    await applyAvatarCrop();
+                } catch (error) {
+                    console.error('Error applying crop:', error);
+                    showAlert('error', 'Lỗi khi xử lý ảnh. Vui lòng thử lại.');
+                    hideLoading();
+                }
+            };
+            
+            applyBtn.addEventListener('click', applyHandler);
+        }
+
+        // Drag to move image
+        const preview = document.getElementById('avatarCropPreview');
+        if (preview) {
+            preview.addEventListener('mousedown', startDrag);
+            preview.addEventListener('touchstart', startDrag);
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('touchmove', drag);
+            document.addEventListener('mouseup', stopDrag);
+            document.addEventListener('touchend', stopDrag);
+        }
+    } catch (error) {
+        console.error('Error setting up avatar crop controls:', error);
+        // Đảm bảo code vẫn tiếp tục hoạt động
+    }
+}
+
+// Render avatar crop
+function renderAvatarCrop() {
+    if (!avatarCropData.image) {
+        console.error('No image to render');
+        return;
+    }
+
+    const canvas = document.getElementById('avatarCropCanvas');
+    const preview = document.getElementById('avatarCropPreview');
+    if (!canvas || !preview) {
+        console.error('Canvas or preview element not found');
+        return;
+    }
+
+    // Wait for preview to have dimensions
+    if (preview.offsetWidth === 0 || preview.offsetHeight === 0) {
+        setTimeout(renderAvatarCrop, 100);
+        return;
+    }
+
+    const containerWidth = preview.offsetWidth;
+    const containerHeight = preview.offsetHeight;
+    const cropSize = Math.min(containerWidth, containerHeight) * 0.8;
+    const cropX = (containerWidth - cropSize) / 2;
+    const cropY = (containerHeight - cropSize) / 2;
+
+    // Set canvas size
+    canvas.width = containerWidth;
+    canvas.height = containerHeight;
+    const ctx = canvas.getContext('2d');
+
+    // Clear canvas with background color
+    ctx.fillStyle = '#36363f';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Calculate base scale to fit image in container (zoom = 1)
+    const imgAspect = avatarCropData.image.width / avatarCropData.image.height;
+    const containerAspect = containerWidth / containerHeight;
+    
+    // Base scale: scale để ảnh vừa khít container khi zoom = 1
+    let baseScale;
+    if (imgAspect > containerAspect) {
+        // Image is wider - fit to width
+        baseScale = containerWidth / avatarCropData.image.width;
+    } else {
+        // Image is taller - fit to height
+        baseScale = containerHeight / avatarCropData.image.height;
+    }
+    
+    // Apply zoom to base scale
+    const currentScale = baseScale * avatarCropData.zoom;
+    const drawWidth = avatarCropData.image.width * currentScale;
+    const drawHeight = avatarCropData.image.height * currentScale;
+
+    // Draw faded background image (full image, faded) - như ảnh mẫu
+    ctx.globalAlpha = 0.3;
+    // Scale to fit container (luôn fit to cover để hiển thị toàn bộ ảnh)
+    const bgScale = Math.max(containerWidth / avatarCropData.image.width, containerHeight / avatarCropData.image.height);
+    const bgWidth = avatarCropData.image.width * bgScale;
+    const bgHeight = avatarCropData.image.height * bgScale;
+    ctx.drawImage(
+        avatarCropData.image,
+        (containerWidth - bgWidth) / 2,
+        (containerHeight - bgHeight) / 2,
+        bgWidth,
+        bgHeight
+    );
+    ctx.globalAlpha = 1;
+
+    // Draw vibrant crop circle area (only inside the circle)
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cropX + cropSize / 2, cropY + cropSize / 2, cropSize / 2, 0, 2 * Math.PI);
+    ctx.clip();
+    
+    // Draw image with transformations inside crop circle
+    ctx.translate(containerWidth / 2 + avatarCropData.offsetX, containerHeight / 2 + avatarCropData.offsetY);
+    ctx.rotate((avatarCropData.rotation * Math.PI) / 180);
+    ctx.translate(-drawWidth / 2, -drawHeight / 2);
+    ctx.globalAlpha = 1;
+    ctx.drawImage(avatarCropData.image, 0, 0, drawWidth, drawHeight);
+    ctx.restore();
+
+    canvas.style.display = 'block';
+}
+
+// Drag functions
+function startDrag(e) {
+    avatarCropData.isDragging = true;
+    const preview = document.getElementById('avatarCropPreview');
+    if (!preview) return;
+    
+    const rect = preview.getBoundingClientRect();
+    const touch = e.touches ? e.touches[0] : e;
+    
+    // Lưu vị trí chuột ban đầu và offset hiện tại
+    avatarCropData.startX = touch.clientX - rect.left;
+    avatarCropData.startY = touch.clientY - rect.top;
+    avatarCropData.startOffsetX = avatarCropData.offsetX;
+    avatarCropData.startOffsetY = avatarCropData.offsetY;
+    
+    e.preventDefault();
+}
+
+function drag(e) {
+    if (!avatarCropData.isDragging) return;
+    
+    const preview = document.getElementById('avatarCropPreview');
+    if (!preview) return;
+    
+    const rect = preview.getBoundingClientRect();
+    const touch = e.touches ? e.touches[0] : e;
+    
+    // Tính toán vị trí chuột trong preview
+    const currentX = touch.clientX - rect.left;
+    const currentY = touch.clientY - rect.top;
+    
+    // Tính toán offset mới dựa trên sự thay đổi vị trí chuột
+    const deltaX = currentX - avatarCropData.startX;
+    const deltaY = currentY - avatarCropData.startY;
+    
+    avatarCropData.offsetX = avatarCropData.startOffsetX + deltaX;
+    avatarCropData.offsetY = avatarCropData.startOffsetY + deltaY;
+    
+    // 🔹 Bước 3: Preview tạm thời sau mỗi thao tác drag
+    renderAvatarCrop();
+    e.preventDefault();
+}
+
+function stopDrag() {
+    avatarCropData.isDragging = false;
+}
+
+// 🔹 Bước 4: Apply - Crop và upload (CHỈ KHI USER CLICK APPLY)
+// Đây là hàm DUY NHẤT thực hiện upload lên server
+// Chỉ được gọi khi user click nút "Apply"
+async function applyAvatarCrop() {
+    if (!avatarCropData.image) {
+        showAlert('error', 'Không có ảnh để xử lý');
+        return;
+    }
+
+    // 🔹 QUAN TRỌNG: Chỉ upload khi user click Apply
+    // Tất cả xử lý trước đó đều client-side, không upload
+    
+    showLoading();
+
+    try {
+        // 🔹 Crop hình tròn 1:1 (square canvas, circular crop)
+        // Đảm bảo chất lượng: sử dụng kích thước tối thiểu hoặc tối đa
+        const size = Math.max(
+            AVATAR_CONFIG.minSize,
+            Math.min(AVATAR_CONFIG.maxSize, 512) // Mặc định 512px cho chất lượng tốt
+        );
+        
+        // Tạo canvas vuông 1:1 để crop hình tròn
+        const canvas = document.createElement('canvas');
+        canvas.width = size;  // 1:1 aspect ratio
+        canvas.height = size; // 1:1 aspect ratio
+
+        const ctx = canvas.getContext('2d');
+        const preview = document.getElementById('avatarCropPreview');
+        const containerWidth = preview.offsetWidth || 500;
+        const containerHeight = preview.offsetHeight || 500;
+        const cropSize = Math.min(containerWidth, containerHeight) * 0.8;
+
+        // Calculate how image is displayed in preview (same as renderAvatarCrop)
+        const imgAspect = avatarCropData.image.width / avatarCropData.image.height;
+        const containerAspect = containerWidth / containerHeight;
+        
+        // Base scale: scale để ảnh vừa khít container khi zoom = 1
+        let baseScale;
+        if (imgAspect > containerAspect) {
+            baseScale = containerWidth / avatarCropData.image.width;
+        } else {
+            baseScale = containerHeight / avatarCropData.image.height;
+        }
+        
+        // Apply zoom to base scale
+        const currentScale = baseScale * avatarCropData.zoom;
+        const drawWidth = avatarCropData.image.width * currentScale;
+        const drawHeight = avatarCropData.image.height * currentScale;
+
+        // Calculate crop circle center in container coordinates
+        const cropCenterX = containerWidth / 2;
+        const cropCenterY = containerHeight / 2;
+        const cropRadius = cropSize / 2;
+
+        // Calculate the crop area in the original image coordinates
+        // First, find where the crop center is in the transformed image space
+        const transformedCropCenterX = cropCenterX + avatarCropData.offsetX;
+        const transformedCropCenterY = cropCenterY + avatarCropData.offsetY;
+        
+        // Convert to image coordinates (accounting for zoom and position)
+        const imageCenterX = avatarCropData.image.width / 2;
+        const imageCenterY = avatarCropData.image.height / 2;
+        
+        // Calculate offset in image space
+        const offsetInImageX = ((transformedCropCenterX - containerWidth / 2) / drawWidth) * avatarCropData.image.width;
+        const offsetInImageY = ((transformedCropCenterY - containerHeight / 2) / drawHeight) * avatarCropData.image.height;
+        
+        const sourceCenterX = imageCenterX + offsetInImageX;
+        const sourceCenterY = imageCenterY + offsetInImageY;
+        
+        // Calculate crop size in original image
+        const cropRatioInImage = (cropRadius * 2) / drawWidth;
+        const sourceCropSize = avatarCropData.image.width * cropRatioInImage;
+
+        // Tạo canvas lớn hơn để đảm bảo chất lượng không bị vỡ
+        // Sử dụng 2x hoặc 3x để có chất lượng tốt hơn
+        const tempCanvas = document.createElement('canvas');
+        const tempSize = size * 3; // 3x để đảm bảo chất lượng cao
+        tempCanvas.width = tempSize;
+        tempCanvas.height = tempSize;
+        const tempCtx = tempCanvas.getContext('2d');
+        
+        // Enable image smoothing để tránh bị vỡ
+        tempCtx.imageSmoothingEnabled = true;
+        tempCtx.imageSmoothingQuality = 'high';
+
+        // Draw cropped portion with rotation
+        tempCtx.save();
+        tempCtx.translate(tempSize / 2, tempSize / 2);
+        tempCtx.rotate((avatarCropData.rotation * Math.PI) / 180);
+        
+        // Calculate source rectangle bounds
+        const sourceX = Math.max(0, Math.min(avatarCropData.image.width - sourceCropSize, sourceCenterX - sourceCropSize / 2));
+        const sourceY = Math.max(0, Math.min(avatarCropData.image.height - sourceCropSize, sourceCenterY - sourceCropSize / 2));
+        const actualSourceSize = Math.min(sourceCropSize, avatarCropData.image.width - sourceX, avatarCropData.image.height - sourceY);
+        
+        tempCtx.drawImage(
+            avatarCropData.image,
+            sourceX,
+            sourceY,
+            actualSourceSize,
+            actualSourceSize,
+            -tempSize / 2,
+            -tempSize / 2,
+            tempSize,
+            tempSize
+        );
+        tempCtx.restore();
+
+        // Draw circular crop to final canvas với chất lượng cao
+        ctx.save();
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, size / 2, 0, 2 * Math.PI);
+        ctx.clip();
+        ctx.drawImage(tempCanvas, 0, 0, size, size);
+        ctx.restore();
+
+        // Kiểm tra hỗ trợ toBlob
+        if (typeof canvas.toBlob !== 'function') {
+            hideLoading();
+            showAlert('error', 'Trình duyệt không hỗ trợ xử lý ảnh. Vui lòng sử dụng trình duyệt khác.');
+            return;
+        }
+
+        // Convert to blob với chất lượng cao (đảm bảo không bị vỡ)
+        // Sử dụng quality cao để đảm bảo chất lượng ảnh tốt
+        canvas.toBlob(async function(blob) {
+            try {
+                if (!blob) {
+                    hideLoading();
+                    showAlert('error', 'Lỗi khi xử lý ảnh. Vui lòng thử lại.');
+                    return;
+                }
+
+                // Kiểm tra kích thước blob (đảm bảo không quá lớn)
+                if (blob.size > AVATAR_CONFIG.maxFileSize) {
+                    hideLoading();
+                    showAlert('error', 'Ảnh sau khi xử lý quá lớn. Vui lòng thử lại với zoom nhỏ hơn.');
+                    return;
+                }
+
+                // Kiểm tra kích thước tối thiểu
+                if (blob.size < 100) {
+                    hideLoading();
+                    showAlert('error', 'Ảnh sau khi xử lý không hợp lệ. Vui lòng thử lại.');
+                    return;
+                }
+
+                // 🔹 Bước 4: Upload lên server (CHỈ KHI APPLY)
+                // Đảm bảo không lưu ảnh rác nếu user hủy (đã xử lý ở cleanupAvatarCrop)
+                const formData = new FormData();
+                formData.append('avatarFile', blob, 'avatar.jpg');
+
+                try {
+                // Tạo AbortController để có thể cancel request nếu timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 giây timeout
+
+                let response;
+                try {
+                    response = await fetch('/UserProfile/UpdateAvatar', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'include', // Đảm bảo gửi cookie
+                        signal: controller.signal // Thêm signal để có thể abort
+                    });
+                    clearTimeout(timeoutId);
+                } catch (fetchError) {
+                    clearTimeout(timeoutId);
+                    if (fetchError.name === 'AbortError') {
+                        throw new Error('Upload ảnh quá lâu. Vui lòng thử lại với file nhỏ hơn.');
+                    }
+                    throw new Error('Lỗi kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+                }
+
+                if (!response.ok) {
+                    let errorMessage = 'Lỗi khi upload ảnh';
+                    try {
+                        const errorText = await response.text();
+                        if (errorText) {
+                            try {
+                                const errorData = JSON.parse(errorText);
+                                errorMessage = errorData.message || errorMessage;
+                            } catch {
+                                // Nếu không parse được JSON, sử dụng text gốc
+                                errorMessage = errorText.length > 200 ? 'Lỗi không xác định từ server' : errorText;
+                            }
+                        }
+                    } catch (parseError) {
+                        console.error('Error parsing error response:', parseError);
+                        // Sử dụng message mặc định
+                    }
+                    throw new Error(errorMessage);
+                }
+
+                let data;
+                try {
+                    const responseText = await response.text();
+                    if (!responseText) {
+                        throw new Error('Empty response from server');
+                    }
+                    data = JSON.parse(responseText);
+                } catch (parseError) {
+                    console.error('Error parsing response:', parseError);
+                    throw new Error('Lỗi khi xử lý phản hồi từ server');
+                }
+
+                if (data.avatarUrl) {
+                    showAlert('success', data.message || 'Cập nhật ảnh đại diện thành công!');
+                    
+                    // Update avatar display
+                    updateAvatarDisplay(data.avatarUrl);
+                    
+                    // Đồng bộ với localStorage
+                    const savedProfile = localStorage.getItem('userProfile');
+                    let profile = savedProfile ? JSON.parse(savedProfile) : {};
+                    profile.defaultImage = data.avatarUrl;
+                    profile.avatarUrl = data.avatarUrl;
+                    localStorage.setItem('userProfile', JSON.stringify(profile));
+                    
+                    // Trigger event
+                    sessionStorage.setItem('avatarUpdated', Date.now().toString());
+                    window.dispatchEvent(new CustomEvent('userProfileUpdated', {
+                        detail: { defaultImage: data.avatarUrl, avatarUrl: data.avatarUrl }
+                    }));
+                    
+                    console.log('Avatar updated and synced to localStorage:', data.avatarUrl);
+                } else {
+                    showAlert('success', data.message || 'Cập nhật ảnh đại diện thành công!');
+                    // Reload profile data để lấy avatar mới
+                    setTimeout(() => {
+                        loadProfileData();
+                    }, 500);
+                }
+
+                // Đóng modal sau khi thành công
+                try {
+                    const modalEl = document.getElementById('avatarCropModal');
+                    if (modalEl) {
+                        const modal = bootstrap.Modal.getInstance(modalEl);
+                        if (modal) {
+                            modal.hide();
+                            // Cleanup sau khi apply thành công
+                            setTimeout(() => {
+                                cleanupAvatarCrop();
+                                // 🔹 QUAN TRỌNG: Đảm bảo code tiếp tục hoạt động sau khi upload
+                                // Reset input để có thể chọn file mới
+                                const avatarInput = document.getElementById('avatarInput');
+                                if (avatarInput) {
+                                    avatarInput.value = '';
+                                }
+                            }, 300);
+                        }
+                    }
+                } catch (modalError) {
+                    console.error('Error closing modal:', modalError);
+                    // Đảm bảo không có lỗi nào làm dừng execution
+                    hideLoading();
+                }
+
+            } catch (error) {
+                console.error('Error uploading avatar:', error);
+                
+                // Hiển thị thông báo lỗi chi tiết hơn
+                let errorMessage = 'Lỗi khi upload ảnh';
+                if (error && error.message) {
+                    errorMessage = error.message;
+                } else if (error && typeof error === 'string') {
+                    errorMessage = error;
+                }
+                
+                showAlert('error', errorMessage);
+                
+                // Đảm bảo modal vẫn có thể đóng được
+                try {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('avatarCropModal'));
+                    if (modal) {
+                        // Không đóng modal nếu có lỗi, để user có thể thử lại
+                    }
+                } catch (modalError) {
+                    console.error('Error accessing modal:', modalError);
+                    // Không throw, chỉ log
+                }
+            } finally {
+                // 🔹 QUAN TRỌNG: Luôn ẩn loading, ngay cả khi có lỗi
+                try {
+                    hideLoading();
+                } catch (loadingError) {
+                    console.error('Error hiding loading:', loadingError);
+                    // Không throw, chỉ log
+                }
+                
+                // 🔹 QUAN TRỌNG: Đảm bảo code tiếp tục hoạt động
+                // Không có exception nào làm dừng execution
+                }
+            } catch (blobError) {
+                console.error('Error in blob callback:', blobError);
+                hideLoading();
+                showAlert('error', 'Lỗi khi xử lý ảnh. Vui lòng thử lại.');
+            }
+        }, 'image/jpeg', 0.9);
+    } catch (error) {
+        console.error('Error processing avatar:', error);
+        showAlert('error', error.message || 'Lỗi khi xử lý ảnh');
+        hideLoading();
+        // 🔹 QUAN TRỌNG: Đảm bảo không có exception nào làm dừng execution
+        // Code vẫn tiếp tục hoạt động sau khi có lỗi
+    }
+}
 
 // ====== PROFILE FUNCTIONS ======
 async function loadProfileData() {
@@ -205,19 +1149,8 @@ async function loadProfileData() {
 
             // Update avatar
             try {
-                var avatarContainer = document.getElementById('avatarContainer');
-                if (avatarContainer && data.defaultImage) {
-                    var timestamp = new Date().getTime();
-                    var img = document.createElement('img');
-                    img.src = data.defaultImage + '?t=' + timestamp;
-                    img.alt = 'Avatar';
-                    img.onerror = function() {
-                        this.onerror = null;
-                        this.src = '/images/default-product.jpg';
-                    };
-                    avatarContainer.innerHTML = '';
-                    avatarContainer.appendChild(img);
-                }
+                // Sử dụng helper function để update avatar
+                updateAvatarDisplay(data.avatarUrl);
             } catch (avatarError) {
                 console.error('Error updating avatar:', avatarError);
             }
@@ -226,7 +1159,8 @@ async function loadProfileData() {
             const profileData = {
                 hoTenKhachHang: data.hoTenKhachHang,
                 emailKhachHang: data.emailKhachHang,
-                defaultImage: data.defaultImage,
+                defaultImage: data.avatarUrl, // Lưu avatarUrl vào defaultImage để tương thích với code khác
+                avatarUrl: data.avatarUrl,
                 diemTichLuy: data.diemTichLuy
             };
             localStorage.setItem('userProfile', JSON.stringify(profileData));
@@ -387,8 +1321,11 @@ function getOrderStatusNumber(trangThai) {
         }
         // Map từ string sang số
         var lower = trangThai.toLowerCase();
-        if (lower.includes('chờ') || lower.includes('pending') || lower === '0') return 0;
-        if (lower.includes('xác nhận') || lower.includes('confirmed') || lower === '1') return 1;
+        // Kiểm tra "chờ xác nhận" trước (vì nó chứa cả "chờ" và "xác nhận")
+        if (lower.includes('chờ xác nhận') || (lower.includes('chờ') && lower.includes('xác nhận')) || lower.includes('pending') || lower === '0') return 0;
+        // "Đã thanh toán" tương đương "Đã xác nhận" (status = 1)
+        if (lower.includes('đã thanh toán') || lower.includes('paid')) return 1;
+        if ((lower.includes('xác nhận') && !lower.includes('chờ')) || lower.includes('confirmed') || lower === '1') return 1;
         if (lower.includes('vận chuyển') || lower.includes('shipping') || lower === '2') return 2;
         if (lower.includes('thành công') || lower.includes('completed') || lower === '3') return 3;
         if (lower.includes('hủy') || lower.includes('cancel') || lower === '4') return 4;
@@ -400,7 +1337,7 @@ function getOrderStatusNumber(trangThai) {
 function getOrderStatusName(statusNum) {
     switch (statusNum) {
         case 0: return 'Chờ xác nhận';
-        case 1: return 'Đã xác nhận';
+        case 1: return 'Đã xác nhận'; // Bao gồm cả "Đã thanh toán"
         case 2: return 'Đang vận chuyển';
         case 3: return 'Giao hàng thành công';
         case 4: return 'Hủy đơn hàng';
@@ -478,6 +1415,11 @@ function renderOrders() {
     var ordersHtml = '';
     var statusOrder = [0, 1, 2, 3, 4]; // Thứ tự hiển thị
     
+    // Thêm status -1 (không xác định) vào cuối nếu có
+    if (ordersByStatus[-1] && ordersByStatus[-1].length > 0) {
+        statusOrder.push(-1);
+    }
+    
     for (var s = 0; s < statusOrder.length; s++) {
         var statusNum = statusOrder[s];
         if (!ordersByStatus[statusNum] || ordersByStatus[statusNum].length === 0) {
@@ -485,6 +1427,10 @@ function renderOrders() {
         }
 
         var statusName = getOrderStatusName(statusNum);
+        // Nếu status -1, hiển thị tên trạng thái gốc từ order
+        if (statusNum === -1 && ordersByStatus[statusNum].length > 0) {
+            statusName = ordersByStatus[statusNum][0].trangThai || 'Không xác định';
+        }
         var statusOrders = ordersByStatus[statusNum];
 
         ordersHtml += '<div class="status-group">';
@@ -510,14 +1456,24 @@ function renderOrders() {
                             item = chiTietArray[j];
                         }
                         if (!item) continue;
+                        var specInfo = [];
+                        if (item.ram && item.ram !== 'N/A') specInfo.push('RAM: ' + item.ram);
+                        if (item.rom && item.rom !== 'N/A') specInfo.push('ROM: ' + item.rom);
+                        if (item.manHinh && item.manHinh !== 'N/A') specInfo.push('Màn hình: ' + item.manHinh);
+                        if (item.cameraTruoc && item.cameraTruoc !== 'N/A') specInfo.push('Camera trước: ' + item.cameraTruoc);
+                        if (item.cameraSau && item.cameraSau !== 'N/A') specInfo.push('Camera sau: ' + item.cameraSau);
+                        var specHtml = specInfo.length > 0 ? '<div class="text-muted small mt-1" style="color: #aaa !important;">' + specInfo.join(' | ') + '</div>' : '';
+                        
                         itemsHtml += '<div class="order-item">' +
                                 '<img src="' + (item.hinhAnh || '/images/default-product.jpg') + '" alt="' + (item.tenSanPham || '') + '" onerror="this.src=\'/images/default-product.jpg\'">' +
                                 '<div class="flex-grow-1">' +
                                 '<div style="color: #ffffff !important;"><strong>' + (item.tenSanPham || '') + '</strong></div>' +
                                 '<div class="text-muted small" style="color: #aaa !important;">' + 
                                 (item.tenThuongHieu && item.tenThuongHieu !== 'N/A' ? '<strong>Thương hiệu:</strong> ' + (item.tenThuongHieu || '') + ' | ' : '') +
-                                (item.tenModel || '') + ' - ' + (item.mau || '') + 
+                                (item.tenModel && item.tenModel !== 'N/A' ? '<strong>Model:</strong> ' + item.tenModel + ' - ' : '') +
+                                '<strong>Màu:</strong> ' + (item.mau || '') + 
                                 '</div>' +
+                                specHtml +
                                 '<div style="color: #ffffff !important;">Số lượng: ' + (item.soLuong || 0) + ' x ' + formatMoney(item.donGia || 0) + '</div>' +
                                 '</div>' +
                                 '<div style="color: #ffffff !important;"><strong>' + formatMoney(item.thanhTien || 0) + '</strong></div>' +
@@ -604,21 +1560,47 @@ function showOrderDetail(orderId) {
     if (order.chiTiet && order.chiTiet.length > 0) {
         for (var i = 0; i < order.chiTiet.length; i++) {
             var item = order.chiTiet[i];
-            chiTietHtml += '<div class="order-detail-item">' +
+            var giaKhuyenMaiHtml = '';
+            if (item.giaKhuyenMai && item.giaKhuyenMai > 0 && item.giaKhuyenMai !== item.donGia) {
+                giaKhuyenMaiHtml = '<p class="mb-1 text-muted"><small>Giá gốc: <del>' + formatMoney(item.donGia || 0) + '</del> | Giá khuyến mãi: <strong class="text-danger">' + formatMoney(item.giaKhuyenMai) + '</strong></small></p>';
+            } else {
+                giaKhuyenMaiHtml = '<p class="mb-1">Đơn giá: ' + formatMoney(item.donGia || 0) + '</p>';
+            }
+            
+            var imeiInfoHtml = '';
+            if (item.maImei && item.maImei !== 'N/A') {
+                imeiInfoHtml = '<p class="mb-1 text-muted small"><strong>IMEI:</strong> ' + (item.maImei || '') + ' | <strong>Trạng thái:</strong> ' + (item.trangThaiImei || 'N/A') + '</p>';
+            }
+            
+            var specDetailHtml = '';
+            var specDetails = [];
+            if (item.ram && item.ram !== 'N/A') specDetails.push('<strong>RAM:</strong> ' + item.ram);
+            if (item.rom && item.rom !== 'N/A') specDetails.push('<strong>ROM:</strong> ' + item.rom);
+            if (item.manHinh && item.manHinh !== 'N/A') specDetails.push('<strong>Màn hình:</strong> ' + item.manHinh);
+            if (item.cameraTruoc && item.cameraTruoc !== 'N/A') specDetails.push('<strong>Camera trước:</strong> ' + item.cameraTruoc);
+            if (item.cameraSau && item.cameraSau !== 'N/A') specDetails.push('<strong>Camera sau:</strong> ' + item.cameraSau);
+            if (specDetails.length > 0) {
+                specDetailHtml = '<p class="text-muted mb-1 small" style="color: #aaa !important;">' + specDetails.join(' | ') + '</p>';
+            }
+            
+            chiTietHtml += '<div class="order-detail-item" style="padding: 15px; margin-bottom: 15px; background-color: #2b2b33; border-radius: 8px; border: 1px solid #444;">' +
                 '<div class="row">' +
                 '<div class="col-md-2">' +
                 '<img src="' + (item.hinhAnh || '/images/default-product.jpg') + '" alt="' + (item.tenSanPham || '') + '" ' +
                 'style="width: 100%; max-width: 100px; border-radius: 8px;" onerror="this.src=\'/images/default-product.jpg\'">' +
                 '</div>' +
                 '<div class="col-md-10">' +
-                '<h6>' + (item.tenSanPham || '') + '</h6>' +
-                '<p class="text-muted mb-1">' +
+                '<h6 style="color: #ffffff;">' + (item.tenSanPham || 'N/A') + '</h6>' +
+                '<p class="text-muted mb-1" style="color: #aaa !important;">' +
                     (item.tenThuongHieu && item.tenThuongHieu !== 'N/A' ? '<strong>Thương hiệu:</strong> ' + (item.tenThuongHieu || '') + ' | ' : '') +
-                    'Model: ' + (item.tenModel || '') + ' - Màu: ' + (item.mau || '') + 
+                    (item.tenModel && item.tenModel !== 'N/A' ? '<strong>Model:</strong> ' + item.tenModel + ' - ' : '') +
+                    '<strong>Màu:</strong> ' + (item.mau || 'N/A') + 
                 '</p>' +
-                '<p class="mb-1">Số lượng: ' + (item.soLuong || 0) + '</p>' +
-                '<p class="mb-1">Đơn giá: ' + formatMoney(item.donGia || 0) + '</p>' +
-                '<p class="mb-0"><strong>Thành tiền: ' + formatMoney(item.thanhTien || 0) + '</strong></p>' +
+                specDetailHtml +
+                imeiInfoHtml +
+                '<p class="mb-1" style="color: #ffffff;">Số lượng: <strong>' + (item.soLuong || 0) + '</strong></p>' +
+                giaKhuyenMaiHtml +
+                '<p class="mb-0" style="color: #ffffff;"><strong>Thành tiền: ' + formatMoney(item.thanhTien || 0) + '</strong></p>' +
                 '</div>' +
                 '</div>' +
                 '</div>';
@@ -650,23 +1632,28 @@ function showOrderDetail(orderId) {
 }
 
 async function cancelOrder(orderId) {
-    if (!confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
+    if (!confirm('Bạn có chắc chắn muốn hủy đơn hàng này? Số lượng sản phẩm sẽ được trả lại vào kho.')) {
         return;
     }
 
     showLoading();
     try {
-        // TODO: Thêm API endpoint để hủy đơn hàng
-        // const response = await fetch('/UserProfile/CancelOrder?id=' + orderId, {
-        //     method: 'POST'
-        // });
+        const response = await fetch('/UserProfile/CancelOrder?id=' + orderId, {
+            method: 'POST',
+            credentials: 'include'
+        });
         
-        // Tạm thời chỉ reload lại danh sách
-        showAlert('success', 'Đơn hàng đã được hủy thành công!');
-        await loadOrders();
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('success', result.message || 'Hủy đơn hàng thành công! Số lượng sản phẩm đã được trả lại vào kho.');
+            await loadOrders();
+        } else {
+            showAlert('error', result.message || 'Lỗi khi hủy đơn hàng');
+        }
     } catch (error) {
         console.error('Error cancelling order:', error);
-        showAlert('error', 'Lỗi khi hủy đơn hàng');
+        showAlert('error', 'Lỗi kết nối đến server');
     } finally {
         hideLoading();
     }
@@ -1344,6 +2331,40 @@ function goToHomePage() {
     }
     // Thêm query parameter để MuaHang biết cần reload profile
     window.location.href = '/MuaHang?refreshProfile=1';
+}
+
+// ====== ORDER FUNCTIONS ======
+async function loadOrdersFromAPI() {
+    try {
+        showLoading();
+        const response = await fetch('/UserProfile/GetOrders', {
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            throw new Error('HTTP error! status: ' + response.status);
+        }
+        
+        const result = await response.json();
+        if (result && result.success && result.data) {
+            allOrdersData = result.data;
+            renderOrders();
+        } else {
+            allOrdersData = [];
+            renderOrders();
+        }
+    } catch (error) {
+        console.error('Error loading orders:', error);
+        showAlert('error', 'Lỗi khi tải danh sách đơn hàng');
+        allOrdersData = [];
+        renderOrders();
+    } finally {
+        hideLoading();
+    }
+}
+
+// Alias function để tương thích với code hiện tại
+async function loadOrders() {
+    await loadOrdersFromAPI();
 }
 
 // ====== INITIALIZATION ======

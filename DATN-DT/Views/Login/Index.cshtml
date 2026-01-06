@@ -70,8 +70,16 @@
                             localStorage.setItem('user', JSON.stringify(response.data));
                             localStorage.setItem('isAuthenticated', 'true');
                             localStorage.setItem('role', response.role.toUpperCase());
+                            
+                            // Lấy returnUrl từ query string
+                            const urlParams = new URLSearchParams(window.location.search);
+                            const returnUrl = urlParams.get('returnUrl');
+                            
+                            // Nếu có returnUrl, redirect đến đó, nếu không thì đến MuaHang
+                            const redirectUrl = returnUrl || '/MuaHang';
+                            
                             setTimeout(() => {
-                                window.location.href = '/MuaHang';
+                                window.location.href = redirectUrl;
                             }, 1000);
                         } else {
                             $('#loginMessage').html('<div class="alert alert-danger">' + response.message + '</div>');

@@ -28,6 +28,15 @@ builder.Services.AddControllersWithViews(options =>
     opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
 
+// ================= REQUEST SIZE LIMIT =================
+// Cấu hình để cho phép upload file lớn (5MB)
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 5 * 1024 * 1024; // 5MB
+    options.ValueLengthLimit = 5 * 1024 * 1024; // 5MB
+    options.MultipartHeadersLengthLimit = 5 * 1024 * 1024; // 5MB
+});
+
 // ================= DB =================
 builder.Services.AddDbContext<MyDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
@@ -52,6 +61,8 @@ builder.Services.AddScoped<IThuongHieuService, ThuongHieuService>();
 builder.Services.AddScoped<ITonKhoRepo, TonKhoRepo>();
 builder.Services.AddScoped<ITonKhoService, TonKhoService>();
 
+builder.Services.AddScoped<IModelSanPhamStatusService, ModelSanPhamStatusService>();
+
 builder.Services.AddScoped<IKhoService, KhoService>();
 
 builder.Services.AddScoped<INhanVienRepo, NhanVienRepo>();
@@ -61,6 +72,8 @@ builder.Services.AddScoped<IPinRepo, PinRepo>();
 builder.Services.AddScoped<IPinService, PinService>();
 
 builder.Services.AddScoped<IVoucherService, VoucherService>();
+
+builder.Services.AddScoped<DATN_DT.IServices.IPayOSService, DATN_DT.Services.PayOSService>();
 
 builder.Services.Configure<GhnOptions>(builder.Configuration.GetSection("GHN"));
 builder.Services.AddHttpClient<IGhnClient, GhnClient>();

@@ -190,6 +190,9 @@ namespace DATN_DT.Repos
         // PHƯƠNG THỨC MỚI: Refresh tồn kho cho model (Cách 1 bạn chọn)
         public async Task RefreshTonKhoForModel(int idModelSanPham)
         {
+            // Tính lại số lượng từ IMEI có trạng thái "Còn hàng"
+            var soLuongImei = await GetSoLuongImeiConHang(idModelSanPham);
+
             // Tìm tất cả tồn kho của model này
             var tonKhos = await _context.TonKhos
                 .Where(tk => tk.IdModelSanPham == idModelSanPham)
@@ -197,9 +200,6 @@ namespace DATN_DT.Repos
 
             if (tonKhos.Any())
             {
-                // Tính lại số lượng từ IMEI có trạng thái "Còn hàng"
-                var soLuongImei = await GetSoLuongImeiConHang(idModelSanPham);
-
                 // Cập nhật số lượng cho tất cả tồn kho của model này
                 foreach (var tonKho in tonKhos)
                 {
@@ -207,6 +207,22 @@ namespace DATN_DT.Repos
                 }
 
                 await _context.SaveChangesAsync();
+            }
+            else
+            {
+                // 🔹 Nếu không có tồn kho, tạo mới để đảm bảo status được hiển thị đúng
+                var khoMacDinh = await _context.Khos.FirstOrDefaultAsync();
+                if (khoMacDinh != null)
+                {
+                    var newTonKho = new TonKho
+                    {
+                        IdModelSanPham = idModelSanPham,
+                        IdKho = khoMacDinh.IdKho,
+                        SoLuong = soLuongImei
+                    };
+                    _context.TonKhos.Add(newTonKho);
+                    await _context.SaveChangesAsync();
+                }
             }
         }
 

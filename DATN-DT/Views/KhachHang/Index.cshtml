@@ -449,10 +449,18 @@
                                 <td><strong>#@item.IdKhachHang</strong></td>
                                 <td class="text-center">
                                     <div class="d-flex align-items-center" style="place-self:center">
-                                        <img src="@(item.DefaultImage ?? null)"
-                                             class="customer-avatar me-2"
-                                             alt="Avatar"
-                                             onerror="this.src='null'">
+                                        @if (!string.IsNullOrEmpty(item.DefaultImage))
+                                        {
+                                            <img src="@item.DefaultImage"
+                                                 class="customer-avatar me-2"
+                                                 alt="Avatar"
+                                                 onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                                            <i class="fas fa-user-circle me-2" style="display:none; font-size: 40px; color: var(--primary-color);"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-user-circle me-2" style="font-size: 40px; color: var(--primary-color);"></i>
+                                        }
                                         @item.HoTenKhachHang
                                     </div>
                                 </td>

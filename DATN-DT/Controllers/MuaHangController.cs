@@ -307,13 +307,14 @@ namespace DATN_DT.Controllers
 
                 if (hasPromotion && p.KhuyenMai.GiaTri > 0)
                 {
-                    if (p.KhuyenMai.LoaiGiam == "PhanTram")
+                    // SỬA LỖI: Sử dụng đúng giá trị từ database ("Phần trăm" và "Số tiền")
+                    if (p.KhuyenMai.LoaiGiam == "Phần trăm")
                     {
                         // Giảm theo phần trăm
                         phanTramGiam = (decimal)p.KhuyenMai.GiaTri;
                         giaSauGiam = giaGoc * (1 - phanTramGiam / 100);
                     }
-                    else if (p.KhuyenMai.LoaiGiam == "SoTien")
+                    else if (p.KhuyenMai.LoaiGiam == "Số tiền")
                     {
                         // Giảm theo số tiền
                         decimal soTienGiam = (decimal)p.KhuyenMai.GiaTri;
@@ -412,12 +413,13 @@ namespace DATN_DT.Controllers
 
                 if (hasPromotion && p.KhuyenMai.GiaTri > 0)
                 {
-                    if (p.KhuyenMai.LoaiGiam == "PhanTram")
+                    
+                    if (p.KhuyenMai.LoaiGiam == "Phần trăm")
                     {
                         phanTramGiam = (decimal)p.KhuyenMai.GiaTri;
                         giaSauGiam = giaGoc * (1 - phanTramGiam / 100);
                     }
-                    else if (p.KhuyenMai.LoaiGiam == "SoTien")
+                    else if (p.KhuyenMai.LoaiGiam == "Số tiền")
                     {
                         decimal soTienGiam = (decimal)p.KhuyenMai.GiaTri;
                         giaSauGiam = giaGoc - soTienGiam;
@@ -448,8 +450,6 @@ namespace DATN_DT.Controllers
             }).ToList();
 
             return hotProductsWithPromotion.Cast<dynamic>().ToList();
-
-            return hotProducts.Cast<dynamic>().ToList();
         }
 
         // THÊM MỚI: API lấy tất cả sản phẩm (cho bộ lọc)
@@ -459,10 +459,18 @@ namespace DATN_DT.Controllers
             try
             {
                 var products = await GetAllModelSanPhamFromDatabase();
+                // Đảm bảo luôn trả về mảng, không bao giờ null
+                if (products == null)
+                {
+                    products = new List<dynamic>();
+                }
                 return Json(products);
             }
             catch (Exception ex)
             {
+                // Log lỗi để debug
+                Console.WriteLine($"❌ Lỗi GetAllProducts: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
                 return Json(new { error = ex.Message });
             }
         }

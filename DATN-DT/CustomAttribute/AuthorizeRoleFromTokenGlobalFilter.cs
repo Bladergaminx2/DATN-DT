@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System;
 
 namespace DATN_DT.CustomAttribute
 {
@@ -28,19 +29,44 @@ namespace DATN_DT.CustomAttribute
             var token = context.HttpContext.Request.Cookies["jwt"];
             if (string.IsNullOrEmpty(token))
             {
-                context.Result = new RedirectToActionResult("AccessDenied", "Error", new { message = "Bạn cần đăng nhập." });
+                // Lấy URL hiện tại để làm returnUrl
+                var currentUrl = context.HttpContext.Request.Path + context.HttpContext.Request.QueryString;
+                context.Result = new RedirectToActionResult("AccessDenied", "Error", new { message = "Bạn cần đăng nhập.", returnUrl = currentUrl });
                 return;
             }
 
             try
             {
                 var jwtHandler = new JwtSecurityTokenHandler();
+                
+                // Kiểm tra token có thể đọc được không
+                if (!jwtHandler.CanReadToken(token))
+                {
+                    var currentUrl = context.HttpContext.Request.Path + context.HttpContext.Request.QueryString;
+                    context.Result = new RedirectToActionResult("AccessDenied", "Error", new { message = "Token không hợp lệ.", returnUrl = currentUrl });
+                    return;
+                }
+                
                 var jwtToken = jwtHandler.ReadJwtToken(token);
+                
+                // Kiểm tra token hết hạn
+                if (jwtToken.ValidTo < DateTime.UtcNow)
+                {
+                    // Token hết hạn - redirect đến Login với returnUrl
+                    var currentUrl = context.HttpContext.Request.Path + context.HttpContext.Request.QueryString;
+                    // Xóa cookie cũ
+                    context.HttpContext.Response.Cookies.Delete("jwt");
+                    // Redirect trực tiếp đến Login thay vì AccessDenied
+                    context.Result = new RedirectResult($"/Login?returnUrl={Uri.EscapeDataString(currentUrl)}");
+                    return;
+                }
+                
                 var roleClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value?.ToUpper();
 
                 if (roles.Length > 0 && !roles.Contains(roleClaim))
                 {
-                    context.Result = new RedirectToActionResult("AccessDenied", "Error", new { message = "Bạn không có quyền truy cập." });
+                    var currentUrl = context.HttpContext.Request.Path + context.HttpContext.Request.QueryString;
+                    context.Result = new RedirectToActionResult("AccessDenied", "Error", new { message = "Bạn không có quyền truy cập.", returnUrl = currentUrl });
                     return;
                 }
 
@@ -48,9 +74,14 @@ namespace DATN_DT.CustomAttribute
                 var claims = jwtToken.Claims.Select(c => new Claim(c.Type, c.Value));
                 context.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "jwt"));
             }
-            catch
+            catch (Exception ex)
             {
-                context.Result = new RedirectToActionResult("AccessDenied", "Error", new { message = "Token không hợp lệ." });
+                // Lấy URL hiện tại để làm returnUrl
+                var currentUrl = context.HttpContext.Request.Path + context.HttpContext.Request.QueryString;
+                // Xóa cookie không hợp lệ
+                context.HttpContext.Response.Cookies.Delete("jwt");
+                // Redirect trực tiếp đến Login thay vì AccessDenied
+                context.Result = new RedirectResult($"/Login?returnUrl={Uri.EscapeDataString(currentUrl)}");
             }
         }
     }
