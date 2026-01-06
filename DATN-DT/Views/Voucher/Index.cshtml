@@ -689,38 +689,47 @@
             const soLuongMoiKhachValue = SoLuongMoiKhachHang.value ? parseInt(SoLuongMoiKhachHang.value) : null;
             const soLuongMoiKhachFinal = (soLuongMoiKhachValue !== null && soLuongMoiKhachValue > 0) ? soLuongMoiKhachValue : null;
 
+            // Format ngày tháng đúng định dạng ISO
+            const ngayBatDauDate = new Date(NgayBatDau.value);
+            const ngayKetThucDate = new Date(NgayKetThuc.value);
+
             const voucher = {
                 MaVoucher: MaVoucher.value.trim(),
                 TenVoucher: TenVoucher.value.trim(),
                 MoTa: MoTa.value.trim() || null,
                 LoaiGiam: LoaiGiam.value,
                 GiaTri: giaTriValue,
-                DonHangToiThieu: DonHangToiThieu.value ? parseFloat(DonHangToiThieu.value) : null,
-                GiamToiDa: GiamToiDa.value && LoaiGiam.value === "PhanTram" ? parseFloat(GiamToiDa.value) : null,
-                SoLuongSuDung: SoLuongSuDung.value ? parseInt(SoLuongSuDung.value) : null,
+                DonHangToiThieu: DonHangToiThieu.value && parseFloat(DonHangToiThieu.value) > 0 ? parseFloat(DonHangToiThieu.value) : null,
+                GiamToiDa: GiamToiDa.value && LoaiGiam.value === "PhanTram" && parseFloat(GiamToiDa.value) > 0 ? parseFloat(GiamToiDa.value) : null,
+                SoLuongSuDung: SoLuongSuDung.value && parseInt(SoLuongSuDung.value) > 0 ? parseInt(SoLuongSuDung.value) : null,
                 SoLuongMoiKhachHang: soLuongMoiKhachFinal,
-                NgayBatDau: new Date(NgayBatDau.value),
-                NgayKetThuc: new Date(NgayKetThuc.value),
+                NgayBatDau: ngayBatDauDate.toISOString(),
+                NgayKetThuc: ngayKetThucDate.toISOString(),
                 TrangThai: "HoatDong"
             };
 
-            const response = await fetch('/Voucher/Create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(voucher)
-            });
+            console.log('Sending voucher data:', voucher);
 
-            const data = await response.json();
+            try {
+                const response = await fetch('/Voucher/Create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(voucher)
+                });
 
-            if (response.ok && data.success) {
-                alert("Thêm voucher thành công!");
-                location.reload();
-            } else {
-                if (data.message) {
-                    alert(data.message);
+                const data = await response.json();
+
+                if (response.ok && (data.success || data.Success)) {
+                    alert(data.message || "Thêm voucher thành công!");
+                    location.reload();
                 } else {
-                    alert("Không thể thêm voucher. Vui lòng thử lại!");
+                    const errorMessage = data.message || data.Message || "Không thể thêm voucher. Vui lòng thử lại!";
+                    alert(errorMessage);
+                    console.error('Create voucher error:', data);
                 }
+            } catch (error) {
+                console.error('Error creating voucher:', error);
+                alert("Lỗi kết nối server. Vui lòng thử lại!");
             }
         });
 

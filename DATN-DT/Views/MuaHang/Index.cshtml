@@ -344,26 +344,19 @@
         /* Main Content */
         .main-content {
             min-height: calc(100vh - 100px);
-            padding: 40px 30px;
-            max-width: 1600px;
-            margin: 0 auto;
-            width: 100%;
-            background: linear-gradient(180deg, #12121d 0%, #1a1a24 100%);
+            padding: 30px;
         }
 
         /* Welcome Banner */
         .welcome-banner {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #667eea 100%);
-            background-size: 200% 200%;
-            animation: gradientShift 8s ease infinite;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 80px 40px;
-            border-radius: 25px;
-            margin-bottom: 50px;
+            padding: 60px 40px;
+            border-radius: 20px;
+            margin-bottom: 40px;
             text-align: center;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
         }
 
             .welcome-banner::before {
@@ -375,228 +368,100 @@
                 height: 200%;
                 background: rgba(255, 255, 255, 0.1);
                 transform: rotate(30deg);
-                animation: rotate 20s linear infinite;
-            }
-
-            .welcome-banner::after {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: radial-gradient(circle at 30% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-                z-index: 1;
             }
 
             .welcome-banner h1 {
-                font-size: 52px;
+                font-size: 48px;
                 margin-bottom: 20px;
-                font-weight: 800;
+                font-weight: bold;
                 position: relative;
-                z-index: 2;
-                text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-                letter-spacing: -1px;
             }
 
             .welcome-banner p {
-                font-size: 20px;
-                opacity: 0.95;
-                max-width: 700px;
+                font-size: 18px;
+                opacity: 0.9;
+                max-width: 600px;
                 margin: 0 auto;
                 position: relative;
-                z-index: 2;
-                line-height: 1.6;
-                text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
             }
-
-        @@keyframes gradientShift {
-            0% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
-            100% {
-                background-position: 0% 50%;
-            }
-        }
-
-        @@keyframes rotate {
-            from {
-                transform: rotate(0deg);
-            }
-            to {
-                transform: rotate(360deg);
-            }
-        }
 
         /* Products Section */
         .products-section {
-            margin-bottom: 60px;
-            margin-top: 40px;
-            width: 100%;
-            padding: 30px;
-            background: rgba(30, 30, 42, 0.3);
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(102, 126, 234, 0.1);
-            transition: all 0.3s;
-        }
-
-        .products-section:hover {
-            border-color: rgba(102, 126, 234, 0.3);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-        }
-
-        .products-section-wrapper {
-            width: 100%;
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 0 30px;
+            margin-bottom: 50px;
         }
 
         .section-title {
-            color: #ffffff;
-            font-size: 32px;
-            margin-bottom: 35px;
+            color: white;
+            font-size: 28px;
+            margin-bottom: 30px;
             display: flex;
             align-items: center;
             gap: 15px;
-            font-weight: 700;
-            position: relative;
-            padding-bottom: 15px;
         }
-
-            .section-title::after {
-                content: '';
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                width: 80px;
-                height: 4px;
-                background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-                border-radius: 2px;
-            }
 
             .section-title i {
                 color: #667eea;
-                font-size: 28px;
-                background: rgba(102, 126, 234, 0.1);
-                padding: 10px;
-                border-radius: 12px;
             }
 
         .products-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 30px;
-            width: 100%;
-            padding: 10px 0;
-        }
-
-        #filteredProductsGrid {
-            width: 100%;
-        }
-
-        @@media (max-width: 1400px) {
-            .products-grid {
-                grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-                gap: 25px;
-            }
-        }
-
-        @@media (max-width: 1200px) {
-            .products-grid {
-                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-                gap: 20px;
-            }
+            gap: 25px;
         }
 
         .product-card {
-            background: linear-gradient(135deg, #36363f 0%, #2b2b33 100%);
-            border-radius: 20px;
+            background-color: #36363f;
+            border-radius: 15px;
             overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: transform 0.3s;
             cursor: pointer;
-            border: 2px solid transparent;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            position: relative;
+            border: 1px solid transparent;
         }
 
-            .product-card::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-                opacity: 0;
-                transition: opacity 0.4s;
-                z-index: 1;
-            }
-
             .product-card:hover {
-                transform: translateY(-10px) scale(1.02);
+                transform: translateY(-5px);
                 border-color: #667eea;
-                box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
-            }
-
-            .product-card:hover::before {
-                opacity: 1;
-            }
-
-            .product-card:hover .product-image img {
-                transform: scale(1.1);
             }
 
         .product-image {
             width: 100%;
-            height: 250px;
-            background: linear-gradient(135deg, #2b2b33 0%, #1e1e2a 100%);
+            height: 200px;
+            background-color: #2b2b33;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
             position: relative;
-            z-index: 2;
         }
 
             .product-image img {
-                max-width: 85%;
-                max-height: 85%;
+                max-width: 80%;
+                max-height: 80%;
                 object-fit: contain;
-                transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             }
 
-        /* Tags cho sản phẩm */
+        /* THAY ĐỔI: Chỉ hiển thị "HOT" thay vì "Đã bán: X" */
         .hot-tag {
             position: absolute;
-            top: 12px;
-            left: 12px;
-            background: linear-gradient(135deg, #ff4757 0%, #ee5a6f 100%);
+            top: 10px;
+            left: 10px;
+            background-color: #ff4757;
             color: white;
-            padding: 8px 14px;
-            border-radius: 25px;
+            padding: 5px 10px;
+            border-radius: 4px;
             font-size: 12px;
             font-weight: bold;
-            box-shadow: 0 4px 10px rgba(255, 71, 87, 0.4);
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            animation: pulse 2s infinite;
         }
 
+        /* Tag Giá rẻ */
         .cheap-tag {
             position: absolute;
-            top: 12px;
-            left: 12px;
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            top: 10px;
+            left: 10px;
+            background-color: #28a745;
             color: white;
-            padding: 8px 14px;
-            border-radius: 25px;
+            padding: 5px 10px;
+            border-radius: 4px;
             font-size: 12px;
             font-weight: bold;
             box-shadow: 0 4px 10px rgba(40, 167, 69, 0.4);
@@ -765,49 +630,28 @@
 
         .product-info {
             padding: 20px;
-            position: relative;
-            z-index: 2;
-            background: linear-gradient(180deg, transparent 0%, #36363f 100%);
         }
 
             .product-info h4 {
-                color: #ffffff;
-                margin-bottom: 12px;
+                color: white;
+                margin-bottom: 10px;
                 font-size: 18px;
-                font-weight: 600;
-                height: 54px;
+                height: 50px;
                 overflow: hidden;
-                line-height: 1.5;
-                transition: color 0.3s;
-            }
-
-            .product-card:hover .product-info h4 {
-                color: #667eea;
             }
 
         .product-price {
             color: #667eea;
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            margin-bottom: 15px;
         }
 
         .product-brand {
-            color: #b0b0b0;
+            color: #aaa;
             font-size: 14px;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            margin-bottom: 10px;
         }
-
-            .product-brand i {
-                color: #667eea;
-                font-size: 12px;
-            }
 
         /* THAY ĐỔI: Xóa nút "Thêm vào giỏ hàng" */
         /* Đã xóa .btn-add-to-cart */
@@ -821,32 +665,6 @@
                 color: #667eea;
                 transition: color 0.3s;
             }
-
-        /* Empty state styling */
-        .empty-state {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 60px 20px;
-            color: #aaa;
-        }
-
-        .empty-state i {
-            font-size: 64px;
-            margin-bottom: 20px;
-            color: #667eea;
-            opacity: 0.5;
-        }
-
-        .empty-state h4 {
-            color: #ddd;
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-
-        .empty-state p {
-            color: #888;
-            font-size: 16px;
-        }
 
         /* Cart Modal */
         .cart-modal {
@@ -1015,6 +833,10 @@
 
             .section-title {
                 font-size: 24px;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
             }
 
             .cart-modal {
@@ -1556,46 +1378,33 @@
             </div>
         </div>
 
-        <!-- ========== CÁC SECTION SẢN PHẨM KHÁC ========== -->
-        <div class="products-section-wrapper">
-            <!-- Sản phẩm thịnh hành -->
-            <div class="products-section">
-                <h2 class="section-title">
-                    <i class="fas fa-fire"></i> Sản phẩm thịnh hành
-                </h2>
-                <div class="products-grid" id="popularProductsGrid">
-                    <!-- Popular products will be loaded from JavaScript -->
-                </div>
+        <!-- Sản phẩm bán chạy -->
+        <div class="products-section">
+            <h2 class="section-title">
+                <i class="fas fa-chart-line"></i> Sản phẩm bán chạy
+            </h2>
+            <div class="products-grid" id="bestSellingProductsGrid">
+                <!-- Best selling products will be loaded from JavaScript -->
             </div>
+        </div>
 
-            <!-- Sản phẩm bán chạy -->
-            <div class="products-section">
-                <h2 class="section-title">
-                    <i class="fas fa-chart-line"></i> Sản phẩm bán chạy
-                </h2>
-                <div class="products-grid" id="bestSellingProductsGrid">
-                    <!-- Best selling products will be loaded from JavaScript -->
-                </div>
+        <!-- Sản phẩm giá rẻ -->
+        <div class="products-section">
+            <h2 class="section-title">
+                <i class="fas fa-tags"></i> Sản phẩm giá rẻ
+            </h2>
+            <div class="products-grid" id="cheapProductsGrid">
+                <!-- Cheap products will be loaded from JavaScript -->
             </div>
+        </div>
 
-            <!-- Sản phẩm giá rẻ -->
-            <div class="products-section">
-                <h2 class="section-title">
-                    <i class="fas fa-tags"></i> Sản phẩm giá rẻ
-                </h2>
-                <div class="products-grid" id="cheapProductsGrid">
-                    <!-- Cheap products will be loaded from JavaScript -->
-                </div>
-            </div>
-
-            <!-- Sản phẩm giảm giá -->
-            <div class="products-section">
-                <h2 class="section-title">
-                    <i class="fas fa-fire"></i> 🔥 Sản phẩm giảm giá
-                </h2>
-                <div class="products-grid" id="discountedProductsGrid">
-                    <!-- Discounted products will be loaded from JavaScript -->
-                </div>
+        <!-- Sản phẩm giảm giá -->
+        <div class="products-section">
+            <h2 class="section-title">
+                <i class="fas fa-fire"></i> 🔥 Sản phẩm giảm giá
+            </h2>
+            <div class="products-grid" id="discountedProductsGrid">
+                <!-- Discounted products will be loaded from JavaScript -->
             </div>
         </div>
 

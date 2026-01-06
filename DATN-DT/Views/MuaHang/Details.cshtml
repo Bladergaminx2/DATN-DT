@@ -20,7 +20,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
     <style>
-        /* GIỮ NGUYÊN MÀU SẮC VÀ BIẾN NHƯ TRANG INDEX */
         :root {
             --primary-color: #667eea;
             --secondary-color: #764ba2;
@@ -40,7 +39,6 @@
             overflow-x: hidden;
         }
 
-        /* Header Styles - GIỐNG NHƯ TRANG INDEX */
         header {
             background-color: var(--card-bg);
             height: 100px;
@@ -152,31 +150,6 @@
                 transform: scale(1.1);
             }
 
-            /* Avatar trong user-icon */
-            .user-icon .user-avatar {
-                width: 60px;
-                height: 60px;
-                border-radius: 50%;
-                object-fit: cover;
-                border: 2px solid #4a90e2;
-                display: none;
-                cursor: pointer;
-                transition: all 0.3s;
-            }
-
-            .user-icon:hover .user-avatar {
-                transform: scale(1.1);
-                border-color: #fff;
-            }
-
-            .user-icon.has-avatar i {
-                display: none !important;
-            }
-
-            .user-icon.has-avatar .user-avatar {
-                display: block !important;
-            }
-
         .cart-count {
             position: absolute;
             top: 5px;
@@ -194,7 +167,6 @@
             border: 2px solid #36363f;
         }
 
-        /* Main Content - ĐIỀU CHỈNH ĐỂ GIỐNG INDEX */
         .main-content {
             min-height: calc(100vh - 100px);
             padding: 30px;
@@ -221,7 +193,6 @@
             font-size: 16px;
         }
 
-        /* Product Detail Container - Liền một khối */
         .product-detail-container {
             background-color: var(--card-bg);
             border-radius: 20px;
@@ -236,7 +207,6 @@
             gap: 0;
         }
 
-        /* Hình ảnh sản phẩm - Cột trái */
         .product-images-section {
             padding: 40px;
             background-color: rgba(0, 0, 0, 0.1);
@@ -280,7 +250,6 @@
                 transform: scale(1.08);
             }
 
-        /* Thông tin sản phẩm - Cột phải */
         .product-info-section {
             padding: 40px;
         }
@@ -380,7 +349,6 @@
             font-size: 16px;
         }
 
-        /* Color Selection - MÀU CHỮ TRẮNG */
         .color-selection {
             margin-bottom: 25px;
         }
@@ -416,7 +384,6 @@
                 transform: translateY(-2px);
             }
 
-        /* Quantity Selector - MÀU CHỮ TRẮNG */
         .quantity-selector {
             display: flex;
             align-items: center;
@@ -504,7 +471,6 @@
                 transform: translateY(-3px);
             }
 
-        /* Thông số kỹ thuật - Nằm ngay dưới 2 cột, cùng container */
         .specifications-section {
             padding: 40px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -545,7 +511,6 @@
             font-size: 16px;
         }
 
-        /* Phần Mô tả sản phẩm (nằm dưới cùng, cùng container) */
         .description-section {
             padding: 40px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -818,15 +783,12 @@
     </style>
 </head>
 <body>
-    <!-- Header - GIỐNG NHƯ TRANG INDEX -->
     <header>
         <div class="header-left">
-            <!-- Logo -->
             <div class="logo" onclick="goToHomePage()">
                 <img src="~/ImgResource/LogoPhoneTech.png" alt="Logo PhoneTech" />
             </div>
 
-            <!-- Search Box ở giữa -->
             <div class="search-container">
                 <div class="search-box">
                     <input type="text" placeholder="Tìm kiếm sản phẩm..." id="searchInput">
@@ -845,12 +807,8 @@
                 <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                 <span class="cart-count" id="cartCount" aria-live="polite">0</span>
             </div>
-            <div class="user-icon" id="userIcon" onclick="goToUserProfile()" role="button" tabindex="0"
-                 onkeypress="if(event.key==='Enter') goToUserProfile()"
-                 aria-label="Xem thông tin tài khoản">
-                <i class="fas fa-user-circle" aria-hidden="true"></i>
-                <img class="user-avatar" id="userAvatar" src="" alt="User Avatar" 
-                     onerror="this.style.display='none'; const icon = this.parentElement.querySelector('i'); if(icon) icon.style.display='flex';">
+            <div class="user-icon" onclick="goToUserProfile()">
+                <i class="fas fa-user-circle"></i>
             </div>
         </div>
     </header>
@@ -880,11 +838,8 @@
         }
         else
         {
-            <!-- Product Detail Container - Tất cả trong một khối -->
             <div class="product-detail-container">
-                <!-- Grid 2 cột trên cùng -->
                 <div class="product-detail-grid">
-                    <!-- Hình ảnh sản phẩm - Cột trái -->
                     <div class="product-images-section">
                         @if (product.AnhSanPhams != null && (product.AnhSanPhams as IEnumerable<dynamic>).Any())
                         {
@@ -910,9 +865,7 @@
                         }
                     </div>
 
-                    <!-- Thông tin sản phẩm - Cột phải -->
                     <div class="product-info-section">
-                        <!-- Product Title & Brand -->
                         <h1 class="product-title">@product.TenModel</h1>
                         <div class="product-brand">
                             <i class="fas fa-tag"></i> @product.TenThuongHieu
@@ -922,7 +875,6 @@
                             }
                         </div>
 
-                        <!-- Price Section -->
                         <div class="price-section">
                             <div class="d-flex align-items-center flex-wrap">
                                 <span class="current-price">
@@ -946,7 +898,6 @@
                             }
                         </div>
 
-                        <!-- Stock Information -->
                         <div class="stock-info">
                             <div class="stock-badge @(product.SoLuongTon > 0 ? "in-stock" : "out-of-stock")">
                                 <i class="fas fa-@(product.SoLuongTon > 0 ? "check-circle" : "times-circle")"></i>
@@ -964,7 +915,6 @@
                             </div>
                         </div>
 
-                        <!-- Color Selection - MÀU CHỮ TRẮNG -->
                         <div class="color-selection">
                             <span class="color-label">Màu sắc:</span>
                             <div class="color-options">
@@ -974,7 +924,6 @@
                             </div>
                         </div>
 
-                        <!-- Quantity Selector - MÀU CHỮ TRẮNG -->
                         <div class="quantity-selector">
                             <span class="quantity-label">Số lượng:</span>
                                 <div class="quantity-controls">
@@ -996,25 +945,16 @@
                             </div>
                         </div>
 
-                        <!-- Action Buttons -->
                         <div class="action-buttons">
                             <button class="btn btn-primary" onclick="addToCart(event)"
                             @(product.SoLuongTon <= 0 ? "disabled" : "")
                             aria-label="Thêm sản phẩm vào giỏ hàng"
                             @(product.SoLuongTon <= 0 ? "aria-disabled=\"true\"" : "")>
-                                <i class="fas fa-shopping-cart" aria-hidden="true"></i> Thêm vào giỏ hàng
-                            </button>
-                            <button class="btn btn-secondary" onclick="buyNow(event)"
-                            @(product.SoLuongTon <= 0 ? "disabled" : "")
-                            aria-label="Mua ngay sản phẩm này"
-                            @(product.SoLuongTon <= 0 ? "aria-disabled=\"true\"" : "")>
-                                <i class="fas fa-bolt" aria-hidden="true"></i> Mua ngay
-                            </button>
+                               <i class="fas fa-shopping-cart" aria-hidden="true"></i> Thêm vào giỏ hàng
                         </div>
                     </div>
                 </div>
 
-                <!-- Thông số kỹ thuật - Nằm ngay dưới 2 cột, cùng container -->
                 <div class="specifications-section">
                     <h3 class="section-title">
                         <i class="fas fa-microchip"></i> Thông số kỹ thuật
@@ -1068,7 +1008,6 @@
                     </div>
                 </div>
 
-                <!-- Phần Mô tả sản phẩm (nằm dưới cùng, cùng container) -->
                 <div class="description-section">
                     <h3 class="section-title"><i class="fas fa-info-circle"></i> Mô tả sản phẩm</h3>
                     <div class="description-content">
@@ -1087,7 +1026,6 @@
                 </div>
             </div>
 
-            <!-- Suggested Products -->
             @if (suggestedProducts != null && suggestedProducts.Any())
             {
                 <div class="suggested-products">
@@ -1140,7 +1078,6 @@
             }
 
             updateCartCount();
-            loadUserProfile();
 
             // Set max quantity based on stock
             const quantityInput = document.getElementById('quantity');

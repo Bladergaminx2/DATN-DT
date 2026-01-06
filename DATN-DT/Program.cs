@@ -71,6 +71,9 @@ builder.Services.AddScoped<INhanVienService, NhanVienService>();
 builder.Services.AddScoped<IPinRepo, PinRepo>();
 builder.Services.AddScoped<IPinService, PinService>();
 
+builder.Services.AddScoped<IChucVuRepo, ChucVuRepo>();
+builder.Services.AddScoped<IChucVuService, ChucVuService>();
+
 builder.Services.AddScoped<IVoucherService, VoucherService>();
 
 builder.Services.AddScoped<DATN_DT.IServices.IPayOSService, DATN_DT.Services.PayOSService>();
