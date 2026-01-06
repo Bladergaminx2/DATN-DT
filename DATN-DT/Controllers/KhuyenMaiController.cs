@@ -247,11 +247,20 @@ namespace DATN_DT.Controllers
                     });
                 }
 
+                Console.WriteLine($"[KhuyenMai] ValidateProducts: {request.ProductIds.Count} sản phẩm, {conflicts.Count} xung đột");
+                
                 return Ok(new { valid = true, message = "" });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { valid = false, message = "Lỗi: " + ex.Message });
+                Console.WriteLine($"[KhuyenMai] Lỗi khi validate sản phẩm: {ex.Message}");
+                Console.WriteLine($"[KhuyenMai] Stack trace: {ex.StackTrace}");
+                
+                return StatusCode(500, new { 
+                    valid = false, 
+                    message = "Lỗi hệ thống khi kiểm tra sản phẩm. Vui lòng thử lại!",
+                    error = ex.Message 
+                });
             }
         }
 
@@ -384,17 +393,35 @@ namespace DATN_DT.Controllers
                         if (modelSanPham == null)
                             continue;
 
-                        // Lấy giá gốc hiện tại
-                        var giaGocHienTai = modelSanPham.GiaBanModel ?? 0;
                         var sanPham = modelSanPham.SanPham;
                         
-                        // Lưu giá gốc vào SanPham.GiaGoc nếu chưa có
-                        if (sanPham != null)
+                        // SỬA LỖI: Lấy giá gốc từ SanPham.GiaGoc trước, nếu chưa có thì mới lấy GiaBanModel
+                        decimal giaGocHienTai = 0;
+                        if (sanPham != null && sanPham.GiaGoc.HasValue && sanPham.GiaGoc > 0)
                         {
-                            if (!sanPham.GiaGoc.HasValue || sanPham.GiaGoc == 0)
+                            // Nếu đã có giá gốc, dùng giá gốc
+                            giaGocHienTai = sanPham.GiaGoc.Value;
+                        }
+                        else
+                        {
+                            // Nếu chưa có giá gốc, lấy từ GiaBanModel hiện tại
+                            giaGocHienTai = modelSanPham.GiaBanModel ?? 0;
+                            
+                            // Lưu giá gốc vào SanPham.GiaGoc nếu chưa có
+                            if (sanPham != null && giaGocHienTai > 0)
                             {
                                 sanPham.GiaGoc = giaGocHienTai;
                             }
+                        }
+
+                        // Kiểm tra sản phẩm có giá hợp lệ không
+                        if (giaGocHienTai <= 0)
+                        {
+                            // Xóa khuyến mãi vừa tạo
+                            _context.KhuyenMais.Remove(khuyenMai);
+                            await _context.SaveChangesAsync();
+                            
+                            return BadRequest(new { message = $"Sản phẩm {modelSanPham.TenModel ?? "N/A"} không có giá hợp lệ! Vui lòng kiểm tra lại giá sản phẩm." });
                         }
 
                         // Kiểm tra giá trị giảm nếu là số tiền
@@ -406,7 +433,7 @@ namespace DATN_DT.Controllers
                                 _context.KhuyenMais.Remove(khuyenMai);
                                 await _context.SaveChangesAsync();
                                 
-                                return BadRequest(new { message = $"Giá trị giảm ({khuyenMai.GiaTri:N0} VNĐ) vượt quá giá bán của sản phẩm ({giaGocHienTai:N0} VNĐ)!" });
+                                return BadRequest(new { message = $"Giá trị giảm ({khuyenMai.GiaTri:N0} VNĐ) vượt quá giá gốc của sản phẩm {modelSanPham.TenModel ?? "N/A"} ({giaGocHienTai:N0} VNĐ)!" });
                             }
                         }
 
@@ -432,8 +459,14 @@ namespace DATN_DT.Controllers
             }
             catch (Exception ex)
             {
-                // Log exception (ex)
-                return StatusCode(500, new { message = "Lỗi khi thêm Khuyến Mãi. Vui lòng thử lại!" });
+                // Log exception chi tiết để debug
+                Console.WriteLine($"[KhuyenMai] Lỗi khi tạo khuyến mãi: {ex.Message}");
+                Console.WriteLine($"[KhuyenMai] Stack trace: {ex.StackTrace}");
+                
+                return StatusCode(500, new { 
+                    message = "Lỗi hệ thống khi thêm Khuyến Mãi. Vui lòng thử lại!",
+                    error = ex.Message 
+                });
             }
         }
 
@@ -523,34 +556,88 @@ namespace DATN_DT.Controllers
                     .Where(mspkm => mspkm.IdKhuyenMai == id)
                     .ToListAsync();
 
+                var skippedProducts = new List<string>();
+                var updatedCount = 0;
+                
                 foreach (var link in productsWithPromotion)
                 {
                     var modelSanPham = link.ModelSanPham;
                     if (modelSanPham != null)
                     {
                         var sanPham = modelSanPham.SanPham;
-                        // Lấy giá gốc từ SanPham.GiaGoc hoặc giá hiện tại
-                        var giaGoc = sanPham?.GiaGoc ?? modelSanPham.GiaBanModel ?? 0;
                         
-                        // Lưu giá gốc vào SanPham.GiaGoc nếu chưa có
-                        if (sanPham != null && (!sanPham.GiaGoc.HasValue || sanPham.GiaGoc == 0))
+                        // SỬA LỖI: Lấy giá gốc từ SanPham.GiaGoc trước, nếu chưa có thì mới lấy GiaBanModel
+                        decimal giaGoc = 0;
+                        if (sanPham != null && sanPham.GiaGoc.HasValue && sanPham.GiaGoc > 0)
                         {
-                            sanPham.GiaGoc = giaGoc;
+                            // Nếu đã có giá gốc, dùng giá gốc
+                            giaGoc = sanPham.GiaGoc.Value;
+                        }
+                        else
+                        {
+                            // Nếu chưa có giá gốc, lấy từ GiaBanModel hiện tại (có thể đã bị giảm)
+                            giaGoc = modelSanPham.GiaBanModel ?? 0;
+                            
+                            // Lưu giá gốc vào SanPham.GiaGoc nếu chưa có
+                            if (sanPham != null && giaGoc > 0)
+                            {
+                                sanPham.GiaGoc = giaGoc;
+                            }
+                        }
+                        
+                        // Kiểm tra sản phẩm có giá hợp lệ không
+                        if (giaGoc <= 0)
+                        {
+                            skippedProducts.Add($"{modelSanPham.TenModel ?? "N/A"} (không có giá hợp lệ)");
+                            Console.WriteLine($"[KhuyenMai] Bỏ qua sản phẩm {modelSanPham.TenModel} vì không có giá hợp lệ");
+                            continue;
+                        }
+                        
+                        // Kiểm tra giá trị giảm có hợp lý không (nếu là số tiền)
+                        if (existing.LoaiGiam == "Số tiền" && existing.GiaTri.HasValue)
+                        {
+                            if (existing.GiaTri > giaGoc)
+                            {
+                                skippedProducts.Add($"{modelSanPham.TenModel ?? "N/A"} (giá trị giảm {existing.GiaTri:N0}₫ vượt quá giá gốc {giaGoc:N0}₫)");
+                                Console.WriteLine($"[KhuyenMai] Bỏ qua sản phẩm {modelSanPham.TenModel} vì giá trị giảm vượt quá giá gốc");
+                                continue;
+                            }
                         }
                         
                         // Tính lại giá sau khuyến mãi và cập nhật
                         var giaSauGiam = CalculateDiscountedPrice(giaGoc, existing.LoaiGiam, existing.GiaTri);
                         modelSanPham.GiaBanModel = giaSauGiam;
+                        updatedCount++;
                     }
                 }
 
                 await _context.SaveChangesAsync();
 
-                return Ok(new { message = "Cập nhật Khuyến Mãi thành công! Giá của các sản phẩm đã được cập nhật." });
+                var message = $"Cập nhật Khuyến Mãi thành công! Giá của {updatedCount} sản phẩm đã được cập nhật.";
+                if (skippedProducts.Any())
+                {
+                    message += $" {skippedProducts.Count} sản phẩm đã bị bỏ qua do giá trị giảm không hợp lệ.";
+                }
+                
+                Console.WriteLine($"[KhuyenMai] Đã cập nhật khuyến mãi {existing.MaKM}: {updatedCount} sản phẩm được cập nhật, {skippedProducts.Count} sản phẩm bị bỏ qua");
+                
+                return Ok(new { 
+                    message = message,
+                    updatedProductsCount = updatedCount,
+                    skippedProductsCount = skippedProducts.Count,
+                    skippedProducts = skippedProducts.Any() ? skippedProducts : null
+                });
             }
-            catch
+            catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Lỗi khi cập nhật Khuyến Mãi. Vui lòng thử lại!" });
+                // Log lỗi chi tiết để debug
+                Console.WriteLine($"[KhuyenMai] Lỗi khi cập nhật khuyến mãi {id}: {ex.Message}");
+                Console.WriteLine($"[KhuyenMai] Stack trace: {ex.StackTrace}");
+                
+                return StatusCode(500, new { 
+                    message = "Lỗi hệ thống khi cập nhật Khuyến Mãi. Vui lòng thử lại!",
+                    error = ex.Message 
+                });
             }
         }
 
@@ -610,11 +697,24 @@ namespace DATN_DT.Controllers
                 // Xóa khuyến mãi
                 _context.KhuyenMais.Remove(existing);
                 await _context.SaveChangesAsync();
-                return Ok(new { message = "Xóa Khuyến Mãi thành công! Giá của các sản phẩm đã được khôi phục." });
+                var restoredProductsCount = productsWithPromotion.Count;
+                Console.WriteLine($"[KhuyenMai] Đã xóa khuyến mãi {existing.MaKM} và khôi phục giá cho {restoredProductsCount} sản phẩm");
+                
+                return Ok(new { 
+                    message = $"Xóa Khuyến Mãi thành công! Giá của {restoredProductsCount} sản phẩm đã được khôi phục.",
+                    restoredProductsCount = restoredProductsCount
+                });
             }
-            catch
+            catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Lỗi khi xóa Khuyến Mãi. Vui lòng thử lại!" });
+                // Log lỗi chi tiết để debug
+                Console.WriteLine($"[KhuyenMai] Lỗi khi xóa khuyến mãi {id}: {ex.Message}");
+                Console.WriteLine($"[KhuyenMai] Stack trace: {ex.StackTrace}");
+                
+                return StatusCode(500, new { 
+                    message = "Lỗi hệ thống khi xóa Khuyến Mãi. Vui lòng thử lại!",
+                    error = ex.Message 
+                });
             }
         }
 
@@ -671,27 +771,59 @@ namespace DATN_DT.Controllers
                         && now <= mspkm.KhuyenMai.NgayKetThuc.Value.Date)
                     .ToListAsync();
 
+                // Lấy thông tin SanPham trước
+                var sanPham = await _context.SanPhams.FindAsync(modelSanPham.IdSanPham);
+                
+                // SỬA LỖI: Lấy giá gốc từ SanPham.GiaGoc trước, nếu chưa có thì mới lấy GiaBanModel
+                decimal giaGocHienTai = 0;
+                if (sanPham != null && sanPham.GiaGoc.HasValue && sanPham.GiaGoc > 0)
+                {
+                    // Nếu đã có giá gốc, dùng giá gốc
+                    giaGocHienTai = sanPham.GiaGoc.Value;
+                }
+                else
+                {
+                    // Nếu chưa có giá gốc, lấy từ GiaBanModel hiện tại (có thể đã bị giảm)
+                    giaGocHienTai = modelSanPham.GiaBanModel ?? 0;
+                    
+                    // Lưu giá gốc vào SanPham.GiaGoc nếu chưa có
+                    if (sanPham != null && giaGocHienTai > 0)
+                    {
+                        sanPham.GiaGoc = giaGocHienTai;
+                    }
+                }
+
+                // CẢI THIỆN: Thông báo chi tiết khi sản phẩm đang có khuyến mãi active
                 if (activePromotionsForProduct.Any())
                 {
+                    // SỬA LỖI: Khôi phục giá gốc trước khi remove khuyến mãi cũ
+                    if (sanPham != null && sanPham.GiaGoc.HasValue && sanPham.GiaGoc > 0)
+                    {
+                        modelSanPham.GiaBanModel = sanPham.GiaGoc.Value;
+                    }
+                    
+                    // Thu thập thông tin khuyến mãi cũ để thông báo
+                    var oldPromotionInfo = activePromotionsForProduct.Select(op => new
+                    {
+                        MaKM = op.KhuyenMai?.MaKM ?? "N/A",
+                        NgayBatDau = op.KhuyenMai?.NgayBatDau?.ToString("dd/MM/yyyy") ?? "N/A",
+                        NgayKetThuc = op.KhuyenMai?.NgayKetThuc?.ToString("dd/MM/yyyy") ?? "N/A"
+                    }).ToList();
+                    
                     // Tự động remove khuyến mãi cũ và thêm khuyến mãi mới
                     foreach (var oldPromotion in activePromotionsForProduct)
                     {
                         _context.ModelSanPhamKhuyenMais.Remove(oldPromotion);
                     }
+                    
+                    // Log thông tin để debug
+                    Console.WriteLine($"[KhuyenMai] Sản phẩm {modelSanPham.TenModel} đã được chuyển từ {oldPromotionInfo.Count} khuyến mãi cũ sang khuyến mãi mới {khuyenMai.MaKM}");
                 }
 
-                // Lấy giá gốc hiện tại (từ ModelSanPham hoặc SanPham)
-                var giaGocHienTai = modelSanPham.GiaBanModel ?? 0;
-                var sanPham = await _context.SanPhams.FindAsync(modelSanPham.IdSanPham);
-                
-                // Lưu giá gốc vào SanPham.GiaGoc nếu chưa có hoặc nếu giá hiện tại khác với giá gốc
-                if (sanPham != null)
+                // Kiểm tra sản phẩm có giá hợp lệ không
+                if (giaGocHienTai <= 0)
                 {
-                    if (!sanPham.GiaGoc.HasValue || sanPham.GiaGoc == 0)
-                    {
-                        sanPham.GiaGoc = giaGocHienTai;
-                    }
-                    // Nếu giá hiện tại khác với giá gốc, có thể đang có khuyến mãi khác, giữ nguyên giá gốc
+                    return BadRequest(new { message = "Sản phẩm không có giá hợp lệ! Vui lòng kiểm tra lại giá sản phẩm." });
                 }
 
                 // VẤN ĐỀ 2: Kiểm tra giá trị giảm có hợp lý không (nếu là số tiền)
@@ -699,7 +831,7 @@ namespace DATN_DT.Controllers
                 {
                     if (khuyenMai.GiaTri > giaGocHienTai)
                     {
-                        return BadRequest(new { message = $"Giá trị giảm ({khuyenMai.GiaTri:N0} VNĐ) không được vượt quá giá bán của sản phẩm ({giaGocHienTai:N0} VNĐ)!" });
+                        return BadRequest(new { message = $"Giá trị giảm ({khuyenMai.GiaTri:N0} VNĐ) không được vượt quá giá gốc của sản phẩm ({giaGocHienTai:N0} VNĐ)!" });
                     }
                     if (khuyenMai.GiaTri <= 0)
                     {
@@ -724,11 +856,25 @@ namespace DATN_DT.Controllers
                 _context.ModelSanPhamKhuyenMais.Add(modelSanPhamKhuyenMai);
                 await _context.SaveChangesAsync();
 
-                return Ok(new { message = "Gán sản phẩm cho khuyến mãi thành công! Giá đã được cập nhật." });
+                var message = activePromotionsForProduct.Any() 
+                    ? $"Gán sản phẩm cho khuyến mãi thành công! Đã tự động gỡ {activePromotionsForProduct.Count} khuyến mãi cũ và áp dụng khuyến mãi mới. Giá đã được cập nhật."
+                    : "Gán sản phẩm cho khuyến mãi thành công! Giá đã được cập nhật.";
+                
+                return Ok(new { 
+                    message = message,
+                    replacedPromotions = activePromotionsForProduct.Any() ? activePromotionsForProduct.Count : 0
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Lỗi: " + ex.Message });
+                // Log lỗi chi tiết để debug
+                Console.WriteLine($"[KhuyenMai] Lỗi khi gán sản phẩm {request.IdModelSanPham} cho khuyến mãi {id}: {ex.Message}");
+                Console.WriteLine($"[KhuyenMai] Stack trace: {ex.StackTrace}");
+                
+                return StatusCode(500, new { 
+                    message = "Lỗi hệ thống khi gán sản phẩm cho khuyến mãi. Vui lòng thử lại!",
+                    error = ex.Message 
+                });
             }
         }
 
@@ -770,11 +916,23 @@ namespace DATN_DT.Controllers
                 _context.ModelSanPhamKhuyenMais.Remove(link);
                 await _context.SaveChangesAsync();
 
-                return Ok(new { message = "Xóa sản phẩm khỏi khuyến mãi thành công! Giá đã được khôi phục." });
+                Console.WriteLine($"[KhuyenMai] Đã xóa sản phẩm {request.IdModelSanPham} khỏi khuyến mãi {id} và khôi phục giá gốc");
+                
+                return Ok(new { 
+                    message = "Xóa sản phẩm khỏi khuyến mãi thành công! Giá đã được khôi phục.",
+                    productId = request.IdModelSanPham
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Lỗi: " + ex.Message });
+                // Log lỗi chi tiết để debug
+                Console.WriteLine($"[KhuyenMai] Lỗi khi xóa sản phẩm {request.IdModelSanPham} khỏi khuyến mãi {id}: {ex.Message}");
+                Console.WriteLine($"[KhuyenMai] Stack trace: {ex.StackTrace}");
+                
+                return StatusCode(500, new { 
+                    message = "Lỗi hệ thống khi xóa sản phẩm khỏi khuyến mãi. Vui lòng thử lại!",
+                    error = ex.Message 
+                });
             }
         }
 

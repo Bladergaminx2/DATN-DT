@@ -40,6 +40,14 @@
                     <a asp-controller="Product" asp-action="Index" asp-route-category="accessories">Phụ kiện</a>
                     <a asp-controller="Home" asp-action="Warranty">Bảo hành</a>
                 </nav>
+                <!-- User avatar (sẽ được đồng bộ từ UserProfile) -->
+                <div id="headerAvatar" style="display:flex;align-items:center;margin-left:16px;">
+                    <a asp-controller="UserProfile" asp-action="Index" title="Tài khoản">
+                        <div style="width:40px;height:40px;border-radius:50%;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;">
+                            <i class="bi bi-person-circle" id="headerAvatarIcon" style="font-size:28px;color:#333"></i>
+                        </div>
+                    </a>
+                </div>
             </div>     
         </div>
     </header>
@@ -134,6 +142,7 @@
                 });
             });
     </script>
+    <script src="/js/header-avatar.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

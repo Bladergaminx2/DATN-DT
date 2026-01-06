@@ -448,7 +448,21 @@ async function addNewAddressCheckout() {
             const modalEl = document.getElementById('addAddressModalCheckout');
             if (modalEl) {
                 const modal = bootstrap.Modal.getInstance(modalEl);
-                if (modal) modal.hide();
+                if (modal) {
+                    modal.hide();
+                    // Đảm bảo backdrop được xóa sau khi modal đóng
+                    modalEl.addEventListener('hidden.bs.modal', function cleanup() {
+                        // Xóa backdrop nếu còn lại
+                        const backdrops = document.querySelectorAll('.modal-backdrop');
+                        backdrops.forEach(backdrop => backdrop.remove());
+                        // Xóa class modal-open khỏi body
+                        document.body.classList.remove('modal-open');
+                        document.body.style.overflow = '';
+                        document.body.style.paddingRight = '';
+                        // Remove event listener sau khi cleanup
+                        modalEl.removeEventListener('hidden.bs.modal', cleanup);
+                    }, { once: true });
+                }
             }
             
             // Reset form

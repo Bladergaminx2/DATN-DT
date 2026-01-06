@@ -1,4 +1,5 @@
 ﻿using DATN_DT.Data;
+using DATN_DT.IServices;
 using DATN_DT.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,10 +12,12 @@ namespace DATN_DT.Controllers
     public class ImeiController : Controller
     {
         private readonly MyDbContext _context;
+        private readonly IModelSanPhamStatusService _statusService;
 
-        public ImeiController(MyDbContext context)
+        public ImeiController(MyDbContext context, IModelSanPhamStatusService statusService)
         {
             _context = context;
+            _statusService = statusService;
         }
 
         // Idex
@@ -65,6 +68,9 @@ namespace DATN_DT.Controllers
 
                 // CapNhatt Kho sau khi them imei
                 await UpdateTonKhoForModel(imei.IdModelSanPham.Value);
+                
+                // Tự động cập nhật trạng thái sản phẩm
+                await _statusService.UpdateStatusBasedOnStock(imei.IdModelSanPham.Value);
 
                 return Ok(new { message = "Thêm Imei thành công!" });
             }
@@ -123,6 +129,19 @@ namespace DATN_DT.Controllers
 
                 
                 await HandleInventoryUpdate(oldModelId, imei.IdModelSanPham.Value, oldStatus, imei.TrangThai);
+                
+                // Tự động cập nhật trạng thái sản phẩm
+                if (oldModelId.HasValue && oldModelId.Value != imei.IdModelSanPham.Value)
+                {
+                    // Nếu model thay đổi, cập nhật cả 2 model
+                    await _statusService.UpdateStatusBasedOnStock(oldModelId.Value);
+                    await _statusService.UpdateStatusBasedOnStock(imei.IdModelSanPham.Value);
+                }
+                else
+                {
+                    // Nếu cùng model, chỉ cập nhật 1 model
+                    await _statusService.UpdateStatusBasedOnStock(imei.IdModelSanPham.Value);
+                }
 
                 return Ok(new { message = "Cập nhật Imei thành công!" });
             }

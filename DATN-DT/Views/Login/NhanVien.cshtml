@@ -56,26 +56,50 @@
                         Password: $('#Password').val()
                     }),
                     success: function(response) {
-                        if (response.success) {
-                            $('#loginMessage').html('<div class="alert alert-success">' + response.message + '</div>');
+                        console.log('Login response:', response);
+                        
+                        // Kiểm tra cả Success (chữ hoa) và success (chữ thường)
+                        var isSuccess = response.Success === true || response.success === true;
+                        
+                        if (isSuccess) {
+                            $('#loginMessage').html('<div class="alert alert-success">' + (response.Message || response.message || 'Đăng nhập thành công') + '</div>');
 
-                            localStorage.setItem('role', response.role);
-                            localStorage.setItem('nhanvien', JSON.stringify(response.data));
+                            // Lưu thông tin vào localStorage
+                            var role = response.Role || response.role || 'NHANVIEN';
+                            localStorage.setItem('role', role);
+                            if (response.Data || response.data) {
+                                localStorage.setItem('nhanvien', JSON.stringify(response.Data || response.data));
+                            }
                             localStorage.setItem('isNhanVien', 'true');
 
+                            // Redirect sau 1 giây
                             setTimeout(() => {
-                                window.location.href = '/quanly';
+                                window.location.href = '/QuanLy';
                             }, 1000);
                         } else {
-                            $('#loginMessage').html('<div class="alert alert-danger">' + response.message + '</div>');
+                            var errorMsg = response.Message || response.message || 'Đăng nhập thất bại';
+                            $('#loginMessage').html('<div class="alert alert-danger">' + errorMsg + '</div>');
+                            btn.prop('disabled', false).html('Đăng Nhập');
                         }
                     },
                     error: function(xhr) {
+                        console.error('Login error:', xhr);
                         let response = xhr.responseJSON;
-                        $('#loginMessage').html('<div class="alert alert-danger">' + (response?.message || 'Lỗi server') + '</div>');
+                        var errorMsg = 'Lỗi server';
+                        
+                        if (response) {
+                            errorMsg = response.Message || response.message || response.error || 'Lỗi server';
+                        } else if (xhr.status === 400) {
+                            errorMsg = 'Sai tài khoản hoặc mật khẩu';
+                        } else if (xhr.status === 500) {
+                            errorMsg = 'Lỗi server. Vui lòng thử lại sau.';
+                        }
+                        
+                        $('#loginMessage').html('<div class="alert alert-danger">' + errorMsg + '</div>');
+                        btn.prop('disabled', false).html('Đăng Nhập');
                     },
                     complete: function() {
-                        btn.prop('disabled', false).html('Đăng Nhập');
+                        // Không cần làm gì ở đây vì đã xử lý trong success/error
                     }
                 });
             });

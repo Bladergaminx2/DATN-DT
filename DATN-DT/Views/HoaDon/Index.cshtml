@@ -321,11 +321,103 @@
             background-color: #357ab8;
             border-color: #357ab8;
         }
+
+        /* Payment Method Filter Styles */
+        .btn-group .btn-check:checked + .btn {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-group .btn {
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            background-color: var(--bg-card);
+        }
+
+        .btn-group .btn:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .payment-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .payment-online {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: var(--success-color);
+        }
+
+        .payment-offline {
+            background-color: rgba(14, 165, 233, 0.15);
+            color: #0ea5e9;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, #0f172a 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow-md);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .stat-card.online {
+            border-left-color: var(--success-color);
+        }
+
+        .stat-card.offline {
+            border-left-color: #0ea5e9;
+        }
+
+        .stat-card .stat-label {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .stat-value {
+            color: var(--text-primary);
+            font-size: 24px;
+            font-weight: 700;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h2><i class="bi bi-receipt me-2"></i>Quản lý Hóa Đơn</h2>
+
+        <!-- Statistics Section -->
+        <div class="stats-row" id="statsContainer">
+            <div class="stat-card">
+                <div class="stat-label">Tổng số hóa đơn</div>
+                <div class="stat-value" id="totalInvoices">0</div>
+            </div>
+            <div class="stat-card online">
+                <div class="stat-label">Bán hàng Online</div>
+                <div class="stat-value" id="onlineInvoices">0</div>
+            </div>
+            <div class="stat-card offline">
+                <div class="stat-label">Bán hàng Offline</div>
+                <div class="stat-value" id="offlineInvoices">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Tổng doanh thu</div>
+                <div class="stat-value" id="totalRevenue">0 ₫</div>
+            </div>
+        </div>
 
         <!-- Filter Section -->
         <div class="filter-container">
@@ -346,6 +438,29 @@
                     <button class="btn btn-primary w-100" onclick="loadInvoices()">
                         <i class="bi bi-search me-1"></i>Tìm kiếm
                     </button>
+                </div>
+            </div>
+
+            <!-- Payment Method Filter -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">Loại bán hàng</label>
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="paymentType" id="allType" value="" checked>
+                        <label class="btn btn-outline-primary" for="allType">
+                            <i class="bi bi-grid-3x3-gap me-1"></i>Tất cả
+                        </label>
+                        
+                        <input type="radio" class="btn-check" name="paymentType" id="onlineType" value="Chuyển khoản">
+                        <label class="btn btn-outline-success" for="onlineType">
+                            <i class="bi bi-globe me-1"></i>Online (Chuyển khoản)
+                        </label>
+                        
+                        <input type="radio" class="btn-check" name="paymentType" id="offlineType" value="COD">
+                        <label class="btn btn-outline-info" for="offlineType">
+                            <i class="bi bi-shop me-1"></i>Offline (COD)
+                        </label>
+                    </div>
                 </div>
             </div>
 
@@ -472,12 +587,20 @@
                 var fromDate = document.getElementById('fromDate').value;
                 var toDate = document.getElementById('toDate').value;
                 var status = currentStatusFilter;
+                
+                // Lấy phương thức thanh toán đã chọn
+                var paymentMethod = '';
+                var paymentRadio = document.querySelector('input[name="paymentType"]:checked');
+                if (paymentRadio && paymentRadio.value) {
+                    paymentMethod = paymentRadio.value;
+                }
 
                 var url = '/HoaDon/GetInvoices?';
                 if (status !== null) url += 'status=' + status + '&';
                 if (search) url += 'search=' + encodeURIComponent(search) + '&';
                 if (fromDate) url += 'fromDate=' + encodeURIComponent(fromDate) + '&';
                 if (toDate) url += 'toDate=' + encodeURIComponent(toDate) + '&';
+                if (paymentMethod) url += 'paymentMethod=' + encodeURIComponent(paymentMethod) + '&';
 
                 const response = await fetch(url);
                 const result = await response.json();
@@ -495,6 +618,7 @@
                     '<thead>' +
                     '<tr>' +
                     '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Mã đơn</th>' +
+                    '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Loại</th>' +
                     '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Khách hàng</th>' +
                     '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Nhân viên</th>' +
                     '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Ngày lập</th>' +
@@ -507,13 +631,34 @@
                     '<tbody>';
 
                 if (!result.data || result.data.length === 0) {
-                    html += '<tr><td colspan="8" class="text-center" style="color: #b0b0b0 !important; font-size: 15px !important; padding: 30px !important;"><i class="bi bi-inbox me-2"></i>Không có hóa đơn nào.</td></tr>';
+                    html += '<tr><td colspan="9" class="text-center" style="color: #b0b0b0 !important; font-size: 15px !important; padding: 30px !important;"><i class="bi bi-inbox me-2"></i>Không có hóa đơn nào.</td></tr>';
                 } else {
+                    // Tính thống kê
+                    var totalCount = result.data.length;
+                    var onlineCount = 0;
+                    var offlineCount = 0;
+                    var totalRevenue = 0;
+
                     for (var i = 0; i < result.data.length; i++) {
                         var invoice = result.data[i];
                         
-                        // Debug: Log từng invoice
-                        console.log('Invoice ' + i + ':', invoice);
+                        // Thống kê
+                        if (invoice.phuongThucThanhToan === 'Chuyển khoản') {
+                            onlineCount++;
+                        } else {
+                            offlineCount++;
+                        }
+                        totalRevenue += (invoice.tongTien || 0);
+                    }
+
+                    // Cập nhật thống kê
+                    document.getElementById('totalInvoices').textContent = totalCount;
+                    document.getElementById('onlineInvoices').textContent = onlineCount;
+                    document.getElementById('offlineInvoices').textContent = offlineCount;
+                    document.getElementById('totalRevenue').textContent = formatMoney(totalRevenue);
+
+                    for (var i = 0; i < result.data.length; i++) {
+                        var invoice = result.data[i];
                         
                         var statusClass = 'status-' + (invoice.trangThaiSo !== undefined ? invoice.trangThaiSo : 0);
                         var statusName = getStatusName(invoice.trangThaiSo !== undefined ? invoice.trangThaiSo : 0);
@@ -526,9 +671,15 @@
                         var ngayLap = invoice.ngayLap || 'N/A';
                         var tongTien = invoice.tongTien !== undefined && invoice.tongTien !== null ? invoice.tongTien : 0;
                         var soLuongSP = invoice.soLuongSanPham !== undefined && invoice.soLuongSanPham !== null ? invoice.soLuongSanPham : 0;
+                        var phuongThuc = invoice.phuongThucThanhToan || 'COD';
+                        var isOnline = phuongThuc === 'Chuyển khoản';
+                        var paymentBadge = isOnline 
+                            ? '<span class="payment-badge payment-online"><i class="bi bi-globe me-1"></i>Online</span>'
+                            : '<span class="payment-badge payment-offline"><i class="bi bi-shop me-1"></i>Offline</span>';
 
                         html += '<tr>' +
                             '<td style="color: #ffffff !important; font-size: 14px !important;"><strong style="color: #ffffff !important; font-weight: 600 !important;">' + maDon + '</strong></td>' +
+                            '<td style="font-size: 14px !important;">' + paymentBadge + '</td>' +
                             '<td style="color: #ffffff !important; font-size: 14px !important;">' +
                             '<div style="font-weight: 600; color: #ffffff !important; margin-bottom: 4px;">' + hoTen + '</div>' +
                             (sdt ? '<small style="color: #b0b0b0 !important; font-size: 12px !important;"><i class="bi bi-telephone me-1"></i>' + sdt + '</small>' : '') +
@@ -696,6 +847,14 @@
                 statusTabs[i].addEventListener('click', function (e) {
                     var status = this.getAttribute('data-status');
                     filterByStatus(status);
+                });
+            }
+
+            // Setup payment method filter
+            var paymentRadios = document.querySelectorAll('input[name="paymentType"]');
+            for (var i = 0; i < paymentRadios.length; i++) {
+                paymentRadios[i].addEventListener('change', function () {
+                    loadInvoices();
                 });
             }
 

@@ -204,9 +204,10 @@ namespace DATN_DT.Controllers
                 Response.Cookies.Append("jwt", token, new CookieOptions
                 {
                     HttpOnly = true,  // Không truy cập bằng JS
-                    Secure = true,    // HTTPS mới gửi cookie
-                    SameSite = SameSiteMode.Strict,
-                    Expires = DateTimeOffset.Now.AddHours(3)
+                    Secure = false,   // Cho phép HTTP trong development (đổi thành true khi deploy production)
+                    SameSite = SameSiteMode.Lax, // Lax thay vì Strict để tránh vấn đề redirect
+                    Expires = DateTimeOffset.Now.AddHours(3),
+                    Path = "/" // Đảm bảo cookie có sẵn cho tất cả routes
                 });
 
                 return Ok(new

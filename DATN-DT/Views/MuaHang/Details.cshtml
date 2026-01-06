@@ -801,9 +801,11 @@
 
         <!-- User Menu bên phải -->
         <div class="header-actions">
-            <div class="cart-icon" onclick="goToCartPage()">
-                <i class="fas fa-shopping-cart"></i>
-                <span class="cart-count" id="cartCount">0</span>
+            <div class="cart-icon" onclick="goToCartPage()" role="button" tabindex="0"
+                 onkeypress="if(event.key==='Enter') goToCartPage()"
+                 aria-label="Xem giỏ hàng">
+                <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+                <span class="cart-count" id="cartCount" aria-live="polite">0</span>
             </div>
             <div class="user-icon" onclick="goToUserProfile()">
                 <i class="fas fa-user-circle"></i>
@@ -924,29 +926,31 @@
 
                         <div class="quantity-selector">
                             <span class="quantity-label">Số lượng:</span>
-                            <div class="quantity-controls">
-                                <button class="quantity-btn" onclick="changeQuantity(-1)">
-                                    <i class="fas fa-minus"></i>
+                                <div class="quantity-controls">
+                                <button class="quantity-btn" onclick="changeQuantity(-1)"
+                                        aria-label="Giảm số lượng"
+                                        type="button">
+                                    <i class="fas fa-minus" aria-hidden="true"></i>
                                 </button>
                                 <input type="number" class="quantity-input" id="quantity"
                                        value="1" min="1" max="@product.SoLuongTon"
+                                       aria-label="Số lượng sản phẩm"
                                 @(product.SoLuongTon <= 0 ? "disabled" : "")>
                                 <button class="quantity-btn" onclick="changeQuantity(1)"
+                                        aria-label="Tăng số lượng"
+                                        type="button"
                                 @(product.SoLuongTon <= 0 ? "disabled" : "")>
-                                    <i class="fas fa-plus"></i>
+                                    <i class="fas fa-plus" aria-hidden="true"></i>
                                 </button>
                             </div>
                         </div>
 
                         <div class="action-buttons">
-                            <button class="btn btn-primary" onclick="addToCart()"
-                            @(product.SoLuongTon <= 0 ? "disabled" : "")>
-                                <i class="fas fa-shopping-cart"></i> Thêm vào giỏ hàng
-                            </button>
-                            <button class="btn btn-secondary" onclick="goToCartPage()"
-                            @(product.SoLuongTon <= 0 ? "disabled" : "")>
-                                <i class="fas fa-bolt"></i> Mua hàng
-                            </button>
+                            <button class="btn btn-primary" onclick="addToCart(event)"
+                            @(product.SoLuongTon <= 0 ? "disabled" : "")
+                            aria-label="Thêm sản phẩm vào giỏ hàng"
+                            @(product.SoLuongTon <= 0 ? "aria-disabled=\"true\"" : "")>
+                               <i class="fas fa-shopping-cart" aria-hidden="true"></i> Thêm vào giỏ hàng
                         </div>
                     </div>
                 </div>
@@ -1009,7 +1013,10 @@
                     <div class="description-content">
                         @if (!string.IsNullOrEmpty(product.MoTaSanPham))
                         {
-                            @Html.Raw((product.MoTaSanPham as string)?.Replace("\n", "<br>"))
+                            @* Escape HTML và chỉ cho phép line breaks *@
+                            var safeDescription = System.Net.WebUtility.HtmlEncode(product.MoTaSanPham as string ?? "");
+                            safeDescription = safeDescription.Replace("\n", "<br>");
+                            @Html.Raw(safeDescription)
                         }
                         else
                         {
@@ -1028,9 +1035,13 @@
                     <div class="suggested-grid">
                         @foreach (var suggestedProduct in suggestedProducts)
                         {
-                            <div class="suggested-card" onclick="viewProductDetail(@suggestedProduct.IdModelSanPham)">
+                            <div class="suggested-card" onclick="viewProductDetail(@suggestedProduct.IdModelSanPham)"
+                                 role="button" tabindex="0"
+                                 onkeypress="if(event.key==='Enter') viewProductDetail(@suggestedProduct.IdModelSanPham)"
+                                 aria-label="Xem chi tiết @suggestedProduct.TenModel">
                                 <img src="@suggestedProduct.AnhSanPham" alt="@suggestedProduct.TenModel"
                                      class="suggested-image"
+                                     loading="lazy"
                                      onerror="this.src='/ImgResource/default-product.jpg'">
                                 <div class="suggested-info">
                                     <div class="suggested-name">@suggestedProduct.TenModel</div>
@@ -1059,12 +1070,22 @@
 
         // ========== INITIALIZATION
         document.addEventListener('DOMContentLoaded', function () {
+            // Validate product data
+            if (!productId || productId <= 0) {
+                console.error('Invalid product ID:', productId);
+                showToast('Thông tin sản phẩm không hợp lệ', 'danger');
+                return;
+            }
+
             updateCartCount();
 
             // Set max quantity based on stock
             const quantityInput = document.getElementById('quantity');
             if (quantityInput) {
                 quantityInput.max = productStock;
+                if (productStock <= 0) {
+                    quantityInput.disabled = true;
+                }
             }
         });
 
@@ -1083,31 +1104,62 @@
         // ========== QUANTITY MANAGEMENT
         function changeQuantity(delta) {
             const quantityInput = document.getElementById('quantity');
+            if (!quantityInput || quantityInput.disabled) {
+                return;
+            }
+
             let newQuantity = parseInt(quantityInput.value) + delta;
 
             // Validate min and max
-            const maxQuantity = parseInt(quantityInput.max);
-            const minQuantity = parseInt(quantityInput.min);
+            const maxQuantity = parseInt(quantityInput.max) || 1;
+            const minQuantity = parseInt(quantityInput.min) || 1;
 
-            if (newQuantity < minQuantity) newQuantity = minQuantity;
-            if (newQuantity > maxQuantity) newQuantity = maxQuantity;
+            if (newQuantity < minQuantity) {
+                newQuantity = minQuantity;
+                showToast('Số lượng tối thiểu là 1', 'info');
+            }
+            if (newQuantity > maxQuantity) {
+                newQuantity = maxQuantity;
+                showToast(`Số lượng tối đa là ${maxQuantity}`, 'info');
+            }
 
             quantityInput.value = newQuantity;
             currentQuantity = newQuantity;
         }
 
         // ========== CART MANAGEMENT
-        async function addToCart() {
-            const quantity = parseInt(document.getElementById('quantity').value);
-
-            if (productId <= 0) {
+        async function addToCart(event) {
+            // Validate productId trước
+            if (!productId || productId <= 0) {
                 showToast('Sản phẩm không hợp lệ', 'danger');
                 return;
             }
+            
+            const quantityInput = document.getElementById('quantity');
+            if (!quantityInput) {
+                showToast('Không tìm thấy ô số lượng', 'danger');
+                return;
+            }
+            
+            const quantity = parseInt(quantityInput.value);
 
-            if (quantity <= 0) {
+            if (isNaN(quantity) || quantity <= 0) {
                 showToast('Vui lòng chọn số lượng hợp lệ', 'warning');
                 return;
+            }
+            
+            if (quantity > productStock) {
+                showToast(`Số lượng không được vượt quá ${productStock}`, 'warning');
+                return;
+            }
+
+            // Loading state
+            const btn = event?.target?.closest('.btn-primary') || document.querySelector('.btn-primary[onclick*="addToCart"]');
+            let originalContent = '';
+            if (btn) {
+                originalContent = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
             }
 
             try {
@@ -1122,6 +1174,10 @@
                         Quantity: quantity
                     })
                 });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
                 const result = await response.json();
 
@@ -1142,13 +1198,80 @@
 
                     localStorage.setItem('cart', JSON.stringify(cart));
                     updateCartCount();
-                    showToast(result.message, 'success');
+                    showToast(result.message || 'Đã thêm vào giỏ hàng thành công!', 'success');
                 } else {
-                    showToast(result.message, 'danger');
+                    showToast(result.message || 'Không thể thêm vào giỏ hàng', 'danger');
                 }
             } catch (error) {
                 console.error('Error adding to cart:', error);
-                // Fallback: Add to local cart only
+                showToast('Có lỗi xảy ra. Vui lòng thử lại sau.', 'danger');
+                
+                // Fallback: Add to local cart only (chỉ khi network error)
+                if (error.name === 'TypeError' || error.message.includes('fetch')) {
+                    try {
+                        const existingItem = cart.find(item => item.id === productId);
+                        if (existingItem) {
+                            existingItem.quantity += quantity;
+                        } else {
+                            cart.push({
+                                id: productId,
+                                name: productName,
+                                price: productPrice,
+                                image: productImage,
+                                quantity: quantity
+                            });
+                        }
+                        localStorage.setItem('cart', JSON.stringify(cart));
+                        updateCartCount();
+                        showToast('Đã thêm vào giỏ hàng (chế độ offline)', 'warning');
+                    } catch (fallbackError) {
+                        console.error('Fallback error:', fallbackError);
+                    }
+                }
+            } finally {
+                // Restore button state
+                if (btn && originalContent) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
+                }
+            }
+        }
+
+        function buyNow(event) {
+            // Validate
+            if (!productId || productId <= 0) {
+                showToast('Sản phẩm không hợp lệ', 'danger');
+                return;
+            }
+            
+            const quantityInput = document.getElementById('quantity');
+            if (!quantityInput) {
+                showToast('Không tìm thấy ô số lượng', 'danger');
+                return;
+            }
+            
+            const quantity = parseInt(quantityInput.value);
+            if (isNaN(quantity) || quantity <= 0) {
+                showToast('Vui lòng chọn số lượng hợp lệ', 'warning');
+                return;
+            }
+            
+            if (quantity > productStock) {
+                showToast(`Số lượng không được vượt quá ${productStock}`, 'warning');
+                return;
+            }
+
+            // Loading state
+            const btn = event?.target?.closest('.btn-secondary') || document.querySelector('.btn-secondary[onclick*="buyNow"]');
+            let originalContent = '';
+            if (btn) {
+                originalContent = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang chuyển...';
+            }
+
+            try {
+                // Add to cart first
                 const existingItem = cart.find(item => item.id === productId);
                 if (existingItem) {
                     existingItem.quantity += quantity;
@@ -1163,12 +1286,18 @@
                 }
 
                 localStorage.setItem('cart', JSON.stringify(cart));
-                updateCartCount();
-                showToast('Đã thêm vào giỏ hàng thành công!', 'success');
+
+                // Redirect to checkout
+                window.location.href = '/GioHang/Cart';
+            } catch (error) {
+                console.error('Error in buyNow:', error);
+                showToast('Có lỗi xảy ra. Vui lòng thử lại.', 'danger');
+                if (btn && originalContent) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
+                }
             }
         }
-
-        
 
         // ========== NAVIGATION
         function goToHomePage() {
@@ -1204,8 +1333,14 @@
         }
 
         function updateCartCount() {
-            const count = cart.reduce((total, item) => total + item.quantity, 0);
-            document.getElementById('cartCount').textContent = count;
+            const cartCountElement = document.getElementById('cartCount');
+            if (cartCountElement) {
+                const count = cart.reduce((total, item) => {
+                    return total + (item.quantity || 0);
+                }, 0);
+                cartCountElement.textContent = count;
+                cartCountElement.setAttribute('aria-label', `${count} sản phẩm trong giỏ hàng`);
+            }
         }
 
         function formatPrice(price) {
@@ -1221,27 +1356,46 @@
             toast.setAttribute('aria-live', 'assertive');
             toast.setAttribute('aria-atomic', 'true');
 
-            toast.innerHTML = `
-                                <div class="d-flex">
-                                    <div class="toast-body">
-                                        <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'warning' ? 'fa-exclamation-triangle' : type === 'danger' ? 'fa-times-circle' : 'fa-info-circle'} me-2"></i>
-                                        ${message}
-                                    </div>
-                                    <button type="button" class="btn-close btn-close-white me-2 m-auto"
-                                            onclick="document.getElementById('${toastId}').remove()"></button>
-                                </div>
-                            `;
+            // Sử dụng textContent để tránh XSS, chỉ dùng innerHTML cho icon
+            const toastBody = document.createElement('div');
+            toastBody.className = 'toast-body';
+            
+            const iconClass = type === 'success' ? 'fa-check-circle' : 
+                            type === 'warning' ? 'fa-exclamation-triangle' : 
+                            type === 'danger' ? 'fa-times-circle' : 'fa-info-circle';
+            
+            const icon = document.createElement('i');
+            icon.className = `fas ${iconClass} me-2`;
+            toastBody.appendChild(icon);
+            toastBody.appendChild(document.createTextNode(message));
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.type = 'button';
+            closeBtn.className = 'btn-close btn-close-white me-2 m-auto';
+            closeBtn.setAttribute('aria-label', 'Close');
+            closeBtn.onclick = function() {
+                const element = document.getElementById(toastId);
+                if (element) element.remove();
+            };
+            
+            const flexDiv = document.createElement('div');
+            flexDiv.className = 'd-flex';
+            flexDiv.appendChild(toastBody);
+            flexDiv.appendChild(closeBtn);
+            toast.appendChild(flexDiv);
 
             const toastContainer = document.getElementById('toastContainer');
-            toastContainer.appendChild(toast);
+            if (toastContainer) {
+                toastContainer.appendChild(toast);
 
-            // Auto remove after 3 seconds
-            setTimeout(() => {
-                const toastElement = document.getElementById(toastId);
-                if (toastElement) {
-                    toastElement.remove();
-                }
-            }, 3000);
+                // Auto remove after 3 seconds
+                setTimeout(() => {
+                    const toastElement = document.getElementById(toastId);
+                    if (toastElement) {
+                        toastElement.remove();
+                    }
+                }, 3000);
+            }
         }
 
         // Listen for quantity input changes
@@ -1264,6 +1418,217 @@
         document.getElementById('searchInput').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 searchProducts();
+            }
+        });
+
+        // ========== USER PROFILE & AVATAR MANAGEMENT
+        async function loadUserProfile() {
+            try {
+                const response = await fetch('/UserProfile/GetProfileData');
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Lưu vào localStorage để đồng bộ
+                    if (data) {
+                        localStorage.setItem('userProfile', JSON.stringify({
+                            hoTenKhachHang: data.hoTenKhachHang,
+                            emailKhachHang: data.emailKhachHang,
+                            defaultImage: data.defaultImage,
+                            diemTichLuy: data.diemTichLuy
+                        }));
+
+                        // Cập nhật avatar trong header
+                        updateUserAvatar(data.defaultImage);
+                    }
+                } else {
+                    // Fallback: Lấy từ localStorage nếu có
+                    const savedProfile = localStorage.getItem('userProfile');
+                    if (savedProfile) {
+                        const profile = JSON.parse(savedProfile);
+                        updateUserAvatar(profile.defaultImage);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user profile:', error);
+                // Fallback: Lấy từ localStorage nếu có
+                const savedProfile = localStorage.getItem('userProfile');
+                if (savedProfile) {
+                    const profile = JSON.parse(savedProfile);
+                    updateUserAvatar(profile.defaultImage);
+                }
+            }
+        }
+
+        function updateUserAvatar(avatarUrl) {
+            const userIcon = document.getElementById('userIcon');
+            const userAvatar = document.getElementById('userAvatar');
+            
+            if (!userIcon || !userAvatar) {
+                console.warn('User icon or avatar element not found');
+                return;
+            }
+
+            if (avatarUrl && avatarUrl.trim() !== '') {
+                // Cập nhật src với timestamp để tránh cache
+                const newSrc = avatarUrl + '?t=' + new Date().getTime();
+                userAvatar.src = newSrc;
+                
+                // Đặt lại display và position
+                userAvatar.style.display = 'block';
+                userAvatar.style.position = 'relative';
+                
+                userAvatar.onerror = function() {
+                    // Nếu ảnh lỗi, hiển thị lại icon mặc định
+                    this.style.display = 'none';
+                    const iconElement = userIcon.querySelector('i');
+                    if (iconElement) {
+                        iconElement.style.display = 'flex';
+                    }
+                    userIcon.classList.remove('has-avatar');
+                };
+                
+                userAvatar.onload = function() {
+                    // Ảnh load thành công, ẩn icon mặc định
+                    userIcon.classList.add('has-avatar');
+                    const iconElement = userIcon.querySelector('i');
+                    if (iconElement) {
+                        iconElement.style.display = 'none';
+                    }
+                };
+                
+                console.log('Avatar updated:', newSrc);
+            } else {
+                userIcon.classList.remove('has-avatar');
+                userAvatar.style.display = 'none';
+                // Hiển thị lại icon mặc định
+                const iconElement = userIcon.querySelector('i');
+                if (iconElement) {
+                    iconElement.style.display = 'flex';
+                }
+            }
+        }
+
+        // ========== EVENT HANDLERS (Lưu reference để có thể remove sau)
+        const eventHandlers = {
+            userProfileUpdated: function(e) {
+                if (e.detail && e.detail.defaultImage) {
+                    updateUserAvatar(e.detail.defaultImage);
+                    console.log('Avatar updated from custom event:', e.detail.defaultImage);
+                }
+            },
+            storage: function(e) {
+                if (e.key === 'userProfile') {
+                    try {
+                        const profile = JSON.parse(e.newValue);
+                        updateUserAvatar(profile.defaultImage);
+                        console.log('Avatar updated from storage event:', profile.defaultImage);
+                    } catch (error) {
+                        console.error('Error parsing userProfile from storage:', error);
+                    }
+                }
+            },
+            visibilitychange: function() {
+                if (!document.hidden) {
+                    // Trang được hiển thị lại, kiểm tra localStorage
+                    const savedProfile = localStorage.getItem('userProfile');
+                    if (savedProfile) {
+                        try {
+                            const profile = JSON.parse(savedProfile);
+                            updateUserAvatar(profile.defaultImage);
+                            console.log('Avatar updated on visibility change:', profile.defaultImage);
+                        } catch (error) {
+                            console.error('Error parsing userProfile:', error);
+                        }
+                    }
+                    // Restart interval nếu đã bị dừng
+                    if (!avatarCheckInterval) {
+                        startAvatarSync();
+                    }
+                } else {
+                    // Dừng interval khi tab hidden
+                    if (avatarCheckInterval) {
+                        clearInterval(avatarCheckInterval);
+                        avatarCheckInterval = null;
+                    }
+                }
+            },
+            focus: function() {
+                loadUserProfile();
+            }
+        };
+
+        // Đăng ký event listeners
+        window.addEventListener('userProfileUpdated', eventHandlers.userProfileUpdated);
+        window.addEventListener('storage', eventHandlers.storage);
+        document.addEventListener('visibilitychange', eventHandlers.visibilitychange);
+        window.addEventListener('focus', eventHandlers.focus);
+
+        // Cleanup function (có thể gọi khi cần)
+        function cleanupEventListeners() {
+            window.removeEventListener('userProfileUpdated', eventHandlers.userProfileUpdated);
+            window.removeEventListener('storage', eventHandlers.storage);
+            document.removeEventListener('visibilitychange', eventHandlers.visibilitychange);
+            window.removeEventListener('focus', eventHandlers.focus);
+            if (avatarCheckInterval) {
+                clearInterval(avatarCheckInterval);
+                avatarCheckInterval = null;
+            }
+        }
+
+        // Kiểm tra localStorage mỗi 5 giây để đồng bộ (nếu user thay đổi trong cùng tab)
+        // Chỉ chạy khi tab active để tiết kiệm tài nguyên
+        let lastAvatarUrl = '';
+        let avatarCheckInterval = null;
+        
+        function startAvatarSync() {
+            if (document.hidden || avatarCheckInterval) return;
+            
+            avatarCheckInterval = setInterval(function() {
+                if (document.hidden) {
+                    clearInterval(avatarCheckInterval);
+                    avatarCheckInterval = null;
+                    return;
+                }
+                
+                const savedProfile = localStorage.getItem('userProfile');
+                if (savedProfile) {
+                    try {
+                        const profile = JSON.parse(savedProfile);
+                        const newAvatarUrl = profile.defaultImage || '';
+                        
+                        // Chỉ cập nhật nếu avatar thay đổi
+                        if (newAvatarUrl !== lastAvatarUrl) {
+                            lastAvatarUrl = newAvatarUrl;
+                            updateUserAvatar(newAvatarUrl);
+                            console.log('Avatar updated from interval check:', newAvatarUrl);
+                        }
+                    } catch (error) {
+                        console.error('Error checking userProfile:', error);
+                    }
+                }
+            }, 5000); // Tăng từ 1s lên 5s để giảm tải CPU
+        }
+        
+        // Chỉ start sync khi tab active
+        if (!document.hidden) {
+            startAvatarSync();
+        }
+
+        // Kiểm tra khi trang được load (có thể từ UserProfile quay lại)
+        // Sử dụng Navigation Timing API (thay thế performance.navigation đã deprecated)
+        const navigationEntry = performance.getEntriesByType('navigation')[0];
+        if (navigationEntry && (navigationEntry.type === 'reload' || navigationEntry.type === 'back_forward')) {
+            // Trang được reload hoặc navigate back/forward
+            setTimeout(function() {
+                loadUserProfile();
+            }, 500);
+        }
+
+        // Kiểm tra khi page show (khi quay lại từ tab khác)
+        document.addEventListener('pageshow', function(event) {
+            // Nếu trang được load từ cache (back/forward cache)
+            if (event.persisted) {
+                loadUserProfile();
             }
         });
     </script>

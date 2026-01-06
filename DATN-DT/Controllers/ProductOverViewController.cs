@@ -1,5 +1,6 @@
 ﻿using DATN_DT.Data;
 using DATN_DT.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Concurrent;
@@ -338,6 +339,7 @@ namespace DATN_DT.Controllers
         }
 
         // API để lấy số lượng tồn kho
+        [AllowAnonymous] // Cho phép gọi mà không cần authentication
         [HttpGet]
         public async Task<IActionResult> GetProductStock(int productId)
         {
@@ -387,6 +389,7 @@ namespace DATN_DT.Controllers
         }
 
         // API để kiểm tra sản phẩm nào cần cập nhật
+        [AllowAnonymous] // Cho phép gọi mà không cần authentication để tránh redirect loop
         [HttpGet]
         public async Task<IActionResult> CheckForProductUpdates(long lastCheckTimestamp = 0)
         {

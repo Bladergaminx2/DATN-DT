@@ -667,7 +667,28 @@
 
         async function checkForProductUpdates() {
             try {
+                // Kiểm tra xem có đang ở trang ProductOverview không
+                if (!window.location.pathname.includes('/ProductOverview')) {
+                    // Dừng interval nếu không ở trang ProductOverview
+                    if (productUpdateInterval) {
+                        clearInterval(productUpdateInterval);
+                        productUpdateInterval = null;
+                    }
+                    return;
+                }
+
                 const response = await fetch(`/ProductOverview/CheckForProductUpdates?lastCheckTimestamp=${lastUpdateTimestamp}`);
+                
+                // Nếu response là redirect (301, 302, 307, 308) hoặc 401, 403 thì dừng
+                if (response.status === 301 || response.status === 302 || response.status === 307 || 
+                    response.status === 308 || response.status === 401 || response.status === 403) {
+                    if (productUpdateInterval) {
+                        clearInterval(productUpdateInterval);
+                        productUpdateInterval = null;
+                    }
+                    return;
+                }
+                
                 if (!response.ok) return;
 
                 const data = await response.json();

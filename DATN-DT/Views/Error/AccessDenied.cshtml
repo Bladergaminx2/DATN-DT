@@ -1,7 +1,37 @@
 ﻿@{
     ViewData["Title"] = "Lỗi truy cập";
+    var returnUrl = ViewBag.ReturnUrl ?? Context.Request.Query["returnUrl"].FirstOrDefault() ?? "";
 }
 
 <h2>⚠️ Truy cập bị từ chối</h2>
 <p>@ViewBag.Message</p>
 <a href="/">Quay về trang chủ</a>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Lấy returnUrl từ ViewBag hoặc query string
+        var returnUrl = '@returnUrl';
+        
+        // Nếu có returnUrl (đặc biệt là từ UserProfile), tự động redirect đến Login
+        if (returnUrl && returnUrl.trim() !== '') {
+            var loginUrl = '/Login?returnUrl=' + encodeURIComponent(returnUrl);
+            // Redirect ngay lập tức
+            window.location.href = loginUrl;
+        } else {
+            // Nếu không có returnUrl, kiểm tra referer
+            var referer = document.referrer;
+            if (referer && (referer.includes('/UserProfile') || referer.includes('/HoaDon/ProcessPayment'))) {
+                // Lấy URL đầy đủ từ referer để redirect
+                try {
+                    var url = new URL(referer);
+                    var loginUrl = '/Login?returnUrl=' + encodeURIComponent(url.pathname + url.search);
+                    window.location.href = loginUrl;
+                } catch (e) {
+                    // Nếu không parse được URL, dùng referer trực tiếp
+                    var loginUrl = '/Login?returnUrl=' + encodeURIComponent(referer);
+                    window.location.href = loginUrl;
+                }
+            }
+        }
+    });
+</script>

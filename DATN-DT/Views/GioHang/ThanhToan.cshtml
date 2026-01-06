@@ -241,6 +241,48 @@
         filter: invert(1);
     }
 
+    /* CẢI THIỆN: Modal backdrop - Đảm bảo không bị tối quá và được xóa đúng cách */
+    .modal-backdrop {
+        background-color: rgba(0, 0, 0, 0.5) !important;
+        opacity: 1 !important;
+        z-index: 1040 !important;
+    }
+
+    .modal-backdrop.show {
+        opacity: 1 !important;
+    }
+
+    .modal-backdrop.fade {
+        opacity: 0;
+        transition: opacity 0.15s linear;
+    }
+
+    .modal-backdrop.fade.show {
+        opacity: 0.5;
+    }
+
+    /* Đảm bảo modal được hiển thị đúng */
+    .modal.show {
+        display: block !important;
+    }
+
+    /* Xóa backdrop khi modal đóng - cleanup */
+    body.modal-open {
+        overflow: hidden;
+        padding-right: 0 !important;
+    }
+
+    /* Đảm bảo backdrop được xóa khi không có modal nào mở */
+    body:not(.modal-open) .modal-backdrop {
+        display: none !important;
+        opacity: 0 !important;
+    }
+
+    /* Fix cho trường hợp backdrop bị stuck */
+    .modal-backdrop:not(.show) {
+        display: none !important;
+    }
+
     /* Toast */
     .toast {
         background-color: #36363f;
@@ -253,116 +295,40 @@
         display: none !important;
     }
 
-    /* Progress Bar Styles */
-    .checkout-progress {
-        background-color: #2b2b33;
-        border-radius: 10px;
-        padding: 20px 30px;
-        margin-bottom: 30px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    .progress-steps {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        position: relative;
-        margin-top: 20px;
-    }
-
-    .progress-steps::before {
-        content: '';
-        position: absolute;
-        top: 20px;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background-color: #444;
-        z-index: 0;
-    }
-
-    .progress-step {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        position: relative;
-        z-index: 1;
-        flex: 1;
-        cursor: default;
-    }
-
-    .progress-step-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background-color: #444;
-        color: #aaa;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        margin-bottom: 10px;
-        transition: all 0.3s ease;
-        border: 3px solid #444;
-    }
-
-    .progress-step.active .progress-step-icon {
-        background-color: #dc3545;
-        color: #ffffff;
-        border-color: #dc3545;
-        box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.2);
-    }
-
-    .progress-step.completed .progress-step-icon {
-        background-color: #28a745;
-        color: #ffffff;
-        border-color: #28a745;
-    }
-
-    .progress-step-label {
-        font-size: 12px;
-        color: #aaa;
-        text-align: center;
-        margin-top: 5px;
-        font-weight: 500;
-    }
-
-    .progress-step.active .progress-step-label {
-        color: #dc3545;
-        font-weight: 600;
-    }
-
-    .progress-step.completed .progress-step-label {
-        color: #28a745;
-    }
-
-    .progress-line {
-        position: absolute;
-        top: 20px;
-        left: 0;
-        height: 3px;
-        background-color: #28a745;
-        z-index: 1;
-        transition: width 0.3s ease;
-    }
-
+    /* Back Link Styles - Nổi bật hơn */
     .back-link {
-        color: #667eea;
-        text-decoration: none;
-        font-size: 14px;
         display: inline-flex;
         align-items: center;
-        margin-bottom: 15px;
-        transition: color 0.3s ease;
+        gap: 10px;
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #ffffff !important;
+        text-decoration: none;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 12px;
+        margin-bottom: 25px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        border: none;
     }
 
     .back-link:hover {
-        color: #5568d3;
-        text-decoration: underline;
+        background: linear-gradient(135deg, #5568d3 0%, #653a8f 100%);
+        color: #ffffff !important;
+        text-decoration: none;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .back-link:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
     }
 
     .back-link i {
-        margin-right: 5px;
+        font-size: 18px;
+        margin-right: 0;
     }
 
     /* Voucher Detail Modal Styles */
@@ -593,45 +559,10 @@
 </div>
 
 <div class="container mt-4">
-    <!-- Progress Bar -->
-    <div class="checkout-progress">
-        <a href="/GioHang/Cart" class="back-link">
-            <i class="bi bi-arrow-left"></i> Trở về
-        </a>
-        <div class="progress-steps">
-            <div class="progress-line" style="width: 50%;"></div>
-            <div class="progress-step completed">
-                <div class="progress-step-icon">
-                    <i class="bi bi-cart"></i>
-                </div>
-                <div class="progress-step-label">Chọn sản phẩm</div>
-            </div>
-            <div class="progress-step completed">
-                <div class="progress-step-icon">
-                    <i class="bi bi-file-text"></i>
-                </div>
-                <div class="progress-step-label">Thông tin đặt hàng</div>
-            </div>
-            <div class="progress-step active">
-                <div class="progress-step-icon">
-                    <i class="bi bi-tag"></i>
-                </div>
-                <div class="progress-step-label">Phiếu giảm giá</div>
-            </div>
-            <div class="progress-step">
-                <div class="progress-step-icon">
-                    <i class="bi bi-credit-card"></i>
-                </div>
-                <div class="progress-step-label">Thanh toán</div>
-            </div>
-            <div class="progress-step">
-                <div class="progress-step-icon">
-                    <i class="bi bi-check-circle"></i>
-                </div>
-                <div class="progress-step-label">Hoàn tất đặt hàng</div>
-            </div>
-        </div>
-    </div>
+    <!-- Nút quay lại -->
+    <a href="/GioHang/Cart" class="back-link">
+        <i class="bi bi-arrow-left"></i> Trở về
+    </a>
 
     <div class="row">
         <div class="col-md-8">
@@ -733,9 +664,9 @@
                                     </label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="phuongThucTT" id="chuyenKhoan" value="ChuyenKhoan">
+                                    <input class="form-check-input" type="radio" name="phuongThucTT" id="chuyenKhoan" value="Chuyển khoản ngân hàng">
                                     <label class="form-check-label" for="chuyenKhoan">
-                                        <i class="bi bi-bank me-1"></i>Chuyển khoản ngân hàng
+                                        <i class="bi bi-bank me-1"></i>Chuyển khoản ngân hàng (PayOS)
                                     </label>
                                 </div>
                             </div>
@@ -1042,6 +973,32 @@
     </div>
 </div>
 
+<!-- Modal QR Code Thanh Toán -->
+<div class="modal fade" id="qrPaymentModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-qr-code me-2"></i>Thanh Toán Chuyển Khoản</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="qrPaymentContent">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Đang tải...</span>
+                    </div>
+                    <p>Đang tạo mã QR thanh toán...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="btnConfirmPaid" style="display: none;">
+                    <i class="bi bi-check-circle me-2"></i>Đã thanh toán
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal sửa địa chỉ -->
 <div class="modal fade" id="editAddressModalCheckout" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -1100,6 +1057,30 @@
 @section Scripts {
     <script src="~/js/thanhtoan.js" asp-append-version="true"></script>
     <script>
+        // CẢI THIỆN: Cleanup backdrop cho tất cả modal khi đóng
+        document.addEventListener('DOMContentLoaded', function() {
+            // Lắng nghe sự kiện đóng modal cho tất cả modal
+            const modals = ['diaChiModal', 'addAddressModalCheckout', 'editAddressModalCheckout', 'voucherListModal', 'voucherDetailModal', 'qrPaymentModal'];
+            
+            modals.forEach(modalId => {
+                const modalEl = document.getElementById(modalId);
+                if (modalEl) {
+                    modalEl.addEventListener('hidden.bs.modal', function() {
+                        // Xóa tất cả backdrop còn lại
+                        const backdrops = document.querySelectorAll('.modal-backdrop');
+                        backdrops.forEach(backdrop => {
+                            backdrop.remove();
+                        });
+                        
+                        // Xóa class modal-open và style khỏi body
+                        document.body.classList.remove('modal-open');
+                        document.body.style.overflow = '';
+                        document.body.style.paddingRight = '';
+                    });
+                }
+            });
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
 
             // Hàm load thông tin người dùng
@@ -1548,11 +1529,28 @@
                     return;
                 }
 
+                // Kiểm tra phương thức thanh toán
+                const phuongThucTT = document.querySelector('input[name="phuongThucTT"]:checked')?.value || 'COD';
+                
+                // Kiểm tra nếu là chuyển khoản (PayOS)
+                if (phuongThucTT && (phuongThucTT.toLowerCase().includes('chuyển khoản') || phuongThucTT.toLowerCase().includes('chuyenkhoan'))) {
+                    // Hiển thị modal PayOS payment
+                    await showQRPaymentModal(diaChiId);
+                    return;
+                }
+
+                // Xử lý COD như bình thường
+                await processCODCheckout(diaChiId);
+            });
+
+            // Hàm xử lý thanh toán COD
+            async function processCODCheckout(diaChiId) {
+                const btn = document.getElementById('btnXacNhanThanhToan');
                 btn.disabled = true;
 
                 const payload = {
                     diaChiId: diaChiId,
-                    phuongThucTT: document.querySelector('input[name="phuongThucTT"]:checked')?.value || 'COD',
+                    phuongThucTT: 'COD',
                     ghiChu: document.getElementById('ghiChu')?.value?.trim() || '',
                     selectedCartItems: cartItemIds,
                     email: document.getElementById('email')?.value?.trim() || '',
@@ -1574,36 +1572,32 @@
 
                     console.log('[Checkout] Response', res.status, result);
 
-                    // Sửa: Kiểm tra cả Success (chữ hoa) và success (chữ thường)
                     const isSuccess = (res.ok && (result?.Success === true || result?.success === true));
                     
                     if (isSuccess) {
-                        // Lấy mã đơn hàng
                         const maDon = result?.Data?.MaDon || result?.data?.maDon || 
                                      result?.Data?.IdHoaDon || result?.data?.idHoaDon;
                         
-                        // Hiển thị thông báo thành công
                         showSuccessAlert(maDon);
-                        
-                        // Cuộn lên đầu trang để người dùng thấy thông báo
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                         
-                        // Reset form (tùy chọn)
                         const form = document.getElementById('checkoutForm');
                         if (form) {
                             form.reset();
                         }
                         
-                        // Có thể thêm logic khác như làm mờ nút, clear cart items, etc.
+                        // Redirect sau 3 giây
+                        setTimeout(() => {
+                            window.location.href = '/DonHang';
+                        }, 3000);
+                        
                         return;
                     }
 
-                    // Chỉ hiển thị lỗi nếu thực sự có lỗi
                     const isError = (!res.ok || result?.Success === false || result?.success === false);
                     if (isError) {
                         showErrorAlert(buildErrorMessage(result));
                     } else {
-                        // Trường hợp không rõ ràng (có thể là success nhưng không match điều kiện trên)
                         console.warn('[Checkout] Unexpected response format:', result);
                         showSuccessAlert(null);
                     }
@@ -1614,6 +1608,161 @@
                 }
                 finally {
                     btn.disabled = false;
+                }
+            }
+
+            // Hàm hiển thị modal QR code thanh toán
+            async function showQRPaymentModal(diaChiId) {
+                const modal = new bootstrap.Modal(document.getElementById('qrPaymentModal'));
+                modal.show();
+
+                const content = document.getElementById('qrPaymentContent');
+                const btnConfirmPaid = document.getElementById('btnConfirmPaid');
+                
+                content.innerHTML = `
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Đang tải...</span>
+                    </div>
+                    <p>Đang tạo mã QR thanh toán...</p>
+                `;
+                btnConfirmPaid.style.display = 'none';
+
+                try {
+                    // Tạo đơn hàng với trạng thái "Chờ thanh toán"
+                    const payload = {
+                        diaChiId: diaChiId,
+                        phuongThucTT: 'Chuyển khoản ngân hàng', // Giá trị khớp với backend
+                        ghiChu: document.getElementById('ghiChu')?.value?.trim() || '',
+                        selectedCartItems: cartItemIds,
+                        email: document.getElementById('email')?.value?.trim() || '',
+                        tongTien: tongTienGoc - voucherDiscount + phiVanChuyen,
+                        idVoucher: voucherId ? parseInt(voucherId) : null,
+                        soTienGiamVoucher: voucherDiscount
+                    };
+
+                    const res = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await res.json();
+
+                    if (res.ok && (result?.Success === true || result?.success === true)) {
+                        const idHoaDon = result?.Data?.IdHoaDon || result?.data?.idHoaDon;
+                        const tongTien = result?.Data?.TongTien || result?.data?.tongTien || (tongTienGoc - voucherDiscount + phiVanChuyen);
+
+                        // Tạo payment link PayOS
+                        const paymentRes = await fetch('/HoaDon/CreatePayOSPayment', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                idHoaDon: idHoaDon
+                            })
+                        });
+
+                        const paymentData = await paymentRes.json();
+
+                        if (paymentRes.ok && paymentData.success) {
+                            // Đóng modal và chuyển hướng trực tiếp đến trang PayOS
+                            const modalInstance = bootstrap.Modal.getInstance(document.getElementById('qrPaymentModal'));
+                            if (modalInstance) {
+                                modalInstance.hide();
+                            }
+                            
+                            // Chuyển hướng đến trang thanh toán PayOS
+                            window.location.href = paymentData.paymentUrl;
+                            
+                            // Lưu idHoaDon để check sau (nếu cần)
+                            window.currentPaymentIdHoaDon = idHoaDon;
+                        } else {
+                            content.innerHTML = `
+                                <div class="alert alert-danger">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    <strong>Lỗi tạo payment link:</strong><br>
+                                    ${paymentData.message || 'Không thể tạo link thanh toán PayOS. Vui lòng thử lại hoặc liên hệ hỗ trợ.'}
+                                </div>
+                                <div class="text-center mt-3">
+                                    <button type="button" class="btn btn-primary" onclick="location.reload()">
+                                        <i class="bi bi-arrow-clockwise me-2"></i>Thử lại
+                                    </button>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        content.innerHTML = `
+                            <div class="alert alert-danger">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                ${result?.Message || result?.message || 'Không thể tạo đơn hàng. Vui lòng thử lại.'}
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('Error creating payment:', error);
+                    content.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Có lỗi xảy ra khi tạo mã QR thanh toán. Vui lòng thử lại.
+                        </div>
+                    `;
+                }
+            }
+
+            // Hàm kiểm tra trạng thái thanh toán
+            async function checkPaymentStatus(idHoaDon) {
+                try {
+                    // Kiểm tra trạng thái từ HoaDon API
+                    const res = await fetch(`/HoaDon/GetInvoiceDetail?id=${idHoaDon}`);
+                    const result = await res.json();
+
+                    if (res.ok && result.success && result.data) {
+                        const trangThai = result.data.trangThai?.toLowerCase() || '';
+                        const isPaid = trangThai.includes('đã thanh toán') || 
+                                      trangThai.includes('đã xác nhận') ||
+                                      trangThai.includes('đang giao hàng');
+
+                        if (isPaid) {
+                            // Thanh toán thành công
+                            if (window.paymentCheckInterval) {
+                                clearInterval(window.paymentCheckInterval);
+                                window.paymentCheckInterval = null;
+                            }
+                            
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('qrPaymentModal'));
+                            if (modal) modal.hide();
+                            
+                            const maDon = result.data.maDon || `HD${String(idHoaDon).padStart(6, '0')}`;
+                            showSuccessAlert(maDon);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                            
+                            // Redirect sau 3 giây
+                            setTimeout(() => {
+                                window.location.href = '/DonHang';
+                            }, 3000);
+                        } else {
+                            // Chưa thanh toán - hiển thị thông báo
+                            console.log('Payment status:', trangThai);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking payment status:', error);
+                }
+            }
+
+            // Hàm copy payment link
+            function copyPaymentLink(url) {
+                navigator.clipboard.writeText(url).then(() => {
+                    showToast('Đã sao chép link thanh toán!', 'success');
+                }).catch(err => {
+                    console.error('Failed to copy:', err);
+                    alert('Không thể sao chép link. Vui lòng copy thủ công: ' + url);
+                });
+            }
+
+            // Cleanup khi đóng modal
+            document.getElementById('qrPaymentModal')?.addEventListener('hidden.bs.modal', function() {
+                if (window.paymentCheckInterval) {
+                    clearInterval(window.paymentCheckInterval);
                 }
             });
 
