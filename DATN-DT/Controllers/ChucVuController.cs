@@ -1,4 +1,3 @@
-
 using DATN_DT.CustomAttribute;
 using DATN_DT.Data;
 using DATN_DT.Models;
@@ -58,7 +57,7 @@ namespace DATN_DT.Controllers
 
             // Kiểm tra trùng tên chức vụ
             var existing = await _context.ChucVus
-                .FirstOrDefaultAsync(cv => cv.TenChucVu == chucVu.TenChucVu || 
+                .FirstOrDefaultAsync(cv => cv.TenChucVu == chucVu.TenChucVu ||
                                           cv.TenChucVuVietHoa == chucVu.TenChucVuVietHoa);
             if (existing != null)
                 return BadRequest(new { message = "Chức vụ đã tồn tại!" });
@@ -104,8 +103,8 @@ namespace DATN_DT.Controllers
 
             // Kiểm tra trùng tên chức vụ (trừ chính nó)
             var duplicate = await _context.ChucVus
-                .FirstOrDefaultAsync(cv => cv.IdChucVu != id && 
-                                          (cv.TenChucVu == chucVu.TenChucVu || 
+                .FirstOrDefaultAsync(cv => cv.IdChucVu != id &&
+                                          (cv.TenChucVu == chucVu.TenChucVu ||
                                            cv.TenChucVuVietHoa == chucVu.TenChucVuVietHoa));
             if (duplicate != null)
                 return BadRequest(new { message = "Chức vụ đã tồn tại!" });
@@ -141,7 +140,7 @@ namespace DATN_DT.Controllers
             // Kiểm tra xem có nhân viên nào đang dùng chức vụ này không
             var hasNhanVien = await _context.NhanViens
                 .AnyAsync(nv => nv.IdChucVu == id);
-            
+
             if (hasNhanVien)
                 return BadRequest(new { message = "Không thể xóa chức vụ đang được sử dụng bởi nhân viên!" });
 
@@ -159,4 +158,3 @@ namespace DATN_DT.Controllers
         }
     }
 }
-

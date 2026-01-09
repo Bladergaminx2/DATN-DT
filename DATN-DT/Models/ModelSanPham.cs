@@ -14,6 +14,7 @@
         public string? Mau { get; set; }
         public decimal? GiaBanModel { get; set; }
         public int TrangThai { get; set; } = 1; // 1: Active, 0: Inactive
+        public int? ThoiHanBaoHanh { get; set; } // Thời hạn bảo hành (tháng), mặc định 12 tháng
 
 
         // Navigation properties

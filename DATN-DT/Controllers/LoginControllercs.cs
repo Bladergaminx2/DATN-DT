@@ -178,24 +178,53 @@ namespace DATN_DT.Controllers
         {
             try
             {
-                var nv = await _con.NhanViens.FirstOrDefaultAsync(x => x.TenTaiKhoanNV == model.TenTaiKhoanNV);
+                if (string.IsNullOrEmpty(model.TenTaiKhoanNV) || string.IsNullOrEmpty(model.Password))
+                {
+                    return BadRequest(new { Success = false, Message = "Tài khoản và mật khẩu không được để trống" });
+                }
+
+                var nv = await _con.NhanViens
+                    .Include(nv => nv.ChucVu)
+                    .FirstOrDefaultAsync(x => x.TenTaiKhoanNV == model.TenTaiKhoanNV);
+                
                 if (nv == null || !VerifyPassword(model.Password, nv.Password))
                     return BadRequest(new { Success = false, Message = "Sai tài khoản hoặc mật khẩu" });
 
-                if (nv.TrangThaiNV == 0)
-                    return BadRequest(new { Success = false, Message = "Tài khoản bị khóa" });
+                // TrangThaiNV: 0 = Đang làm việc, 1 = Đã nghỉ, 2 = Nghỉ phép
+                // Kiểm tra trạng thái nhân viên (trừ ADMIN - ADMIN luôn được phép đăng nhập)
+                var isAdmin = nv.ChucVu != null && 
+                             (nv.ChucVu.TenChucVuVietHoa == "ADMIN" || nv.ChucVu.TenChucVu == "Admin");
+                
+                // Chỉ cho phép đăng nhập nếu TrangThaiNV = 0 (Đang làm việc) hoặc là ADMIN
+                if (!isAdmin && nv.TrangThaiNV != 0)
+                {
+                    string message = nv.TrangThaiNV == 1 ? "Tài khoản đã nghỉ việc" : "Tài khoản đang nghỉ phép";
+                    return BadRequest(new { Success = false, Message = message });
+                }
 
                 // Lấy role từ bảng ChucVu
-                var role = await _con.ChucVus
-                                     .Where(c => c.IdChucVu == nv.IdChucVu)
-                                     .Select(c => c.TenChucVuVietHoa)
-                                     .FirstOrDefaultAsync();
-
-                if (string.IsNullOrEmpty(role))
+                string role;
+                if (nv.ChucVu != null && !string.IsNullOrEmpty(nv.ChucVu.TenChucVuVietHoa))
                 {
-                    var cv = await _con.ChucVus.FirstOrDefaultAsync(c => c.IdChucVu == nv.IdChucVu);
-                    role = cv?.TenChucVu?.ToUpper().Replace(" ", "") ?? "NHANVIEN";
+                    role = nv.ChucVu.TenChucVuVietHoa;
                 }
+                else
+                {
+                    // Fallback: lấy từ database nếu chưa load
+                    var cv = await _con.ChucVus.FirstOrDefaultAsync(c => c.IdChucVu == nv.IdChucVu);
+                    if (cv != null && !string.IsNullOrEmpty(cv.TenChucVuVietHoa))
+                    {
+                        role = cv.TenChucVuVietHoa;
+                    }
+                    else
+                    {
+                        // Nếu không có chức vụ, mặc định là NHANVIEN
+                        role = "NHANVIEN";
+                    }
+                }
+
+                // Đảm bảo role là chữ in hoa
+                role = role.ToUpper().Trim();
 
                 // Tạo JWT token
                 var token = GenerateJwtToken(nv.TenTaiKhoanNV, role, nv.IdNhanVien);
