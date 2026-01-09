@@ -54,7 +54,29 @@ namespace DATN_DT.Controllers
         [HttpPost("login-staff")]
         public async Task<IActionResult> LoginStaff([FromBody] LoginNhanVienForm model)
         {
-            var nv = await _context.NhanViens.FirstOrDefaultAsync(x => x.TenTaiKhoanNV == model.TenTaiKhoanNV);
+            // Cho phép đăng nhập bằng TenTaiKhoanNV hoặc EmailNhanVien
+            var loginInput = model.TenTaiKhoanNV?.Trim() ?? string.Empty;
+            Models.NhanVien? nv = null;
+
+            // Kiểm tra xem input có phải là email không
+            if (!string.IsNullOrEmpty(loginInput) && loginInput.Contains("@"))
+            {
+                // Tìm theo EmailNhanVien
+                nv = await _context.NhanViens.FirstOrDefaultAsync(x => x.EmailNhanVien == loginInput);
+            }
+            else
+            {
+                // Tìm theo TenTaiKhoanNV
+                nv = await _context.NhanViens.FirstOrDefaultAsync(x => x.TenTaiKhoanNV == loginInput);
+            }
+
+            // Nếu không tìm thấy theo cách trên, thử tìm theo cả hai
+            if (nv == null)
+            {
+                nv = await _context.NhanViens.FirstOrDefaultAsync(x => 
+                    x.TenTaiKhoanNV == loginInput || x.EmailNhanVien == loginInput);
+            }
+
             if (nv == null || !VerifyPassword(model.Password, nv.Password))
                 return BadRequest(new { Success = false, Message = "Sai tài khoản hoặc mật khẩu" });
 

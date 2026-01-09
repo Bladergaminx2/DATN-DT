@@ -446,9 +446,93 @@
                 padding: 15px;
             }
         }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(99, 102, 241, 0.2);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @@keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            color: var(--text-primary);
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .loading-content {
+            text-align: center;
+        }
+
+        /* Disable buttons when loading */
+        button:disabled,
+        button.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .btn-loading {
+            position: relative;
+            color: transparent !important;
+        }
+
+        .btn-loading::after {
+            content: "";
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin-left: -8px;
+            margin-top: -8px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.6s linear infinite;
+        }
     </style>
 </head>
 <body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text" id="loadingText">Đang xử lý...</div>
+        </div>
+    </div>
+
     <!-- Main Content -->
     <div class="main-content">
         <h2 class="page-title"><i class="fas fa-shopping-cart me-2"></i>Bán Hàng</h2>
@@ -636,6 +720,35 @@
         var currentProductName = '';
         var virtualInvoicesKey = 'virtualInvoices';
 
+        // Loading functions
+        function showLoading(text = "Đang xử lý...") {
+            const overlay = document.getElementById('loadingOverlay');
+            const loadingText = document.getElementById('loadingText');
+            if (overlay) {
+                loadingText.textContent = text;
+                overlay.classList.add('active');
+            }
+            // Disable all buttons
+            document.querySelectorAll('button').forEach(btn => {
+                if (!btn.hasAttribute('data-bs-dismiss')) {
+                    btn.disabled = true;
+                    btn.classList.add('disabled');
+                }
+            });
+        }
+
+        function hideLoading() {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.classList.remove('active');
+            }
+            // Enable all buttons
+            document.querySelectorAll('button').forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('disabled');
+            });
+        }
+
         function renderPrice(value) {
             return Number(value || 0).toLocaleString() + ' đ';
         }
@@ -649,7 +762,10 @@
                 return;
             }
 
+            showLoading("Đang tìm kiếm sản phẩm...");
+
             $.get('@Url.Action("SearchProducts", "DonHang")', { keyword: keyword }, function (response) {
+                hideLoading();
                 if (response && response.success && response.data && response.data.length > 0) {
                     var html = '<div class="list-group">';
                     response.data.forEach(function (product) {
@@ -668,6 +784,9 @@
                     $('#searchResults').html('<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>Không tìm thấy sản phẩm nào</div>');
                     $('#modelResults').empty();
                 }
+            }).fail(function() {
+                hideLoading();
+                alert('Có lỗi xảy ra khi tìm kiếm sản phẩm. Vui lòng thử lại.');
             });
         }
 
@@ -681,43 +800,71 @@
 
         function selectProduct(productId, productName) {
             currentProductName = productName || '';
+            showLoading("Đang tải danh sách model...");
             $('#modelResults').html('<div class="text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Đang tải model...</div>');
             $.get('@Url.Action("GetModelsByProduct", "DonHang")', { productId: productId }, function (response) {
+                hideLoading();
                 if (response && response.success && response.data && response.data.length > 0) {
-                    var html = '<div class="row">';
-                    response.data.forEach(function (model) {
-                        var img = model.anh ? model.anh : '/images/no-image.png';
-                        var imgHtml = img && img !== '/images/no-image.png' 
-                            ? '<img class="card-img-top" src="' + img + '" alt="' + model.tenModel + '" onerror="this.src=\'/images/no-image.png\'">'
-                            : '<div class="card-img-top no-image-placeholder"><div><i class="fas fa-image"></i><div>Không có ảnh</div></div></div>';
-                        
-                        html += '' +
-                            '<div class="col-md-4 mb-3">' +
-                                '<div class="card product-card h-100" style="cursor:pointer;" onclick="showModelDetail(' + model.idModelSanPham + ')">' +
-                                    imgHtml +
-                                    '<div class="card-body">' +
-                                        '<h6 class="card-title mb-2" style="color: var(--text-primary); font-weight: 600;">' + model.tenModel + '</h6>' +
-                                        '<p class="card-text mb-2" style="color: var(--text-secondary);"><i class="fas fa-palette me-1"></i><strong>Màu:</strong> ' + (model.mau || 'N/A') + '</p>' +
-                                        '<p class="card-text mb-2" style="color: var(--text-secondary);"><i class="fas fa-memory me-1"></i><strong>RAM/ROM:</strong> ' + (model.ram || '-') + ' / ' + (model.rom || '-') + '</p>' +
-                                        '<p class="card-text mb-2" style="color: var(--text-primary); font-size: 1.1rem;"><strong>Giá:</strong> <span class="text-success fw-bold">' + renderPrice(model.giaBanModel) + '</span></p>' +
-                                        '<p class="card-text mb-0" style="color: var(--text-secondary);"><i class="fas fa-boxes me-1"></i><strong>Tồn:</strong> <span class="' + ((model.soLuongTon || 0) > 0 ? 'text-success' : 'text-danger') + '">' + (model.soLuongTon || 0) + '</span></p>' +
-                                    '</div>' +
-                                '</div>' +
-                            '</div>';
+                    // Lọc chỉ hiển thị các model có số lượng tồn > 0
+                    var availableModels = response.data.filter(function (model) {
+                        return (model.soLuongTon || 0) > 0;
                     });
-                    html += '</div>';
-                    $('#modelResults').html(html);
+
+                    if (availableModels.length > 0) {
+                        var html = '<div class="row">';
+                        availableModels.forEach(function (model) {
+                            var img = model.anh ? model.anh : '/images/no-image.png';
+                            var imgHtml = img && img !== '/images/no-image.png' 
+                                ? '<img class="card-img-top" src="' + img + '" alt="' + model.tenModel + '" onerror="this.src=\'/images/no-image.png\'">'
+                                : '<div class="card-img-top no-image-placeholder"><div><i class="fas fa-image"></i><div>Không có ảnh</div></div></div>';
+                            
+                            html += '' +
+                                '<div class="col-md-4 mb-3">' +
+                                    '<div class="card product-card h-100" style="cursor:pointer;" onclick="showModelDetail(' + model.idModelSanPham + ')">' +
+                                        imgHtml +
+                                        '<div class="card-body">' +
+                                            '<h6 class="card-title mb-2" style="color: var(--text-primary); font-weight: 600;">' + model.tenModel + '</h6>' +
+                                            '<p class="card-text mb-2" style="color: var(--text-secondary);"><i class="fas fa-palette me-1"></i><strong>Màu:</strong> ' + (model.mau || 'N/A') + '</p>' +
+                                            '<p class="card-text mb-2" style="color: var(--text-secondary);"><i class="fas fa-memory me-1"></i><strong>RAM/ROM:</strong> ' + (model.ram || '-') + ' / ' + (model.rom || '-') + '</p>' +
+                                            '<p class="card-text mb-2" style="color: var(--text-primary); font-size: 1.1rem;"><strong>Giá:</strong> <span class="text-success fw-bold">' + renderPrice(model.giaBanModel) + '</span></p>' +
+                                            '<p class="card-text mb-0" style="color: var(--text-secondary);"><i class="fas fa-boxes me-1"></i><strong>Tồn:</strong> <span class="text-success">' + (model.soLuongTon || 0) + '</span></p>' +
+                                        '</div>' +
+                                    '</div>' +
+                                '</div>';
+                        });
+                        html += '</div>';
+                        $('#modelResults').html(html);
+                    } else {
+                        // Tất cả model đều hết hàng
+                        var totalModels = response.data.length;
+                        $('#modelResults').html('<div class="alert alert-warning">' +
+                            '<i class="fas fa-exclamation-triangle me-2"></i>' +
+                            'Sản phẩm có ' + totalModels + ' model nhưng tất cả đều hết hàng (số lượng tồn = 0).' +
+                            '</div>');
+                    }
                 } else {
                     $('#modelResults').html('<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>Sản phẩm chưa có model khả dụng.</div>');
                 }
+            }).fail(function() {
+                hideLoading();
+                alert('Có lỗi xảy ra khi tải danh sách model. Vui lòng thử lại.');
             });
         }
 
         // Hiển thị chi tiết model + IMEI
         function showModelDetail(productId) {
+            showLoading("Đang tải chi tiết sản phẩm...");
             $.get('@Url.Action("GetProductDetail", "DonHang")', { id: productId }, function (response) {
+                hideLoading();
                 if (response && response.success) {
                     currentProductDetail = response.data;
+
+                    // Kiểm tra số lượng tồn kho - không hiển thị model có số lượng = 0
+                    var soLuongTon = currentProductDetail.soLuongTon || 0;
+                    if (soLuongTon <= 0) {
+                        alert('Sản phẩm này hiện đang hết hàng (số lượng tồn = 0). Vui lòng chọn sản phẩm khác.');
+                        return;
+                    }
 
                     var img = currentProductDetail.anh ? currentProductDetail.anh : '/images/no-image.png';
                     var hasImei = currentProductDetail.imeis && currentProductDetail.imeis.length > 0;
@@ -784,6 +931,9 @@
                 } else {
                     alert('Không tìm thấy thông tin sản phẩm');
                 }
+            }).fail(function() {
+                hideLoading();
+                alert('Có lỗi xảy ra khi tải chi tiết sản phẩm. Vui lòng thử lại.');
             });
         }
 
@@ -815,6 +965,8 @@
                 }
             }
 
+            showLoading("Đang thêm sản phẩm vào đơn hàng...");
+
             var selectedImeiObj = null;
             if (selectedImei && currentProductDetail.imeis) {
                 selectedImeiObj = currentProductDetail.imeis.find(function (i) { return i.idImei == selectedImei; });
@@ -841,6 +993,7 @@
             renderSelectedProducts();
             var modal = bootstrap.Modal.getInstance(document.getElementById('productDetailModal'));
             modal.hide();
+            hideLoading();
         }
 
         // Cập nhật IMEI khi chọn trong bảng
@@ -1003,7 +1156,63 @@
             return isValid;
         }
 
-        function thanhToan() {
+        // Kiểm tra IMEI và số lượng tồn kho trước khi thanh toán
+        async function checkImeiAndInventory() {
+            var errors = [];
+            
+            for (var i = 0; i < selectedProducts.length; i++) {
+                var product = selectedProducts[i];
+                
+                // Kiểm tra số lượng tồn kho hiện tại và danh sách IMEI còn hàng
+                try {
+                    var tonKhoResponse = await $.get('@Url.Action("GetProductDetail", "DonHang")', { id: product.idModelSanPham });
+                    if (tonKhoResponse && tonKhoResponse.success) {
+                        var soLuongTon = tonKhoResponse.data.soLuongTon || 0;
+                        if (soLuongTon <= 0) {
+                            errors.push('Sản phẩm "' + product.tenSanPham + ' - ' + product.tenModel + '" đã hết hàng (số lượng tồn = 0)');
+                            continue;
+                        }
+                        
+                        // Lấy danh sách IMEI còn hàng từ response
+                        var availableImeis = tonKhoResponse.data.imeis || [];
+                        
+                        // Kiểm tra từng IMEI đã chọn có còn trong danh sách IMEI còn hàng không
+                        if (product.selectedImeis && product.selectedImeis.length > 0) {
+                            for (var j = 0; j < product.selectedImeis.length; j++) {
+                                var imeiId = parseInt(product.selectedImeis[j]);
+                                
+                                // Tìm IMEI trong danh sách còn hàng (so sánh cả number và string)
+                                var imeiFound = availableImeis.some(function(imei) {
+                                    return parseInt(imei.idImei) === imeiId;
+                                });
+                                
+                                if (!imeiFound) {
+                                    // Tìm mã IMEI để hiển thị trong thông báo lỗi
+                                    var imeiInfo = product.imeis ? product.imeis.find(function(i) { 
+                                        return parseInt(i.idImei) === imeiId; 
+                                    }) : null;
+                                    var imeiCode = imeiInfo ? imeiInfo.maImei : (product.maImei || imeiId);
+                                    errors.push('IMEI "' + imeiCode + '" của sản phẩm "' + product.tenModel + '" đã được bán hoặc không còn khả dụng');
+                                }
+                            }
+                        }
+                    } else {
+                        errors.push('Không thể kiểm tra số lượng tồn kho của sản phẩm "' + product.tenModel + '"');
+                    }
+                } catch (error) {
+                    errors.push('Lỗi khi kiểm tra sản phẩm "' + product.tenModel + '": ' + (error.message || 'Không xác định'));
+                }
+            }
+            
+            return errors;
+        }
+
+        async function thanhToan() {
+            // Lấy nút thanh toán và disable ngay lập tức
+            var btnThanhToan = $('button[onclick="thanhToan()"]');
+            var originalBtnHtml = btnThanhToan.html();
+            
+            // Validation checks trước khi disable nút
             if (selectedProducts.length === 0) {
                 alert('Vui lòng chọn ít nhất một sản phẩm');
                 return;
@@ -1029,41 +1238,80 @@
                 return;
             }
 
-            var orderData = {
-                IdKhachHang: $('#khachHangSelect').val() || null,
-                TenKhachHang: $('#tenKhachHang').val().trim() || '',
-                SdtKhachHang: $('#sdtKhachHang').val().trim() || '',
-                DiaChiGiaoHang: 'Thanh Toán Tại Quầy',
-                PhuongThucThanhToan: $('#phuongThucTT').val(),
-                ChiTietDonHang: selectedProducts.map(function (p) {
-                    return {
-                        IdModelSanPham: p.idModelSanPham,
-                        SoLuong: p.soLuong,
-                        SelectedImeis: p.selectedImeis,
-                        IdKhuyenMai: p.idKhuyenMai || null
-                    };
-                })
-            };
+            // Sau khi validation thành công, disable nút và hiển thị loading
+            btnThanhToan.prop('disabled', true).addClass('disabled').html('<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...');
 
-            $.post('@Url.Action("Create", "DonHang")', orderData, function (response) {
-                if (response && response.success) {
-                    var message = 'Thanh toán thành công!\nMã đơn: ' + response.maDon + '\nNgày bảo hành: ' + response.ngayBaoHanh;
-                    alert(message);
-                    
-                    if (response.pdfUrl && response.maDon) {
-                        window.location.href = response.pdfUrl;
-                    } else {
-                        setTimeout(function() {
-                            location.reload();
-                        }, 2000);
+            try {
+
+                // Hiển thị loading overlay ngay từ đầu
+                showLoading("Đang kiểm tra IMEI và số lượng tồn kho...");
+                
+                try {
+                    var checkErrors = await checkImeiAndInventory();
+                    if (checkErrors && checkErrors.length > 0) {
+                        hideLoading();
+                        btnThanhToan.prop('disabled', false).removeClass('disabled').html(originalBtnHtml);
+                        var errorMessage = 'Không thể thanh toán vì:\n\n' + checkErrors.join('\n');
+                        alert(errorMessage);
+                        return;
                     }
-                } else {
-                    alert('Lỗi: ' + (response ? response.message : 'Không xác định'));
+                } catch (error) {
+                    hideLoading();
+                    btnThanhToan.prop('disabled', false).removeClass('disabled').html(originalBtnHtml);
+                    console.error('Lỗi khi kiểm tra IMEI và tồn kho:', error);
+                    alert('Lỗi khi kiểm tra IMEI và số lượng tồn kho. Vui lòng thử lại.');
+                    return;
                 }
-            }).fail(function(xhr, status, error) {
-                console.error('Lỗi AJAX:', error);
-                alert('Có lỗi xảy ra khi thanh toán. Vui lòng thử lại.');
-            });
+
+                // Cập nhật text loading khi bắt đầu xử lý thanh toán
+                showLoading("Đang xử lý thanh toán...");
+
+                var orderData = {
+                    IdKhachHang: $('#khachHangSelect').val() || null,
+                    TenKhachHang: $('#tenKhachHang').val().trim() || '',
+                    SdtKhachHang: $('#sdtKhachHang').val().trim() || '',
+                    DiaChiGiaoHang: 'Thanh Toán Tại Quầy',
+                    PhuongThucThanhToan: $('#phuongThucTT').val(),
+                    ChiTietDonHang: selectedProducts.map(function (p) {
+                        return {
+                            IdModelSanPham: p.idModelSanPham,
+                            SoLuong: p.soLuong,
+                            SelectedImeis: p.selectedImeis,
+                            IdKhuyenMai: p.idKhuyenMai || null
+                        };
+                    })
+                };
+
+                $.post('@Url.Action("Create", "DonHang")', orderData, function (response) {
+                    hideLoading();
+                    btnThanhToan.prop('disabled', false).removeClass('disabled').html(originalBtnHtml);
+                    
+                    if (response && response.success) {
+                        var message = 'Thanh toán thành công!\nMã đơn: ' + response.maDon + '\nNgày bảo hành: ' + response.ngayBaoHanh;
+                        alert(message);
+                        
+                        if (response.pdfUrl && response.maDon) {
+                            window.location.href = response.pdfUrl;
+                        } else {
+                            setTimeout(function() {
+                                location.reload();
+                            }, 2000);
+                        }
+                    } else {
+                        alert('Lỗi: ' + (response ? response.message : 'Không xác định'));
+                    }
+                }).fail(function(xhr, status, error) {
+                    hideLoading();
+                    btnThanhToan.prop('disabled', false).removeClass('disabled').html(originalBtnHtml);
+                    console.error('Lỗi AJAX:', error);
+                    alert('Có lỗi xảy ra khi thanh toán. Vui lòng thử lại.');
+                });
+            } catch (error) {
+                hideLoading();
+                btnThanhToan.prop('disabled', false).removeClass('disabled').html(originalBtnHtml);
+                console.error('Lỗi không mong đợi:', error);
+                alert('Có lỗi xảy ra. Vui lòng thử lại.');
+            }
         }
 
         $(document).ready(function () {

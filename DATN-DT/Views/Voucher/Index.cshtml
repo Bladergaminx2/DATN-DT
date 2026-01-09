@@ -268,9 +268,88 @@
             ::-webkit-scrollbar-thumb:hover {
                 background: #475569;
             }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(99, 102, 241, 0.2);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            color: var(--text-primary);
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .loading-content {
+            text-align: center;
+        }
+
+        /* Disable buttons when loading */
+        button:disabled,
+        button.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .btn-loading {
+            position: relative;
+            color: transparent !important;
+        }
+
+        .btn-loading::after {
+            content: "";
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin-left: -8px;
+            margin-top: -8px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.6s linear infinite;
+        }
     </style>
 </head>
 <body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text" id="loadingText">Đang xử lý...</div>
+        </div>
+    </div>
+
     <div class="container">
         <h2>Quản Lý Voucher</h2>
 
@@ -599,6 +678,33 @@
     </div>
 
     <script>
+        // Loading functions
+        function showLoading(text = "Đang xử lý...") {
+            const overlay = document.getElementById('loadingOverlay');
+            const loadingText = document.getElementById('loadingText');
+            if (overlay) {
+                loadingText.textContent = text;
+                overlay.classList.add('active');
+            }
+            // Disable all buttons
+            document.querySelectorAll('button[type="submit"], .btn-delete, .btn-edit').forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('disabled');
+            });
+        }
+
+        function hideLoading() {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.classList.remove('active');
+            }
+            // Enable all buttons
+            document.querySelectorAll('button[type="submit"], .btn-delete, .btn-edit').forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('disabled');
+            });
+        }
+
         function showError(id, msg) {
             const el = document.getElementById(id);
             if (el) {
@@ -635,6 +741,9 @@
         document.getElementById("createForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
+            // Show loading
+            showLoading("Đang thêm voucher...");
+
             // Reset errors
             document.querySelectorAll("#createForm small").forEach(e => e.classList.add("d-none"));
 
@@ -652,35 +761,43 @@
 
             // Validate
             if (!MaVoucher.value.trim()) {
+                hideLoading();
                 showError("errorMaVoucher", "Mã voucher không được để trống");
                 return;
             }
             if (!TenVoucher.value.trim()) {
+                hideLoading();
                 showError("errorTenVoucher", "Tên voucher không được để trống");
                 return;
             }
             if (!LoaiGiam.value) {
+                hideLoading();
                 showError("errorLoaiGiam", "Vui lòng chọn loại giảm");
                 return;
             }
             const giaTriValue = parseFloat(GiaTri.value);
             if (isNaN(giaTriValue) || giaTriValue <= 0) {
+                hideLoading();
                 showError("errorGiaTri", "Giá trị phải lớn hơn 0");
                 return;
             }
             if (LoaiGiam.value === "PhanTram" && giaTriValue > 100) {
+                hideLoading();
                 showError("errorGiaTri", "Giá trị phần trăm không được vượt quá 100%");
                 return;
             }
             if (!NgayBatDau.value) {
+                hideLoading();
                 showError("errorNgayBatDau", "Vui lòng chọn ngày bắt đầu");
                 return;
             }
             if (!NgayKetThuc.value) {
+                hideLoading();
                 showError("errorNgayKetThuc", "Vui lòng chọn ngày kết thúc");
                 return;
             }
             if (new Date(NgayKetThuc.value) <= new Date(NgayBatDau.value)) {
+                hideLoading();
                 showError("errorNgayKetThuc", "Ngày kết thúc phải sau ngày bắt đầu");
                 return;
             }
@@ -720,14 +837,17 @@
                 const data = await response.json();
 
                 if (response.ok && (data.success || data.Success)) {
+                    hideLoading();
                     alert(data.message || "Thêm voucher thành công!");
                     location.reload();
                 } else {
+                    hideLoading();
                     const errorMessage = data.message || data.Message || "Không thể thêm voucher. Vui lòng thử lại!";
                     alert(errorMessage);
                     console.error('Create voucher error:', data);
                 }
             } catch (error) {
+                hideLoading();
                 console.error('Error creating voucher:', error);
                 alert("Lỗi kết nối server. Vui lòng thử lại!");
             }
@@ -760,14 +880,19 @@
         document.getElementById("editForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
+            // Show loading
+            showLoading("Đang cập nhật voucher...");
+
             document.querySelectorAll("#editForm small").forEach(e => e.classList.add("d-none"));
 
             const giaTriValue = parseFloat(EditGiaTri.value);
             if (isNaN(giaTriValue) || giaTriValue <= 0) {
+                hideLoading();
                 showError("errorEditGiaTri", "Giá trị phải lớn hơn 0");
                 return;
             }
             if (EditLoaiGiam.value === "PhanTram" && giaTriValue > 100) {
+                hideLoading();
                 showError("errorEditGiaTri", "Giá trị phần trăm không được vượt quá 100%");
                 return;
             }
@@ -814,9 +939,11 @@
             const data = await response.json();
 
             if (response.ok && data.success) {
+                hideLoading();
                 alert("Cập nhật voucher thành công!");
                 location.reload();
             } else {
+                hideLoading();
                 alert(data.message || "Không thể cập nhật voucher. Vui lòng thử lại!");
             }
         });
@@ -829,19 +956,30 @@
                     return;
                 }
 
-                const response = await fetch('/Voucher/Delete', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ Id: parseInt(id) })
-                });
+                // Show loading
+                showLoading("Đang xóa voucher...");
 
-                const data = await response.json();
+                try {
+                    const response = await fetch('/Voucher/Delete', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ Id: parseInt(id) })
+                    });
 
-                if (response.ok && data.success) {
-                    alert("Xóa voucher thành công!");
-                    location.reload();
-                } else {
-                    alert(data.message || "Lỗi khi xóa voucher. Vui lòng thử lại!");
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        hideLoading();
+                        alert("Xóa voucher thành công!");
+                        location.reload();
+                    } else {
+                        hideLoading();
+                        alert(data.message || "Lỗi khi xóa voucher. Vui lòng thử lại!");
+                    }
+                } catch (error) {
+                    hideLoading();
+                    console.error('Error deleting voucher:', error);
+                    alert("Lỗi kết nối server. Vui lòng thử lại!");
                 }
             });
         });

@@ -1049,12 +1049,37 @@
                     const rom = getValue(item, 'rom', 'ROM') || 'N/A';
                     const mau = getValue(item, 'mau', 'Mau') || 'N/A';
                     const anhSanPham = getValue(item, 'anhSanPham', 'AnhSanPham') || '';
-                    const imeis = getValue(item, 'imeis', 'Imeis') || [];
+                    // Lấy IMEI - thử nhiều tên property
+                    let imeis = getValue(item, 'imeis', 'Imeis', 'imei', 'Imei') || [];
+                    const maImei = getValue(item, 'maImei', 'MaImei');
                     const soLuong = getValue(item, 'soLuong', 'SoLuong') || 0;
                     const donGia = getValue(item, 'donGia', 'DonGia') || 0;
                     const thanhTien = getValue(item, 'thanhTien', 'ThanhTien') || 0;
 
-                    const imeiDisplay = Array.isArray(imeis) && imeis.length > 0 ? imeis.join(', ') : 'N/A';
+                    // Xử lý IMEI: có thể là mảng, string, hoặc object
+                    let imeiDisplay = 'N/A';
+                    if (Array.isArray(imeis) && imeis.length > 0) {
+                        // Nếu là mảng string, lọc và join
+                        const validImeis = imeis.filter(i => i && i !== 'N/A' && i !== null && i !== undefined);
+                        imeiDisplay = validImeis.length > 0 ? validImeis.join(', ') : 'N/A';
+                    } else if (maImei && maImei !== 'N/A' && maImei !== null && maImei !== undefined) {
+                        // Nếu có maImei trực tiếp
+                        imeiDisplay = maImei;
+                    } else if (typeof imeis === 'string' && imeis !== 'N/A' && imeis !== '') {
+                        // Nếu là string
+                        imeiDisplay = imeis;
+                    } else if (imeis && typeof imeis === 'object' && !Array.isArray(imeis)) {
+                        // Nếu là object, thử lấy maImei
+                        const imeiObj = imeis;
+                        if (imeiObj.maImei || imeiObj.MaImei) {
+                            imeiDisplay = imeiObj.maImei || imeiObj.MaImei;
+                        }
+                    }
+                    
+                    // Đảm bảo không hiển thị giá trị rỗng
+                    if (!imeiDisplay || imeiDisplay === 'N/A' || imeiDisplay === '' || imeiDisplay === null || imeiDisplay === undefined) {
+                        imeiDisplay = 'N/A';
+                    }
                     const anhHtml = anhSanPham ? `<img src="${anhSanPham.startsWith('/') ? anhSanPham : '/' + anhSanPham}" alt="${tenSanPham}" class="img-fluid" style="max-width: 100px; max-height: 100px;" />` : '<span class="text-muted">N/A</span>';
 
                     html += `
@@ -1139,12 +1164,37 @@
                     const rom = getValue(item, 'rom', 'ROM') || 'N/A';
                     const mau = getValue(item, 'mau', 'Mau') || 'N/A';
                     const anhSanPham = getValue(item, 'anhSanPham', 'AnhSanPham') || '';
-                    const imeis = getValue(item, 'imeis', 'Imeis') || [];
+                    // Lấy IMEI - thử nhiều tên property
+                    let imeis = getValue(item, 'imeis', 'Imeis', 'imei', 'Imei') || [];
+                    const maImei = getValue(item, 'maImei', 'MaImei');
                     const soLuong = getValue(item, 'soLuong', 'SoLuong') || 0;
                     const donGia = getValue(item, 'donGia', 'DonGia') || 0;
                     const thanhTien = getValue(item, 'thanhTien', 'ThanhTien') || 0;
 
-                    const imeiDisplay = Array.isArray(imeis) && imeis.length > 0 ? imeis.join(', ') : 'N/A';
+                    // Xử lý IMEI: có thể là mảng, string, hoặc object
+                    let imeiDisplay = 'N/A';
+                    if (Array.isArray(imeis) && imeis.length > 0) {
+                        // Nếu là mảng string, lọc và join
+                        const validImeis = imeis.filter(i => i && i !== 'N/A' && i !== null && i !== undefined);
+                        imeiDisplay = validImeis.length > 0 ? validImeis.join(', ') : 'N/A';
+                    } else if (maImei && maImei !== 'N/A' && maImei !== null && maImei !== undefined) {
+                        // Nếu có maImei trực tiếp
+                        imeiDisplay = maImei;
+                    } else if (typeof imeis === 'string' && imeis !== 'N/A' && imeis !== '') {
+                        // Nếu là string
+                        imeiDisplay = imeis;
+                    } else if (imeis && typeof imeis === 'object' && !Array.isArray(imeis)) {
+                        // Nếu là object, thử lấy maImei
+                        const imeiObj = imeis;
+                        if (imeiObj.maImei || imeiObj.MaImei) {
+                            imeiDisplay = imeiObj.maImei || imeiObj.MaImei;
+                        }
+                    }
+                    
+                    // Đảm bảo không hiển thị giá trị rỗng
+                    if (!imeiDisplay || imeiDisplay === 'N/A' || imeiDisplay === '' || imeiDisplay === null || imeiDisplay === undefined) {
+                        imeiDisplay = 'N/A';
+                    }
                     const anhHtml = anhSanPham ? `<img src="${anhSanPham.startsWith('/') ? anhSanPham : '/' + anhSanPham}" alt="${tenSanPham}" class="img-fluid" style="max-width: 100px; max-height: 100px;" />` : '<span class="text-muted">N/A</span>';
 
                     html += `

@@ -865,9 +865,6 @@
         <a href="#" data-page="voucher">
             <i class="fas fa-ticket-alt" style="font-size: 20px; width: 20px; height: 20px; display: inline-block;"></i>Voucher
         </a>
-        <a href="#" data-page="thanhtoan">
-            <img src="~/ImgResource/Icons/money-bill-solid-full.svg" class="icon" />Thanh Toán
-        </a>
         <a href="#" data-page="donhang">
             <img src="~/ImgResource/Icons/boxes-packing-solid-full.svg" class="icon" />Đơn Hàng
         </a>
@@ -1242,19 +1239,6 @@
             </div>
         </div>
 
-        <!-- Thanh Toán Page -->
-        <div class="page-container" id="thanhToanPage">
-            <div class="page-header">
-                <h2>Thanh Toán</h2>
-                <button class="btn btn-back" onclick="showWelcomePage()">
-                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
-                </button>
-            </div>
-            <div class="iframe-container">
-                <iframe src="/ThanhToan" class="iframe-full" id="thanhToanFrame"></iframe>
-            </div>
-        </div>
-
         <!-- Đơn Hàng Page -->
         <div class="page-container" id="donHangPage">
             <div class="page-header">
@@ -1545,8 +1529,6 @@
                         showPage('khuyenMaiPage');
                     } else if (page === 'voucher') {
                         showPage('voucherPage');
-                    } else if (page === 'thanhtoan') {
-                        showPage('thanhToanPage');
                     } else if (page === 'donhang') {
                         showPage('donHangPage');
                     } else if (page === 'hoadon') {
@@ -1596,7 +1578,6 @@
                 'imeiPage': 'imei',
                 'khuyenMaiPage': 'khuyenmai',
                 'voucherPage': 'voucher',
-                'thanhToanPage': 'thanhtoan',
                 'donHangPage': 'donhang',
                 'hoaDonPage': 'hoadon',
                 'quanlybanhangPage': 'quanlybanhang',
