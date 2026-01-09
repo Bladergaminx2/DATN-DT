@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "Quản lý Hóa Đơn";
+    ViewData["Title"] = "Quản lý Hóa Đơn Offline";
     Layout = null;
 }
 
@@ -7,7 +7,7 @@
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
-    <title>Quản lý Hóa Đơn</title>
+    <title>Quản lý Hóa Đơn Offline</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -157,18 +157,6 @@
             box-shadow: var(--shadow-md);
         }
 
-        .btn-update-status {
-            background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
-            border: none;
-            color: white;
-        }
-
-        .btn-update-status:hover {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-md);
-        }
-
         .modal-content {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -254,23 +242,53 @@
         }
 
         .status-1 {
-            background-color: rgba(99, 102, 241, 0.1);
-            color: var(--primary-color);
-        }
-
-        .status-2 {
-            background-color: rgba(14, 165, 233, 0.1);
-            color: #0ea5e9;
-        }
-
-        .status-3 {
             background-color: rgba(16, 185, 129, 0.1);
             color: var(--success-color);
         }
 
-        .status-4 {
-            background-color: rgba(239, 68, 68, 0.1);
-            color: var(--danger-color);
+        .payment-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .payment-offline {
+            background-color: rgba(14, 165, 233, 0.15);
+            color: #0ea5e9;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, #0f172a 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow-md);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .stat-card.offline {
+            border-left-color: #0ea5e9;
+        }
+
+        .stat-card .stat-label {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .stat-value {
+            color: var(--text-primary);
+            font-size: 24px;
+            font-weight: 700;
         }
 
         .invoice-item {
@@ -301,113 +319,21 @@
             object-fit: cover;
             border-radius: 6px;
         }
-
-        .nav-pills .nav-link {
-            color: var(--text-secondary);
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            margin-right: 5px;
-            margin-bottom: 5px;
-        }
-
-        .nav-pills .nav-link.active {
-            background-color: #4a90e2;
-            color: white;
-            border-color: #4a90e2;
-        }
-
-        .nav-pills .nav-link:hover {
-            color: #fff;
-            background-color: #357ab8;
-            border-color: #357ab8;
-        }
-
-        /* Payment Method Filter Styles */
-        .btn-group .btn-check:checked + .btn {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            border-color: var(--primary-color);
-            color: white;
-        }
-
-        .btn-group .btn {
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            background-color: var(--bg-card);
-        }
-
-        .btn-group .btn:hover {
-            background-color: rgba(99, 102, 241, 0.1);
-            border-color: var(--primary-color);
-        }
-
-        .payment-badge {
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            display: inline-block;
-        }
-
-        .payment-online {
-            background-color: rgba(16, 185, 129, 0.15);
-            color: var(--success-color);
-        }
-
-        .payment-offline {
-            background-color: rgba(14, 165, 233, 0.15);
-            color: #0ea5e9;
-        }
-
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, var(--bg-card) 0%, #0f172a 100%);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: var(--shadow-md);
-            border-left: 4px solid var(--primary-color);
-        }
-
-        .stat-card.online {
-            border-left-color: var(--success-color);
-        }
-
-        .stat-card.offline {
-            border-left-color: #0ea5e9;
-        }
-
-        .stat-card .stat-label {
-            color: var(--text-secondary);
-            font-size: 13px;
-            margin-bottom: 8px;
-        }
-
-        .stat-card .stat-value {
-            color: var(--text-primary);
-            font-size: 24px;
-            font-weight: 700;
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2><i class="bi bi-receipt me-2"></i>Quản lý Hóa Đơn Online</h2>
+        <h2><i class="bi bi-shop me-2"></i>Quản lý Hóa Đơn Offline</h2>
 
         <!-- Statistics Section -->
         <div class="stats-row" id="statsContainer">
             <div class="stat-card">
-                <div class="stat-label">Tổng số hóa đơn</div>
-                <div class="stat-value" id="totalInvoices">0</div>
+                <div class="stat-label">Tổng số đơn hàng</div>
+                <div class="stat-value" id="totalOrders">0</div>
             </div>
-            <div class="stat-card online">
-                <div class="stat-label">Hóa đơn Online</div>
-                <div class="stat-value" id="onlineInvoices">0</div>
+            <div class="stat-card offline">
+                <div class="stat-label">Đơn hàng Offline</div>
+                <div class="stat-value" id="offlineOrders">0</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Tổng doanh thu</div>
@@ -431,7 +357,7 @@
                     <input type="date" id="toDate" class="form-control">
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
-                    <button class="btn btn-primary w-100" onclick="loadInvoices()">
+                    <button class="btn btn-primary w-100" onclick="loadOrders()">
                         <i class="bi bi-search me-1"></i>Tìm kiếm
                     </button>
                 </div>
@@ -440,70 +366,46 @@
             <!-- Payment Method Filter -->
             <div class="row mb-3">
                 <div class="col-md-12">
-                    <label class="form-label">Loại bán hàng</label>
+                    <label class="form-label">Phương thức thanh toán</label>
                     <div class="btn-group w-100" role="group">
-                        <input type="radio" class="btn-check" name="paymentType" id="onlineType" value="Chuyển khoản" checked>
-                        <label class="btn btn-outline-success" for="onlineType">
-                            <i class="bi bi-globe me-1"></i>Online (Chuyển khoản)
+                        <input type="radio" class="btn-check" name="paymentType" id="allType" value="" checked>
+                        <label class="btn btn-outline-primary" for="allType">
+                            <i class="bi bi-grid-3x3-gap me-1"></i>Tất cả
+                        </label>
+                        
+                        <input type="radio" class="btn-check" name="paymentType" id="cashType" value="Tiền mặt">
+                        <label class="btn btn-outline-success" for="cashType">
+                            <i class="bi bi-cash-coin me-1"></i>Tiền mặt
+                        </label>
+                        
+                        <input type="radio" class="btn-check" name="paymentType" id="transferType" value="Chuyển khoản">
+                        <label class="btn btn-outline-info" for="transferType">
+                            <i class="bi bi-bank me-1"></i>Chuyển khoản
                         </label>
                     </div>
                 </div>
             </div>
-
-            <!-- Status Filter Tabs -->
-            <ul class="nav nav-pills" id="statusFilterTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="all-tab" data-status="" type="button">
-                        <i class="bi bi-list-ul me-1"></i>Tất cả
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="status0-tab" data-status="0" type="button">
-                        <i class="bi bi-hourglass-split me-1"></i>Chờ xác nhận
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="status1-tab" data-status="1" type="button">
-                        <i class="bi bi-check-circle me-1"></i>Đã xác nhận
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="status2-tab" data-status="2" type="button">
-                        <i class="bi bi-truck me-1"></i>Đang vận chuyển
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="status3-tab" data-status="3" type="button">
-                        <i class="bi bi-check2-circle me-1"></i>Giao hàng thành công
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="status4-tab" data-status="4" type="button">
-                        <i class="bi bi-x-circle me-1"></i>Hủy đơn hàng
-                    </button>
-                </li>
-            </ul>
         </div>
 
         <!-- Table Container -->
         <div class="table-container">
-            <div id="invoicesTableContainer">
+            <div id="ordersTableContainer">
                 <p class="text-center text-muted">Đang tải dữ liệu...</p>
             </div>
         </div>
     </div>
 
-    <!-- Modal Chi tiết Hóa đơn -->
-    <div class="modal fade" id="invoiceDetailModal" tabindex="-1" aria-labelledby="invoiceDetailModalLabel" aria-hidden="true">
+    <!-- Modal Chi tiết Đơn hàng -->
+    <div class="modal fade" id="orderDetailModal" tabindex="-1" aria-labelledby="orderDetailModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="invoiceDetailModalLabel">
-                        <i class="bi bi-receipt me-2"></i>Chi tiết Hóa đơn
+                    <h5 class="modal-title" id="orderDetailModalLabel">
+                        <i class="bi bi-receipt me-2"></i>Chi tiết Đơn hàng
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body" id="invoiceDetailContent">
+                <div class="modal-body" id="orderDetailContent">
                     <p class="text-muted">Đang tải chi tiết...</p>
                 </div>
                 <div class="modal-footer">
@@ -513,72 +415,27 @@
         </div>
     </div>
 
-    <!-- Modal Cập nhật trạng thái -->
-    <div class="modal fade" id="updateStatusModal" tabindex="-1" aria-labelledby="updateStatusModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="updateStatusModalLabel">
-                        <i class="bi bi-pencil-square me-2"></i>Cập nhật trạng thái
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="currentInvoiceId">
-                    <div class="mb-3">
-                        <label class="form-label">Trạng thái mới</label>
-                        <select id="newStatus" class="form-control">
-                            <option value="0">Chờ xác nhận</option>
-                            <option value="1">Đã xác nhận</option>
-                            <option value="2">Đang vận chuyển</option>
-                            <option value="3">Giao hàng thành công</option>
-                            <option value="4">Hủy đơn hàng</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button type="button" class="btn btn-primary" onclick="confirmUpdateStatus()">
-                        <i class="bi bi-check-circle me-1"></i>Cập nhật
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
-        var currentStatusFilter = null;
-
         // Format tiền
         function formatMoney(amount) {
             return new Intl.NumberFormat('vi-VN').format(amount) + ' ₫';
         }
 
-        // Lấy tên trạng thái từ số
-        function getStatusName(statusNum) {
-            switch (statusNum) {
-                case 0: return 'Chờ xác nhận';
-                case 1: return 'Đã xác nhận';
-                case 2: return 'Đang vận chuyển';
-                case 3: return 'Giao hàng thành công';
-                case 4: return 'Hủy đơn hàng';
-                default: return 'Không xác định';
-            }
-        }
-
-        // Load danh sách hóa đơn
-        async function loadInvoices() {
+        // Load danh sách đơn hàng offline
+        async function loadOrders() {
             try {
                 var search = document.getElementById('searchInput').value;
                 var fromDate = document.getElementById('fromDate').value;
                 var toDate = document.getElementById('toDate').value;
-                var status = currentStatusFilter;
                 
-                // Mặc định chỉ lấy hóa đơn online (Chuyển khoản)
-                var paymentMethod = 'Chuyển khoản';
+                // Lấy phương thức thanh toán đã chọn
+                var paymentMethod = '';
+                var paymentRadio = document.querySelector('input[name="paymentType"]:checked');
+                if (paymentRadio && paymentRadio.value) {
+                    paymentMethod = paymentRadio.value;
+                }
 
-                var url = '/HoaDon/GetInvoices?';
-                if (status !== null) url += 'status=' + status + '&';
+                var url = '/DonHang/GetOfflineOrders?';
                 if (search) url += 'search=' + encodeURIComponent(search) + '&';
                 if (fromDate) url += 'fromDate=' + encodeURIComponent(fromDate) + '&';
                 if (toDate) url += 'toDate=' + encodeURIComponent(toDate) + '&';
@@ -587,23 +444,20 @@
                 const response = await fetch(url);
                 const result = await response.json();
 
-                var container = document.getElementById('invoicesTableContainer');
+                var container = document.getElementById('ordersTableContainer');
                 if (!result.success) {
                     container.innerHTML = '<p class="text-center text-danger" style="color: #dc3545 !important;">Lỗi: ' + (result.message || 'Không thể tải dữ liệu') + '</p>';
                     return;
                 }
 
-                // Debug: Log dữ liệu
-                console.log('Invoices data:', result.data);
-                
                 var html = '<table class="table table-hover" style="width: 100%;">' +
                     '<thead>' +
                     '<tr>' +
                     '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Mã đơn</th>' +
-                    '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Loại</th>' +
+                    '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Phương thức</th>' +
                     '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Khách hàng</th>' +
                     '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Nhân viên</th>' +
-                    '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Ngày lập</th>' +
+                    '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Ngày đặt</th>' +
                     '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Trạng thái</th>' +
                     '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Tổng tiền</th>' +
                     '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Số lượng SP</th>' +
@@ -613,41 +467,39 @@
                     '<tbody>';
 
                 if (!result.data || result.data.length === 0) {
-                    html += '<tr><td colspan="9" class="text-center" style="color: #b0b0b0 !important; font-size: 15px !important; padding: 30px !important;"><i class="bi bi-inbox me-2"></i>Không có hóa đơn nào.</td></tr>';
+                    html += '<tr><td colspan="9" class="text-center" style="color: #b0b0b0 !important; font-size: 15px !important; padding: 30px !important;"><i class="bi bi-inbox me-2"></i>Không có đơn hàng nào.</td></tr>';
                 } else {
                     // Tính thống kê
                     var totalCount = result.data.length;
                     var totalRevenue = 0;
 
                     for (var i = 0; i < result.data.length; i++) {
-                        var invoice = result.data[i];
-                        totalRevenue += (invoice.tongTien || 0);
+                        var order = result.data[i];
+                        totalRevenue += (order.tongTien || 0);
                     }
 
                     // Cập nhật thống kê
-                    document.getElementById('totalInvoices').textContent = totalCount;
-                    document.getElementById('onlineInvoices').textContent = totalCount;
+                    document.getElementById('totalOrders').textContent = totalCount;
+                    document.getElementById('offlineOrders').textContent = totalCount;
                     document.getElementById('totalRevenue').textContent = formatMoney(totalRevenue);
 
                     for (var i = 0; i < result.data.length; i++) {
-                        var invoice = result.data[i];
+                        var order = result.data[i];
                         
-                        var statusClass = 'status-' + (invoice.trangThaiSo !== undefined ? invoice.trangThaiSo : 0);
-                        var statusName = getStatusName(invoice.trangThaiSo !== undefined ? invoice.trangThaiSo : 0);
+                        var statusClass = 'status-' + (order.trangThaiSo !== undefined ? order.trangThaiSo : 1);
+                        var statusName = order.trangThaiSo === 1 ? 'Đã thanh toán' : 'Chưa thanh toán';
                         
-                        // Đảm bảo hiển thị đầy đủ thông tin
-                        var maDon = invoice.maDon || (invoice.idHoaDon ? 'HD' + String(invoice.idHoaDon).padStart(6, '0') : 'N/A');
-                        var hoTen = invoice.hoTenKhachHang || 'N/A';
-                        var sdt = invoice.sdtKhachHang || '';
-                        var hoTenNhanVien = invoice.hoTenNhanVien || 'N/A';
-                        var ngayLap = invoice.ngayLap || 'N/A';
-                        var tongTien = invoice.tongTien !== undefined && invoice.tongTien !== null ? invoice.tongTien : 0;
-                        var soLuongSP = invoice.soLuongSanPham !== undefined && invoice.soLuongSanPham !== null ? invoice.soLuongSanPham : 0;
-                        var phuongThuc = invoice.phuongThucThanhToan || 'COD';
-                        var isOnline = phuongThuc === 'Chuyển khoản';
-                        var paymentBadge = isOnline 
-                            ? '<span class="payment-badge payment-online"><i class="bi bi-globe me-1"></i>Online</span>'
-                            : '<span class="payment-badge payment-offline"><i class="bi bi-shop me-1"></i>Offline</span>';
+                        var maDon = order.maDon || 'N/A';
+                        var hoTen = order.hoTenKhachHang || 'N/A';
+                        var sdt = order.sdtKhachHang || '';
+                        var hoTenNhanVien = order.hoTenNhanVien || 'N/A';
+                        var ngayDat = order.ngayDat || 'N/A';
+                        var tongTien = order.tongTien !== undefined && order.tongTien !== null ? order.tongTien : 0;
+                        var soLuongSP = order.soLuongSanPham !== undefined && order.soLuongSanPham !== null ? order.soLuongSanPham : 0;
+                        var phuongThuc = order.phuongThucThanhToan || 'Tiền mặt';
+                        var paymentBadge = phuongThuc === 'Tiền mặt'
+                            ? '<span class="payment-badge payment-offline"><i class="bi bi-cash-coin me-1"></i>Tiền mặt</span>'
+                            : '<span class="payment-badge payment-offline"><i class="bi bi-bank me-1"></i>Chuyển khoản</span>';
 
                         html += '<tr>' +
                             '<td style="color: #ffffff !important; font-size: 14px !important;"><strong style="color: #ffffff !important; font-weight: 600 !important;">' + maDon + '</strong></td>' +
@@ -659,16 +511,14 @@
                             '<td style="color: #f1f5f9 !important; font-size: 14px !important;">' +
                             (hoTenNhanVien !== 'N/A' ? '<span style="color: #667eea !important; font-weight: 500;"><i class="bi bi-person-badge me-1"></i>' + hoTenNhanVien + '</span>' : '<span class="text-muted">Chưa có</span>') +
                             '</td>' +
-                            '<td style="color: #f1f5f9 !important; font-size: 14px !important;">' + ngayLap + '</td>' +
+                            '<td style="color: #f1f5f9 !important; font-size: 14px !important;">' + ngayDat + '</td>' +
                             '<td style="font-size: 14px !important;"><span class="status-badge ' + statusClass + '">' + statusName + '</span></td>' +
                             '<td style="font-size: 14px !important;"><strong style="color: #28a745 !important; font-weight: 600 !important; font-size: 14px !important;">' + formatMoney(tongTien) + '</strong></td>' +
                             '<td style="font-size: 14px !important;"><span class="badge bg-secondary" style="font-size: 12px !important;">' + soLuongSP + '</span></td>' +
                             '<td>' +
                             '<div class="d-flex gap-2 flex-wrap">' +
-                            '<button class="btn btn-view btn-action" onclick="showInvoiceDetail(' + invoice.idHoaDon + ')">' +
+                            '<button class="btn btn-view btn-action" onclick="showOrderDetail(' + order.idDonHang + ')">' +
                             '<i class="bi bi-eye me-1"></i>Chi tiết</button>' +
-                            '<button class="btn btn-update-status btn-action" onclick="openUpdateStatusModal(' + invoice.idHoaDon + ', ' + (invoice.trangThaiSo !== undefined ? invoice.trangThaiSo : 0) + ')">' +
-                            '<i class="bi bi-pencil me-1"></i>Đổi trạng thái</button>' +
                             '</div>' +
                             '</td>' +
                             '</tr>';
@@ -678,38 +528,43 @@
                 html += '</tbody></table>';
                 container.innerHTML = html;
             } catch (error) {
-                console.error('Error loading invoices:', error);
-                document.getElementById('invoicesTableContainer').innerHTML =
-                    '<p class="text-center text-danger">Lỗi khi tải danh sách hóa đơn.</p>';
+                console.error('Error loading orders:', error);
+                document.getElementById('ordersTableContainer').innerHTML =
+                    '<p class="text-center text-danger">Lỗi khi tải danh sách đơn hàng.</p>';
             }
         }
 
-        // Xem chi tiết hóa đơn
-        async function showInvoiceDetail(id) {
+        // Xem chi tiết đơn hàng
+        async function showOrderDetail(id) {
             try {
-                const response = await fetch('/HoaDon/GetInvoiceDetail?id=' + id);
+                const response = await fetch('/DonHang/GetOfflineOrderDetail?id=' + id);
                 const result = await response.json();
 
                 if (!result.success || !result.data) {
-                    alert('Không tìm thấy chi tiết hóa đơn');
+                    alert('Không tìm thấy chi tiết đơn hàng');
                     return;
                 }
 
-                var invoice = result.data;
-                var statusClass = 'status-' + invoice.trangThaiSo;
-                var statusName = getStatusName(invoice.trangThaiSo);
+                var order = result.data;
+                var statusClass = 'status-' + order.trangThaiSo;
+                var statusName = order.trangThaiSo === 1 ? 'Đã thanh toán' : 'Chưa thanh toán';
 
                 var chiTietHtml = '';
-                if (invoice.chiTiet && invoice.chiTiet.length > 0) {
-                    for (var i = 0; i < invoice.chiTiet.length; i++) {
-                        var item = invoice.chiTiet[i];
+                if (order.chiTiet && order.chiTiet.length > 0) {
+                    for (var i = 0; i < order.chiTiet.length; i++) {
+                        var item = order.chiTiet[i];
+                        var imeiHtml = '';
+                        if (item.imeis && item.imeis.length > 0) {
+                            imeiHtml = '<p class="mb-1" style="color: #aaa !important; font-size: 12px;"><strong>IMEI:</strong> ' + item.imeis.join(', ') + '</p>';
+                        }
                         chiTietHtml += '<div class="invoice-detail-row">' +
                             '<img src="' + (item.hinhAnh || '/images/default-product.jpg') + '" alt="' + (item.tenSanPham || '') + '" ' +
                             'onerror="this.src=\'/images/default-product.jpg\'">' +
                             '<div class="flex-grow-1">' +
                             '<h6 style="color: #ffffff !important;">' + (item.tenSanPham || '') + '</h6>' +
                             '<p class="text-muted mb-1" style="color: #aaa !important;">Model: ' + (item.tenModel || '') + ' - Màu: ' + (item.mau || '') + '</p>' +
-                            '<p class="mb-1" style="color: #ffffff !important;">Số lượng: ' + (item.soLuong || 0) + '</p>' +
+                            '<p class="mb-1" style="color: #aaa !important;">RAM/ROM: ' + (item.ram || '') + ' / ' + (item.rom || '') + '</p>' +
+                            imeiHtml +
                             '<p class="mb-1" style="color: #ffffff !important;">Đơn giá: ' + formatMoney(item.donGia || 0) + '</p>' +
                             '<p class="mb-0" style="color: #ffffff !important;"><strong>Thành tiền: ' + formatMoney(item.thanhTien || 0) + '</strong></p>' +
                             '</div>' +
@@ -717,123 +572,64 @@
                     }
                 }
 
+                var paymentInfoHtml = '';
+                if (order.tienKhachDua !== null && order.tienKhachDua !== undefined) {
+                    paymentInfoHtml = '<p class="mb-1" style="color: #ffffff !important;"><strong>Tiền khách đưa:</strong> ' + formatMoney(order.tienKhachDua) + '</p>';
+                    if (order.tienThua !== null && order.tienThua !== undefined) {
+                        paymentInfoHtml += '<p class="mb-1" style="color: #ffffff !important;"><strong>Tiền thừa:</strong> ' + formatMoney(order.tienThua) + '</p>';
+                    }
+                }
+
                 var detailHtml = '<div class="invoice-item">' +
-                    '<h6>Thông tin hóa đơn</h6>' +
-                    '<p class="mb-1" style="color: #ffffff !important;"><strong>Mã đơn:</strong> ' + (invoice.maDon || '') + '</p>' +
-                    '<p class="mb-1" style="color: #ffffff !important;"><strong>Ngày lập:</strong> ' + (invoice.ngayLap || '') + '</p>' +
+                    '<h6>Thông tin đơn hàng</h6>' +
+                    '<p class="mb-1" style="color: #ffffff !important;"><strong>Mã đơn:</strong> ' + (order.maDon || '') + '</p>' +
+                    '<p class="mb-1" style="color: #ffffff !important;"><strong>Ngày đặt:</strong> ' + (order.ngayDat || '') + '</p>' +
                     '<p class="mb-1" style="color: #ffffff !important;"><strong>Trạng thái:</strong> <span class="status-badge ' + statusClass + '">' + statusName + '</span></p>' +
-                    '<p class="mb-1" style="color: #ffffff !important;"><strong>Phương thức thanh toán:</strong> ' + (invoice.phuongThucThanhToan || 'COD') + '</p>' +
-                    '<p class="mb-1" style="color: #ffffff !important;"><strong>Tổng tiền:</strong> <strong class="text-primary">' + formatMoney(invoice.tongTien || 0) + '</strong></p>' +
+                    '<p class="mb-1" style="color: #ffffff !important;"><strong>Phương thức thanh toán:</strong> ' + (order.phuongThucThanhToan || 'Tiền mặt') + '</p>' +
+                    paymentInfoHtml +
+                    '<p class="mb-1" style="color: #ffffff !important;"><strong>Tổng tiền:</strong> <strong class="text-primary">' + formatMoney(order.tongTien || 0) + '</strong></p>' +
                     '</div>' +
                     '<div class="invoice-item">' +
                     '<h6>Thông tin khách hàng</h6>' +
-                    '<p class="mb-1" style="color: #ffffff !important;"><strong>Họ tên:</strong> ' + (invoice.hoTenKhachHang || '') + '</p>' +
-                    '<p class="mb-1" style="color: #ffffff !important;"><strong>SĐT:</strong> ' + (invoice.sdtKhachHang || '') + '</p>' +
-                    '<p class="mb-1" style="color: #ffffff !important;"><strong>Email:</strong> ' + (invoice.emailKhachHang || '') + '</p>' +
+                    '<p class="mb-1" style="color: #ffffff !important;"><strong>Họ tên:</strong> ' + (order.hoTenKhachHang || '') + '</p>' +
+                    '<p class="mb-1" style="color: #ffffff !important;"><strong>SĐT:</strong> ' + (order.sdtKhachHang || '') + '</p>' +
                     '</div>' +
                     '<div class="invoice-item">' +
                     '<h6>Thông tin nhân viên</h6>' +
                     '<p class="mb-1" style="color: #ffffff !important;"><strong>Nhân viên bán hàng:</strong> ' + 
-                    ((invoice.hoTenNhanVien && invoice.hoTenNhanVien !== 'N/A') ? '<span style="color: #667eea !important;"><i class="bi bi-person-badge me-1"></i>' + invoice.hoTenNhanVien + '</span>' : '<span class="text-muted">Chưa có</span>') + '</p>' +
+                    ((order.hoTenNhanVien && order.hoTenNhanVien !== 'N/A') ? '<span style="color: #667eea !important;"><i class="bi bi-person-badge me-1"></i>' + order.hoTenNhanVien + '</span>' : '<span class="text-muted">Chưa có</span>') + '</p>' +
                     '</div>' +
                     '<div class="invoice-item">' +
                     '<h6>Chi tiết sản phẩm</h6>' +
                     chiTietHtml +
                     '</div>';
 
-                document.getElementById('invoiceDetailContent').innerHTML = detailHtml;
+                document.getElementById('orderDetailContent').innerHTML = detailHtml;
 
-                var modal = new bootstrap.Modal(document.getElementById('invoiceDetailModal'));
+                var modal = new bootstrap.Modal(document.getElementById('orderDetailModal'));
                 modal.show();
             } catch (error) {
-                console.error('Error loading invoice detail:', error);
-                alert('Lỗi khi tải chi tiết hóa đơn');
+                console.error('Error loading order detail:', error);
+                alert('Lỗi khi tải chi tiết đơn hàng');
             }
-        }
-
-        // Mở modal cập nhật trạng thái
-        function openUpdateStatusModal(id, currentStatus) {
-            document.getElementById('currentInvoiceId').value = id;
-            document.getElementById('newStatus').value = currentStatus;
-
-            var modal = new bootstrap.Modal(document.getElementById('updateStatusModal'));
-            modal.show();
-        }
-
-        // Xác nhận cập nhật trạng thái
-        async function confirmUpdateStatus() {
-            var id = document.getElementById('currentInvoiceId').value;
-            var newStatus = parseInt(document.getElementById('newStatus').value);
-
-            if (!id || isNaN(newStatus)) {
-                alert('Dữ liệu không hợp lệ');
-                return;
-            }
-
-            try {
-                const response = await fetch('/HoaDon/UpdateStatus?id=' + id, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ TrangThai: newStatus })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    alert(result.message || 'Cập nhật trạng thái thành công!');
-                    var modal = bootstrap.Modal.getInstance(document.getElementById('updateStatusModal'));
-                    if (modal) modal.hide();
-                    loadInvoices();
-                } else {
-                    alert(result.message || 'Cập nhật trạng thái thất bại!');
-                }
-            } catch (error) {
-                console.error('Error updating status:', error);
-                alert('Lỗi khi cập nhật trạng thái');
-            }
-        }
-
-        // Filter theo trạng thái
-        function filterByStatus(status) {
-            currentStatusFilter = status === '' ? null : parseInt(status);
-
-            // Update active tab
-            var tabs = document.querySelectorAll('#statusFilterTabs .nav-link');
-            for (var i = 0; i < tabs.length; i++) {
-                tabs[i].classList.remove('active');
-                if (tabs[i].getAttribute('data-status') === status) {
-                    tabs[i].classList.add('active');
-                }
-            }
-
-            loadInvoices();
         }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function () {
-            loadInvoices();
-
-            // Setup status filter tabs
-            var statusTabs = document.querySelectorAll('#statusFilterTabs .nav-link');
-            for (var i = 0; i < statusTabs.length; i++) {
-                statusTabs[i].addEventListener('click', function (e) {
-                    var status = this.getAttribute('data-status');
-                    filterByStatus(status);
-                });
-            }
+            loadOrders();
 
             // Setup payment method filter
             var paymentRadios = document.querySelectorAll('input[name="paymentType"]');
             for (var i = 0; i < paymentRadios.length; i++) {
                 paymentRadios[i].addEventListener('change', function () {
-                    loadInvoices();
+                    loadOrders();
                 });
             }
 
             // Search on Enter
             document.getElementById('searchInput').addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') {
-                    loadInvoices();
+                    loadOrders();
                 }
             });
         });

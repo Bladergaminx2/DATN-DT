@@ -991,15 +991,13 @@ namespace DATN_DT.Controllers
             {
                 var now = DateTime.Now.Date;
 
-                // Tìm khuyến mãi đang hoạt động cho sản phẩm này
+                // Tìm khuyến mãi đang hoạt động cho sản phẩm này (bỏ kiểm tra ngày kết thúc để cho phép khuyến mãi hết hạn vẫn hoạt động)
                 var activePromotion = await (from mspkm in _context.ModelSanPhamKhuyenMais
                                            join km in _context.KhuyenMais on mspkm.IdKhuyenMai equals km.IdKhuyenMai
                                            where mspkm.IdModelSanPham == idModelSanPham
                                               && km.NgayBatDau.HasValue
-                                              && km.NgayKetThuc.HasValue
                                               && km.NgayBatDau.Value.Date <= now
-                                              && km.NgayKetThuc.Value.Date >= now
-                                              && km.TrangThaiKM == "Đang diễn ra"
+                                              && (km.TrangThaiKM == "Đang diễn ra" || km.TrangThaiKM == "Đã kết thúc")
                                            orderby km.NgayKetThuc descending // Lấy khuyến mãi gần nhất
                                            select km)
                                           .FirstOrDefaultAsync(ct);

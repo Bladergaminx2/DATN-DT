@@ -430,6 +430,7 @@
                                 var statusClass = "status-active";
                                 var statusText = "Đang làm việc";
 
+                                // TrangThaiNV: 0 = Đang làm việc, 1 = Đã nghỉ, 2 = Nghỉ phép
                                 if (item.TrangThaiNV == 1)
                                 {
                                     statusClass = "status-inactive";
@@ -439,6 +440,11 @@
                                 {
                                     statusClass = "status-warning";
                                     statusText = "Nghỉ phép";
+                                }
+                                else if (item.TrangThaiNV == 0)
+                                {
+                                    statusClass = "status-active";
+                                    statusText = "Đang làm việc";
                                 }
                             }
                             <span class="@statusClass">
@@ -552,10 +558,11 @@
                                 <div class="mb-3">
                                     <label class="form-label">Trạng thái</label>
                                     <select id="TrangThaiNV" class="form-control">
-                                        <option value="0">Đang làm việc</option>
+                                        <option value="0" selected>Đang làm việc</option>
                                         <option value="2">Nghỉ phép</option>
                                         <option value="1">Đã nghỉ</option>
                                     </select>
+                                    <small class="text-muted">Lưu ý: Chỉ nhân viên "Đang làm việc" mới có thể đăng nhập</small>
                                     <small id="errorTrangThaiNV" class="text-danger d-none"></small>
                                 </div>
                             </div>
@@ -797,6 +804,7 @@
             e.preventDefault();
 
             const id = document.getElementById("EditIdNhanVien").value;
+            const editPassword = document.getElementById("EditPassword").value.trim();
             const nvData = {
                 TenTaiKhoanNV: document.getElementById("EditTenTaiKhoanNV").value.trim(),
                 HoTenNhanVien: document.getElementById("EditHoTenNhanVien").value.trim(),
@@ -804,7 +812,8 @@
                 SdtNhanVien: document.getElementById("EditSdtNhanVien").value.trim(),
                 EmailNhanVien: document.getElementById("EditEmailNhanVien").value.trim() || null,
                 DiaChiNV: document.getElementById("EditDiaChiNV").value.trim() || null,
-                TrangThaiNV: parseInt(document.getElementById("EditTrangThaiNV").value) || null
+                TrangThaiNV: parseInt(document.getElementById("EditTrangThaiNV").value) || null,
+                Password: editPassword || null // Chỉ gửi nếu có giá trị
             };
 
             // Validate dữ liệu

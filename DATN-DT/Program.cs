@@ -73,6 +73,8 @@ builder.Services.AddScoped<IPinService, PinService>();
 
 builder.Services.AddScoped<IVoucherService, VoucherService>();
 
+builder.Services.AddScoped<IBaoHanhStatusService, BaoHanhStatusService>();
+
 builder.Services.AddScoped<DATN_DT.IServices.IPayOSService, DATN_DT.Services.PayOSService>();
 
 builder.Services.Configure<GhnOptions>(builder.Configuration.GetSection("GHN"));
@@ -149,7 +151,9 @@ using (var scope = app.Services.CreateScope())
     }
 
     // ========== 2. TẠO TÀI KHOẢN ADMIN ==========
-    var admin = db.NhanViens.FirstOrDefault(nv => nv.TenTaiKhoanNV == "admin");
+    var admin = db.NhanViens
+        .Include(nv => nv.ChucVu)
+        .FirstOrDefault(nv => nv.TenTaiKhoanNV == "admin");
 
     if (admin == null)
     {
@@ -169,12 +173,37 @@ using (var scope = app.Services.CreateScope())
             Password = hashedPassword,
             HoTenNhanVien = "Tài khoản quản trị",
             IdChucVu = roleAdmin.IdChucVu,
-            TrangThaiNV = 1,
+            TrangThaiNV = 0, // 0 = Đang làm việc (cho phép đăng nhập)
             NgayVaoLam = DateTime.Now
         };
 
         db.NhanViens.Add(admin);
         db.SaveChanges();
+    }
+    else
+    {
+        // Cập nhật admin cũ:
+        // 1. Đảm bảo TrangThaiNV = 0 (cho phép đăng nhập)
+        // 2. Đảm bảo IdChucVu = roleAdmin.IdChucVu (có quyền ADMIN)
+        bool needUpdate = false;
+        
+        if (admin.TrangThaiNV != 0)
+        {
+            admin.TrangThaiNV = 0;
+            needUpdate = true;
+        }
+        
+        if (admin.IdChucVu != roleAdmin.IdChucVu)
+        {
+            admin.IdChucVu = roleAdmin.IdChucVu;
+            needUpdate = true;
+        }
+        
+        if (needUpdate)
+        {
+            db.NhanViens.Update(admin);
+            db.SaveChanges();
+        }
     }
 }
 

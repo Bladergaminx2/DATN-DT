@@ -55,7 +55,8 @@ namespace DATN_DT.Controllers
             {
                 var query = _context.SanPhams
                     .Include(sp => sp.ThuongHieu)
-                    .Where(sp => sp.TrangThaiSP != "Ngừng kinh doanh"); // Chỉ lấy sản phẩm đang kinh doanh
+                    .Where(sp => sp.TrangThaiSP != "Ngừng kinh doanh" && // Chỉ lấy sản phẩm đang kinh doanh
+                                _context.ModelSanPhams.Any(m => m.IdSanPham == sp.IdSanPham && m.TrangThai == 1)); // Chỉ lấy sản phẩm có model
 
                 // Tìm kiếm theo keyword (không phân biệt hoa thường)
                 if (!string.IsNullOrWhiteSpace(keyword))
@@ -64,7 +65,7 @@ namespace DATN_DT.Controllers
                     query = query.Where(sp =>
                         (sp.MaSanPham != null && sp.MaSanPham.ToLower().Contains(keyword)) ||
                         (sp.TenSanPham != null && sp.TenSanPham.ToLower().Contains(keyword)) ||
-                        (sp.ThuongHieu != null && sp.ThuongHieu.TenThuongHieu != null && 
+                        (sp.ThuongHieu != null && sp.ThuongHieu.TenThuongHieu != null &&
                          sp.ThuongHieu.TenThuongHieu.ToLower().Contains(keyword))
                     );
                 }
@@ -192,7 +193,7 @@ namespace DATN_DT.Controllers
                 var handler = new JwtSecurityTokenHandler();
                 var jsonToken = handler.ReadJwtToken(token);
                 var nhanVienIdClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == "IdNhanVien");
-                
+
                 if (nhanVienIdClaim != null && int.TryParse(nhanVienIdClaim.Value, out int nhanVienId))
                 {
                     return nhanVienId;
@@ -211,15 +212,15 @@ namespace DATN_DT.Controllers
 
                 // Tìm khuyến mãi đang hoạt động cho sản phẩm này
                 var activePromotion = await (from mspkm in _context.ModelSanPhamKhuyenMais
-                                           join km in _context.KhuyenMais on mspkm.IdKhuyenMai equals km.IdKhuyenMai
-                                           where mspkm.IdModelSanPham == idModelSanPham
-                                              && km.NgayBatDau.HasValue
-                                              && km.NgayKetThuc.HasValue
-                                              && km.NgayBatDau.Value.Date <= now
-                                              && km.NgayKetThuc.Value.Date >= now
-                                              && km.TrangThaiKM == "Đang diễn ra"
-                                           orderby km.NgayKetThuc descending // Lấy khuyến mãi gần nhất
-                                           select km)
+                                             join km in _context.KhuyenMais on mspkm.IdKhuyenMai equals km.IdKhuyenMai
+                                             where mspkm.IdModelSanPham == idModelSanPham
+                                                && km.NgayBatDau.HasValue
+                                                && km.NgayKetThuc.HasValue
+                                                && km.NgayBatDau.Value.Date <= now
+                                                && km.NgayKetThuc.Value.Date >= now
+                                                && km.TrangThaiKM == "Đang diễn ra"
+                                             orderby km.NgayKetThuc descending // Lấy khuyến mãi gần nhất
+                                             select km)
                                           .FirstOrDefaultAsync();
 
                 if (activePromotion == null)
@@ -285,8 +286,166 @@ namespace DATN_DT.Controllers
                 }
             }
 
+            // Validation phương thức thanh toán
+            if (string.IsNullOrWhiteSpace(orderModel.PhuongThucThanhToan))
+            {
+                return Json(new { success = false, message = "Vui lòng chọn phương thức thanh toán" });
+            }
+
+            // Validation số tiền khách đưa (nếu thanh toán bằng tiền mặt)
+            if (orderModel.PhuongThucThanhToan == "Tiền mặt")
+            {
+                if (!orderModel.TienKhachDua.HasValue || orderModel.TienKhachDua.Value <= 0)
+                {
+                    return Json(new { success = false, message = "Vui lòng nhập số tiền khách đưa" });
+                }
+
+                // Validate min/max số tiền khách đưa
+                decimal minTien = 0;
+                decimal maxTien = 10000000000; // 10 tỷ VNĐ
+
+                if (orderModel.TienKhachDua.Value < minTien)
+                {
+                    return Json(new { success = false, message = $"Số tiền khách đưa không được nhỏ hơn {minTien:N0} VNĐ" });
+                }
+
+                if (orderModel.TienKhachDua.Value > maxTien)
+                {
+                    return Json(new { success = false, message = $"Số tiền khách đưa không được vượt quá {maxTien:N0} VNĐ (10 tỷ VNĐ)" });
+                }
+
+                // Tính tổng tiền tạm thời để validate
+                decimal tongTienTam = 0;
+                if (orderModel.ChiTietDonHang != null && orderModel.ChiTietDonHang.Any())
+                {
+                    foreach (var item in orderModel.ChiTietDonHang)
+                    {
+                        var model = await _context.ModelSanPhams.FirstOrDefaultAsync(m => m.IdModelSanPham == item.IdModelSanPham);
+                        if (model != null)
+                        {
+                            var donGia = model.GiaBanModel ?? 0;
+                            var giaKhuyenMai = await CalculatePromotionPrice(item.IdModelSanPham, donGia);
+                            var finalPrice = giaKhuyenMai ?? donGia;
+                            tongTienTam += finalPrice * item.SoLuong;
+                        }
+                    }
+                }
+
+                if (orderModel.TienKhachDua.Value < tongTienTam)
+                {
+                    var thieu = tongTienTam - orderModel.TienKhachDua.Value;
+                    return Json(new { success = false, message = $"Số tiền khách đưa không đủ! Còn thiếu: {thieu:N0} đ" });
+                }
+
+                // Tính tiền thừa
+                orderModel.TienThua = orderModel.TienKhachDua.Value - tongTienTam;
+            }
+            else
+            {
+                // Chuyển khoản: không cần tiền khách đưa
+                orderModel.TienKhachDua = null;
+                orderModel.TienThua = null;
+            }
+
+            // Validation chi tiết đơn hàng
+            if (orderModel.ChiTietDonHang == null || !orderModel.ChiTietDonHang.Any())
+            {
+                return Json(new { success = false, message = "Vui lòng chọn ít nhất một sản phẩm" });
+            }
+
+            // Validation IMEI cho từng sản phẩm
+            var imeiErrors = new List<string>();
+            foreach (var item in orderModel.ChiTietDonHang)
+            {
+                if (item.SelectedImeis == null || !item.SelectedImeis.Any())
+                {
+                    var model = await _context.ModelSanPhams
+                        .Include(m => m.SanPham)
+                        .FirstOrDefaultAsync(m => m.IdModelSanPham == item.IdModelSanPham);
+                    var tenSanPham = model?.SanPham?.TenSanPham ?? "N/A";
+                    var tenModel = model?.TenModel ?? "N/A";
+                    imeiErrors.Add($"Sản phẩm {tenSanPham} - {tenModel} chưa chọn IMEI");
+                }
+                else
+                {
+                    // Kiểm tra IMEI có tồn tại và có thể bán được
+                    foreach (var imeiId in item.SelectedImeis)
+                    {
+                        var imei = await _context.Imeis
+                            .Include(i => i.ModelSanPham)
+                            .ThenInclude(m => m.SanPham)
+                            .FirstOrDefaultAsync(i => i.IdImei == imeiId);
+
+                        if (imei == null)
+                        {
+                            imeiErrors.Add($"IMEI ID {imeiId} không tồn tại");
+                        }
+                        else
+                        {
+                            // Kiểm tra trạng thái IMEI - chỉ cho phép bán nếu trạng thái là "Còn hàng"
+                            var trangThaiHienTai = imei.TrangThai ?? "";
+                            var trangThaiHopLe = trangThaiHienTai == "Còn hàng";
+
+                            // Kiểm tra IMEI có đúng model không
+                            var imeiDungModel = imei.IdModelSanPham == item.IdModelSanPham;
+
+                            if (!trangThaiHopLe)
+                            {
+                                var tenSanPham = imei.ModelSanPham?.SanPham?.TenSanPham ?? "N/A";
+                                var tenModel = imei.ModelSanPham?.TenModel ?? "N/A";
+                                imeiErrors.Add($"IMEI {imei.MaImei} của sản phẩm {tenSanPham} - {tenModel} không thể bán (Trạng thái: {trangThaiHienTai}). Chỉ có thể bán IMEI có trạng thái 'Còn hàng'");
+                            }
+                            else if (!imeiDungModel)
+                            {
+                                var tenSanPham = imei.ModelSanPham?.SanPham?.TenSanPham ?? "N/A";
+                                var tenModel = imei.ModelSanPham?.TenModel ?? "N/A";
+                                imeiErrors.Add($"IMEI {imei.MaImei} không thuộc về model sản phẩm đã chọn. IMEI này thuộc: {tenSanPham} - {tenModel}");
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (imeiErrors.Any())
+            {
+                return Json(new { success = false, message = "Lỗi IMEI:", errors = imeiErrors });
+            }
+
             if (ModelState.IsValid)
             {
+                // Kiểm tra số lượng sản phẩm trong kho trước khi tạo hóa đơn
+                var stockErrors = new List<string>();
+                foreach (var item in orderModel.ChiTietDonHang)
+                {
+                    var tonKho = await _context.TonKhos
+                        .Where(t => t.IdModelSanPham == item.IdModelSanPham)
+                        .SumAsync(t => t.SoLuong);
+
+                    if (tonKho <= 0)
+                    {
+                        var model = await _context.ModelSanPhams
+                            .Include(m => m.SanPham)
+                            .FirstOrDefaultAsync(m => m.IdModelSanPham == item.IdModelSanPham);
+                        var tenSanPham = model?.SanPham?.TenSanPham ?? "N/A";
+                        var tenModel = model?.TenModel ?? "N/A";
+                        stockErrors.Add($"Sản phẩm {tenSanPham} - {tenModel} đã hết hàng trong kho (tồn kho: {tonKho})");
+                    }
+                    else if (tonKho < item.SoLuong)
+                    {
+                        var model = await _context.ModelSanPhams
+                            .Include(m => m.SanPham)
+                            .FirstOrDefaultAsync(m => m.IdModelSanPham == item.IdModelSanPham);
+                        var tenSanPham = model?.SanPham?.TenSanPham ?? "N/A";
+                        var tenModel = model?.TenModel ?? "N/A";
+                        stockErrors.Add($"Sản phẩm {tenSanPham} - {tenModel} không đủ số lượng (tồn kho: {tonKho}, yêu cầu: {item.SoLuong})");
+                    }
+                }
+
+                if (stockErrors.Any())
+                {
+                    return Json(new { success = false, message = "Không thể tạo đơn hàng:", errors = stockErrors });
+                }
+
                 using var transaction = await _context.Database.BeginTransactionAsync();
 
                 try
@@ -316,6 +475,28 @@ namespace DATN_DT.Controllers
                         sdtNguoiNhan = khachHang?.SdtKhachHang ?? string.Empty;
                     }
 
+                    // Tính tổng tiền trước khi tạo đơn hàng
+                    decimal tongTienTinh = 0;
+                    foreach (var item in orderModel.ChiTietDonHang)
+                    {
+                        var model = await _context.ModelSanPhams
+                            .FirstOrDefaultAsync(m => m.IdModelSanPham == item.IdModelSanPham);
+                        if (model != null)
+                        {
+                            var donGia = model.GiaBanModel ?? 0;
+                            var giaKhuyenMai = await CalculatePromotionPrice(item.IdModelSanPham, donGia);
+                            var finalPrice = giaKhuyenMai ?? donGia;
+                            tongTienTinh += finalPrice * item.SoLuong;
+                        }
+                    }
+
+                    // Lưu thông tin thanh toán vào GhiChu (JSON format)
+                    var ghiChuThanhToan = string.Empty;
+                    if (orderModel.PhuongThucThanhToan == "Tiền mặt" && orderModel.TienKhachDua.HasValue && orderModel.TienThua.HasValue)
+                    {
+                        ghiChuThanhToan = $"TIEN_KHACH_DUA:{orderModel.TienKhachDua.Value:N0}|TIEN_THUA:{orderModel.TienThua.Value:N0}|TONG_TIEN:{tongTienTinh:N0}";
+                    }
+
                     var donHang = new DonHang
                     {
                         IdKhachHang = orderModel.IdKhachHang,
@@ -326,6 +507,7 @@ namespace DATN_DT.Controllers
                         DiaChiGiaoHang = orderModel.DiaChiGiaoHang,
                         TrangThaiHoaDon = "Đã thanh toán",
                         PhuongThucThanhToan = orderModel.PhuongThucThanhToan,
+                        GhiChu = ghiChuThanhToan,
                         TrangThaiDH = 1
                     };
 
@@ -344,7 +526,7 @@ namespace DATN_DT.Controllers
                         if (model == null) continue;
 
                         var donGia = model.GiaBanModel ?? 0;
-                        
+
                         // Tính giá khuyến mãi nếu có
                         var idModelSanPham = item.IdModelSanPham;
                         var giaKhuyenMai = await CalculatePromotionPrice(idModelSanPham, donGia);
@@ -375,18 +557,32 @@ namespace DATN_DT.Controllers
                                 {
                                     imei.TrangThai = "Đã bán";
 
-                                    // Tạo bảo hành
-                                    var baoHanh = new BaoHanh
+                                    // Kiểm tra IMEI đã có bảo hành đang hoạt động chưa (tránh trùng lặp)
+                                    // Trạng thái hoạt động: "Đang tiếp nhận", "Đang xử lý", "Đang bảo hành"
+                                    // Trạng thái không hoạt động: "Đã hoàn thành", "Từ chối bảo hành"
+                                    var hasActiveWarranty = await _context.BaoHanhs
+                                        .AnyAsync(b => b.IdImei == imei.IdImei &&
+                                                       b.TrangThai != "Đã hoàn thành" &&
+                                                       b.TrangThai != "Từ chối bảo hành" &&
+                                                       (b.NgayTra == null || b.NgayTra >= DateTime.Now));
+
+                                    // Chỉ tạo bảo hành nếu chưa có bảo hành đang hoạt động
+                                    if (!hasActiveWarranty)
                                     {
-                                        IdImei = imei.IdImei,
-                                        IdKhachHang = orderModel.IdKhachHang,
-                                        NgayNhan = DateTime.Now,
-                                        NgayTra = DateTime.Now.AddYears(1), // Bảo hành 1 năm
-                                        TrangThai = "Đang bảo hành",
-                                        MoTaLoi = "Mới mua",
-                                        XuLy = "Hoạt động bình thường"
-                                    };
-                                    _context.BaoHanhs.Add(baoHanh);
+                                        // Tạo bảo hành tự động khi bán hàng
+                                        // Lưu ý: IdKhachHang có thể null nếu là khách vãng lai (được phép)
+                                        var baoHanh = new BaoHanh
+                                        {
+                                            IdImei = imei.IdImei,
+                                            IdKhachHang = orderModel.IdKhachHang, // Có thể null cho khách vãng lai
+                                            NgayNhan = DateTime.Now,
+                                            NgayTra = DateTime.Now.AddYears(1), // Bảo hành 1 năm
+                                            TrangThai = "Đang bảo hành", // Trạng thái khi mới mua
+                                            MoTaLoi = "Mới mua - Sản phẩm hoạt động bình thường",
+                                            XuLy = "Hoạt động bình thường"
+                                        };
+                                        _context.BaoHanhs.Add(baoHanh);
+                                    }
                                 }
                             }
                         }
@@ -428,10 +624,34 @@ namespace DATN_DT.Controllers
                                 var imeis = new List<string>();
                                 if (item.SelectedImeis != null && item.SelectedImeis.Any())
                                 {
+                                    // Lấy IMEI từ danh sách đã chọn
                                     imeis = await _context.Imeis
                                         .Where(i => item.SelectedImeis.Contains(i.IdImei))
                                         .Select(i => i.MaImei ?? "")
+                                        .OrderBy(i => i)
                                         .ToListAsync();
+                                }
+                                else
+                                {
+                                    // Nếu không có SelectedImeis, lấy từ BaoHanh được tạo cùng ngày với đơn hàng
+                                    var ngayDat = donHang.NgayDat ?? DateTime.Now;
+                                    var baoHanhImeis = await _context.BaoHanhs
+                                        .Where(b => b.IdKhachHang == donHang.IdKhachHang &&
+                                                   b.NgayNhan.HasValue &&
+                                                   b.NgayNhan.Value.Date == ngayDat.Date &&
+                                                   b.IdImei.HasValue &&
+                                                   _context.Imeis.Any(i => i.IdImei == b.IdImei.Value && i.IdModelSanPham == item.IdModelSanPham))
+                                        .Select(b => b.IdImei.Value)
+                                        .ToListAsync();
+
+                                    if (baoHanhImeis.Any())
+                                    {
+                                        imeis = await _context.Imeis
+                                            .Where(i => baoHanhImeis.Contains(i.IdImei))
+                                            .Select(i => i.MaImei ?? "")
+                                            .OrderBy(i => i)
+                                            .ToListAsync();
+                                    }
                                 }
 
                                 chiTietListForPdf.Add(new InvoiceChiTietViewModel
@@ -442,10 +662,36 @@ namespace DATN_DT.Controllers
                             }
                         }
 
+                        // Parse thông tin thanh toán từ GhiChu
+                        decimal? tienKhachDua = null;
+                        decimal? tienThua = null;
+                        if (!string.IsNullOrWhiteSpace(ghiChuThanhToan))
+                        {
+                            var parts = ghiChuThanhToan.Split('|');
+                            foreach (var part in parts)
+                            {
+                                if (part.StartsWith("TIEN_KHACH_DUA:"))
+                                {
+                                    var value = part.Replace("TIEN_KHACH_DUA:", "").Replace(",", "");
+                                    if (decimal.TryParse(value, out decimal tienDua))
+                                        tienKhachDua = tienDua;
+                                }
+                                else if (part.StartsWith("TIEN_THUA:"))
+                                {
+                                    var value = part.Replace("TIEN_THUA:", "").Replace(",", "");
+                                    if (decimal.TryParse(value, out decimal tienThuaValue))
+                                        tienThua = tienThuaValue;
+                                }
+                            }
+                        }
+
                         var invoiceViewModel = new InvoiceViewModel
                         {
                             DonHang = donHang,
-                            ChiTietList = chiTietListForPdf
+                            ChiTietList = chiTietListForPdf,
+                            TienKhachDua = tienKhachDua,
+                            TienThua = tienThua,
+                            TongTien = tongTien
                         };
 
                         var html = await RenderViewToStringAsync("Invoice", invoiceViewModel);
@@ -474,7 +720,7 @@ namespace DATN_DT.Controllers
                         var fileName = $"HoaDon_{donHang.MaDon}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
                         var filePath = Path.Combine(invoicesFolder, fileName);
                         await System.IO.File.WriteAllBytesAsync(filePath, pdfBytes);
-                        
+
                         pdfUrl = $"/DonHang/ExportPdf?maDon={donHang.MaDon}";
                     }
                     catch (Exception pdfEx)
@@ -546,10 +792,38 @@ namespace DATN_DT.Controllers
                     });
                 }
 
+                // Parse thông tin thanh toán từ GhiChu
+                decimal? tienKhachDua = null;
+                decimal? tienThua = null;
+                decimal tongTien = chiTietList.Sum(c => c.ChiTiet.ThanhTien ?? 0);
+
+                if (!string.IsNullOrWhiteSpace(donHang.GhiChu) && donHang.GhiChu.Contains("TIEN_KHACH_DUA:"))
+                {
+                    var parts = donHang.GhiChu.Split('|');
+                    foreach (var part in parts)
+                    {
+                        if (part.StartsWith("TIEN_KHACH_DUA:"))
+                        {
+                            var value = part.Replace("TIEN_KHACH_DUA:", "").Replace(",", "");
+                            if (decimal.TryParse(value, out decimal tienDua))
+                                tienKhachDua = tienDua;
+                        }
+                        else if (part.StartsWith("TIEN_THUA:"))
+                        {
+                            var value = part.Replace("TIEN_THUA:", "").Replace(",", "");
+                            if (decimal.TryParse(value, out decimal tienThuaValue))
+                                tienThua = tienThuaValue;
+                        }
+                    }
+                }
+
                 var viewModel = new InvoiceViewModel
                 {
                     DonHang = donHang,
-                    ChiTietList = chiTietList
+                    ChiTietList = chiTietList,
+                    TienKhachDua = tienKhachDua,
+                    TienThua = tienThua,
+                    TongTien = tongTien
                 };
 
                 return View(viewModel);
@@ -603,10 +877,38 @@ namespace DATN_DT.Controllers
                     });
                 }
 
+                // Parse thông tin thanh toán từ GhiChu
+                decimal? tienKhachDua = null;
+                decimal? tienThua = null;
+                decimal tongTien = chiTietList.Sum(c => c.ChiTiet.ThanhTien ?? 0);
+
+                if (!string.IsNullOrWhiteSpace(donHang.GhiChu) && donHang.GhiChu.Contains("TIEN_KHACH_DUA:"))
+                {
+                    var parts = donHang.GhiChu.Split('|');
+                    foreach (var part in parts)
+                    {
+                        if (part.StartsWith("TIEN_KHACH_DUA:"))
+                        {
+                            var value = part.Replace("TIEN_KHACH_DUA:", "").Replace(",", "");
+                            if (decimal.TryParse(value, out decimal tienDua))
+                                tienKhachDua = tienDua;
+                        }
+                        else if (part.StartsWith("TIEN_THUA:"))
+                        {
+                            var value = part.Replace("TIEN_THUA:", "").Replace(",", "");
+                            if (decimal.TryParse(value, out decimal tienThuaValue))
+                                tienThua = tienThuaValue;
+                        }
+                    }
+                }
+
                 var viewModel = new InvoiceViewModel
                 {
                     DonHang = donHang,
-                    ChiTietList = chiTietList
+                    ChiTietList = chiTietList,
+                    TienKhachDua = tienKhachDua,
+                    TienThua = tienThua,
+                    TongTien = tongTien
                 };
 
                 // Render HTML
@@ -625,7 +927,7 @@ namespace DATN_DT.Controllers
                 PdfDocument doc = converter.ConvertHtmlString(html);
                 byte[] pdfBytes = doc.Save();
                 doc.Close();
-                
+
                 // Tạo thư mục invoices nếu chưa có
                 var invoicesFolder = Path.Combine(_env.WebRootPath, "invoices");
                 if (!Directory.Exists(invoicesFolder))
@@ -638,8 +940,10 @@ namespace DATN_DT.Controllers
                 var filePath = Path.Combine(invoicesFolder, fileName);
                 await System.IO.File.WriteAllBytesAsync(filePath, pdfBytes);
 
-                // Trả về file để download
-                return File(pdfBytes, "application/pdf", fileName);
+                // Trả về file để download với Content-Disposition header để force download
+                var downloadFileName = $"HoaDon_{donHang.MaDon}.pdf";
+                Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{downloadFileName}\"");
+                return File(pdfBytes, "application/pdf", downloadFileName);
             }
             catch (Exception ex)
             {
@@ -655,7 +959,7 @@ namespace DATN_DT.Controllers
             {
                 var viewEngine = HttpContext.RequestServices.GetService(typeof(ICompositeViewEngine)) as ICompositeViewEngine;
                 var viewResult = viewEngine?.FindView(ControllerContext, viewName, false);
-                
+
                 if (viewResult?.View == null)
                 {
                     throw new Exception($"View '{viewName}' not found");
@@ -674,6 +978,212 @@ namespace DATN_DT.Controllers
                 return sw.GetStringBuilder().ToString();
             }
         }
+
+        // GET: DonHang/Manage - Trang quản lý hóa đơn offline
+        public IActionResult Manage()
+        {
+            return View();
+        }
+
+        // GET: API - Lấy danh sách đơn hàng offline
+        [HttpGet]
+        public async Task<IActionResult> GetOfflineOrders(int? status, string? search, DateTime? fromDate, DateTime? toDate, string? paymentMethod)
+        {
+            try
+            {
+                var query = _context.DonHangs
+                    .Include(d => d.KhachHang)
+                    .Include(d => d.NhanVien)
+                    .Include(d => d.DonHangChiTiets)
+                        .ThenInclude(c => c.ModelSanPham)
+                            .ThenInclude(m => m.SanPham)
+                                .ThenInclude(sp => sp.ThuongHieu)
+                    .Include(d => d.DonHangChiTiets)
+                        .ThenInclude(c => c.ModelSanPham)
+                            .ThenInclude(m => m.RAM)
+                    .Include(d => d.DonHangChiTiets)
+                        .ThenInclude(c => c.ModelSanPham)
+                            .ThenInclude(m => m.ROM)
+                    .Include(d => d.DonHangChiTiets)
+                        .ThenInclude(c => c.ModelSanPham)
+                            .ThenInclude(m => m.AnhSanPhams)
+                    .Where(d => d.TrangThaiHoaDon == "Đã thanh toán") // Chỉ lấy đơn đã thanh toán
+                    .AsQueryable();
+
+                // Filter theo trạng thái (nếu có)
+                if (status.HasValue)
+                {
+                    query = query.Where(d => d.TrangThaiDH == status.Value);
+                }
+
+                // Tìm kiếm
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    var searchLower = search.ToLower();
+                    query = query.Where(d =>
+                        (d.MaDon != null && d.MaDon.ToLower().Contains(searchLower)) ||
+                        (d.KhachHang != null && d.KhachHang.HoTenKhachHang != null && d.KhachHang.HoTenKhachHang.ToLower().Contains(searchLower)) ||
+                        (d.HoTenNguoiNhan != null && d.HoTenNguoiNhan.ToLower().Contains(searchLower)) ||
+                        (d.SdtNguoiNhan != null && d.SdtNguoiNhan.Contains(search))
+                    );
+                }
+
+                // Filter theo ngày
+                if (fromDate.HasValue)
+                {
+                    query = query.Where(d => d.NgayDat >= fromDate.Value);
+                }
+                if (toDate.HasValue)
+                {
+                    query = query.Where(d => d.NgayDat <= toDate.Value.AddDays(1).AddSeconds(-1));
+                }
+
+                // Filter theo phương thức thanh toán
+                if (!string.IsNullOrWhiteSpace(paymentMethod))
+                {
+                    query = query.Where(d => d.PhuongThucThanhToan == paymentMethod);
+                }
+
+                var donHangs = await query
+                    .OrderByDescending(d => d.NgayDat)
+                    .ToListAsync();
+
+                var orders = donHangs.Select(d => new
+                {
+                    idDonHang = d.IdDonHang,
+                    maDon = d.MaDon ?? $"DH{d.IdDonHang:D6}",
+                    ngayDat = d.NgayDat?.ToString("dd/MM/yyyy HH:mm"),
+                    trangThai = d.TrangThaiHoaDon ?? "Đã thanh toán",
+                    trangThaiSo = d.TrangThaiDH ?? 1,
+                    tongTien = d.DonHangChiTiets?.Sum(c => c.ThanhTien ?? 0) ?? 0,
+                    phuongThucThanhToan = d.PhuongThucThanhToan ?? "Tiền mặt",
+                    hoTenKhachHang = d.KhachHang?.HoTenKhachHang ?? d.HoTenNguoiNhan ?? "N/A",
+                    sdtKhachHang = d.KhachHang?.SdtKhachHang ?? d.SdtNguoiNhan ?? "N/A",
+                    hoTenNhanVien = d.NhanVien?.HoTenNhanVien ?? "N/A",
+                    soLuongSanPham = d.DonHangChiTiets?.Count ?? 0,
+                    chiTiet = d.DonHangChiTiets?.Select(c => new
+                    {
+                        tenSanPham = c.ModelSanPham?.SanPham?.TenSanPham ?? "N/A",
+                        tenModel = c.ModelSanPham?.TenModel ?? "N/A",
+                        tenThuongHieu = c.ModelSanPham?.SanPham?.ThuongHieu?.TenThuongHieu ?? "N/A",
+                        mau = c.ModelSanPham?.Mau ?? "N/A",
+                        ram = c.ModelSanPham?.RAM?.DungLuongRAM ?? "N/A",
+                        rom = c.ModelSanPham?.ROM?.DungLuongROM ?? "N/A",
+                        soLuong = 1, // Mỗi chi tiết là 1 sản phẩm với IMEI
+                        donGia = c.DonGia ?? 0,
+                        giaKhuyenMai = c.GiaKhuyenMai,
+                        thanhTien = c.ThanhTien ?? 0,
+                        hinhAnh = c.ModelSanPham?.AnhSanPhams?.FirstOrDefault()?.DuongDan ?? "/images/default-product.jpg"
+                    }).ToList()
+                }).ToList();
+
+                return Json(new { success = true, data = orders });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // GET: API - Lấy chi tiết đơn hàng offline
+        [HttpGet]
+        public async Task<IActionResult> GetOfflineOrderDetail(int id)
+        {
+            try
+            {
+                var donHang = await _context.DonHangs
+                    .Include(d => d.KhachHang)
+                    .Include(d => d.NhanVien)
+                    .Include(d => d.DonHangChiTiets)
+                        .ThenInclude(c => c.ModelSanPham)
+                            .ThenInclude(m => m.SanPham)
+                    .Include(d => d.DonHangChiTiets)
+                        .ThenInclude(c => c.ModelSanPham)
+                            .ThenInclude(m => m.AnhSanPhams)
+                    .FirstOrDefaultAsync(d => d.IdDonHang == id);
+
+                if (donHang == null)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy đơn hàng" });
+                }
+
+                // Lấy IMEI cho từng chi tiết
+                var chiTietList = new List<object>();
+                foreach (var chiTiet in donHang.DonHangChiTiets ?? new List<DonHangChiTiet>())
+                {
+                    var imeis = new List<string>();
+                    if (chiTiet.IdModelSanPham.HasValue)
+                    {
+                        imeis = await _context.Imeis
+                            .Where(i => i.IdModelSanPham == chiTiet.IdModelSanPham && i.TrangThai == "Đã bán")
+                            .Select(i => i.MaImei ?? "")
+                            .ToListAsync();
+                    }
+
+                    chiTietList.Add(new
+                    {
+                        tenSanPham = chiTiet.ModelSanPham?.SanPham?.TenSanPham ?? "N/A",
+                        tenModel = chiTiet.ModelSanPham?.TenModel ?? "N/A",
+                        mau = chiTiet.ModelSanPham?.Mau ?? "N/A",
+                        ram = chiTiet.ModelSanPham?.RAM?.DungLuongRAM ?? "N/A",
+                        rom = chiTiet.ModelSanPham?.ROM?.DungLuongROM ?? "N/A",
+                        soLuong = 1,
+                        donGia = chiTiet.DonGia ?? 0,
+                        giaKhuyenMai = chiTiet.GiaKhuyenMai,
+                        thanhTien = chiTiet.ThanhTien ?? 0,
+                        hinhAnh = chiTiet.ModelSanPham?.AnhSanPhams?.FirstOrDefault()?.DuongDan ?? "/images/default-product.jpg",
+                        imeis = imeis
+                    });
+                }
+
+                // Parse thông tin thanh toán từ GhiChu
+                decimal? tienKhachDua = null;
+                decimal? tienThua = null;
+                if (!string.IsNullOrWhiteSpace(donHang.GhiChu) && donHang.GhiChu.Contains("TIEN_KHACH_DUA:"))
+                {
+                    var parts = donHang.GhiChu.Split('|');
+                    foreach (var part in parts)
+                    {
+                        if (part.StartsWith("TIEN_KHACH_DUA:"))
+                        {
+                            var value = part.Replace("TIEN_KHACH_DUA:", "").Replace(",", "");
+                            if (decimal.TryParse(value, out decimal tienDua))
+                                tienKhachDua = tienDua;
+                        }
+                        else if (part.StartsWith("TIEN_THUA:"))
+                        {
+                            var value = part.Replace("TIEN_THUA:", "").Replace(",", "");
+                            if (decimal.TryParse(value, out decimal tienThuaValue))
+                                tienThua = tienThuaValue;
+                        }
+                    }
+                }
+
+                var result = new
+                {
+                    idDonHang = donHang.IdDonHang,
+                    maDon = donHang.MaDon ?? $"DH{donHang.IdDonHang:D6}",
+                    ngayDat = donHang.NgayDat?.ToString("dd/MM/yyyy HH:mm"),
+                    trangThai = donHang.TrangThaiHoaDon ?? "Đã thanh toán",
+                    trangThaiSo = donHang.TrangThaiDH ?? 1,
+                    tongTien = donHang.DonHangChiTiets?.Sum(c => c.ThanhTien ?? 0) ?? 0,
+                    phuongThucThanhToan = donHang.PhuongThucThanhToan ?? "Tiền mặt",
+                    hoTenKhachHang = donHang.KhachHang?.HoTenKhachHang ?? donHang.HoTenNguoiNhan ?? "N/A",
+                    sdtKhachHang = donHang.KhachHang?.SdtKhachHang ?? donHang.SdtNguoiNhan ?? "N/A",
+                    hoTenNhanVien = donHang.NhanVien?.HoTenNhanVien ?? "N/A",
+                    tienKhachDua = tienKhachDua,
+                    tienThua = tienThua,
+                    chiTiet = chiTietList
+                };
+
+                return Json(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
     }
 
     // ViewModel cho trang Index
@@ -691,6 +1201,8 @@ namespace DATN_DT.Controllers
         public string SdtKhachHang { get; set; }
         public string DiaChiGiaoHang { get; set; }
         public string PhuongThucThanhToan { get; set; }
+        public decimal? TienKhachDua { get; set; }
+        public decimal? TienThua { get; set; }
         public List<OrderItemModel> ChiTietDonHang { get; set; }
     }
 
@@ -707,6 +1219,9 @@ namespace DATN_DT.Controllers
     {
         public DonHang DonHang { get; set; }
         public List<InvoiceChiTietViewModel> ChiTietList { get; set; }
+        public decimal? TienKhachDua { get; set; }
+        public decimal? TienThua { get; set; }
+        public decimal TongTien { get; set; }
     }
 
     public class InvoiceChiTietViewModel
@@ -714,4 +1229,16 @@ namespace DATN_DT.Controllers
         public DonHangChiTiet ChiTiet { get; set; }
         public List<string> Imeis { get; set; }
     }
+
+    public class QrThanhToanViewModel
+    {
+        public string TenNganHang { get; set; }
+        public string SoTaiKhoan { get; set; }
+        public string ChuTaiKhoan { get; set; }
+        public decimal SoTien { get; set; }
+        public string NoiDung { get; set; }
+        public string QrImageUrl { get; set; }
+        public string MaDon { get; set; }
+    }
+
 }

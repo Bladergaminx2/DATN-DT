@@ -869,7 +869,10 @@
             <img src="~/ImgResource/Icons/boxes-packing-solid-full.svg" class="icon" />Đơn Hàng
         </a>
         <a href="#" data-page="hoadon">
-            <img src="~/ImgResource/Icons/file-invoice-dollar-solid-full.svg" class="icon" />Hóa Đơn
+            <img src="~/ImgResource/Icons/file-invoice-dollar-solid-full.svg" class="icon" />Hóa Đơn Online
+        </a>
+        <a href="#" data-page="hoadonoffline">
+            <img src="~/ImgResource/Icons/file-invoice-dollar-solid-full.svg" class="icon" />Hóa Đơn Offline
         </a>
         <a href="#" data-page="quanlybanhang">
             <i class="fas fa-chart-line" style="font-size: 20px; width: 20px; height: 20px; display: inline-block;"></i>Thống Kê Bán Hàng
@@ -1265,16 +1268,29 @@
             </div>
         </div>
 
-        <!-- Hóa Đơn Page -->
+        <!-- Hóa Đơn Online Page -->
         <div class="page-container" id="hoaDonPage">
             <div class="page-header">
-                <h2>Hóa Đơn</h2>
+                <h2>Hóa Đơn Online</h2>
                 <button class="btn btn-back" onclick="showWelcomePage()">
                     <i class="fas fa-arrow-left"></i> Quay lại trang chính
                 </button>
             </div>
             <div class="iframe-container">
                 <iframe src="/HoaDon" class="iframe-full" id="hoaDonFrame"></iframe>
+            </div>
+        </div>
+
+        <!-- Hóa Đơn Offline Page -->
+        <div class="page-container" id="hoaDonOfflinePage">
+            <div class="page-header">
+                <h2>Hóa Đơn Offline</h2>
+                <button class="btn btn-back" onclick="showWelcomePage()">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang chính
+                </button>
+            </div>
+            <div class="iframe-container">
+                <iframe src="/DonHang/Manage" class="iframe-full" id="hoaDonOfflineFrame"></iframe>
             </div>
         </div>
 
@@ -1546,6 +1562,8 @@
                         showPage('donHangPage');
                     } else if (page === 'hoadon') {
                         showPage('hoaDonPage');
+                    } else if (page === 'hoadonoffline') {
+                        showPage('hoaDonOfflinePage');
                     } else if (page === 'quanlybanhang') {
                         showPage('quanlybanhangPage');
                     } else if (page === 'baohanh') {
@@ -1593,6 +1611,7 @@
                 'thanhToanPage': 'thanhtoan',
                 'donHangPage': 'donhang',
                 'hoaDonPage': 'hoadon',
+                'hoaDonOfflinePage': 'hoadonoffline',
                 'quanlybanhangPage': 'quanlybanhang',
                 'baoHanhPage': 'baohanh'
             };

@@ -1,10 +1,12 @@
-﻿using DATN_DT.Form;
+﻿using DATN_DT.CustomAttribute;
+using DATN_DT.Form;
 using DATN_DT.IServices;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DATN_DT.Controllers
 {
     [Route("NhanVien")]
+    [AuthorizeRoleFromToken("ADMIN")] // Chỉ ADMIN mới được quản lý nhân viên
     public class NhanVienController : Controller
     {
         private readonly INhanVienService _nhanVienService;
@@ -71,7 +73,15 @@ namespace DATN_DT.Controllers
                 if (nhanVien == null)
                     return BadRequest(new { message = "Dữ liệu không hợp lệ!" });
 
-                await _nhanVienService.Update(id, nhanVien);
+                // Nếu có password mới, dùng UpdateWithPassword
+                if (!string.IsNullOrEmpty(nhanVien.Password))
+                {
+                    await _nhanVienService.UpdateWithPassword(id, nhanVien, nhanVien.Password);
+                }
+                else
+                {
+                    await _nhanVienService.Update(id, nhanVien);
+                }
 
                 return Ok(new { message = "Cập nhật Nhân viên thành công!" });
             }
