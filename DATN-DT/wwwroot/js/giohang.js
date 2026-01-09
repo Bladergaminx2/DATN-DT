@@ -100,17 +100,20 @@ function renderCartItems() {
     const tbody = document.getElementById('cartItems');
 
     if (cartData.length === 0) {
+        // Sử dụng URL từ window.muaHangUrl nếu có, nếu không thì dùng /MuaHang
+        const muaHangUrl = (typeof window !== 'undefined' && window.muaHangUrl) ? window.muaHangUrl : '/MuaHang';
         tbody.innerHTML = `
             <tr>
                 <td colspan="7" class="text-center py-4">
                     <i class="bi bi-cart-x" style="font-size: 3rem; color: #6c757d;"></i>
                     <p class="text-muted mt-2">Giỏ hàng của bạn đang trống</p>
-                    <a href="/SanPham" class="btn btn-primary">Mua sắm ngay</a>
+                    <a href="${muaHangUrl}" class="btn btn-primary">Mua sắm ngay</a>
                 </td>
             </tr>
         `;
         return;
     }
+
 
     tbody.innerHTML = cartData.map(item => {
         const anhDaiDien = item.modelSanPham.anhSanPhams && item.modelSanPham.anhSanPhams.length > 0
