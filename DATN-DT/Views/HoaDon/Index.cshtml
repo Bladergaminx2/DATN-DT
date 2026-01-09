@@ -397,7 +397,7 @@
 </head>
 <body>
     <div class="container">
-        <h2><i class="bi bi-receipt me-2"></i>Quản lý Hóa Đơn Online</h2>
+        <h2><i class="bi bi-receipt me-2"></i>Quản lý Hóa Đơn</h2>
 
         <!-- Statistics Section -->
         <div class="stats-row" id="statsContainer">
@@ -406,8 +406,12 @@
                 <div class="stat-value" id="totalInvoices">0</div>
             </div>
             <div class="stat-card online">
-                <div class="stat-label">Hóa đơn Online</div>
+                <div class="stat-label">Bán hàng Online</div>
                 <div class="stat-value" id="onlineInvoices">0</div>
+            </div>
+            <div class="stat-card offline">
+                <div class="stat-label">Bán hàng Offline</div>
+                <div class="stat-value" id="offlineInvoices">0</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Tổng doanh thu</div>
@@ -442,9 +446,19 @@
                 <div class="col-md-12">
                     <label class="form-label">Loại bán hàng</label>
                     <div class="btn-group w-100" role="group">
-                        <input type="radio" class="btn-check" name="paymentType" id="onlineType" value="Chuyển khoản" checked>
+                        <input type="radio" class="btn-check" name="paymentType" id="allType" value="" checked>
+                        <label class="btn btn-outline-primary" for="allType">
+                            <i class="bi bi-grid-3x3-gap me-1"></i>Tất cả
+                        </label>
+                        
+                        <input type="radio" class="btn-check" name="paymentType" id="onlineType" value="Chuyển khoản">
                         <label class="btn btn-outline-success" for="onlineType">
                             <i class="bi bi-globe me-1"></i>Online (Chuyển khoản)
+                        </label>
+                        
+                        <input type="radio" class="btn-check" name="paymentType" id="offlineType" value="COD">
+                        <label class="btn btn-outline-info" for="offlineType">
+                            <i class="bi bi-shop me-1"></i>Offline (COD)
                         </label>
                     </div>
                 </div>
@@ -574,8 +588,12 @@
                 var toDate = document.getElementById('toDate').value;
                 var status = currentStatusFilter;
                 
-                // Mặc định chỉ lấy hóa đơn online (Chuyển khoản)
-                var paymentMethod = 'Chuyển khoản';
+                // Lấy phương thức thanh toán đã chọn
+                var paymentMethod = '';
+                var paymentRadio = document.querySelector('input[name="paymentType"]:checked');
+                if (paymentRadio && paymentRadio.value) {
+                    paymentMethod = paymentRadio.value;
+                }
 
                 var url = '/HoaDon/GetInvoices?';
                 if (status !== null) url += 'status=' + status + '&';
@@ -617,16 +635,26 @@
                 } else {
                     // Tính thống kê
                     var totalCount = result.data.length;
+                    var onlineCount = 0;
+                    var offlineCount = 0;
                     var totalRevenue = 0;
 
                     for (var i = 0; i < result.data.length; i++) {
                         var invoice = result.data[i];
+                        
+                        // Thống kê
+                        if (invoice.phuongThucThanhToan === 'Chuyển khoản') {
+                            onlineCount++;
+                        } else {
+                            offlineCount++;
+                        }
                         totalRevenue += (invoice.tongTien || 0);
                     }
 
                     // Cập nhật thống kê
                     document.getElementById('totalInvoices').textContent = totalCount;
-                    document.getElementById('onlineInvoices').textContent = totalCount;
+                    document.getElementById('onlineInvoices').textContent = onlineCount;
+                    document.getElementById('offlineInvoices').textContent = offlineCount;
                     document.getElementById('totalRevenue').textContent = formatMoney(totalRevenue);
 
                     for (var i = 0; i < result.data.length; i++) {

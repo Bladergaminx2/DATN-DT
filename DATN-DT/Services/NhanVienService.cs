@@ -3,8 +3,6 @@ using DATN_DT.IRepos;
 using DATN_DT.IServices;
 using DATN_DT.Models;
 using DATN_DT.Repos;
-using System.Security.Cryptography;
-using System.Text;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace DATN_DT.Services
@@ -18,29 +16,18 @@ namespace DATN_DT.Services
             _INhanVienRepo = nhanVienRepo;
         }
 
-        // Hash password helper
-        private string HashPassword(string password)
-        {
-            using var sha = SHA256.Create();
-            var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return Convert.ToBase64String(bytes);
-        }
-
         public async Task Create(NhanVienFormSystemCreate nhanvien)
         {
             var data = new NhanVien();
             data.EmailNhanVien = nhanvien.EmailNhanVien;
-            // Hash password trước khi lưu
-            data.Password = HashPassword(nhanvien.Password ?? "");
+            data.Password = nhanvien.Password;
             data.TenTaiKhoanNV = nhanvien?.TenTaiKhoanNV;
             data.HoTenNhanVien = nhanvien?.HoTenNhanVien;
             data.SdtNhanVien = nhanvien?.SdtNhanVien;
             data.IdChucVu = nhanvien?.IdChucVu;
             data.DiaChiNV = nhanvien?.DiaChiNV;
-            data.NgayVaoLam = nhanvien?.NgayVaoLam ?? DateTime.Now;
-            // TrangThaiNV: 0 = Đang làm việc, 1 = Đã nghỉ, 2 = Nghỉ phép
-            // Mặc định khi tạo là 0 (Đang làm việc)
-            data.TrangThaiNV = nhanvien?.TrangThaiNV ?? 0; // 0 = Đang làm việc
+            data.NgayVaoLam = DateTime.Now;
+            data.TrangThaiNV = 1;
             await _INhanVienRepo.Create(data);
         }
 
@@ -101,37 +88,6 @@ namespace DATN_DT.Services
             data.IdChucVu = nhanvien?.IdChucVu;
             data.DiaChiNV = nhanvien?.DiaChiNV;
             data.TrangThaiNV = nhanvien?.TrangThaiNV;
-
-            await _INhanVienRepo.Update(data);
-        }
-
-        // Update với password (dùng khi đổi mật khẩu)
-        public async Task UpdateWithPassword(int id, NhanVienFormSystem nhanvien, string? newPassword)
-        {
-            if (nhanvien.IdChucVu.HasValue && await _INhanVienRepo.IsAdminRole(nhanvien.IdChucVu.Value))
-            {
-                throw new InvalidOperationException("Không thể cập nhật nhân viên thành role Admin");
-            }
-
-            var data = await _INhanVienRepo.GetNhanVienById(id);
-            if (data == null)
-            {
-                throw new InvalidOperationException("Không tìm thấy nhân viên");
-            }
-
-            data.EmailNhanVien = nhanvien.EmailNhanVien;
-            data.TenTaiKhoanNV = nhanvien?.TenTaiKhoanNV;
-            data.HoTenNhanVien = nhanvien?.HoTenNhanVien;
-            data.SdtNhanVien = nhanvien?.SdtNhanVien;
-            data.IdChucVu = nhanvien?.IdChucVu;
-            data.DiaChiNV = nhanvien?.DiaChiNV;
-            data.TrangThaiNV = nhanvien?.TrangThaiNV;
-
-            // Hash password nếu có
-            if (!string.IsNullOrEmpty(newPassword))
-            {
-                data.Password = HashPassword(newPassword);
-            }
 
             await _INhanVienRepo.Update(data);
         }

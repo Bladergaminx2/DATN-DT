@@ -89,7 +89,7 @@ namespace DATN_DT.Repos
                 existing.NgayVaoLam = nhanvien.NgayVaoLam;
                 existing.TrangThaiNV = nhanvien.TrangThaiNV;
 
-                // Chỉ cập nhật mật khẩu nếu có giá trị (đã được hash ở service)
+                // Chỉ cập nhật mật khẩu nếu có giá trị
                 if (!string.IsNullOrEmpty(nhanvien.Password))
                 {
                     existing.Password = nhanvien.Password;

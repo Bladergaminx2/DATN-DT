@@ -21,7 +21,6 @@
         public string? EmailNhanVien { get; set; }
         public string? DiaChiNV { get; set; }
         public int? TrangThaiNV { get; set; }
-        public string? Password { get; set; } // Thêm trường Password để đổi mật khẩu
     }
     public class NhanVienFormSystemCreate
     {
@@ -32,7 +31,6 @@
         public string? SdtNhanVien { get; set; }
         public string? EmailNhanVien { get; set; }
         public string? DiaChiNV { get; set; }
-        public DateTime? NgayVaoLam { get; set; }
         public int? TrangThaiNV { get; set; }
     }
 

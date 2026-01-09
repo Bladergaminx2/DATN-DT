@@ -12,8 +12,7 @@ namespace DATN_DT.IServices
         Task<NhanVien?> GetNhanVienById(int id);
         Task<List<ChucVu>> GetChucVus();
         Task<List<ChucVu>> GetChucVusExceptAdmin();
-        Task Update(int id, NhanVienFormSystem nhanvien);
-        Task UpdateWithPassword(int id, NhanVienFormSystem nhanvien, string? newPassword);
+        Task Update(int id,NhanVienFormSystem nhanvien);
         Task<bool> IsAdminRole(int idChucVu);
     }
 }

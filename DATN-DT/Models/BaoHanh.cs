@@ -12,7 +12,6 @@
         public string? MoTaLoi { get; set; }
         public string? XuLy { get; set; }
         public decimal? ChiPhiPhatSinh { get; set; }
-        public string? LoaiBaoHanh { get; set; } // "Mới mua", "Sửa chữa", "Đổi máy"
 
 
 

@@ -259,13 +259,15 @@ namespace DATN_DT.Controllers
                                   let stockQuantity = _context.TonKhos
                                       .Where(t => t.IdModelSanPham == model.IdModelSanPham)
                                       .Sum(t => t.SoLuong)
-                                  // Lấy khuyến mãi đang active cho sản phẩm (bỏ kiểm tra ngày kết thúc để cho phép khuyến mãi hết hạn vẫn hoạt động)
+                                  // Lấy khuyến mãi đang active cho sản phẩm
                                   let activePromotion = (from mskm in _context.ModelSanPhamKhuyenMais
                                                         join km in _context.KhuyenMais on mskm.IdKhuyenMai equals km.IdKhuyenMai
                                                         where mskm.IdModelSanPham == model.IdModelSanPham
-                                                              && (km.TrangThaiKM == "Đang diễn ra" || km.TrangThaiKM == "Đã kết thúc")
+                                                              && km.TrangThaiKM == "Đang diễn ra"
                                                               && km.NgayBatDau.HasValue
+                                                              && km.NgayKetThuc.HasValue
                                                               && km.NgayBatDau.Value <= now
+                                                              && km.NgayKetThuc.Value >= now
                                                         orderby km.NgayKetThuc descending
                                                         select km).FirstOrDefault()
                                   where model.TrangThai == 1 && stockQuantity > 0
@@ -370,9 +372,11 @@ namespace DATN_DT.Controllers
                                      let activePromotion = (from mskm in _context.ModelSanPhamKhuyenMais
                                                            join km in _context.KhuyenMais on mskm.IdKhuyenMai equals km.IdKhuyenMai
                                                            where mskm.IdModelSanPham == model.IdModelSanPham
-                                                                 && (km.TrangThaiKM == "Đang diễn ra" || km.TrangThaiKM == "Đã kết thúc")
+                                                                 && km.TrangThaiKM == "Đang diễn ra"
                                                                  && km.NgayBatDau.HasValue
+                                                                 && km.NgayKetThuc.HasValue
                                                                  && km.NgayBatDau.Value <= now
+                                                                 && km.NgayKetThuc.Value >= now
                                                            orderby km.NgayKetThuc descending
                                                            select km).FirstOrDefault()
                                      where model.TrangThai == 1 && stockQuantity > 0 && soldCount > 3
@@ -507,8 +511,9 @@ namespace DATN_DT.Controllers
                                .Select(mspkm => mspkm.KhuyenMai)
                                .Where(km => km != null 
                                    && km.NgayBatDau.HasValue 
+                                   && km.NgayKetThuc.HasValue
                                    && now >= km.NgayBatDau.Value.Date
-                                   && (km.TrangThaiKM == "Đang diễn ra" || km.TrangThaiKM == "Đã kết thúc"))
+                                   && now <= km.NgayKetThuc.Value.Date)
                                .FirstOrDefault()
                            where model.TrangThai == 1 && stockQuantity > 0
                            // Áp dụng bộ lọc

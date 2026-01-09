@@ -446,51 +446,9 @@
                 padding: 15px;
             }
         }
-        /* Loading Overlay */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-
-        .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 5px solid rgba(255, 255, 255, 0.3);
-            border-top: 5px solid var(--primary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @@keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .loading-text {
-            color: white;
-            margin-top: 20px;
-            font-size: 18px;
-            font-weight: 500;
-        }
     </style>
 </head>
 <body>
-    <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div style="text-align: center;">
-            <div class="loading-spinner"></div>
-            <div class="loading-text">Đang xử lý...</div>
-        </div>
-    </div>
-
     <!-- Main Content -->
     <div class="main-content">
         <h2 class="page-title"><i class="fas fa-shopping-cart me-2"></i>Bán Hàng</h2>
@@ -609,6 +567,7 @@
                             <select id="phuongThucTT" class="form-control form-select">
                             <option value="Tiền mặt">Tiền mặt</option>
                             <option value="Chuyển khoản">Chuyển khoản</option>
+                            <option value="Thẻ">Thẻ</option>
                         </select>
                     </div>
 
@@ -627,10 +586,8 @@
                     </div>
 
                     <div class="mb-3">
-                            <label class="form-label">Số tiền khách đưa (VNĐ)</label>
-                            <input type="number" id="tienKhachDua" class="form-control" value="0" min="0" max="10000000000" step="1000" />
-                            <small class="form-text text-muted">Số tiền tối thiểu: 0 VNĐ, tối đa: 10.000.000.000 VNĐ</small>
-                            <small id="tienKhachDuaError" class="text-danger d-none"></small>
+                            <label class="form-label">Số tiền khách đưa</label>
+                            <input type="number" id="tienKhachDua" class="form-control" value="0" min="0" />
                     </div>
 
                     <div class="mb-3">
@@ -1046,120 +1003,38 @@
             return isValid;
         }
 
-        function showLoading() {
-            $('#loadingOverlay').css('display', 'flex');
-        }
-
-        function hideLoading() {
-            $('#loadingOverlay').css('display', 'none');
-        }
-
-        function cleanForm() {
-            // Xóa sản phẩm đã chọn
-            selectedProducts = [];
-            renderSelectedProducts();
-            
-            // Reset form khách hàng
-            $('#khachHangSelect').val('');
-            $('#idKhachHang').val('');
-            $('#diemTichLuy').text('');
-            $('#tenKhachHang').val('').prop('disabled', false);
-            $('#sdtKhachHang').val('').prop('disabled', false);
-            $('#tenKhachHangError').addClass('d-none').text('');
-            $('#sdtKhachHangError').addClass('d-none').text('');
-            
-            // Reset thanh toán
-            $('#tienKhachDua').val(0);
-            $('#phuongThucTT').val('Tiền mặt');
-            
-            // Reset tìm kiếm
-            resetSearch();
-        }
-
         function thanhToan() {
-            // Validation: Kiểm tra có sản phẩm không
             if (selectedProducts.length === 0) {
                 alert('Vui lòng chọn ít nhất một sản phẩm');
                 return;
             }
 
-            // Validation: Kiểm tra IMEI cho tất cả sản phẩm
             var hasMissingImei = selectedProducts.some(function (p) { return !p.selectedImeis || p.selectedImeis.length === 0; });
             if (hasMissingImei) {
                 alert('Vui lòng chọn IMEI cho tất cả sản phẩm trước khi thanh toán');
                 return;
             }
 
-            // Validation: Kiểm tra thông tin khách hàng
             if (!validateKhachHang()) {
                 alert('Vui lòng kiểm tra lại thông tin khách hàng');
                 return;
             }
 
-            // Validation: Kiểm tra phương thức thanh toán
-            var phuongThucTT = $('#phuongThucTT').val();
-            if (!phuongThucTT || phuongThucTT === '') {
-                alert('Vui lòng chọn phương thức thanh toán');
-                return;
-            }
-
-            // Validation: Kiểm tra số tiền
             var tongThanhToan = parseFloat($('#tongThanhToan').text().replace(/[^0-9]/g, '')) || 0;
-            if (tongThanhToan <= 0) {
-                alert('Tổng tiền thanh toán phải lớn hơn 0');
-                return;
-            }
-
-            // Validation: Nếu thanh toán bằng tiền mặt, phải nhập số tiền khách đưa
-            if (phuongThucTT === 'Tiền mặt') {
-                var tienKhachDua = parseFloat($('#tienKhachDua').val()) || 0;
-                var minTien = 0;
-                var maxTien = 10000000000; // 10 tỷ VNĐ
-                
-                // Validate số tiền khách đưa
-                if (tienKhachDua <= 0) {
-                    $('#tienKhachDuaError').removeClass('d-none').text('Vui lòng nhập số tiền khách đưa (phải lớn hơn 0)');
-                    $('#tienKhachDua').focus();
-                    return;
-                }
-                
-                if (tienKhachDua < minTien) {
-                    $('#tienKhachDuaError').removeClass('d-none').text('Số tiền khách đưa không được nhỏ hơn ' + minTien.toLocaleString() + ' VNĐ');
-                    $('#tienKhachDua').focus();
-                    return;
-                }
-                
-                if (tienKhachDua > maxTien) {
-                    $('#tienKhachDuaError').removeClass('d-none').text('Số tiền khách đưa không được vượt quá ' + maxTien.toLocaleString() + ' VNĐ (10 tỷ VNĐ)');
-                    $('#tienKhachDua').focus();
-                    return;
-                }
-                
-                $('#tienKhachDuaError').addClass('d-none').text('');
-                
-                var tienThua = tienKhachDua - tongThanhToan;
-                if (tienThua < 0) {
-                    alert('Không thanh toán - Số tiền khách đưa chưa đủ! Còn thiếu: ' + Math.abs(tienThua).toLocaleString() + ' đ');
-                    $('#tienKhachDua').focus();
-                    return;
-                }
-            }
-
-            // Hiển thị loading
-            showLoading();
-
-            var phuongThucTT = $('#phuongThucTT').val();
             var tienKhachDua = parseFloat($('#tienKhachDua').val()) || 0;
             var tienThua = tienKhachDua - tongThanhToan;
+            
+            if (tienThua < 0) {
+                alert('Không thanh toán - Số tiền khách đưa chưa đủ! Còn thiếu: ' + Math.abs(tienThua).toLocaleString() + ' đ');
+                return;
+            }
 
             var orderData = {
                 IdKhachHang: $('#khachHangSelect').val() || null,
                 TenKhachHang: $('#tenKhachHang').val().trim() || '',
                 SdtKhachHang: $('#sdtKhachHang').val().trim() || '',
                 DiaChiGiaoHang: 'Thanh Toán Tại Quầy',
-                PhuongThucThanhToan: phuongThucTT,
-                TienKhachDua: phuongThucTT === 'Tiền mặt' ? tienKhachDua : null,
-                TienThua: phuongThucTT === 'Tiền mặt' ? tienThua : null,
+                PhuongThucThanhToan: $('#phuongThucTT').val(),
                 ChiTietDonHang: selectedProducts.map(function (p) {
                     return {
                         IdModelSanPham: p.idModelSanPham,
@@ -1171,91 +1046,30 @@
             };
 
             $.post('@Url.Action("Create", "DonHang")', orderData, function (response) {
-                hideLoading();
-                
                 if (response && response.success) {
                     var message = 'Thanh toán thành công!\nMã đơn: ' + response.maDon + '\nNgày bảo hành: ' + response.ngayBaoHanh;
                     alert(message);
                     
-                    // Clean form sau khi thanh toán thành công
-                    cleanForm();
-                    
-                    // Tự động tải PDF xuống
-                    if (response.maDon) {
-                        // Tạo URL để download PDF
-                        var pdfDownloadUrl = '/DonHang/ExportPdf?maDon=' + encodeURIComponent(response.maDon);
-                        
-                        // Sử dụng fetch để tải PDF và trigger download
-                        fetch(pdfDownloadUrl)
-                            .then(response => {
-                                if (!response.ok) {
-                                    throw new Error('Không thể tải PDF');
-                                }
-                                return response.blob();
-                            })
-                            .then(blob => {
-                                // Tạo URL từ blob
-                                var url = window.URL.createObjectURL(blob);
-                                
-                                // Tạo link ẩn để trigger download
-                                var link = document.createElement('a');
-                                link.href = url;
-                                link.download = 'HoaDon_' + response.maDon + '.pdf';
-                                link.style.display = 'none';
-                                document.body.appendChild(link);
-                                link.click();
-                                
-                                // Cleanup
-                                document.body.removeChild(link);
-                                window.URL.revokeObjectURL(url);
-                            })
-                            .catch(error => {
-                                console.error('Lỗi khi tải PDF:', error);
-                                // Fallback: mở trong tab mới nếu fetch thất bại
-                                window.open(pdfDownloadUrl, '_blank');
-                            });
+                    if (response.pdfUrl && response.maDon) {
+                        window.location.href = response.pdfUrl;
+                    } else {
+                        setTimeout(function() {
+                            location.reload();
+                        }, 2000);
                     }
                 } else {
-                    var errorMsg = 'Lỗi: ' + (response ? (response.message || 'Không xác định') : 'Không xác định');
-                    if (response && response.errors && Array.isArray(response.errors)) {
-                        errorMsg += '\n' + response.errors.join('\n');
-                    }
-                    alert(errorMsg);
+                    alert('Lỗi: ' + (response ? response.message : 'Không xác định'));
                 }
             }).fail(function(xhr, status, error) {
-                hideLoading();
                 console.error('Lỗi AJAX:', error);
-                var errorMsg = 'Có lỗi xảy ra khi thanh toán. Vui lòng thử lại.';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMsg = xhr.responseJSON.message;
-                }
-                alert(errorMsg);
+                alert('Có lỗi xảy ra khi thanh toán. Vui lòng thử lại.');
             });
         }
 
         $(document).ready(function () {
             $('#tienKhachDua').on('input', function() {
-                var tienKhachDua = parseFloat($(this).val()) || 0;
-                var minTien = 0;
-                var maxTien = 10000000000; // 10 tỷ VNĐ
-                
-                // Clear error khi người dùng nhập
-                $('#tienKhachDuaError').addClass('d-none').text('');
-                
-                // Validate min/max
-                if (tienKhachDua < minTien) {
-                    $('#tienKhachDuaError').removeClass('d-none').text('Số tiền không được nhỏ hơn ' + minTien.toLocaleString() + ' VNĐ');
-                    return;
-                }
-                
-                if (tienKhachDua > maxTien) {
-                    $('#tienKhachDuaError').removeClass('d-none').text('Số tiền không được vượt quá ' + maxTien.toLocaleString() + ' VNĐ (10 tỷ VNĐ)');
-                    // Giới hạn giá trị input
-                    $(this).val(maxTien);
-                    tienKhachDua = maxTien;
-                }
-                
                 var tongThanhToan = parseFloat($('#tongThanhToan').text().replace(/[^0-9]/g, '')) || 0;
+                var tienKhachDua = parseFloat($(this).val()) || 0;
                 var tienThua = tienKhachDua - tongThanhToan;
                 
                 if (tienThua >= 0) {
