@@ -27,6 +27,7 @@ namespace DATN_DT.Data
         public DbSet<TonKho> TonKhos { get; set; }
         public DbSet<Imei> Imeis { get; set; }
         public DbSet<BaoHanh> BaoHanhs { get; set; }
+        public DbSet<BaoHanhLichSu> BaoHanhLichSus { get; set; }
         public DbSet<HoaDon> HoaDons { get; set; }
         public DbSet<HoaDonChiTiet> HoaDonChiTiets { get; set; }
         public DbSet<GioHang> GioHangs { get; set; }
@@ -60,6 +61,7 @@ namespace DATN_DT.Data
             modelBuilder.Entity<TonKho>().HasKey(e => e.IdTonKho);
             modelBuilder.Entity<Imei>().HasKey(e => e.IdImei);
             modelBuilder.Entity<BaoHanh>().HasKey(e => e.IdBaoHanh);
+            modelBuilder.Entity<BaoHanhLichSu>().HasKey(e => e.IdBaoHanhLichSu);
             modelBuilder.Entity<HoaDon>().HasKey(e => e.IdHoaDon);
             modelBuilder.Entity<HoaDonChiTiet>().HasKey(e => e.IdHoaDonChiTiet);
             modelBuilder.Entity<GioHang>().HasKey(e => e.IdGioHang);
@@ -185,6 +187,19 @@ namespace DATN_DT.Data
                 .WithMany()
                 .HasForeignKey(b => b.IdNhanVien)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // BaoHanhLichSu relationships
+            modelBuilder.Entity<BaoHanhLichSu>()
+                .HasOne(b => b.BaoHanh)
+                .WithMany()
+                .HasForeignKey(b => b.IdBaoHanh)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<BaoHanhLichSu>()
+                .HasOne(b => b.NhanVien)
+                .WithMany()
+                .HasForeignKey(b => b.IdNhanVien)
+                .OnDelete(DeleteBehavior.SetNull);
 
             // DonHang -> KhachHang
             modelBuilder.Entity<DonHang>()
