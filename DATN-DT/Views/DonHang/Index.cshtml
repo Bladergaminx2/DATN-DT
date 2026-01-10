@@ -626,14 +626,15 @@
                         </div>
                     </div>
 
-                    <div class="mb-3">
+                    <!-- Phần tiền khách đưa - chỉ hiển thị khi chọn "Tiền mặt" -->
+                    <div class="mb-3" id="tienKhachDuaSection">
                             <label class="form-label">Số tiền khách đưa (VNĐ)</label>
                             <input type="number" id="tienKhachDua" class="form-control" value="0" min="0" max="10000000000" step="1000" />
                             <small class="form-text text-muted">Số tiền tối thiểu: 0 VNĐ, tối đa: 10.000.000.000 VNĐ</small>
                             <small id="tienKhachDuaError" class="text-danger d-none"></small>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-3" id="tienThuaSection">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="summary-label">Tiền thừa</span>
                             <span id="tienThua" class="summary-value text-info">0 đ</span>
@@ -667,6 +668,32 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                     <button type="button" class="btn btn-primary" onclick="addSelectedProduct()">
                         <i class="fas fa-plus me-1"></i>Thêm vào hóa đơn
+                    </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal QR Code Ngân Hàng -->
+<div class="modal fade" id="bankQRModal" tabindex="-1" role="dialog" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-success">
+                    <h5 class="modal-title text-white"><i class="fas fa-qrcode me-2"></i>Thanh Toán Chuyển Khoản</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="bankQRContent">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Đang tải...</span>
+                    </div>
+                    <p class="text-muted">Đang tạo mã QR...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-success" id="btnConfirmBankPayment" onclick="confirmBankPayment()">
+                        <i class="fas fa-check-circle me-2"></i>Đã chuyển khoản - Xác nhận đơn hàng
                     </button>
             </div>
         </div>
@@ -1110,6 +1137,31 @@
                 return;
             }
 
+            // Nếu chọn "Chuyển khoản", tạo dữ liệu đơn hàng và hiển thị modal QR code
+            if (phuongThucTT === 'Chuyển khoản') {
+                // Tạo dữ liệu đơn hàng trước
+                pendingOrderData = {
+                    IdKhachHang: $('#khachHangSelect').val() || null,
+                    TenKhachHang: $('#tenKhachHang').val().trim() || '',
+                    SdtKhachHang: $('#sdtKhachHang').val().trim() || '',
+                    DiaChiGiaoHang: 'Thanh Toán Tại Quầy',
+                    PhuongThucThanhToan: phuongThucTT,
+                    TienKhachDua: null,
+                    TienThua: null,
+                    ChiTietDonHang: selectedProducts.map(function (p) {
+                        return {
+                            IdModelSanPham: p.idModelSanPham,
+                            SoLuong: p.soLuong,
+                            SelectedImeis: p.selectedImeis,
+                            IdKhuyenMai: p.idKhuyenMai || null
+                        };
+                    })
+                };
+                // Hiển thị modal QR code
+                showBankQRModal(tongThanhToan);
+                return;
+            }
+
             // Validation: Nếu thanh toán bằng tiền mặt, phải nhập số tiền khách đưa
             if (phuongThucTT === 'Tiền mặt') {
                 var tienKhachDua = parseFloat($('#tienKhachDua').val()) || 0;
@@ -1148,7 +1200,11 @@
             // Hiển thị loading
             showLoading();
 
-            var phuongThucTT = $('#phuongThucTT').val();
+            // Tạo dữ liệu đơn hàng và submit
+            submitOrderData(phuongThucTT, tongThanhToan);
+        }
+
+        function submitOrderData(phuongThucTT, tongThanhToan) {
             var tienKhachDua = parseFloat($('#tienKhachDua').val()) || 0;
             var tienThua = tienKhachDua - tongThanhToan;
 
@@ -1169,6 +1225,13 @@
                     };
                 })
             };
+
+            // Lưu dữ liệu đơn hàng để dùng khi xác nhận chuyển khoản (nếu là chuyển khoản)
+            if (phuongThucTT === 'Chuyển khoản') {
+                pendingOrderData = orderData;
+                // Không submit ngay, đợi user xác nhận trong modal
+                return;
+            }
 
             $.post('@Url.Action("Create", "DonHang")', orderData, function (response) {
                 hideLoading();
@@ -1233,7 +1296,152 @@
             });
         }
 
+        // Hiển thị modal QR code ngân hàng
+        function showBankQRModal(tongTien) {
+            // Hiển thị loading
+            $('#bankQRContent').html(
+                '<div class="spinner-border text-primary mb-3" role="status">' +
+                '<span class="visually-hidden">Đang tải...</span>' +
+                '</div>' +
+                '<p class="text-muted">Đang tạo mã QR...</p>'
+            );
+
+            // Mở modal
+            var modal = new bootstrap.Modal(document.getElementById('bankQRModal'));
+            modal.show();
+
+            // Gọi API để lấy thông tin QR code
+            $.get('@Url.Action("GetBankQRCode", "DonHang")', {
+                tongTien: tongTien,
+                noiDung: 'THANH TOAN DON HANG ' + new Date().toISOString().slice(0, 10).replace(/-/g, '')
+            }, function (response) {
+                if (response && response.success) {
+                    var html = '' +
+                        '<div class="mb-4">' +
+                        '<h5 class="mb-3" style="color: var(--text-primary);">Thông Tin Chuyển Khoản</h5>' +
+                        '<div class="card mb-3" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary-color);">' +
+                        '<div class="card-body text-start">' +
+                        '<p class="mb-2"><strong>Ngân hàng:</strong> <span style="color: var(--primary-color);">' + response.bankName + '</span></p>' +
+                        '<p class="mb-2"><strong>Số tài khoản:</strong> <span style="color: var(--text-primary); font-weight: 600; font-size: 1.1rem;">' + response.accountNumber + '</span></p>' +
+                        '<p class="mb-2"><strong>Chủ tài khoản:</strong> <span style="color: var(--text-primary);">' + response.accountName + '</span></p>' +
+                        '<p class="mb-0"><strong>Số tiền:</strong> <span class="text-success fw-bold" style="font-size: 1.2rem;">' + renderPrice(response.tongTien) + '</span></p>' +
+                        '</div>' +
+                        '</div>' +
+                        '</div>' +
+                        '<div class="mb-4">' +
+                        '<h5 class="mb-3" style="color: var(--text-primary);">Mã QR Code</h5>' +
+                        '<div class="d-flex justify-content-center">' +
+                        '<img src="' + response.qrCodeUrl + '" alt="QR Code" style="max-width: 300px; border: 2px solid var(--border-color); border-radius: 8px; padding: 10px; background: white;">' +
+                        '</div>' +
+                        '<p class="text-muted mt-3" style="font-size: 0.9rem;">Quét mã QR bằng ứng dụng ngân hàng để thanh toán</p>' +
+                        '</div>' +
+                        '<div class="alert alert-info">' +
+                        '<i class="fas fa-info-circle me-2"></i><strong>Hướng dẫn:</strong> Sau khi chuyển khoản thành công, vui lòng nhấn nút "Đã chuyển khoản" để xác nhận đơn hàng.' +
+                        '</div>';
+
+                    $('#bankQRContent').html(html);
+                } else {
+                    $('#bankQRContent').html(
+                        '<div class="alert alert-danger">' +
+                        '<i class="fas fa-exclamation-triangle me-2"></i>Lỗi: ' + (response.message || 'Không thể tạo QR code') +
+                        '</div>'
+                    );
+                }
+            }).fail(function () {
+                $('#bankQRContent').html(
+                    '<div class="alert alert-danger">' +
+                    '<i class="fas fa-exclamation-triangle me-2"></i>Lỗi kết nối. Vui lòng thử lại.' +
+                    '</div>'
+                );
+            });
+        }
+
+        // Xác nhận đã chuyển khoản và tạo đơn hàng
+        function confirmBankPayment() {
+            if (!pendingOrderData) {
+                alert('Không có dữ liệu đơn hàng. Vui lòng thử lại.');
+                return;
+            }
+
+            // Đóng modal
+            var modal = bootstrap.Modal.getInstance(document.getElementById('bankQRModal'));
+            modal.hide();
+
+            // Hiển thị loading
+            showLoading();
+
+            // Submit đơn hàng
+            $.post('@Url.Action("Create", "DonHang")', pendingOrderData, function (response) {
+                hideLoading();
+
+                if (response && response.success) {
+                    var message = 'Đơn hàng đã được tạo thành công!\nMã đơn: ' + response.maDon + '\nTrạng thái: Chờ xác nhận thanh toán\n\nVui lòng đợi xác nhận từ hệ thống sau khi chuyển khoản.';
+                    alert(message);
+
+                    // Clean form sau khi tạo đơn hàng thành công
+                    cleanForm();
+                    pendingOrderData = null;
+
+                    // Tự động tải PDF xuống
+                    if (response.maDon) {
+                        var pdfDownloadUrl = '/DonHang/ExportPdf?maDon=' + encodeURIComponent(response.maDon);
+                        fetch(pdfDownloadUrl)
+                            .then(response => {
+                                if (!response.ok) throw new Error('Không thể tải PDF');
+                                return response.blob();
+                            })
+                            .then(blob => {
+                                var url = window.URL.createObjectURL(blob);
+                                var link = document.createElement('a');
+                                link.href = url;
+                                link.download = 'HoaDon_' + response.maDon + '.pdf';
+                                link.style.display = 'none';
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                window.URL.revokeObjectURL(url);
+                            })
+                            .catch(error => {
+                                console.error('Lỗi khi tải PDF:', error);
+                                window.open(pdfDownloadUrl, '_blank');
+                            });
+                    }
+                } else {
+                    var errorMsg = 'Lỗi: ' + (response ? (response.message || 'Không xác định') : 'Không xác định');
+                    if (response && response.errors && Array.isArray(response.errors)) {
+                        errorMsg += '\n' + response.errors.join('\n');
+                    }
+                    alert(errorMsg);
+                }
+            }).fail(function(xhr, status, error) {
+                hideLoading();
+                console.error('Lỗi AJAX:', error);
+                var errorMsg = 'Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMsg = xhr.responseJSON.message;
+                }
+                alert(errorMsg);
+            });
+        }
+
         $(document).ready(function () {
+            // Ẩn/hiện phần tiền khách đưa khi thay đổi phương thức thanh toán
+            $('#phuongThucTT').on('change', function() {
+                var phuongThuc = $(this).val();
+                if (phuongThuc === 'Tiền mặt') {
+                    $('#tienKhachDuaSection').show();
+                    $('#tienThuaSection').show();
+                } else if (phuongThuc === 'Chuyển khoản') {
+                    $('#tienKhachDuaSection').hide();
+                    $('#tienThuaSection').hide();
+                    $('#tienKhachDua').val(0);
+                    $('#tienThua').text('0 đ');
+                    $('#tienThuaWarning').addClass('d-none');
+                }
+            });
+
+            // Trigger change để set initial state
+            $('#phuongThucTT').trigger('change');
             $('#tienKhachDua').on('input', function() {
                 var tienKhachDua = parseFloat($(this).val()) || 0;
                 var minTien = 0;
@@ -1298,6 +1506,24 @@
                 }
             });
 
+            // Ẩn/hiện phần tiền khách đưa khi thay đổi phương thức thanh toán
+            $('#phuongThucTT').on('change', function() {
+                var phuongThuc = $(this).val();
+                if (phuongThuc === 'Tiền mặt') {
+                    $('#tienKhachDuaSection').show();
+                    $('#tienThuaSection').show();
+                } else if (phuongThuc === 'Chuyển khoản') {
+                    $('#tienKhachDuaSection').hide();
+                    $('#tienThuaSection').hide();
+                    $('#tienKhachDua').val(0);
+                    $('#tienThua').text('0 đ');
+                    $('#tienThuaWarning').addClass('d-none');
+                }
+            });
+
+            // Trigger change để set initial state
+            $('#phuongThucTT').trigger('change');
+
             $('#searchProduct').keypress(function (e) {
                 if (e.which === 13) {
                     searchProducts();
@@ -1316,6 +1542,134 @@
                 }
             });
             });
+
+        // Hiển thị modal QR code ngân hàng
+        function showBankQRModal(tongTien) {
+            // Hiển thị loading
+            $('#bankQRContent').html(
+                '<div class="spinner-border text-primary mb-3" role="status">' +
+                '<span class="visually-hidden">Đang tải...</span>' +
+                '</div>' +
+                '<p class="text-muted">Đang tạo mã QR...</p>'
+            );
+
+            // Mở modal
+            var modal = new bootstrap.Modal(document.getElementById('bankQRModal'));
+            modal.show();
+
+            // Gọi API để lấy thông tin QR code
+            $.get('@Url.Action("GetBankQRCode", "DonHang")', {
+                tongTien: tongTien,
+                noiDung: 'THANH TOAN DON HANG ' + new Date().toISOString().slice(0, 10).replace(/-/g, '')
+            }, function (response) {
+                if (response && response.success) {
+                    var html = '' +
+                        '<div class="mb-4">' +
+                        '<h5 class="mb-3" style="color: var(--text-primary);">Thông Tin Chuyển Khoản</h5>' +
+                        '<div class="card mb-3" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary-color);">' +
+                        '<div class="card-body text-start">' +
+                        '<p class="mb-2"><strong>Ngân hàng:</strong> <span style="color: var(--primary-color);">' + response.bankName + '</span></p>' +
+                        '<p class="mb-2"><strong>Số tài khoản:</strong> <span style="color: var(--text-primary); font-weight: 600; font-size: 1.1rem;">' + response.accountNumber + '</span></p>' +
+                        '<p class="mb-2"><strong>Chủ tài khoản:</strong> <span style="color: var(--text-primary);">' + response.accountName + '</span></p>' +
+                        '<p class="mb-0"><strong>Số tiền:</strong> <span class="text-success fw-bold" style="font-size: 1.2rem;">' + renderPrice(response.tongTien) + '</span></p>' +
+                        '</div>' +
+                        '</div>' +
+                        '</div>' +
+                        '<div class="mb-4">' +
+                        '<h5 class="mb-3" style="color: var(--text-primary);">Mã QR Code</h5>' +
+                        '<div class="d-flex justify-content-center">' +
+                        '<img src="' + response.qrCodeUrl + '" alt="QR Code" style="max-width: 300px; border: 2px solid var(--border-color); border-radius: 8px; padding: 10px; background: white;">' +
+                        '</div>' +
+                        '<p class="text-muted mt-3" style="font-size: 0.9rem;">Quét mã QR bằng ứng dụng ngân hàng để thanh toán</p>' +
+                        '</div>' +
+                        '<div class="alert alert-info">' +
+                        '<i class="fas fa-info-circle me-2"></i><strong>Hướng dẫn:</strong> Sau khi chuyển khoản thành công, vui lòng nhấn nút "Đã chuyển khoản" để xác nhận đơn hàng.' +
+                        '</div>';
+
+                    $('#bankQRContent').html(html);
+                } else {
+                    $('#bankQRContent').html(
+                        '<div class="alert alert-danger">' +
+                        '<i class="fas fa-exclamation-triangle me-2"></i>Lỗi: ' + (response.message || 'Không thể tạo QR code') +
+                        '</div>'
+                    );
+                }
+            }).fail(function () {
+                $('#bankQRContent').html(
+                    '<div class="alert alert-danger">' +
+                    '<i class="fas fa-exclamation-triangle me-2"></i>Lỗi kết nối. Vui lòng thử lại.' +
+                    '</div>'
+                );
+            });
+        }
+
+        // Xác nhận đã chuyển khoản và tạo đơn hàng
+        function confirmBankPayment() {
+            if (!pendingOrderData) {
+                alert('Không có dữ liệu đơn hàng. Vui lòng thử lại.');
+                return;
+            }
+
+            // Đóng modal
+            var modal = bootstrap.Modal.getInstance(document.getElementById('bankQRModal'));
+            modal.hide();
+
+            // Hiển thị loading
+            showLoading();
+
+            // Submit đơn hàng
+            $.post('@Url.Action("Create", "DonHang")', pendingOrderData, function (response) {
+                hideLoading();
+
+                if (response && response.success) {
+                    var message = 'Đơn hàng đã được tạo thành công!\nMã đơn: ' + response.maDon + '\nTrạng thái: Chờ xác nhận thanh toán\n\nVui lòng đợi xác nhận từ hệ thống sau khi chuyển khoản.';
+                    alert(message);
+
+                    // Clean form sau khi tạo đơn hàng thành công
+                    cleanForm();
+                    pendingOrderData = null;
+
+                    // Tự động tải PDF xuống
+                    if (response.maDon) {
+                        var pdfDownloadUrl = '/DonHang/ExportPdf?maDon=' + encodeURIComponent(response.maDon);
+                        fetch(pdfDownloadUrl)
+                            .then(response => {
+                                if (!response.ok) throw new Error('Không thể tải PDF');
+                                return response.blob();
+                            })
+                            .then(blob => {
+                                var url = window.URL.createObjectURL(blob);
+                                var link = document.createElement('a');
+                                link.href = url;
+                                link.download = 'HoaDon_' + response.maDon + '.pdf';
+                                link.style.display = 'none';
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                window.URL.revokeObjectURL(url);
+                            })
+                            .catch(error => {
+                                console.error('Lỗi khi tải PDF:', error);
+                                window.open(pdfDownloadUrl, '_blank');
+                            });
+                    }
+                } else {
+                    var errorMsg = 'Lỗi: ' + (response ? (response.message || 'Không xác định') : 'Không xác định');
+                    if (response && response.errors && Array.isArray(response.errors)) {
+                        errorMsg += '\n' + response.errors.join('\n');
+                    }
+                    alert(errorMsg);
+                }
+            }).fail(function(xhr, status, error) {
+                hideLoading();
+                console.error('Lỗi AJAX:', error);
+                var errorMsg = 'Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMsg = xhr.responseJSON.message;
+                }
+                alert(errorMsg);
+            });
+        }
 
         window.searchProducts = searchProducts;
         window.showModelDetail = showModelDetail;
