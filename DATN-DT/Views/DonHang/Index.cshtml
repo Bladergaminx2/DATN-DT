@@ -651,7 +651,6 @@
                             <select id="phuongThucTT" class="form-control form-select">
                             <option value="Tiền mặt">Tiền mặt</option>
                             <option value="Chuyển khoản">Chuyển khoản</option>
-                            <option value="Thẻ">Thẻ</option>
                         </select>
                     </div>
 
@@ -669,20 +668,23 @@
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                            <label class="form-label">Số tiền khách đưa</label>
-                            <input type="number" id="tienKhachDua" class="form-control" value="0" min="0" />
-                    </div>
+                        <div id="cashFields">
+                            <div class="mb-3">
+                                <label class="form-label">Số tiền khách đưa</label>
+                                <input type="number" id="tienKhachDua" class="form-control" value="0" min="0" />
+                            </div>
 
-                    <div class="mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="summary-label">Tiền thừa</span>
-                            <span id="tienThua" class="summary-value text-info">0 đ</span>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="summary-label">Tiền thừa</span>
+                                    <span id="tienThua" class="summary-value text-info">0 đ</span>
+                                </div>
+                                <div id="tienThuaWarning" class="alert alert-danger mt-2 mb-0 d-none">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>Không thanh toán - Số tiền khách đưa chưa đủ!
+                                </div>
+                            </div>
                         </div>
-                            <div id="tienThuaWarning" class="alert alert-danger mt-2 mb-0 d-none">
-                                <i class="fas fa-exclamation-triangle me-1"></i>Không thanh toán - Số tiền khách đưa chưa đủ!
-                        </div>
-                    </div>
+
 
                         <button class="btn btn-success w-100 btn-lg" onclick="thanhToan()">
                             <i class="fas fa-check me-2"></i>THANH TOÁN
@@ -714,13 +716,118 @@
     </div>
 </div>
 
+    <!-- Modal thanh toán chuyển khoản -->
+    <div class="modal fade" id="bankTransferModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-qrcode me-2"></i>Thanh toán chuyển khoản
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <div class="p-3" style="background: rgba(99, 102, 241, 0.08); border: 1px solid var(--border-color); border-radius: 12px;">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-university me-2 text-info"></i>
+                                    <div style="font-weight: 600;">Vietcombank</div>
+                                </div>
+
+                                <div class="mb-1"><span class="text-muted">Chủ tài khoản:</span> <strong>LE NHO LOC</strong></div>
+                                <div class="mb-2"><span class="text-muted">Số tài khoản:</span> <strong>9964837016</strong></div>
+
+                                <hr style="border-color: var(--border-color);" />
+
+                                <div class="mb-1"><span class="text-muted">Số tiền phải thanh toán:</span></div>
+                                <div class="fs-4 fw-bold text-success" id="bankAmountText">0 đ</div>
+
+                                <div class="mt-3 mb-1"><span class="text-muted">Nội dung thanh toán:</span></div>
+                                <div class="p-2" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 10px;">
+                                    <span id="bankTransferContent" style="word-break: break-word;">thanh toán đơn hàng ...</span>
+                                </div>
+
+                                <small class="text-muted d-block mt-2">
+                                    Vui lòng chuyển khoản đúng số tiền và đúng nội dung để đối soát.
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="col-md-7">
+                            <div class="p-3" style="border: 1px solid var(--border-color); border-radius: 12px;">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <div style="font-weight: 600;">
+                                        <i class="fas fa-receipt me-2 text-primary"></i>Thông tin giao dịch
+                                    </div>
+                                    <span class="badge text-bg-warning">Chờ xác nhận</span>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-6 mb-2">
+                                        <div class="text-muted">Mã đơn (tạm)</div>
+                                        <div class="fw-bold" id="tempOrderCode">DH...</div>
+                                    </div>
+                                    <div class="col-6 mb-2">
+                                        <div class="text-muted">Phương thức</div>
+                                        <div class="fw-bold">Chuyển khoản</div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <div class="text-muted mb-2">QR thanh toán</div>
+
+                                    <!-- Nếu bạn có ảnh QR thật, thay src -->
+                                    <div class="d-flex align-items-center justify-content-center"
+                                         style="height: 260px; border: 1px solid var(--border-color); border-radius: 12px; background: rgba(15, 23, 42, 0.35); padding: 10px;">
+                                        <img id="bankQrImage"
+                                             src=""
+                                             alt="QR thanh toán Vietcombank"
+                                             style="max-height: 240px; width: 100%; object-fit: contain; border-radius: 10px; border: 2px solid rgba(255,255,255,0.06);" />
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-info mt-3 mb-0">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Sau khi khách đã chuyển khoản thành công, nhấn <strong>Đã thanh toán đơn hàng</strong> để hệ thống tạo đơn và trừ tồn kho.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" id="btnCancelBankTransfer" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Hủy tạo đơn hàng
+                    </button>
+                    <button type="button" class="btn btn-success" id="btnConfirmBankTransfer">
+                        <i class="fas fa-check me-2"></i>Đã thanh toán đơn hàng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <script>
+        // =========================
+        // GLOBAL STATE
+        // =========================
         var selectedProducts = [];
         var currentProductDetail = null;
         var currentProductName = '';
-        var virtualInvoicesKey = 'virtualInvoices';
 
-        // Loading functions
+        // Bank transfer pending state
+        var pendingOrderData = null;
+
+        // =========================
+        // UI HELPERS
+        // =========================
+        function renderPrice(value) {
+            return Number(value || 0).toLocaleString() + ' đ';
+        }
+
         function showLoading(text = "Đang xử lý...") {
             const overlay = document.getElementById('loadingOverlay');
             const loadingText = document.getElementById('loadingText');
@@ -728,7 +835,7 @@
                 loadingText.textContent = text;
                 overlay.classList.add('active');
             }
-            // Disable all buttons
+            // Disable all buttons except dismiss buttons
             document.querySelectorAll('button').forEach(btn => {
                 if (!btn.hasAttribute('data-bs-dismiss')) {
                     btn.disabled = true;
@@ -739,9 +846,8 @@
 
         function hideLoading() {
             const overlay = document.getElementById('loadingOverlay');
-            if (overlay) {
-                overlay.classList.remove('active');
-            }
+            if (overlay) overlay.classList.remove('active');
+
             // Enable all buttons
             document.querySelectorAll('button').forEach(btn => {
                 btn.disabled = false;
@@ -749,11 +855,70 @@
             });
         }
 
-        function renderPrice(value) {
-            return Number(value || 0).toLocaleString() + ' đ';
+        // =========================
+        // BANK TRANSFER CONTENT (NEW)
+        // =========================
+        function formatPayTime(dateObj) {
+            const d = dateObj || new Date();
+            const pad = (n) => String(n).padStart(2, '0');
+            return (
+                pad(d.getDate()) + '/' +
+                pad(d.getMonth() + 1) + '/' +
+                d.getFullYear() + ' ' +
+                pad(d.getHours()) + ':' +
+                pad(d.getMinutes())
+            );
         }
 
-        // Tìm kiếm sản phẩm khi nhấn nút
+        function normalizeTransferText(text) {
+            if (!text) return '';
+            let s = text.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // remove accents
+            s = s.replace(/đ/g, 'd').replace(/Đ/g, 'D');
+            s = s.replace(/[^a-zA-Z0-9\s]/g, ' '); // keep letters/digits/spaces
+            s = s.replace(/\s+/g, ' ').trim();
+            return s.slice(0, 60); // keep short for bank addInfo
+        }
+
+        function buildTransferContent() {
+            const ten = ($('#tenKhachHang').val() || '').trim();
+            const sdt = ($('#sdtKhachHang').val() || '').trim();
+            const timeStr = formatPayTime(new Date());
+            const raw = `${ten} ${sdt} ${timeStr}`;
+            return normalizeTransferText(raw);
+        }
+
+        // VietQR Vietcombank URL (FREE)
+        function buildVietQrUrlVcb(amount, addInfoText) {
+            // TODO: đảm bảo đúng STK + tên chủ TK Vietcombank của bạn
+            const bank = 'VCB';
+            const accountNo = '9964837016';
+            const accountName = 'LE NHO LOC';
+
+            const amt = Math.max(0, Number(amount || 0));
+            const addInfo = encodeURIComponent(addInfoText || '');
+            const accName = encodeURIComponent(normalizeTransferText(accountName));
+
+            return `https://img.vietqr.io/image/${bank}-${accountNo}-compact.png?amount=${amt}&addInfo=${addInfo}&accountName=${accName}`;
+        }
+
+        function openBankTransferModal(amount) {
+            const transferContent = buildTransferContent();
+
+            $('#bankAmountText').text(renderPrice(amount));
+            $('#bankTransferContent').text(transferContent);
+
+            // Nếu bạn có <img id="bankQrImage"> trong modal thì sẽ set QR thật
+            const qrUrl = buildVietQrUrlVcb(amount, transferContent);
+            const $qr = $('#bankQrImage');
+            if ($qr.length) $qr.attr('src', qrUrl);
+
+            const modal = new bootstrap.Modal(document.getElementById('bankTransferModal'));
+            modal.show();
+        }
+
+        // =========================
+        // PRODUCT SEARCH
+        // =========================
         function searchProducts() {
             var keyword = $('#searchProduct').val();
             if (!keyword || !keyword.trim()) {
@@ -766,17 +931,21 @@
 
             $.get('@Url.Action("SearchProducts", "DonHang")', { keyword: keyword }, function (response) {
                 hideLoading();
+
                 if (response && response.success && response.data && response.data.length > 0) {
                     var html = '<div class="list-group">';
                     response.data.forEach(function (product) {
                         var tenSanPham = product.tenSanPham || 'N/A';
                         var thuongHieu = product.thuongHieu || 'N/A';
-                        html += '<button type="button" class="list-group-item list-group-item-action" onclick="selectProduct(' + product.idSanPham + ', \'' + tenSanPham.replace(/'/g, "\\'") + '\')">' +
+
+                        html +=
+                            '<button type="button" class="list-group-item list-group-item-action" ' +
+                            'onclick="selectProduct(' + product.idSanPham + ', \'' + tenSanPham.replace(/'/g, "\\'") + '\')">' +
                             '<div class="d-flex w-100 justify-content-between align-items-center">' +
-                                '<span class="flex-grow-1 text-left">' + tenSanPham + '</span>' +
-                                '<small class="text-muted ml-3">' + thuongHieu + '</small>' +
+                            '<span class="flex-grow-1 text-left">' + tenSanPham + '</span>' +
+                            '<small class="text-muted ml-3">' + thuongHieu + '</small>' +
                             '</div>' +
-                        '</button>';
+                            '</button>';
                     });
                     html += '</div>';
                     $('#searchResults').html(html);
@@ -784,7 +953,7 @@
                     $('#searchResults').html('<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>Không tìm thấy sản phẩm nào</div>');
                     $('#modelResults').empty();
                 }
-            }).fail(function() {
+            }).fail(function () {
                 hideLoading();
                 alert('Có lỗi xảy ra khi tìm kiếm sản phẩm. Vui lòng thử lại.');
             });
@@ -802,10 +971,11 @@
             currentProductName = productName || '';
             showLoading("Đang tải danh sách model...");
             $('#modelResults').html('<div class="text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Đang tải model...</div>');
+
             $.get('@Url.Action("GetModelsByProduct", "DonHang")', { productId: productId }, function (response) {
                 hideLoading();
+
                 if (response && response.success && response.data && response.data.length > 0) {
-                    // Lọc chỉ hiển thị các model có số lượng tồn > 0
                     var availableModels = response.data.filter(function (model) {
                         return (model.soLuongTon || 0) > 0;
                     });
@@ -814,52 +984,56 @@
                         var html = '<div class="row">';
                         availableModels.forEach(function (model) {
                             var img = model.anh ? model.anh : '/images/no-image.png';
-                            var imgHtml = img && img !== '/images/no-image.png' 
+                            var imgHtml = img && img !== '/images/no-image.png'
                                 ? '<img class="card-img-top" src="' + img + '" alt="' + model.tenModel + '" onerror="this.src=\'/images/no-image.png\'">'
                                 : '<div class="card-img-top no-image-placeholder"><div><i class="fas fa-image"></i><div>Không có ảnh</div></div></div>';
-                            
+
                             html += '' +
                                 '<div class="col-md-4 mb-3">' +
-                                    '<div class="card product-card h-100" style="cursor:pointer;" onclick="showModelDetail(' + model.idModelSanPham + ')">' +
-                                        imgHtml +
-                                        '<div class="card-body">' +
-                                            '<h6 class="card-title mb-2" style="color: var(--text-primary); font-weight: 600;">' + model.tenModel + '</h6>' +
-                                            '<p class="card-text mb-2" style="color: var(--text-secondary);"><i class="fas fa-palette me-1"></i><strong>Màu:</strong> ' + (model.mau || 'N/A') + '</p>' +
-                                            '<p class="card-text mb-2" style="color: var(--text-secondary);"><i class="fas fa-memory me-1"></i><strong>RAM/ROM:</strong> ' + (model.ram || '-') + ' / ' + (model.rom || '-') + '</p>' +
-                                            '<p class="card-text mb-2" style="color: var(--text-primary); font-size: 1.1rem;"><strong>Giá:</strong> <span class="text-success fw-bold">' + renderPrice(model.giaBanModel) + '</span></p>' +
-                                            '<p class="card-text mb-0" style="color: var(--text-secondary);"><i class="fas fa-boxes me-1"></i><strong>Tồn:</strong> <span class="text-success">' + (model.soLuongTon || 0) + '</span></p>' +
-                                        '</div>' +
-                                    '</div>' +
+                                '<div class="card product-card h-100" style="cursor:pointer;" onclick="showModelDetail(' + model.idModelSanPham + ')">' +
+                                imgHtml +
+                                '<div class="card-body">' +
+                                '<h6 class="card-title mb-2" style="color: var(--text-primary); font-weight: 600;">' + model.tenModel + '</h6>' +
+                                '<p class="card-text mb-2" style="color: var(--text-secondary);"><i class="fas fa-palette me-1"></i><strong>Màu:</strong> ' + (model.mau || 'N/A') + '</p>' +
+                                '<p class="card-text mb-2" style="color: var(--text-secondary);"><i class="fas fa-memory me-1"></i><strong>RAM/ROM:</strong> ' + (model.ram || '-') + ' / ' + (model.rom || '-') + '</p>' +
+                                '<p class="card-text mb-2" style="color: var(--text-primary); font-size: 1.1rem;"><strong>Giá:</strong> <span class="text-success fw-bold">' + renderPrice(model.giaBanModel) + '</span></p>' +
+                                '<p class="card-text mb-0" style="color: var(--text-secondary);"><i class="fas fa-boxes me-1"></i><strong>Tồn:</strong> <span class="text-success">' + (model.soLuongTon || 0) + '</span></p>' +
+                                '</div>' +
+                                '</div>' +
                                 '</div>';
                         });
                         html += '</div>';
                         $('#modelResults').html(html);
                     } else {
-                        // Tất cả model đều hết hàng
                         var totalModels = response.data.length;
-                        $('#modelResults').html('<div class="alert alert-warning">' +
+                        $('#modelResults').html(
+                            '<div class="alert alert-warning">' +
                             '<i class="fas fa-exclamation-triangle me-2"></i>' +
                             'Sản phẩm có ' + totalModels + ' model nhưng tất cả đều hết hàng (số lượng tồn = 0).' +
-                            '</div>');
+                            '</div>'
+                        );
                     }
                 } else {
                     $('#modelResults').html('<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>Sản phẩm chưa có model khả dụng.</div>');
                 }
-            }).fail(function() {
+            }).fail(function () {
                 hideLoading();
                 alert('Có lỗi xảy ra khi tải danh sách model. Vui lòng thử lại.');
             });
         }
 
-        // Hiển thị chi tiết model + IMEI
+        // =========================
+        // PRODUCT DETAIL + IMEI
+        // =========================
         function showModelDetail(productId) {
             showLoading("Đang tải chi tiết sản phẩm...");
+
             $.get('@Url.Action("GetProductDetail", "DonHang")', { id: productId }, function (response) {
                 hideLoading();
+
                 if (response && response.success) {
                     currentProductDetail = response.data;
 
-                    // Kiểm tra số lượng tồn kho - không hiển thị model có số lượng = 0
                     var soLuongTon = currentProductDetail.soLuongTon || 0;
                     if (soLuongTon <= 0) {
                         alert('Sản phẩm này hiện đang hết hàng (số lượng tồn = 0). Vui lòng chọn sản phẩm khác.');
@@ -868,8 +1042,8 @@
 
                     var img = currentProductDetail.anh ? currentProductDetail.anh : '/images/no-image.png';
                     var hasImei = currentProductDetail.imeis && currentProductDetail.imeis.length > 0;
+
                     var imeiOptions = '<option value="">-- Chọn IMEI --</option>';
-                    
                     if (hasImei) {
                         currentProductDetail.imeis.forEach(function (imei) {
                             imeiOptions += '<option value="' + imei.idImei + '">' + imei.maImei + '</option>';
@@ -884,64 +1058,62 @@
 
                     var imeiSectionHtml = hasImei
                         ? '<div class="mb-3">' +
-                            '<label class="form-label"><i class="fas fa-mobile-alt me-2"></i>Chọn IMEI <span class="text-danger">*</span></label>' +
-                            '<select id="modalImeiSelect" class="form-control form-select">' +
-                                imeiOptions +
-                            '</select>' +
-                          '</div>'
+                        '<label class="form-label"><i class="fas fa-mobile-alt me-2"></i>Chọn IMEI <span class="text-danger">*</span></label>' +
+                        '<select id="modalImeiSelect" class="form-control form-select">' +
+                        imeiOptions +
+                        '</select>' +
+                        '</div>'
                         : '<div class="alert alert-danger mb-3">' +
-                            '<i class="fas fa-exclamation-triangle me-2"></i><strong>Cảnh báo:</strong> Sản phẩm này chưa có IMEI khả dụng. Không thể thêm vào đơn hàng!' +
-                          '</div>' +
-                          '<div class="mb-3">' +
-                            '<label class="form-label"><i class="fas fa-mobile-alt me-2"></i>Chọn IMEI</label>' +
-                            '<select id="modalImeiSelect" class="form-control form-select" disabled>' +
-                                imeiOptions +
-                            '</select>' +
-                          '</div>';
+                        '<i class="fas fa-exclamation-triangle me-2"></i><strong>Cảnh báo:</strong> Sản phẩm này chưa có IMEI khả dụng. Không thể thêm vào đơn hàng!' +
+                        '</div>' +
+                        '<div class="mb-3">' +
+                        '<label class="form-label"><i class="fas fa-mobile-alt me-2"></i>Chọn IMEI</label>' +
+                        '<select id="modalImeiSelect" class="form-control form-select" disabled>' +
+                        imeiOptions +
+                        '</select>' +
+                        '</div>';
 
                     var html = '' +
                         '<div class="row">' +
-                            '<div class="col-md-5 mb-3">' +
-                                modalImgHtml +
-                            '</div>' +
-                            '<div class="col-md-7">' +
-                                '<h4 class="mb-3" style="color: var(--text-primary); font-weight: 600;">' + (currentProductDetail.tenSanPham || '') + ' - ' + currentProductDetail.tenModel + '</h4>' +
-                                '<div class="mb-3 p-3" style="background: rgba(99, 102, 241, 0.1); border-radius: 8px; border-left: 3px solid var(--primary-color);">' +
-                                    '<p class="mb-2" style="color: var(--text-primary);"><i class="fas fa-tag me-2"></i><strong>Giá bán: </strong><span class="text-success fw-bold fs-5">' + renderPrice(currentProductDetail.giaBanModel) + '</span></p>' +
-                                '</div>' +
-                                '<p class="mb-2" style="color: var(--text-secondary);"><i class="fas fa-palette me-2"></i><strong>Màu sắc: </strong><span style="color: var(--text-primary);">' + (currentProductDetail.tenMau || 'N/A') + '</span></p>' +
-                                '<p class="mb-2" style="color: var(--text-secondary);"><i class="fas fa-memory me-2"></i><strong>RAM/ROM: </strong><span style="color: var(--text-primary);">' + (currentProductDetail.ram || '-') + ' / ' + (currentProductDetail.rom || '-') + '</span></p>' +
-                                '<p class="mb-3" style="color: var(--text-secondary);"><i class="fas fa-boxes me-2"></i><strong>Số lượng tồn: </strong><span class="' + ((currentProductDetail.soLuongTon || 0) > 0 ? 'text-success' : 'text-danger') + ' fw-bold">' + (currentProductDetail.soLuongTon || 0) + '</span></p>' +
-                                imeiSectionHtml +
-                            '</div>' +
+                        '<div class="col-md-5 mb-3">' +
+                        modalImgHtml +
+                        '</div>' +
+                        '<div class="col-md-7">' +
+                        '<h4 class="mb-3" style="color: var(--text-primary); font-weight: 600;">' + (currentProductDetail.tenSanPham || '') + ' - ' + currentProductDetail.tenModel + '</h4>' +
+                        '<div class="mb-3 p-3" style="background: rgba(99, 102, 241, 0.1); border-radius: 8px; border-left: 3px solid var(--primary-color);">' +
+                        '<p class="mb-2" style="color: var(--text-primary);"><i class="fas fa-tag me-2"></i><strong>Giá bán: </strong><span class="text-success fw-bold fs-5">' + renderPrice(currentProductDetail.giaBanModel) + '</span></p>' +
+                        '</div>' +
+                        '<p class="mb-2" style="color: var(--text-secondary);"><i class="fas fa-palette me-2"></i><strong>Màu sắc: </strong><span style="color: var(--text-primary);">' + (currentProductDetail.tenMau || 'N/A') + '</span></p>' +
+                        '<p class="mb-2" style="color: var(--text-secondary);"><i class="fas fa-memory me-2"></i><strong>RAM/ROM: </strong><span style="color: var(--text-primary);">' + (currentProductDetail.ram || '-') + ' / ' + (currentProductDetail.rom || '-') + '</span></p>' +
+                        '<p class="mb-3" style="color: var(--text-secondary);"><i class="fas fa-boxes me-2"></i><strong>Số lượng tồn: </strong><span class="' + ((currentProductDetail.soLuongTon || 0) > 0 ? 'text-success' : 'text-danger') + ' fw-bold">' + (currentProductDetail.soLuongTon || 0) + '</span></p>' +
+                        imeiSectionHtml +
+                        '</div>' +
                         '</div>';
 
                     $('#productDetailContent').html(html);
-                    // Disable nút thêm nếu không có IMEI hoặc chưa chọn IMEI
+
+                    // Disable nút thêm nếu chưa chọn IMEI / không có IMEI
                     var addButton = $('#productDetailModal .btn-primary');
                     if (!hasImei) {
                         addButton.prop('disabled', true).addClass('disabled').html('<i class="fas fa-ban me-1"></i>Không thể thêm (Chưa có IMEI)');
                     } else {
-                        // Ban đầu disable, chỉ enable khi đã chọn IMEI
                         addButton.prop('disabled', true).addClass('disabled').html('<i class="fas fa-ban me-1"></i>Vui lòng chọn IMEI');
                     }
-                    
+
                     var modal = new bootstrap.Modal(document.getElementById('productDetailModal'));
                     modal.show();
                 } else {
                     alert('Không tìm thấy thông tin sản phẩm');
                 }
-            }).fail(function() {
+            }).fail(function () {
                 hideLoading();
                 alert('Có lỗi xảy ra khi tải chi tiết sản phẩm. Vui lòng thử lại.');
             });
         }
 
-        // Thêm sản phẩm đã chọn vào hóa đơn
         function addSelectedProduct() {
             if (!currentProductDetail) return;
 
-            // Kiểm tra nếu sản phẩm không có IMEI
             var hasImei = currentProductDetail.imeis && currentProductDetail.imeis.length > 0;
             if (!hasImei) {
                 alert('Không thể thêm sản phẩm: Sản phẩm này chưa có IMEI khả dụng. Vui lòng kiểm tra lại!');
@@ -949,28 +1121,23 @@
             }
 
             var selectedImei = $('#modalImeiSelect').val();
-            if (!selectedImei || selectedImei === '') {
+            if (!selectedImei) {
                 alert('Vui lòng chọn IMEI trước khi thêm sản phẩm vào đơn hàng!');
                 return;
             }
 
-            // Kiểm tra IMEI trùng lặp
-            if (selectedImei) {
-                var imeiDup = selectedProducts.some(function (p) {
-                    return p.selectedImeis && p.selectedImeis.indexOf(parseInt(selectedImei)) !== -1;
-                });
-                if (imeiDup) {
-                    alert('IMEI này đã được chọn cho sản phẩm khác trong đơn hàng!');
-                    return;
-                }
+            // Check duplicate IMEI
+            var imeiDup = selectedProducts.some(function (p) {
+                return p.selectedImeis && p.selectedImeis.indexOf(parseInt(selectedImei)) !== -1;
+            });
+            if (imeiDup) {
+                alert('IMEI này đã được chọn cho sản phẩm khác trong đơn hàng!');
+                return;
             }
 
             showLoading("Đang thêm sản phẩm vào đơn hàng...");
 
-            var selectedImeiObj = null;
-            if (selectedImei && currentProductDetail.imeis) {
-                selectedImeiObj = currentProductDetail.imeis.find(function (i) { return i.idImei == selectedImei; });
-            }
+            var selectedImeiObj = currentProductDetail.imeis.find(function (i) { return i.idImei == selectedImei; });
 
             var product = {
                 idModelSanPham: currentProductDetail.idModelSanPham,
@@ -982,7 +1149,7 @@
                 soLuongTon: currentProductDetail.soLuongTon,
                 soLuong: 1,
                 imeis: currentProductDetail.imeis || [],
-                selectedImeis: selectedImei ? [parseInt(selectedImei)] : [],
+                selectedImeis: [parseInt(selectedImei)],
                 maImei: selectedImeiObj ? selectedImeiObj.maImei : '',
                 ram: currentProductDetail.ram,
                 rom: currentProductDetail.rom,
@@ -991,45 +1158,16 @@
 
             selectedProducts.push(product);
             renderSelectedProducts();
+
             var modal = bootstrap.Modal.getInstance(document.getElementById('productDetailModal'));
-            modal.hide();
+            if (modal) modal.hide();
+
             hideLoading();
         }
 
-        // Cập nhật IMEI khi chọn trong bảng
-        $('#selectedProductsBody').on('change', '.imei-select', function () {
-            var index = parseInt($(this).data('index'));
-            var imeiId = $(this).val();
-            var product = selectedProducts[index];
-            if (!product) return;
-
-            if (imeiId) {
-                var imeiNumber = parseInt(imeiId);
-                var duplicate = selectedProducts.some(function (p, idx) {
-                    if (idx === index) return false;
-                    return p.selectedImeis && p.selectedImeis.indexOf(imeiNumber) !== -1;
-                });
-                if (duplicate) {
-                    alert('IMEI này đã được chọn cho sản phẩm khác.');
-                    $(this).val(product.selectedImeis.length ? product.selectedImeis[0] : '');
-                    return;
-                }
-            }
-
-            if (!imeiId) {
-                product.selectedImeis = [];
-                product.maImei = '';
-            } else {
-                var imeiIdNumber = parseInt(imeiId);
-                product.selectedImeis = [imeiIdNumber];
-                var imeiObj = (product.imeis || []).find(function (i) { return i.idImei === imeiIdNumber; });
-                product.maImei = imeiObj ? imeiObj.maImei : '';
-            }
-
-            renderSelectedProducts();
-        });
-
-        // Hiển thị danh sách sản phẩm đã chọn
+        // =========================
+        // RENDER SELECTED PRODUCTS
+        // =========================
         function renderSelectedProducts() {
             var tbody = $('#selectedProductsBody');
             tbody.empty();
@@ -1052,33 +1190,36 @@
                 var productImg = product.anh || '/images/no-image.png';
                 var imgCellHtml;
                 if (productImg && productImg !== '/images/no-image.png') {
-                    imgCellHtml = '<img src="' + productImg + '" alt="' + product.tenModel + '" class="product-image-table" onerror="this.onerror=null; this.src=\'/images/no-image.png\'; this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';">' +
+                    imgCellHtml =
+                        '<img src="' + productImg + '" alt="' + product.tenModel + '" class="product-image-table" ' +
+                        'onerror="this.onerror=null; this.src=\'/images/no-image.png\'; this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';">' +
                         '<div class="product-image-table no-image-placeholder" style="display:none;"><i class="fas fa-image"></i></div>';
                 } else {
                     imgCellHtml = '<div class="product-image-table no-image-placeholder"><i class="fas fa-image"></i></div>';
                 }
-                
-                var row = '' +
-                    '<tr id="selected_' + index + '" style="transition: background-color 0.2s;">' +
-                        '<td class="align-middle"><strong>' + (index + 1) + '</strong></td>' +
-                        '<td class="align-middle">' + imgCellHtml + '</td>' +
-                        '<td class="align-middle">' +
-                            '<div style="font-weight: 500; color: var(--text-primary); margin-bottom: 5px;">' + (product.tenSanPham || '') + '</div>' +
-                            '<div style="color: var(--text-secondary); font-size: 0.9rem;">' + product.tenModel + '</div>' +
-                        '</td>' +
-                        '<td class="align-middle" style="font-size: 0.9rem;">' +
-                            '<div class="mb-1"><i class="fas fa-palette me-1 text-secondary"></i><strong>Màu: </strong><span style="color: var(--text-primary);">' + (product.tenMau || 'N/A') + '</span></div>' +
-                            '<div class="mb-1"><i class="fas fa-memory me-1 text-secondary"></i><strong>RAM/ROM: </strong><span style="color: var(--text-primary);">' + (product.ram || '-') + ' / ' + (product.rom || '-') + '</span></div>' +
-                            '<div><i class="fas fa-boxes me-1 text-secondary"></i><strong>Tồn: </strong><span class="' + (tonDisplay > 0 ? 'text-success' : 'text-danger') + '">' + tonDisplay + '</span></div>' +
-                        '</td>' +
-                        '<td class="align-middle"><span class="text-success fw-bold" style="font-size: 1.1rem;">' + renderPrice(product.giaBanModel) + '</span></td>' +
-                        '<td class="align-middle">' + imeiDisplay + '</td>' +
-                        '<td class="align-middle">' +
-                            '<button class="btn btn-danger btn-sm" onclick="removeSelectedProduct(' + index + ')" title="Xóa sản phẩm" style="min-width: 40px;">' +
-                                '<i class="fas fa-trash"></i>' +
-                            '</button>' +
-                        '</td>' +
+
+                var row =
+                    '<tr id="selected_' + index + '">' +
+                    '<td class="align-middle"><strong>' + (index + 1) + '</strong></td>' +
+                    '<td class="align-middle">' + imgCellHtml + '</td>' +
+                    '<td class="align-middle">' +
+                    '<div style="font-weight: 500; color: var(--text-primary); margin-bottom: 5px;">' + (product.tenSanPham || '') + '</div>' +
+                    '<div style="color: var(--text-secondary); font-size: 0.9rem;">' + product.tenModel + '</div>' +
+                    '</td>' +
+                    '<td class="align-middle" style="font-size: 0.9rem;">' +
+                    '<div class="mb-1"><i class="fas fa-palette me-1 text-secondary"></i><strong>Màu: </strong><span style="color: var(--text-primary);">' + (product.tenMau || 'N/A') + '</span></div>' +
+                    '<div class="mb-1"><i class="fas fa-memory me-1 text-secondary"></i><strong>RAM/ROM: </strong><span style="color: var(--text-primary);">' + (product.ram || '-') + ' / ' + (product.rom || '-') + '</span></div>' +
+                    '<div><i class="fas fa-boxes me-1 text-secondary"></i><strong>Tồn: </strong><span class="' + (tonDisplay > 0 ? 'text-success' : 'text-danger') + '">' + tonDisplay + '</span></div>' +
+                    '</td>' +
+                    '<td class="align-middle"><span class="text-success fw-bold" style="font-size: 1.1rem;">' + renderPrice(product.giaBanModel) + '</span></td>' +
+                    '<td class="align-middle">' + imeiDisplay + '</td>' +
+                    '<td class="align-middle">' +
+                    '<button class="btn btn-danger btn-sm" onclick="removeSelectedProduct(' + index + ')" title="Xóa sản phẩm" style="min-width: 40px;">' +
+                    '<i class="fas fa-trash"></i>' +
+                    '</button>' +
+                    '</td>' +
                     '</tr>';
+
                 tbody.append(row);
             });
 
@@ -1097,7 +1238,7 @@
 
             $('#tongTienHang').text(renderPrice(total));
             $('#tongThanhToan').text(renderPrice(thanhToan));
-            
+
             if (tienThua >= 0) {
                 $('#tienThua').text(renderPrice(tienThua)).removeClass('text-danger').addClass('text-info');
                 $('#tienThuaWarning').addClass('d-none');
@@ -1107,6 +1248,9 @@
             }
         }
 
+        // =========================
+        // CUSTOMER VALIDATION
+        // =========================
         function setKhachVangLai() {
             $('#khachHangSelect').val('');
             $('#idKhachHang').val('');
@@ -1129,7 +1273,7 @@
                 return true;
             }
 
-            if (!tenKhachHang || tenKhachHang.length === 0) {
+            if (!tenKhachHang) {
                 $('#tenKhachHangError').removeClass('d-none').text('Vui lòng nhập tên khách hàng');
                 isValid = false;
             } else if (tenKhachHang.length < 2) {
@@ -1143,10 +1287,11 @@
             }
 
             var phoneRegex = /^(0|\+84)[0-9]{9,10}$/;
-            if (!sdtKhachHang || sdtKhachHang.length === 0) {
+            var cleaned = sdtKhachHang.replace(/\s/g, '');
+            if (!cleaned) {
                 $('#sdtKhachHangError').removeClass('d-none').text('Vui lòng nhập số điện thoại');
                 isValid = false;
-            } else if (!phoneRegex.test(sdtKhachHang.replace(/\s/g, ''))) {
+            } else if (!phoneRegex.test(cleaned)) {
                 $('#sdtKhachHangError').removeClass('d-none').text('Số điện thoại không hợp lệ (VD: 0123456789 hoặc +84123456789)');
                 isValid = false;
             } else {
@@ -1156,14 +1301,15 @@
             return isValid;
         }
 
-        // Kiểm tra IMEI và số lượng tồn kho trước khi thanh toán
+        // =========================
+        // IMEI + INVENTORY CHECK
+        // =========================
         async function checkImeiAndInventory() {
             var errors = [];
-            
+
             for (var i = 0; i < selectedProducts.length; i++) {
                 var product = selectedProducts[i];
-                
-                // Kiểm tra số lượng tồn kho hiện tại và danh sách IMEI còn hàng
+
                 try {
                     var tonKhoResponse = await $.get('@Url.Action("GetProductDetail", "DonHang")', { id: product.idModelSanPham });
                     if (tonKhoResponse && tonKhoResponse.success) {
@@ -1172,24 +1318,20 @@
                             errors.push('Sản phẩm "' + product.tenSanPham + ' - ' + product.tenModel + '" đã hết hàng (số lượng tồn = 0)');
                             continue;
                         }
-                        
-                        // Lấy danh sách IMEI còn hàng từ response
+
                         var availableImeis = tonKhoResponse.data.imeis || [];
-                        
-                        // Kiểm tra từng IMEI đã chọn có còn trong danh sách IMEI còn hàng không
+
                         if (product.selectedImeis && product.selectedImeis.length > 0) {
                             for (var j = 0; j < product.selectedImeis.length; j++) {
                                 var imeiId = parseInt(product.selectedImeis[j]);
-                                
-                                // Tìm IMEI trong danh sách còn hàng (so sánh cả number và string)
-                                var imeiFound = availableImeis.some(function(imei) {
+
+                                var imeiFound = availableImeis.some(function (imei) {
                                     return parseInt(imei.idImei) === imeiId;
                                 });
-                                
+
                                 if (!imeiFound) {
-                                    // Tìm mã IMEI để hiển thị trong thông báo lỗi
-                                    var imeiInfo = product.imeis ? product.imeis.find(function(i) { 
-                                        return parseInt(i.idImei) === imeiId; 
+                                    var imeiInfo = product.imeis ? product.imeis.find(function (i) {
+                                        return parseInt(i.idImei) === imeiId;
                                     }) : null;
                                     var imeiCode = imeiInfo ? imeiInfo.maImei : (product.maImei || imeiId);
                                     errors.push('IMEI "' + imeiCode + '" của sản phẩm "' + product.tenModel + '" đã được bán hoặc không còn khả dụng');
@@ -1203,22 +1345,71 @@
                     errors.push('Lỗi khi kiểm tra sản phẩm "' + product.tenModel + '": ' + (error.message || 'Không xác định'));
                 }
             }
-            
+
             return errors;
         }
 
+        async function processOrderCreation(orderData, btnThanhToan, originalBtnHtml) {
+            try {
+                showLoading("Đang kiểm tra IMEI và số lượng tồn kho...");
+
+                var checkErrors = await checkImeiAndInventory();
+                if (checkErrors && checkErrors.length > 0) {
+                    hideLoading();
+                    btnThanhToan.prop('disabled', false).removeClass('disabled').html(originalBtnHtml);
+                    alert('Không thể thanh toán vì:\n\n' + checkErrors.join('\n'));
+                    return;
+                }
+
+                showLoading("Đang xử lý thanh toán...");
+
+                $.post('@Url.Action("Create", "DonHang")', orderData, function (response) {
+                    hideLoading();
+                    btnThanhToan.prop('disabled', false).removeClass('disabled').html(originalBtnHtml);
+
+                    if (response && response.success) {
+                        var message = 'Thanh toán thành công!\nMã đơn: ' + response.maDon + '\nNgày bảo hành: ' + response.ngayBaoHanh;
+                        alert(message);
+
+                        if (response.pdfUrl && response.maDon) {
+                            window.location.href = response.pdfUrl;
+                        } else {
+                            setTimeout(function () {
+                                location.reload();
+                            }, 2000);
+                        }
+                    } else {
+                        alert('Lỗi: ' + (response ? response.message : 'Không xác định'));
+                    }
+                }).fail(function () {
+                    hideLoading();
+                    btnThanhToan.prop('disabled', false).removeClass('disabled').html(originalBtnHtml);
+                    alert('Có lỗi xảy ra khi thanh toán. Vui lòng thử lại.');
+                });
+
+            } catch (error) {
+                hideLoading();
+                btnThanhToan.prop('disabled', false).removeClass('disabled').html(originalBtnHtml);
+                alert('Có lỗi xảy ra. Vui lòng thử lại.');
+            }
+        }
+
+        // =========================
+        // PAYMENT FLOW (CLEANED)
+        // =========================
         async function thanhToan() {
-            // Lấy nút thanh toán và disable ngay lập tức
             var btnThanhToan = $('button[onclick="thanhToan()"]');
             var originalBtnHtml = btnThanhToan.html();
-            
-            // Validation checks trước khi disable nút
+
+            // 1) Validate
             if (selectedProducts.length === 0) {
                 alert('Vui lòng chọn ít nhất một sản phẩm');
                 return;
             }
 
-            var hasMissingImei = selectedProducts.some(function (p) { return !p.selectedImeis || p.selectedImeis.length === 0; });
+            var hasMissingImei = selectedProducts.some(function (p) {
+                return !p.selectedImeis || p.selectedImeis.length === 0;
+            });
             if (hasMissingImei) {
                 alert('Vui lòng chọn IMEI cho tất cả sản phẩm trước khi thanh toán');
                 return;
@@ -1230,96 +1421,121 @@
             }
 
             var tongThanhToan = parseFloat($('#tongThanhToan').text().replace(/[^0-9]/g, '')) || 0;
-            var tienKhachDua = parseFloat($('#tienKhachDua').val()) || 0;
-            var tienThua = tienKhachDua - tongThanhToan;
-            
-            if (tienThua < 0) {
-                alert('Không thanh toán - Số tiền khách đưa chưa đủ! Còn thiếu: ' + Math.abs(tienThua).toLocaleString() + ' đ');
+            var phuongThuc = $('#phuongThucTT').val();
+
+            // 2) Tiền mặt: bắt đủ tiền
+            if (phuongThuc === 'Tiền mặt') {
+                var tienKhachDua = parseFloat($('#tienKhachDua').val()) || 0;
+                var tienThua = tienKhachDua - tongThanhToan;
+                if (tienThua < 0) {
+                    alert('Không thanh toán - Số tiền khách đưa chưa đủ! Còn thiếu: ' + Math.abs(tienThua).toLocaleString() + ' đ');
+                    return;
+                }
+            }
+
+            // 3) Build orderData
+            var orderData = {
+                IdKhachHang: $('#khachHangSelect').val() || null,
+                TenKhachHang: $('#tenKhachHang').val().trim() || '',
+                SdtKhachHang: $('#sdtKhachHang').val().trim() || '',
+                DiaChiGiaoHang: 'Thanh Toán Tại Quầy',
+                PhuongThucThanhToan: phuongThuc,
+                ChiTietDonHang: selectedProducts.map(function (p) {
+                    return {
+                        IdModelSanPham: p.idModelSanPham,
+                        SoLuong: p.soLuong,
+                        SelectedImeis: p.selectedImeis,
+                        IdKhuyenMai: p.idKhuyenMai || null
+                    };
+                })
+            };
+
+            // 4) Chuyển khoản: mở modal, chưa tạo đơn
+            if (phuongThuc === 'Chuyển khoản') {
+                pendingOrderData = orderData;
+                openBankTransferModal(tongThanhToan);
                 return;
             }
 
-            // Sau khi validation thành công, disable nút và hiển thị loading
-            btnThanhToan.prop('disabled', true).addClass('disabled').html('<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...');
+            // 5) Tiền mặt: tạo đơn ngay
+            btnThanhToan.prop('disabled', true).addClass('disabled')
+                .html('<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...');
 
-            try {
+            await processOrderCreation(orderData, btnThanhToan, originalBtnHtml);
+        }
 
-                // Hiển thị loading overlay ngay từ đầu
-                showLoading("Đang kiểm tra IMEI và số lượng tồn kho...");
-                
-                try {
-                    var checkErrors = await checkImeiAndInventory();
-                    if (checkErrors && checkErrors.length > 0) {
-                        hideLoading();
-                        btnThanhToan.prop('disabled', false).removeClass('disabled').html(originalBtnHtml);
-                        var errorMessage = 'Không thể thanh toán vì:\n\n' + checkErrors.join('\n');
-                        alert(errorMessage);
-                        return;
-                    }
-                } catch (error) {
-                    hideLoading();
-                    btnThanhToan.prop('disabled', false).removeClass('disabled').html(originalBtnHtml);
-                    console.error('Lỗi khi kiểm tra IMEI và tồn kho:', error);
-                    alert('Lỗi khi kiểm tra IMEI và số lượng tồn kho. Vui lòng thử lại.');
-                    return;
+        // =========================
+        // PAYMENT UI TOGGLE
+        // =========================
+        function toggleCashFields() {
+            var phuongThuc = $('#phuongThucTT').val();
+            if (phuongThuc === 'Chuyển khoản') {
+                $('#cashFields').addClass('d-none');
+                $('#tienThuaWarning').addClass('d-none');
+            } else {
+                $('#cashFields').removeClass('d-none');
+                var tongThanhToan = parseFloat($('#tongThanhToan').text().replace(/[^0-9]/g, '')) || 0;
+                var tienKhachDua = parseFloat($('#tienKhachDua').val()) || 0;
+                var tienThua = tienKhachDua - tongThanhToan;
+
+                if (tienThua >= 0) {
+                    $('#tienThua').text(renderPrice(tienThua)).removeClass('text-danger').addClass('text-info');
+                    $('#tienThuaWarning').addClass('d-none');
+                } else {
+                    $('#tienThua').text(renderPrice(Math.abs(tienThua)) + ' (thiếu)').removeClass('text-info').addClass('text-danger');
+                    $('#tienThuaWarning').removeClass('d-none');
                 }
-
-                // Cập nhật text loading khi bắt đầu xử lý thanh toán
-                showLoading("Đang xử lý thanh toán...");
-
-                var orderData = {
-                    IdKhachHang: $('#khachHangSelect').val() || null,
-                    TenKhachHang: $('#tenKhachHang').val().trim() || '',
-                    SdtKhachHang: $('#sdtKhachHang').val().trim() || '',
-                    DiaChiGiaoHang: 'Thanh Toán Tại Quầy',
-                    PhuongThucThanhToan: $('#phuongThucTT').val(),
-                    ChiTietDonHang: selectedProducts.map(function (p) {
-                        return {
-                            IdModelSanPham: p.idModelSanPham,
-                            SoLuong: p.soLuong,
-                            SelectedImeis: p.selectedImeis,
-                            IdKhuyenMai: p.idKhuyenMai || null
-                        };
-                    })
-                };
-
-                $.post('@Url.Action("Create", "DonHang")', orderData, function (response) {
-                    hideLoading();
-                    btnThanhToan.prop('disabled', false).removeClass('disabled').html(originalBtnHtml);
-                    
-                    if (response && response.success) {
-                        var message = 'Thanh toán thành công!\nMã đơn: ' + response.maDon + '\nNgày bảo hành: ' + response.ngayBaoHanh;
-                        alert(message);
-                        
-                        if (response.pdfUrl && response.maDon) {
-                            window.location.href = response.pdfUrl;
-                        } else {
-                            setTimeout(function() {
-                                location.reload();
-                            }, 2000);
-                        }
-                    } else {
-                        alert('Lỗi: ' + (response ? response.message : 'Không xác định'));
-                    }
-                }).fail(function(xhr, status, error) {
-                    hideLoading();
-                    btnThanhToan.prop('disabled', false).removeClass('disabled').html(originalBtnHtml);
-                    console.error('Lỗi AJAX:', error);
-                    alert('Có lỗi xảy ra khi thanh toán. Vui lòng thử lại.');
-                });
-            } catch (error) {
-                hideLoading();
-                btnThanhToan.prop('disabled', false).removeClass('disabled').html(originalBtnHtml);
-                console.error('Lỗi không mong đợi:', error);
-                alert('Có lỗi xảy ra. Vui lòng thử lại.');
             }
         }
 
+        // =========================
+        // BANK MODAL EVENTS
+        // =========================
+        $('#btnCancelBankTransfer').on('click', function () {
+            pendingOrderData = null;
+        });
+
+        $('#btnConfirmBankTransfer').on('click', async function () {
+            if (!pendingOrderData) {
+                alert('Không có đơn hàng chờ xử lý. Vui lòng thao tác lại.');
+                return;
+            }
+
+            var $btnConfirm = $('#btnConfirmBankTransfer');
+            $btnConfirm.prop('disabled', true).addClass('disabled')
+                .html('<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...');
+
+            // đóng modal
+            var modalEl = document.getElementById('bankTransferModal');
+            var modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+
+            var btnThanhToan = $('button[onclick="thanhToan()"]');
+            var originalBtnHtml = btnThanhToan.html();
+
+            btnThanhToan.prop('disabled', true).addClass('disabled')
+                .html('<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...');
+
+            try {
+                await processOrderCreation(pendingOrderData, btnThanhToan, originalBtnHtml);
+            } finally {
+                pendingOrderData = null;
+
+                $btnConfirm.prop('disabled', false).removeClass('disabled')
+                    .html('<i class="fas fa-check me-2"></i>Đã thanh toán đơn hàng');
+            }
+        });
+
+        // =========================
+        // DOM READY
+        // =========================
         $(document).ready(function () {
-            $('#tienKhachDua').on('input', function() {
+            // input tiền khách đưa
+            $('#tienKhachDua').on('input', function () {
                 var tongThanhToan = parseFloat($('#tongThanhToan').text().replace(/[^0-9]/g, '')) || 0;
                 var tienKhachDua = parseFloat($(this).val()) || 0;
                 var tienThua = tienKhachDua - tongThanhToan;
-                
+
                 if (tienThua >= 0) {
                     $('#tienThua').text(renderPrice(tienThua)).removeClass('text-danger').addClass('text-info');
                     $('#tienThuaWarning').addClass('d-none');
@@ -1329,61 +1545,70 @@
                 }
             });
 
+            // chọn khách hàng thân thiết
             $('#khachHangSelect').on('change', function () {
                 var diem = $(this).find('option:selected').data('diem');
                 $('#diemTichLuy').text('Điểm: ' + (diem || 0));
                 $('#idKhachHang').val($(this).val());
+
                 var selectedText = $(this).find('option:selected').text() || '';
                 var parts = selectedText.split(' - ');
                 $('#tenKhachHang').val(parts[0] || '').prop('disabled', !!$(this).val());
                 $('#sdtKhachHang').val(parts[1] || '').prop('disabled', !!$(this).val());
+
                 $('#tenKhachHangError').addClass('d-none').text('');
                 $('#sdtKhachHangError').addClass('d-none').text('');
             });
 
-            $('#tenKhachHang').on('blur', function() {
-                if (!$(this).prop('disabled')) {
-                    validateKhachHang();
-                }
+            $('#tenKhachHang').on('blur', function () {
+                if (!$(this).prop('disabled')) validateKhachHang();
             });
 
-            $('#sdtKhachHang').on('blur', function() {
-                if (!$(this).prop('disabled')) {
-                    validateKhachHang();
-                }
+            $('#sdtKhachHang').on('blur', function () {
+                if (!$(this).prop('disabled')) validateKhachHang();
             });
 
-            $('#sdtKhachHang').on('input', function() {
+            $('#sdtKhachHang').on('input', function () {
                 var value = $(this).val().replace(/\s/g, '');
-                if (value !== $(this).val()) {
-                    $(this).val(value);
-                }
+                if (value !== $(this).val()) $(this).val(value);
             });
 
             $('#searchProduct').keypress(function (e) {
-                if (e.which === 13) {
-                    searchProducts();
-                }
+                if (e.which === 13) searchProducts();
             });
 
-            // Event handler cho việc chọn IMEI trong modal
-            $(document).on('change', '#modalImeiSelect', function() {
+            // enable nút "Thêm vào hóa đơn" khi chọn IMEI trong modal
+            $(document).on('change', '#modalImeiSelect', function () {
                 var selectedImei = $(this).val();
                 var addButton = $('#productDetailModal .btn-primary');
-                
-                if (selectedImei && selectedImei !== '') {
+
+                if (selectedImei) {
                     addButton.prop('disabled', false).removeClass('disabled').html('<i class="fas fa-plus me-1"></i>Thêm vào hóa đơn');
                 } else {
                     addButton.prop('disabled', true).addClass('disabled').html('<i class="fas fa-ban me-1"></i>Vui lòng chọn IMEI');
                 }
             });
+
+            // đổi phương thức thanh toán
+            $('#phuongThucTT').on('change', function () {
+                toggleCashFields();
             });
 
+            // gọi 1 lần khi load trang
+            toggleCashFields();
+        });
+
+        // expose functions
         window.searchProducts = searchProducts;
+        window.resetSearch = resetSearch;
+        window.selectProduct = selectProduct;
         window.showModelDetail = showModelDetail;
         window.addSelectedProduct = addSelectedProduct;
         window.removeSelectedProduct = removeSelectedProduct;
-        window.selectProduct = selectProduct;
+        window.thanhToan = thanhToan;
+        window.setKhachVangLai = setKhachVangLai;
     </script>
+
+
 </body>
 </html>
