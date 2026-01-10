@@ -276,6 +276,8 @@
                 <tr>
                     <th>ID Phiếu</th>
                     <th>Imei</th>
+                    <th>Sản Phẩm</th>
+                    <th>Loại BH</th>
                     <th>Khách Hàng</th>
                     <th>Nhân Viên Nhận</th>
                     <th>Ngày Nhận</th>
@@ -292,24 +294,62 @@
                     <tr>
                         <td>@item.IdBaoHanh</td>
                         <td>@item.Imei?.MaImei</td>
+                        <td class="text-start">
+                            @if (item.Imei?.ModelSanPham != null)
+                            {
+                                <div>@item.Imei.ModelSanPham.SanPham?.TenSanPham</div>
+                                <small class="text-muted">@item.Imei.ModelSanPham.TenModel</small>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">@(item.LoaiBaoHanh ?? "Chưa xác định")</span>
+                        </td>
                         <td class="text-start">@item.KhachHang?.HoTenKhachHang</td>
                         <td>@item.NhanVien?.HoTenNhanVien</td>
                         <td>@item.NgayNhan?.ToString("dd/MM/yyyy")</td>
-                        <td>@(item.NgayTra.HasValue? item.NgayTra.Value.ToString("dd/MM/yyyy") : "Chưa xác định")</td>
+                        <td>
+                            @if (item.NgayTra.HasValue)
+                            {
+                                var isExpired = item.NgayTra.Value < DateTime.Now && item.TrangThai != "Đã hoàn thành" && item.TrangThai != "Hoàn tất";
+                                <span class="@(isExpired ? "text-danger fw-bold" : "")">
+                                    @item.NgayTra.Value.ToString("dd/MM/yyyy")
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Chưa xác định</span>
+                            }
+                        </td>
                         <td>@item.MoTaLoi</td>
                         <td class="cost-value">@item.ChiPhiPhatSinh?.ToString("N0") ₫</td>
                         <td>
                             @{
                                 var statusClass = "status-info";
-                                if (item.TrangThai == "Đã hoàn thành")
+                                if (item.TrangThai == "Đã hoàn thành" || item.TrangThai == "Hoàn tất")
                                 {
                                     statusClass = "status-success";
                                 }
-                                else if (item.TrangThai == "Đang xử lý")
+                                else if (item.TrangThai == "Chờ tiếp nhận" || item.TrangThai == "Đang tiếp nhận")
                                 {
                                     statusClass = "status-pending";
                                 }
-                                else if (item.TrangThai == "Từ chối bảo hành")
+                                else if (item.TrangThai == "Đang xử lý")
+                                {
+                                    statusClass = "status-info";
+                                }
+                                else if (item.TrangThai == "Chờ linh kiện")
+                                {
+                                    statusClass = "status-pending";
+                                }
+                                else if (item.TrangThai == "Từ chối" || item.TrangThai == "Từ chối bảo hành")
+                                {
+                                    statusClass = "status-danger";
+                                }
+                                else if (item.TrangThai == "Hết bảo hành")
                                 {
                                     statusClass = "status-danger";
                                 }
@@ -329,7 +369,8 @@
                                     data-trangthai="@item.TrangThai"
                                     data-motaloi="@item.MoTaLoi"
                                     data-xuly="@item.XuLy"
-                                    data-chiphi="@item.ChiPhiPhatSinh">
+                                    data-chiphi="@item.ChiPhiPhatSinh"
+                                    data-loaibaohanh="@item.LoaiBaoHanh">
                                 Sửa
                             </button>
                         </td>
@@ -371,6 +412,18 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
+                                    <label class="form-label">Loại Bảo Hành <span class="text-danger">*</span></label>
+                                    <select id="LoaiBaoHanh" class="form-control">
+                                        <option value="">Chọn loại bảo hành</option>
+                                        <option value="Mới mua">Mới mua</option>
+                                        <option value="Sửa chữa">Sửa chữa</option>
+                                        <option value="Đổi máy">Đổi máy</option>
+                                    </select>
+                                    <small id="errorLoaiBaoHanh" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
                                     <label class="form-label">Nhân Viên Tiếp Nhận <span class="text-danger">*</span></label>
                                     <select id="IdNhanVien" class="form-control">
                                         <option value="">Chọn Nhân Viên</option>
@@ -378,10 +431,20 @@
                                     <small id="errorIdNhanVien" class="text-danger d-none"></small>
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Ngày Nhận</label>
                                     <input type="date" id="NgayNhan" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Ngày Trả (dự kiến)</label>
+                                    <input type="date" id="NgayTra" class="form-control" readonly />
+                                    <small class="text-muted">Tự động tính theo thời hạn bảo hành sản phẩm</small>
                                 </div>
                             </div>
                         </div>
@@ -396,17 +459,19 @@
                                 <div class="mb-3">
                                     <label class="form-label">Trạng Thái</label>
                                     <select id="TrangThai" class="form-control">
-                                        <option value="Đang tiếp nhận" selected>Đang tiếp nhận</option>
+                                        <option value="Chờ tiếp nhận" selected>Chờ tiếp nhận</option>
                                         <option value="Đang xử lý">Đang xử lý</option>
-                                        <option value="Đã hoàn thành">Đã hoàn thành</option>
-                                        <option value="Từ chối bảo hành">Từ chối bảo hành</option>
+                                        <option value="Chờ linh kiện">Chờ linh kiện</option>
+                                        <option value="Hoàn tất">Hoàn tất</option>
+                                        <option value="Từ chối">Từ chối</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Chi Phí Phát Sinh (₫)</label>
-                                    <input type="number" id="ChiPhiPhatSinh" class="form-control" value="0" />
+                                    <input type="number" id="ChiPhiPhatSinh" class="form-control" value="0" min="0" />
+                                    <small class="text-muted">Nhập 0 nếu trong thời hạn bảo hành</small>
                                 </div>
                             </div>
                         </div>
@@ -450,15 +515,36 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
+                                    <label class="form-label">Loại Bảo Hành <span class="text-danger">*</span></label>
+                                    <select id="EditLoaiBaoHanh" class="form-control">
+                                        <option value="">Chọn loại bảo hành</option>
+                                        <option value="Mới mua">Mới mua</option>
+                                        <option value="Sửa chữa">Sửa chữa</option>
+                                        <option value="Đổi máy">Đổi máy</option>
+                                    </select>
+                                    <small id="errorEditLoaiBaoHanh" class="text-danger d-none"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
                                     <label class="form-label">Nhân Viên Xử Lý <span class="text-danger">*</span></label>
                                     <select id="EditIdNhanVien" class="form-control"></select>
                                     <small id="errorEditIdNhanVien" class="text-danger d-none"></small>
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Ngày Nhận</label>
                                     <input type="date" id="EditNgayNhan" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Ngày Trả</label>
+                                    <input type="date" id="EditNgayTra" class="form-control" />
                                 </div>
                             </div>
                         </div>
@@ -482,6 +568,7 @@
                                     <select id="EditTrangThai" class="form-control">
                                         <option value="Đang tiếp nhận">Đang tiếp nhận</option>
                                         <option value="Đang xử lý">Đang xử lý</option>
+                                        <option value="Đang bảo hành">Đang bảo hành</option>
                                         <option value="Đã hoàn thành">Đã hoàn thành</option>
                                         <option value="Từ chối bảo hành">Từ chối bảo hành</option>
                                     </select>
@@ -556,6 +643,23 @@
         document.getElementById("createForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
+            // Lấy các element
+            const IdImei = document.getElementById('IdImei');
+            const IdKhachHang = document.getElementById('IdKhachHang');
+            const IdNhanVien = document.getElementById('IdNhanVien');
+            const NgayNhan = document.getElementById('NgayNhan');
+            const NgayTra = document.getElementById('NgayTra');
+            const LoaiBaoHanh = document.getElementById('LoaiBaoHanh');
+            const TrangThai = document.getElementById('TrangThai');
+            const MoTaLoi = document.getElementById('MoTaLoi');
+            const ChiPhiPhatSinh = document.getElementById('ChiPhiPhatSinh');
+
+            if (!IdImei || !IdKhachHang || !IdNhanVien || !NgayNhan || !LoaiBaoHanh || 
+                !TrangThai || !MoTaLoi || !ChiPhiPhatSinh) {
+                alert('Lỗi: Không tìm thấy các trường form cần thiết!');
+                return;
+            }
+
             // Client-side validation
             const errors = [];
             
@@ -574,6 +678,11 @@
                 errors.push("Chi phí phát sinh không được âm!");
             }
 
+            // Validate LoaiBaoHanh
+            if (!LoaiBaoHanh.value) {
+                errors.push("Phải chọn loại bảo hành!");
+            }
+
             if (errors.length > 0) {
                 alert(errors.join("\n"));
                 return;
@@ -584,6 +693,8 @@
                 IdKhachHang: parseInt(IdKhachHang.value) || 0,
                 IdNhanVien: parseInt(IdNhanVien.value) || 0,
                 NgayNhan: NgayNhan.value,
+                NgayTra: NgayTra ? NgayTra.value || null : null,
+                LoaiBaoHanh: LoaiBaoHanh.value,
                 TrangThai: TrangThai.value,
                 MoTaLoi: MoTaLoi.value.trim(),
                 XuLy: '', // Mới tạo chưa có xử lý
@@ -622,15 +733,36 @@
         // --- Lắng nghe sự kiện mở modal Sửa ---
         document.querySelectorAll(".btn-edit").forEach(btn => {
             btn.addEventListener("click", () => {
+                // Lấy các element
+                const EditIdBaoHanh = document.getElementById('EditIdBaoHanh');
+                const EditIdImei = document.getElementById('EditIdImei');
+                const EditIdKhachHang = document.getElementById('EditIdKhachHang');
+                const EditIdNhanVien = document.getElementById('EditIdNhanVien');
+                const EditNgayNhan = document.getElementById('EditNgayNhan');
+                const EditNgayTra = document.getElementById('EditNgayTra');
+                const EditLoaiBaoHanh = document.getElementById('EditLoaiBaoHanh');
+                const EditTrangThai = document.getElementById('EditTrangThai');
+                const EditMoTaLoi = document.getElementById('EditMoTaLoi');
+                const EditXuLy = document.getElementById('EditXuLy');
+                const EditChiPhiPhatSinh = document.getElementById('EditChiPhiPhatSinh');
+
+                if (!EditIdBaoHanh || !EditIdImei || !EditIdKhachHang || !EditIdNhanVien || 
+                    !EditNgayNhan || !EditNgayTra || !EditLoaiBaoHanh || !EditTrangThai || 
+                    !EditMoTaLoi || !EditChiPhiPhatSinh) {
+                    console.error('Không tìm thấy các element cần thiết');
+                    return;
+                }
+
                 EditIdBaoHanh.value = btn.dataset.id;
                 EditIdImei.value = btn.dataset.imei;
                 EditIdKhachHang.value = btn.dataset.khachhang;
                 EditIdNhanVien.value = btn.dataset.nhanvien;
                 EditNgayNhan.value = btn.dataset.ngaynhan;
                 EditNgayTra.value = btn.dataset.ngaytra || ''; // Có thể null
+                EditLoaiBaoHanh.value = btn.dataset.loaibaohanh || '';
                 EditTrangThai.value = btn.dataset.trangthai;
                 EditMoTaLoi.value = btn.dataset.motaloi;
-                EditXuLy.value = btn.dataset.xuly || '';
+                if (EditXuLy) EditXuLy.value = btn.dataset.xuly || '';
                 EditChiPhiPhatSinh.value = btn.dataset.chiphi || 0;
 
                 // Cập nhật đếm ký tự
@@ -642,7 +774,7 @@
                 // Kiểm tra trạng thái để hiển thị ngày trả bắt buộc
                 const ngayTraRequired = document.getElementById('ngayTraRequired');
                 const ngayTraHint = document.getElementById('ngayTraHint');
-                if (EditTrangThai.value === "Đã hoàn thành") {
+                if (EditTrangThai.value === "Đã hoàn thành" || EditTrangThai.value === "Hoàn tất") {
                     if (ngayTraRequired) ngayTraRequired.classList.remove('d-none');
                     if (ngayTraHint) ngayTraHint.classList.remove('d-none');
                     EditNgayTra.setAttribute('required', 'required');
@@ -652,13 +784,36 @@
                     EditNgayTra.removeAttribute('required');
                 }
 
-                new bootstrap.Modal(editModal).show();
+                const editModal = document.getElementById('editModal');
+                if (editModal) {
+                    new bootstrap.Modal(editModal).show();
+                }
             });
         });
 
         // --- Cập nhật Bảo Hành ---
         document.getElementById("editForm").addEventListener("submit", async (e) => {
             e.preventDefault();
+
+            // Lấy các element
+            const EditIdBaoHanh = document.getElementById('EditIdBaoHanh');
+            const EditIdImei = document.getElementById('EditIdImei');
+            const EditIdKhachHang = document.getElementById('EditIdKhachHang');
+            const EditIdNhanVien = document.getElementById('EditIdNhanVien');
+            const EditNgayNhan = document.getElementById('EditNgayNhan');
+            const EditNgayTra = document.getElementById('EditNgayTra');
+            const EditLoaiBaoHanh = document.getElementById('EditLoaiBaoHanh');
+            const EditTrangThai = document.getElementById('EditTrangThai');
+            const EditMoTaLoi = document.getElementById('EditMoTaLoi');
+            const EditXuLy = document.getElementById('EditXuLy');
+            const EditChiPhiPhatSinh = document.getElementById('EditChiPhiPhatSinh');
+
+            if (!EditIdBaoHanh || !EditIdImei || !EditIdKhachHang || !EditIdNhanVien || 
+                !EditNgayNhan || !EditNgayTra || !EditLoaiBaoHanh || !EditTrangThai || 
+                !EditMoTaLoi || !EditChiPhiPhatSinh) {
+                alert('Lỗi: Không tìm thấy các trường form cần thiết!');
+                return;
+            }
 
             // Client-side validation
             const errors = [];
@@ -687,9 +842,14 @@
                 }
             }
 
-            // Validate trạng thái "Đã hoàn thành" phải có NgayTra
-            if (EditTrangThai.value === "Đã hoàn thành" && !EditNgayTra.value) {
-                errors.push("Khi trạng thái là 'Đã hoàn thành', bắt buộc phải có ngày trả!");
+            // Validate trạng thái "Đã hoàn thành" hoặc "Hoàn tất" phải có NgayTra
+            if ((EditTrangThai.value === "Đã hoàn thành" || EditTrangThai.value === "Hoàn tất") && !EditNgayTra.value) {
+                errors.push("Khi trạng thái là 'Đã hoàn thành' hoặc 'Hoàn tất', bắt buộc phải có ngày trả!");
+            }
+
+            // Validate LoaiBaoHanh
+            if (!EditLoaiBaoHanh.value) {
+                errors.push("Phải chọn loại bảo hành!");
             }
 
             if (errors.length > 0) {
@@ -705,9 +865,10 @@
                 IdNhanVien: parseInt(EditIdNhanVien.value) || 0,
                 NgayNhan: EditNgayNhan.value,
                 NgayTra: EditNgayTra.value || null,
+                LoaiBaoHanh: EditLoaiBaoHanh.value,
                 TrangThai: EditTrangThai.value,
                 MoTaLoi: EditMoTaLoi.value.trim(),
-                XuLy: EditXuLy.value.trim() || null,
+                XuLy: EditXuLy ? EditXuLy.value.trim() || null : null,
                 ChiPhiPhatSinh: parseFloat(EditChiPhiPhatSinh.value) || 0
             };
 
@@ -733,6 +894,7 @@
                     if (data.NgayTra) showError("errorEditNgayTra", data.NgayTra);
                     if (data.NgayNhan) showError("errorEditNgayNhan", data.NgayNhan);
                     if (data.TrangThai) showError("errorEditTrangThai", data.TrangThai);
+                    if (data.LoaiBaoHanh) showError("errorEditLoaiBaoHanh", data.LoaiBaoHanh);
                     return;
                 }
                 alert(data.message || "Không thể cập nhật Phiếu Bảo Hành. Vui lòng thử lại!");
@@ -765,17 +927,18 @@
             const trangThai = document.getElementById('EditTrangThai');
             const ngayTraRequired = document.getElementById('ngayTraRequired');
             const ngayTraHint = document.getElementById('ngayTraHint');
+            const editNgayTra = document.getElementById('EditNgayTra');
             
-            if (trangThai && ngayTraRequired && ngayTraHint) {
+            if (trangThai && editNgayTra) {
                 trangThai.addEventListener('change', function() {
-                    if (this.value === "Đã hoàn thành") {
-                        ngayTraRequired.classList.remove('d-none');
-                        ngayTraHint.classList.remove('d-none');
-                        document.getElementById('EditNgayTra').setAttribute('required', 'required');
+                    if (this.value === "Đã hoàn thành" || this.value === "Hoàn tất") {
+                        if (ngayTraRequired) ngayTraRequired.classList.remove('d-none');
+                        if (ngayTraHint) ngayTraHint.classList.remove('d-none');
+                        editNgayTra.setAttribute('required', 'required');
                     } else {
-                        ngayTraRequired.classList.add('d-none');
-                        ngayTraHint.classList.add('d-none');
-                        document.getElementById('EditNgayTra').removeAttribute('required');
+                        if (ngayTraRequired) ngayTraRequired.classList.add('d-none');
+                        if (ngayTraHint) ngayTraHint.classList.add('d-none');
+                        editNgayTra.removeAttribute('required');
                     }
                 });
             }
@@ -787,20 +950,62 @@
             const ngayTra = document.getElementById('EditNgayTra');
             const errorNgayTra = document.getElementById('errorEditNgayTra');
             
-            if (ngayNhan && ngayTra && errorNgayTra) {
+            if (ngayNhan && ngayTra) {
                 ngayTra.addEventListener('change', function() {
                     if (ngayNhan.value && this.value) {
                         const nhan = new Date(ngayNhan.value);
                         const tra = new Date(this.value);
                         if (tra < nhan) {
-                            showError("errorEditNgayTra", "Ngày trả phải lớn hơn hoặc bằng ngày nhận!");
+                            if (errorNgayTra) {
+                                showError("errorEditNgayTra", "Ngày trả phải lớn hơn hoặc bằng ngày nhận!");
+                            } else {
+                                alert("Ngày trả phải lớn hơn hoặc bằng ngày nhận!");
+                            }
                         } else {
-                            errorNgayTra.classList.add('d-none');
+                            if (errorNgayTra) errorNgayTra.classList.add('d-none');
                         }
                     }
                 });
             }
         }
+
+        // --- Tính Ngày Trả tự động khi chọn IMEI ---
+        async function calculateNgayTra() {
+            const IdImei = document.getElementById('IdImei');
+            const NgayNhan = document.getElementById('NgayNhan');
+            const NgayTra = document.getElementById('NgayTra');
+            
+            if (!IdImei || !NgayNhan || !NgayTra) return;
+            
+            const idImei = IdImei.value;
+            const ngayNhan = NgayNhan.value;
+            
+            if (idImei && ngayNhan) {
+                try {
+                    // Gọi API để lấy thời hạn bảo hành (hoặc tính trực tiếp từ IMEI)
+                    // Tạm thời mặc định 12 tháng, có thể cải thiện sau
+                    const ngayNhanDate = new Date(ngayNhan);
+                    const ngayTraDate = new Date(ngayNhanDate);
+                    ngayTraDate.setMonth(ngayTraDate.getMonth() + 12);
+                    NgayTra.value = ngayTraDate.toISOString().split('T')[0];
+                } catch (error) {
+                    console.error('Lỗi khi tính ngày trả:', error);
+                }
+            }
+        }
+
+        // Lắng nghe sự kiện thay đổi IMEI và Ngày Nhận
+        document.addEventListener('DOMContentLoaded', function() {
+            const IdImei = document.getElementById('IdImei');
+            const NgayNhan = document.getElementById('NgayNhan');
+            
+            if (IdImei) {
+                IdImei.addEventListener('change', calculateNgayTra);
+            }
+            if (NgayNhan) {
+                NgayNhan.addEventListener('change', calculateNgayTra);
+            }
+        });
 
         // --- Khởi tạo ---
         document.addEventListener('DOMContentLoaded', function() {
