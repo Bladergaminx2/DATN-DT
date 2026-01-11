@@ -15,7 +15,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-<style>
+    <style>
         :root {
             --primary-color: #6366f1;
             --primary-hover: #4f46e5;
@@ -84,22 +84,22 @@
             border-bottom: none;
         }
 
-        .card-header.bg-primary {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-        }
+            .card-header.bg-primary {
+                background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            }
 
-        .card-header.bg-info {
-            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-        }
+            .card-header.bg-info {
+                background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+            }
 
-        .card-header.bg-success {
-            background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
-        }
+            .card-header.bg-success {
+                background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
+            }
 
-        .card-header.bg-warning {
-            background: linear-gradient(135deg, var(--warning-color) 0%, #d97706 100%);
-            color: white;
-        }
+            .card-header.bg-warning {
+                background: linear-gradient(135deg, var(--warning-color) 0%, #d97706 100%);
+                color: white;
+            }
 
         .card-body {
             background-color: var(--bg-card);
@@ -116,22 +116,22 @@
             padding: 10px 15px;
         }
 
-        .form-control:focus, .form-select:focus {
-            background-color: #1e293b;
-            border-color: var(--primary-color);
-            color: var(--text-primary);
-            box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
-        }
+            .form-control:focus, .form-select:focus {
+                background-color: #1e293b;
+                border-color: var(--primary-color);
+                color: var(--text-primary);
+                box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+            }
 
-        .form-control::placeholder {
-            color: var(--text-secondary);
-        }
+            .form-control::placeholder {
+                color: var(--text-secondary);
+            }
 
-        .form-control:disabled {
-            background-color: #334155;
-            color: var(--text-secondary);
-            cursor: not-allowed;
-        }
+            .form-control:disabled {
+                background-color: #334155;
+                color: var(--text-secondary);
+                cursor: not-allowed;
+            }
 
         .form-label, label {
             color: var(--text-primary);
@@ -157,11 +157,11 @@
             color: white;
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-            background: linear-gradient(135deg, var(--primary-hover) 0%, #7c3aed 100%);
-        }
+            .btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-md);
+                background: linear-gradient(135deg, var(--primary-hover) 0%, #7c3aed 100%);
+            }
 
         .btn-success {
             background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
@@ -169,11 +169,11 @@
             color: white;
         }
 
-        .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
-        }
+            .btn-success:hover {
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-md);
+                background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            }
 
         .btn-danger {
             background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
@@ -181,10 +181,10 @@
             color: white;
         }
 
-        .btn-danger:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
+            .btn-danger:hover {
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-md);
+            }
 
         .btn-outline-secondary {
             border: 1px solid var(--border-color);
@@ -192,11 +192,11 @@
             background: transparent;
         }
 
-        .btn-outline-secondary:hover {
-            background: rgba(99, 102, 241, 0.1);
-            border-color: var(--primary-color);
-            color: var(--text-primary);
-        }
+            .btn-outline-secondary:hover {
+                background: rgba(99, 102, 241, 0.1);
+                border-color: var(--primary-color);
+                color: var(--text-primary);
+            }
 
         /* Table */
         .table {
@@ -204,24 +204,24 @@
             color: var(--text-primary);
         }
 
-        .table thead th {
-            background: linear-gradient(135deg, var(--bg-header) 0%, #0f172a 100%);
-            color: var(--text-primary);
-            border-bottom: 2px solid var(--border-color);
-            font-weight: 600;
-            padding: 15px;
-        }
+            .table thead th {
+                background: linear-gradient(135deg, var(--bg-header) 0%, #0f172a 100%);
+                color: var(--text-primary);
+                border-bottom: 2px solid var(--border-color);
+                font-weight: 600;
+                padding: 15px;
+            }
 
-        .table tbody td {
-            background-color: var(--bg-card);
-            color: var(--text-primary);
-            border-bottom: 1px solid var(--border-color);
-            padding: 12px 15px;
-        }
+            .table tbody td {
+                background-color: var(--bg-card);
+                color: var(--text-primary);
+                border-bottom: 1px solid var(--border-color);
+                padding: 12px 15px;
+            }
 
-        .table tbody tr:hover {
-            background-color: rgba(99, 102, 241, 0.1);
-        }
+            .table tbody tr:hover {
+                background-color: rgba(99, 102, 241, 0.1);
+            }
 
         .table-bordered {
             border: 1px solid var(--border-color);
@@ -234,10 +234,10 @@
             color: var(--text-primary);
         }
 
-        .list-group-item:hover {
-            background-color: rgba(99, 102, 241, 0.1);
-            border-color: var(--primary-color);
-        }
+            .list-group-item:hover {
+                background-color: rgba(99, 102, 241, 0.1);
+                border-color: var(--primary-color);
+            }
 
         .list-group-item-action {
             cursor: pointer;
@@ -272,11 +272,11 @@
         /* Summary Labels */
         .summary-label {
             color: var(--text-secondary);
-        font-size: 0.95rem;
-    }
+            font-size: 0.95rem;
+        }
 
         .summary-value {
-        font-weight: 700;
+            font-weight: 700;
             font-size: 1.1rem;
         }
 
@@ -330,26 +330,26 @@
             overflow: hidden;
         }
 
-        .product-card:hover {
-            transform: translateY(-6px);
-            box-shadow: var(--shadow-xl);
-            border-color: var(--primary-color);
-        }
+            .product-card:hover {
+                transform: translateY(-6px);
+                box-shadow: var(--shadow-xl);
+                border-color: var(--primary-color);
+            }
 
-        .product-card .card-img-top {
-            width: 100%;
-            height: 250px;
-            object-fit: contain;
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            padding: 15px;
-            border-bottom: 2px solid var(--border-color);
-            transition: all 0.3s ease;
-        }
+            .product-card .card-img-top {
+                width: 100%;
+                height: 250px;
+                object-fit: contain;
+                background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+                padding: 15px;
+                border-bottom: 2px solid var(--border-color);
+                transition: all 0.3s ease;
+            }
 
-        .product-card:hover .card-img-top {
-            transform: scale(1.05);
-            border-bottom-color: var(--primary-color);
-        }
+            .product-card:hover .card-img-top {
+                transform: scale(1.05);
+                border-bottom-color: var(--primary-color);
+            }
 
         /* Product Image in Table */
         .product-image-table {
@@ -364,13 +364,13 @@
             cursor: pointer;
         }
 
-        .product-image-table:hover {
-            transform: scale(1.1);
-            border-color: var(--primary-color);
-            box-shadow: var(--shadow-md);
-            z-index: 10;
-            position: relative;
-        }
+            .product-image-table:hover {
+                transform: scale(1.1);
+                border-color: var(--primary-color);
+                box-shadow: var(--shadow-md);
+                z-index: 10;
+                position: relative;
+            }
 
         /* Product Image in Modal */
         .product-image-modal {
@@ -396,19 +396,19 @@
             border: 2px dashed var(--border-color);
         }
 
-        .no-image-placeholder i {
-            font-size: 24px;
-            margin-bottom: 5px;
-        }
+            .no-image-placeholder i {
+                font-size: 24px;
+                margin-bottom: 5px;
+            }
 
         /* Input Group */
         .input-group {
             gap: 10px;
         }
 
-        .input-group .btn {
-            border-radius: 8px;
-        }
+            .input-group .btn {
+                border-radius: 8px;
+            }
 
         /* Radio Button Styles */
         .form-check-input {
@@ -416,10 +416,10 @@
             border: 2px solid var(--border-color);
         }
 
-        .form-check-input:checked {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-        }
+            .form-check-input:checked {
+                background-color: var(--primary-color);
+                border-color: var(--primary-color);
+            }
 
         /* Scrollbar */
         ::-webkit-scrollbar {
@@ -436,9 +436,9 @@
             border-radius: 4px;
         }
 
-        ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
-        }
+            ::-webkit-scrollbar-thumb:hover {
+                background: #475569;
+            }
 
         /* Responsive */
         @@media (max-width: 768px) {
@@ -446,48 +446,91 @@
                 padding: 15px;
             }
         }
+
         /* Loading Overlay */
         .loading-overlay {
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: none;
+            background: rgba(15, 23, 42, 0.8);
+            z-index: 9999;
             justify-content: center;
             align-items: center;
-            z-index: 9999;
+            backdrop-filter: blur(4px);
         }
+
+            .loading-overlay.active {
+                display: flex;
+            }
 
         .loading-spinner {
             width: 60px;
             height: 60px;
-            border: 5px solid rgba(255, 255, 255, 0.3);
-            border-top: 5px solid var(--primary-color);
+            border: 4px solid rgba(99, 102, 241, 0.2);
+            border-top-color: var(--primary-color);
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
 
         @@keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .loading-text {
-            color: white;
             margin-top: 20px;
+            color: var(--text-primary);
             font-size: 18px;
             font-weight: 500;
         }
+
+        .loading-content {
+            text-align: center;
+        }
+
+        /* Disable buttons when loading */
+        button:disabled,
+        button.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .btn-loading {
+            position: relative;
+            color: transparent !important;
+        }
+
+            .btn-loading::after {
+                content: "";
+                position: absolute;
+                width: 16px;
+                height: 16px;
+                top: 50%;
+                left: 50%;
+                margin-left: -8px;
+                margin-top: -8px;
+                border: 2px solid #ffffff;
+                border-radius: 50%;
+                border-top-color: transparent;
+                animation: spin 0.6s linear infinite;
+            }
     </style>
 </head>
 <body>
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
-        <div style="text-align: center;">
+        <div class="loading-content">
             <div class="loading-spinner"></div>
-            <div class="loading-text">Đang xử lý...</div>
+            <div class="loading-text" id="loadingText">Đang xử lý...</div>
         </div>
     </div>
 
@@ -495,210 +538,278 @@
     <div class="main-content">
         <h2 class="page-title"><i class="fas fa-shopping-cart me-2"></i>Bán Hàng</h2>
 
-    <div class="row">
-        <!-- Bên trái: Thông tin khách hàng và tìm kiếm sản phẩm -->
-        <div class="col-md-8">
-            <!-- Phần chọn khách hàng -->
-            <div class="card mb-3">
+        <div class="row">
+            <!-- Bên trái: Thông tin khách hàng và tìm kiếm sản phẩm -->
+            <div class="col-md-8">
+                <!-- Phần chọn khách hàng -->
+                <div class="card mb-3">
                     <div class="card-header bg-primary">
                         <i class="fas fa-user me-2"></i>Thông Tin Khách Hàng
-                </div>
-                <div class="card-body">
-                    <div class="row">
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Khách Hàng Thân Thiết</label>
                                 <select id="khachHangSelect" class="form-control form-select">
-                                <option value="">-- Chọn khách hàng --</option>
-                                @foreach (var kh in Model.KhachHangList)
-                                {
-                                    <option value="@kh.IdKhachHang" data-diem="@kh.DiemTichLuy">
-                                        @kh.HoTenKhachHang - @kh.SdtKhachHang
-                                    </option>
-                                }
-                            </select>
-                            <small id="diemTichLuy" class="text-success"></small>
-                        </div>
+                                    <option value="">-- Chọn khách hàng --</option>
+                                    @foreach (var kh in Model.KhachHangList)
+                                    {
+                                        <option value="@kh.IdKhachHang" data-diem="@kh.DiemTichLuy">
+                                            @kh.HoTenKhachHang - @kh.SdtKhachHang
+                                        </option>
+                                    }
+                                </select>
+                                <small id="diemTichLuy" class="text-success"></small>
+                            </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Hoặc Khách Vãng Lai</label>
                                 <button type="button" class="btn btn-outline-secondary w-100" onclick="setKhachVangLai()">
                                     <i class="fas fa-user-slash me-2"></i>Khách Vãng Lai
-                            </button>
-                            <input type="hidden" id="idKhachHang" value="" />
+                                </button>
+                                <input type="hidden" id="idKhachHang" value="" />
+                            </div>
                         </div>
-                    </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Tên khách hàng <span class="text-danger">*</span></label>
                                 <input type="text" id="tenKhachHang" class="form-control" placeholder="Tên khách hàng" required />
-                            <small id="tenKhachHangError" class="text-danger d-none"></small>
-                        </div>
+                                <small id="tenKhachHangError" class="text-danger d-none"></small>
+                            </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Số điện thoại <span class="text-danger">*</span></label>
                                 <input type="text" id="sdtKhachHang" class="form-control" placeholder="Số điện thoại" required />
-                            <small id="sdtKhachHangError" class="text-danger d-none"></small>
+                                <small id="sdtKhachHangError" class="text-danger d-none"></small>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Phần tìm kiếm sản phẩm -->
-            <div class="card mb-3">
+                <!-- Phần tìm kiếm sản phẩm -->
+                <div class="card mb-3">
                     <div class="card-header bg-info">
                         <i class="fas fa-search me-2"></i>Tìm Kiếm Sản Phẩm
-                </div>
-                <div class="card-body">
+                    </div>
+                    <div class="card-body">
                         <div class="input-group mb-3">
-                        <input type="text" id="searchProduct" class="form-control" placeholder="Nhập tên sản phẩm để tìm kiếm..." />
+                            <input type="text" id="searchProduct" class="form-control" placeholder="Nhập tên sản phẩm để tìm kiếm..." />
                             <button class="btn btn-primary" onclick="searchProducts()">
                                 <i class="fas fa-search me-1"></i>Tìm
                             </button>
                             <button class="btn btn-outline-secondary" type="button" onclick="resetSearch()">
                                 <i class="fas fa-undo me-1"></i>Đặt lại
                             </button>
-                    </div>
-                    <div id="searchResults" class="mt-3">
-                        <!-- Kết quả tìm kiếm sẽ hiển thị ở đây -->
-                    </div>
-                    <div id="modelResults" class="mt-3">
-                        <!-- Danh sách model theo sản phẩm -->
+                        </div>
+                        <div id="searchResults" class="mt-3">
+                            <!-- Kết quả tìm kiếm sẽ hiển thị ở đây -->
+                        </div>
+                        <div id="modelResults" class="mt-3">
+                            <!-- Danh sách model theo sản phẩm -->
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Phần sản phẩm đã chọn -->
-            <div class="card">
+                <!-- Phần sản phẩm đã chọn -->
+                <div class="card">
                     <div class="card-header bg-success">
                         <i class="fas fa-shopping-cart me-2"></i>Sản Phẩm Đã Chọn
-                </div>
-                <div class="card-body">
+                    </div>
+                    <div class="card-body">
                         <div class="table-responsive">
-                    <table class="table table-bordered" id="selectedProductsTable">
-                        <thead>
-                            <tr>
-                                <th>STT</th>
-                                <th>Ảnh</th>
-                                <th>Tên Model</th>
-                                <th>Thuộc tính</th>
-                                <th>Giá</th>
-                                <th>IMEI</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="selectedProductsBody">
+                            <table class="table table-bordered" id="selectedProductsTable">
+                                <thead>
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Ảnh</th>
+                                        <th>Tên Model</th>
+                                        <th>Thuộc tính</th>
+                                        <th>Giá</th>
+                                        <th>IMEI</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="selectedProductsBody">
                                     <tr>
                                         <td colspan="7" class="text-center text-muted">
                                             <i class="fas fa-shopping-cart me-2"></i>Chưa có sản phẩm nào được chọn
                                         </td>
                                     </tr>
-                        </tbody>
-                    </table>
+                                </tbody>
+                            </table>
                         </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Bên phải: Thanh toán -->
-        <div class="col-md-4">
-            <div class="card">
+            <!-- Bên phải: Thanh toán -->
+            <div class="col-md-4">
+                <div class="card">
                     <div class="card-header bg-warning">
                         <i class="fas fa-money-bill-wave me-2"></i>Thanh Toán
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
                             <label class="form-label">Phương Thức Thanh Toán</label>
                             <select id="phuongThucTT" class="form-control form-select">
-                            <option value="Tiền mặt">Tiền mặt</option>
-                            <option value="Chuyển khoản">Chuyển khoản</option>
-                        </select>
-                    </div>
+                                <option value="Tiền mặt">Tiền mặt</option>
+                                <option value="Chuyển khoản">Chuyển khoản</option>
+                            </select>
+                        </div>
 
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="summary-label">Tổng tiền hàng</span>
-                            <span id="tongTienHang" class="summary-value text-danger">0 đ</span>
+                                <span class="summary-label">Tổng tiền hàng</span>
+                                <span id="tongTienHang" class="summary-value text-danger">0 đ</span>
+                            </div>
                         </div>
-                    </div>
 
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="summary-label">Tổng thanh toán</span>
-                            <span id="tongThanhToan" class="summary-value text-primary">0 đ</span>
+                                <span class="summary-label">Tổng thanh toán</span>
+                                <span id="tongThanhToan" class="summary-value text-primary">0 đ</span>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Phần tiền khách đưa - chỉ hiển thị khi chọn "Tiền mặt" -->
-                    <div class="mb-3" id="tienKhachDuaSection">
-                            <label class="form-label">Số tiền khách đưa (VNĐ)</label>
-                            <input type="number" id="tienKhachDua" class="form-control" value="0" min="0" max="10000000000" step="1000" />
-                            <small class="form-text text-muted">Số tiền tối thiểu: 0 VNĐ, tối đa: 10.000.000.000 VNĐ</small>
-                            <small id="tienKhachDuaError" class="text-danger d-none"></small>
-                    </div>
+                        <div id="cashFields">
+                            <div class="mb-3">
+                                <label class="form-label">Số tiền khách đưa</label>
+                                <input type="number" id="tienKhachDua" class="form-control" value="0" min="0" />
+                            </div>
 
-                    <div class="mb-3" id="tienThuaSection">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="summary-label">Tiền thừa</span>
-                            <span id="tienThua" class="summary-value text-info">0 đ</span>
-                        </div>
-                            <div id="tienThuaWarning" class="alert alert-danger mt-2 mb-0 d-none">
-                                <i class="fas fa-exclamation-triangle me-1"></i>Không thanh toán - Số tiền khách đưa chưa đủ!
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="summary-label">Tiền thừa</span>
+                                    <span id="tienThua" class="summary-value text-info">0 đ</span>
+                                </div>
+                                <div id="tienThuaWarning" class="alert alert-danger mt-2 mb-0 d-none">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>Không thanh toán - Số tiền khách đưa chưa đủ!
+                                </div>
+                            </div>
                         </div>
 
 
                         <button class="btn btn-success w-100 btn-lg" onclick="thanhToan()">
                             <i class="fas fa-check me-2"></i>THANH TOÁN
-                    </button>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Modal chi tiết sản phẩm -->
-<div class="modal fade" id="productDetailModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
+    <!-- Modal chi tiết sản phẩm -->
+    <div class="modal fade" id="productDetailModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-info-circle me-2"></i>Chi Tiết Sản Phẩm</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="productDetailContent">
-                <!-- Nội dung chi tiết sản phẩm sẽ load ở đây -->
-            </div>
-            <div class="modal-footer">
+                </div>
+                <div class="modal-body" id="productDetailContent">
+                    <!-- Nội dung chi tiết sản phẩm sẽ load ở đây -->
+                </div>
+                <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                     <button type="button" class="btn btn-primary" onclick="addSelectedProduct()">
                         <i class="fas fa-plus me-1"></i>Thêm vào hóa đơn
                     </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal QR Code Ngân Hàng -->
-<div class="modal fade" id="bankQRModal" tabindex="-1" role="dialog" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-success">
-                    <h5 class="modal-title text-white"><i class="fas fa-qrcode me-2"></i>Thanh Toán Chuyển Khoản</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center">
-                <div id="bankQRContent">
-                    <div class="spinner-border text-primary mb-3" role="status">
-                        <span class="visually-hidden">Đang tải...</span>
-                    </div>
-                    <p class="text-muted">Đang tạo mã QR...</p>
                 </div>
             </div>
-            <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button type="button" class="btn btn-success" id="btnConfirmBankPayment" onclick="confirmBankPayment()">
-                        <i class="fas fa-check-circle me-2"></i>Đã chuyển khoản - Xác nhận đơn hàng
+        </div>
+    </div>
+
+    <!-- Modal thanh toán chuyển khoản -->
+    <div class="modal fade" id="bankTransferModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-qrcode me-2"></i>Thanh toán chuyển khoản
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <div class="p-3" style="background: rgba(99, 102, 241, 0.08); border: 1px solid var(--border-color); border-radius: 12px;">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-university me-2 text-info"></i>
+                                    <div style="font-weight: 600;">Vietcombank</div>
+                                </div>
+
+                                <div class="mb-1"><span class="text-muted">Chủ tài khoản:</span> <strong>LE NHO LOC</strong></div>
+                                <div class="mb-2"><span class="text-muted">Số tài khoản:</span> <strong>9964837016</strong></div>
+
+                                <hr style="border-color: var(--border-color);" />
+
+                                <div class="mb-1"><span class="text-muted">Số tiền phải thanh toán:</span></div>
+                                <div class="fs-4 fw-bold text-success" id="bankAmountText">0 đ</div>
+
+                                <div class="mt-3 mb-1"><span class="text-muted">Nội dung thanh toán:</span></div>
+                                <div class="p-2" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 10px;">
+                                    <span id="bankTransferContent" style="word-break: break-word;">thanh toán đơn hàng ...</span>
+                                </div>
+
+                                <small class="text-muted d-block mt-2">
+                                    Vui lòng chuyển khoản đúng số tiền và đúng nội dung để đối soát.
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="col-md-7">
+                            <div class="p-3" style="border: 1px solid var(--border-color); border-radius: 12px;">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <div style="font-weight: 600;">
+                                        <i class="fas fa-receipt me-2 text-primary"></i>Thông tin giao dịch
+                                    </div>
+                                    <span class="badge text-bg-warning">Chờ xác nhận</span>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-6 mb-2">
+                                        <div class="text-muted">Mã đơn (tạm)</div>
+                                        <div class="fw-bold" id="tempOrderCode">DH...</div>
+                                    </div>
+                                    <div class="col-6 mb-2">
+                                        <div class="text-muted">Phương thức</div>
+                                        <div class="fw-bold">Chuyển khoản</div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <div class="text-muted mb-2">QR thanh toán</div>
+
+                                    <!-- Nếu bạn có ảnh QR thật, thay src -->
+                                    <div class="d-flex align-items-center justify-content-center"
+                                         style="height: 260px; border: 1px solid var(--border-color); border-radius: 12px; background: rgba(15, 23, 42, 0.35); padding: 10px;">
+                                        <img id="bankQrImage"
+                                             src=""
+                                             alt="QR thanh toán Vietcombank"
+                                             style="max-height: 240px; width: 100%; object-fit: contain; border-radius: 10px; border: 2px solid rgba(255,255,255,0.06);" />
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-info mt-3 mb-0">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Sau khi khách đã chuyển khoản thành công, nhấn <strong>Đã thanh toán đơn hàng</strong> để hệ thống tạo đơn và trừ tồn kho.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" id="btnCancelBankTransfer" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Hủy tạo đơn hàng
                     </button>
+                    <button type="button" class="btn btn-success" id="btnConfirmBankTransfer">
+                        <i class="fas fa-check me-2"></i>Đã thanh toán đơn hàng
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-</div>
+
 
     <script>
         // =========================
@@ -1305,50 +1416,16 @@
                 return;
             }
 
-            // Validation: Kiểm tra thông tin khách hàng
             if (!validateKhachHang()) {
                 alert('Vui lòng kiểm tra lại thông tin khách hàng');
                 return;
             }
 
-            // Validation: Kiểm tra phương thức thanh toán
-            var phuongThucTT = $('#phuongThucTT').val();
-            if (!phuongThucTT || phuongThucTT === '') {
-                alert('Vui lòng chọn phương thức thanh toán');
-                return;
-            }
-
-            // Validation: Kiểm tra số tiền
             var tongThanhToan = parseFloat($('#tongThanhToan').text().replace(/[^0-9]/g, '')) || 0;
             var phuongThuc = $('#phuongThucTT').val();
 
-            // Nếu chọn "Chuyển khoản", tạo dữ liệu đơn hàng và hiển thị modal QR code
-            if (phuongThucTT === 'Chuyển khoản') {
-                // Tạo dữ liệu đơn hàng trước
-                pendingOrderData = {
-                    IdKhachHang: $('#khachHangSelect').val() || null,
-                    TenKhachHang: $('#tenKhachHang').val().trim() || '',
-                    SdtKhachHang: $('#sdtKhachHang').val().trim() || '',
-                    DiaChiGiaoHang: 'Thanh Toán Tại Quầy',
-                    PhuongThucThanhToan: phuongThucTT,
-                    TienKhachDua: null,
-                    TienThua: null,
-                    ChiTietDonHang: selectedProducts.map(function (p) {
-                        return {
-                            IdModelSanPham: p.idModelSanPham,
-                            SoLuong: p.soLuong,
-                            SelectedImeis: p.selectedImeis,
-                            IdKhuyenMai: p.idKhuyenMai || null
-                        };
-                    })
-                };
-                // Hiển thị modal QR code
-                showBankQRModal(tongThanhToan);
-                return;
-            }
-
-            // Validation: Nếu thanh toán bằng tiền mặt, phải nhập số tiền khách đưa
-            if (phuongThucTT === 'Tiền mặt') {
+            // 2) Tiền mặt: bắt đủ tiền
+            if (phuongThuc === 'Tiền mặt') {
                 var tienKhachDua = parseFloat($('#tienKhachDua').val()) || 0;
                 var tienThua = tienKhachDua - tongThanhToan;
                 if (tienThua < 0) {
@@ -1357,17 +1434,7 @@
                 }
             }
 
-            // Hiển thị loading
-            showLoading();
-
-            // Tạo dữ liệu đơn hàng và submit
-            submitOrderData(phuongThucTT, tongThanhToan);
-        }
-
-        function submitOrderData(phuongThucTT, tongThanhToan) {
-            var tienKhachDua = parseFloat($('#tienKhachDua').val()) || 0;
-            var tienThua = tienKhachDua - tongThanhToan;
-
+            // 3) Build orderData
             var orderData = {
                 IdKhachHang: $('#khachHangSelect').val() || null,
                 TenKhachHang: $('#tenKhachHang').val().trim() || '',
@@ -1384,58 +1451,37 @@
                 })
             };
 
-            // Lưu dữ liệu đơn hàng để dùng khi xác nhận chuyển khoản (nếu là chuyển khoản)
-            if (phuongThucTT === 'Chuyển khoản') {
+            // 4) Chuyển khoản: mở modal, chưa tạo đơn
+            if (phuongThuc === 'Chuyển khoản') {
                 pendingOrderData = orderData;
-                // Không submit ngay, đợi user xác nhận trong modal
+                openBankTransferModal(tongThanhToan);
                 return;
             }
 
-            $.post('@Url.Action("Create", "DonHang")', orderData, function (response) {
-                hideLoading();
-                
-                if (response && response.success) {
-                    var message = 'Thanh toán thành công!\nMã đơn: ' + response.maDon + '\nNgày bảo hành: ' + response.ngayBaoHanh;
-                    alert(message);
-                    
-                    // Clean form sau khi thanh toán thành công
-                    cleanForm();
-                    
-                    // Tự động tải PDF xuống
-                    if (response.maDon) {
-                        // Tạo URL để download PDF
-                        var pdfDownloadUrl = '/DonHang/ExportPdf?maDon=' + encodeURIComponent(response.maDon);
-                        
-                        // Sử dụng fetch để tải PDF và trigger download
-                        fetch(pdfDownloadUrl)
-                            .then(response => {
-                                if (!response.ok) {
-                                    throw new Error('Không thể tải PDF');
-                                }
-                                return response.blob();
-                            })
-                            .then(blob => {
-                                // Tạo URL từ blob
-                                var url = window.URL.createObjectURL(blob);
-                                
-                                // Tạo link ẩn để trigger download
-                                var link = document.createElement('a');
-                                link.href = url;
-                                link.download = 'HoaDon_' + response.maDon + '.pdf';
-                                link.style.display = 'none';
-                                document.body.appendChild(link);
-                                link.click();
-                                
-                                // Cleanup
-                                document.body.removeChild(link);
-                                window.URL.revokeObjectURL(url);
-                            })
-                            .catch(error => {
-                                console.error('Lỗi khi tải PDF:', error);
-                                // Fallback: mở trong tab mới nếu fetch thất bại
-                                window.open(pdfDownloadUrl, '_blank');
-                            });
-                    }
+            // 5) Tiền mặt: tạo đơn ngay
+            btnThanhToan.prop('disabled', true).addClass('disabled')
+                .html('<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...');
+
+            await processOrderCreation(orderData, btnThanhToan, originalBtnHtml);
+        }
+
+        // =========================
+        // PAYMENT UI TOGGLE
+        // =========================
+        function toggleCashFields() {
+            var phuongThuc = $('#phuongThucTT').val();
+            if (phuongThuc === 'Chuyển khoản') {
+                $('#cashFields').addClass('d-none');
+                $('#tienThuaWarning').addClass('d-none');
+            } else {
+                $('#cashFields').removeClass('d-none');
+                var tongThanhToan = parseFloat($('#tongThanhToan').text().replace(/[^0-9]/g, '')) || 0;
+                var tienKhachDua = parseFloat($('#tienKhachDua').val()) || 0;
+                var tienThua = tienKhachDua - tongThanhToan;
+
+                if (tienThua >= 0) {
+                    $('#tienThua').text(renderPrice(tienThua)).removeClass('text-danger').addClass('text-info');
+                    $('#tienThuaWarning').addClass('d-none');
                 } else {
                     $('#tienThua').text(renderPrice(Math.abs(tienThua)) + ' (thiếu)').removeClass('text-info').addClass('text-danger');
                     $('#tienThuaWarning').removeClass('d-none');
@@ -1443,174 +1489,52 @@
             }
         }
 
-        // Hiển thị modal QR code ngân hàng
-        function showBankQRModal(tongTien) {
-            // Hiển thị loading
-            $('#bankQRContent').html(
-                '<div class="spinner-border text-primary mb-3" role="status">' +
-                '<span class="visually-hidden">Đang tải...</span>' +
-                '</div>' +
-                '<p class="text-muted">Đang tạo mã QR...</p>'
-            );
+        // =========================
+        // BANK MODAL EVENTS
+        // =========================
+        $('#btnCancelBankTransfer').on('click', function () {
+            pendingOrderData = null;
+        });
 
-            // Mở modal
-            var modal = new bootstrap.Modal(document.getElementById('bankQRModal'));
-            modal.show();
-
-            // Gọi API để lấy thông tin QR code
-            $.get('@Url.Action("GetBankQRCode", "DonHang")', {
-                tongTien: tongTien,
-                noiDung: 'THANH TOAN DON HANG ' + new Date().toISOString().slice(0, 10).replace(/-/g, '')
-            }, function (response) {
-                if (response && response.success) {
-                    var html = '' +
-                        '<div class="mb-4">' +
-                        '<h5 class="mb-3" style="color: var(--text-primary);">Thông Tin Chuyển Khoản</h5>' +
-                        '<div class="card mb-3" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary-color);">' +
-                        '<div class="card-body text-start">' +
-                        '<p class="mb-2"><strong>Ngân hàng:</strong> <span style="color: var(--primary-color);">' + response.bankName + '</span></p>' +
-                        '<p class="mb-2"><strong>Số tài khoản:</strong> <span style="color: var(--text-primary); font-weight: 600; font-size: 1.1rem;">' + response.accountNumber + '</span></p>' +
-                        '<p class="mb-2"><strong>Chủ tài khoản:</strong> <span style="color: var(--text-primary);">' + response.accountName + '</span></p>' +
-                        '<p class="mb-0"><strong>Số tiền:</strong> <span class="text-success fw-bold" style="font-size: 1.2rem;">' + renderPrice(response.tongTien) + '</span></p>' +
-                        '</div>' +
-                        '</div>' +
-                        '</div>' +
-                        '<div class="mb-4">' +
-                        '<h5 class="mb-3" style="color: var(--text-primary);">Mã QR Code</h5>' +
-                        '<div class="d-flex justify-content-center">' +
-                        '<img src="' + response.qrCodeUrl + '" alt="QR Code" style="max-width: 300px; border: 2px solid var(--border-color); border-radius: 8px; padding: 10px; background: white;">' +
-                        '</div>' +
-                        '<p class="text-muted mt-3" style="font-size: 0.9rem;">Quét mã QR bằng ứng dụng ngân hàng để thanh toán</p>' +
-                        '</div>' +
-                        '<div class="alert alert-info">' +
-                        '<i class="fas fa-info-circle me-2"></i><strong>Hướng dẫn:</strong> Sau khi chuyển khoản thành công, vui lòng nhấn nút "Đã chuyển khoản" để xác nhận đơn hàng.' +
-                        '</div>';
-
-                    $('#bankQRContent').html(html);
-                } else {
-                    $('#bankQRContent').html(
-                        '<div class="alert alert-danger">' +
-                        '<i class="fas fa-exclamation-triangle me-2"></i>Lỗi: ' + (response.message || 'Không thể tạo QR code') +
-                        '</div>'
-                    );
-                }
-            }).fail(function () {
-                $('#bankQRContent').html(
-                    '<div class="alert alert-danger">' +
-                    '<i class="fas fa-exclamation-triangle me-2"></i>Lỗi kết nối. Vui lòng thử lại.' +
-                    '</div>'
-                );
-            });
-        }
-
-        // Xác nhận đã chuyển khoản và tạo đơn hàng
-        function confirmBankPayment() {
+        $('#btnConfirmBankTransfer').on('click', async function () {
             if (!pendingOrderData) {
-                alert('Không có dữ liệu đơn hàng. Vui lòng thử lại.');
+                alert('Không có đơn hàng chờ xử lý. Vui lòng thao tác lại.');
                 return;
             }
 
-            // Đóng modal
-            var modal = bootstrap.Modal.getInstance(document.getElementById('bankQRModal'));
-            modal.hide();
+            var $btnConfirm = $('#btnConfirmBankTransfer');
+            $btnConfirm.prop('disabled', true).addClass('disabled')
+                .html('<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...');
 
-            // Hiển thị loading
-            showLoading();
+            // đóng modal
+            var modalEl = document.getElementById('bankTransferModal');
+            var modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
 
-            // Submit đơn hàng
-            $.post('@Url.Action("Create", "DonHang")', pendingOrderData, function (response) {
-                hideLoading();
+            var btnThanhToan = $('button[onclick="thanhToan()"]');
+            var originalBtnHtml = btnThanhToan.html();
 
-                if (response && response.success) {
-                    var message = 'Đơn hàng đã được tạo thành công!\nMã đơn: ' + response.maDon + '\nTrạng thái: Chờ xác nhận thanh toán\n\nVui lòng đợi xác nhận từ hệ thống sau khi chuyển khoản.';
-                    alert(message);
+            btnThanhToan.prop('disabled', true).addClass('disabled')
+                .html('<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...');
 
-                    // Clean form sau khi tạo đơn hàng thành công
-                    cleanForm();
-                    pendingOrderData = null;
+            try {
+                await processOrderCreation(pendingOrderData, btnThanhToan, originalBtnHtml);
+            } finally {
+                pendingOrderData = null;
 
-                    // Tự động tải PDF xuống
-                    if (response.maDon) {
-                        var pdfDownloadUrl = '/DonHang/ExportPdf?maDon=' + encodeURIComponent(response.maDon);
-                        fetch(pdfDownloadUrl)
-                            .then(response => {
-                                if (!response.ok) throw new Error('Không thể tải PDF');
-                                return response.blob();
-                            })
-                            .then(blob => {
-                                var url = window.URL.createObjectURL(blob);
-                                var link = document.createElement('a');
-                                link.href = url;
-                                link.download = 'HoaDon_' + response.maDon + '.pdf';
-                                link.style.display = 'none';
-                                document.body.appendChild(link);
-                                link.click();
-                                document.body.removeChild(link);
-                                window.URL.revokeObjectURL(url);
-                            })
-                            .catch(error => {
-                                console.error('Lỗi khi tải PDF:', error);
-                                window.open(pdfDownloadUrl, '_blank');
-                            });
-                    }
-                } else {
-                    var errorMsg = 'Lỗi: ' + (response ? (response.message || 'Không xác định') : 'Không xác định');
-                    if (response && response.errors && Array.isArray(response.errors)) {
-                        errorMsg += '\n' + response.errors.join('\n');
-                    }
-                    alert(errorMsg);
-                }
-            }).fail(function(xhr, status, error) {
-                hideLoading();
-                console.error('Lỗi AJAX:', error);
-                var errorMsg = 'Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMsg = xhr.responseJSON.message;
-                }
-                alert(errorMsg);
-            });
-        }
+                $btnConfirm.prop('disabled', false).removeClass('disabled')
+                    .html('<i class="fas fa-check me-2"></i>Đã thanh toán đơn hàng');
+            }
+        });
 
+        // =========================
+        // DOM READY
+        // =========================
         $(document).ready(function () {
-            // Ẩn/hiện phần tiền khách đưa khi thay đổi phương thức thanh toán
-            $('#phuongThucTT').on('change', function() {
-                var phuongThuc = $(this).val();
-                if (phuongThuc === 'Tiền mặt') {
-                    $('#tienKhachDuaSection').show();
-                    $('#tienThuaSection').show();
-                } else if (phuongThuc === 'Chuyển khoản') {
-                    $('#tienKhachDuaSection').hide();
-                    $('#tienThuaSection').hide();
-                    $('#tienKhachDua').val(0);
-                    $('#tienThua').text('0 đ');
-                    $('#tienThuaWarning').addClass('d-none');
-                }
-            });
-
-            // Trigger change để set initial state
-            $('#phuongThucTT').trigger('change');
-            $('#tienKhachDua').on('input', function() {
-                var tienKhachDua = parseFloat($(this).val()) || 0;
-                var minTien = 0;
-                var maxTien = 10000000000; // 10 tỷ VNĐ
-                
-                // Clear error khi người dùng nhập
-                $('#tienKhachDuaError').addClass('d-none').text('');
-                
-                // Validate min/max
-                if (tienKhachDua < minTien) {
-                    $('#tienKhachDuaError').removeClass('d-none').text('Số tiền không được nhỏ hơn ' + minTien.toLocaleString() + ' VNĐ');
-                    return;
-                }
-                
-                if (tienKhachDua > maxTien) {
-                    $('#tienKhachDuaError').removeClass('d-none').text('Số tiền không được vượt quá ' + maxTien.toLocaleString() + ' VNĐ (10 tỷ VNĐ)');
-                    // Giới hạn giá trị input
-                    $(this).val(maxTien);
-                    tienKhachDua = maxTien;
-                }
-                
+            // input tiền khách đưa
+            $('#tienKhachDua').on('input', function () {
                 var tongThanhToan = parseFloat($('#tongThanhToan').text().replace(/[^0-9]/g, '')) || 0;
+                var tienKhachDua = parseFloat($(this).val()) || 0;
                 var tienThua = tienKhachDua - tongThanhToan;
 
                 if (tienThua >= 0) {
@@ -1650,24 +1574,6 @@
                 if (value !== $(this).val()) $(this).val(value);
             });
 
-            // Ẩn/hiện phần tiền khách đưa khi thay đổi phương thức thanh toán
-            $('#phuongThucTT').on('change', function() {
-                var phuongThuc = $(this).val();
-                if (phuongThuc === 'Tiền mặt') {
-                    $('#tienKhachDuaSection').show();
-                    $('#tienThuaSection').show();
-                } else if (phuongThuc === 'Chuyển khoản') {
-                    $('#tienKhachDuaSection').hide();
-                    $('#tienThuaSection').hide();
-                    $('#tienKhachDua').val(0);
-                    $('#tienThua').text('0 đ');
-                    $('#tienThuaWarning').addClass('d-none');
-                }
-            });
-
-            // Trigger change để set initial state
-            $('#phuongThucTT').trigger('change');
-
             $('#searchProduct').keypress(function (e) {
                 if (e.which === 13) searchProducts();
             });
@@ -1689,134 +1595,11 @@
                 toggleCashFields();
             });
 
-        // Hiển thị modal QR code ngân hàng
-        function showBankQRModal(tongTien) {
-            // Hiển thị loading
-            $('#bankQRContent').html(
-                '<div class="spinner-border text-primary mb-3" role="status">' +
-                '<span class="visually-hidden">Đang tải...</span>' +
-                '</div>' +
-                '<p class="text-muted">Đang tạo mã QR...</p>'
-            );
+            // gọi 1 lần khi load trang
+            toggleCashFields();
+        });
 
-            // Mở modal
-            var modal = new bootstrap.Modal(document.getElementById('bankQRModal'));
-            modal.show();
-
-            // Gọi API để lấy thông tin QR code
-            $.get('@Url.Action("GetBankQRCode", "DonHang")', {
-                tongTien: tongTien,
-                noiDung: 'THANH TOAN DON HANG ' + new Date().toISOString().slice(0, 10).replace(/-/g, '')
-            }, function (response) {
-                if (response && response.success) {
-                    var html = '' +
-                        '<div class="mb-4">' +
-                        '<h5 class="mb-3" style="color: var(--text-primary);">Thông Tin Chuyển Khoản</h5>' +
-                        '<div class="card mb-3" style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary-color);">' +
-                        '<div class="card-body text-start">' +
-                        '<p class="mb-2"><strong>Ngân hàng:</strong> <span style="color: var(--primary-color);">' + response.bankName + '</span></p>' +
-                        '<p class="mb-2"><strong>Số tài khoản:</strong> <span style="color: var(--text-primary); font-weight: 600; font-size: 1.1rem;">' + response.accountNumber + '</span></p>' +
-                        '<p class="mb-2"><strong>Chủ tài khoản:</strong> <span style="color: var(--text-primary);">' + response.accountName + '</span></p>' +
-                        '<p class="mb-0"><strong>Số tiền:</strong> <span class="text-success fw-bold" style="font-size: 1.2rem;">' + renderPrice(response.tongTien) + '</span></p>' +
-                        '</div>' +
-                        '</div>' +
-                        '</div>' +
-                        '<div class="mb-4">' +
-                        '<h5 class="mb-3" style="color: var(--text-primary);">Mã QR Code</h5>' +
-                        '<div class="d-flex justify-content-center">' +
-                        '<img src="' + response.qrCodeUrl + '" alt="QR Code" style="max-width: 300px; border: 2px solid var(--border-color); border-radius: 8px; padding: 10px; background: white;">' +
-                        '</div>' +
-                        '<p class="text-muted mt-3" style="font-size: 0.9rem;">Quét mã QR bằng ứng dụng ngân hàng để thanh toán</p>' +
-                        '</div>' +
-                        '<div class="alert alert-info">' +
-                        '<i class="fas fa-info-circle me-2"></i><strong>Hướng dẫn:</strong> Sau khi chuyển khoản thành công, vui lòng nhấn nút "Đã chuyển khoản" để xác nhận đơn hàng.' +
-                        '</div>';
-
-                    $('#bankQRContent').html(html);
-                } else {
-                    $('#bankQRContent').html(
-                        '<div class="alert alert-danger">' +
-                        '<i class="fas fa-exclamation-triangle me-2"></i>Lỗi: ' + (response.message || 'Không thể tạo QR code') +
-                        '</div>'
-                    );
-                }
-            }).fail(function () {
-                $('#bankQRContent').html(
-                    '<div class="alert alert-danger">' +
-                    '<i class="fas fa-exclamation-triangle me-2"></i>Lỗi kết nối. Vui lòng thử lại.' +
-                    '</div>'
-                );
-            });
-        }
-
-        // Xác nhận đã chuyển khoản và tạo đơn hàng
-        function confirmBankPayment() {
-            if (!pendingOrderData) {
-                alert('Không có dữ liệu đơn hàng. Vui lòng thử lại.');
-                return;
-            }
-
-            // Đóng modal
-            var modal = bootstrap.Modal.getInstance(document.getElementById('bankQRModal'));
-            modal.hide();
-
-            // Hiển thị loading
-            showLoading();
-
-            // Submit đơn hàng
-            $.post('@Url.Action("Create", "DonHang")', pendingOrderData, function (response) {
-                hideLoading();
-
-                if (response && response.success) {
-                    var message = 'Đơn hàng đã được tạo thành công!\nMã đơn: ' + response.maDon + '\nTrạng thái: Chờ xác nhận thanh toán\n\nVui lòng đợi xác nhận từ hệ thống sau khi chuyển khoản.';
-                    alert(message);
-
-                    // Clean form sau khi tạo đơn hàng thành công
-                    cleanForm();
-                    pendingOrderData = null;
-
-                    // Tự động tải PDF xuống
-                    if (response.maDon) {
-                        var pdfDownloadUrl = '/DonHang/ExportPdf?maDon=' + encodeURIComponent(response.maDon);
-                        fetch(pdfDownloadUrl)
-                            .then(response => {
-                                if (!response.ok) throw new Error('Không thể tải PDF');
-                                return response.blob();
-                            })
-                            .then(blob => {
-                                var url = window.URL.createObjectURL(blob);
-                                var link = document.createElement('a');
-                                link.href = url;
-                                link.download = 'HoaDon_' + response.maDon + '.pdf';
-                                link.style.display = 'none';
-                                document.body.appendChild(link);
-                                link.click();
-                                document.body.removeChild(link);
-                                window.URL.revokeObjectURL(url);
-                            })
-                            .catch(error => {
-                                console.error('Lỗi khi tải PDF:', error);
-                                window.open(pdfDownloadUrl, '_blank');
-                            });
-                    }
-                } else {
-                    var errorMsg = 'Lỗi: ' + (response ? (response.message || 'Không xác định') : 'Không xác định');
-                    if (response && response.errors && Array.isArray(response.errors)) {
-                        errorMsg += '\n' + response.errors.join('\n');
-                    }
-                    alert(errorMsg);
-                }
-            }).fail(function(xhr, status, error) {
-                hideLoading();
-                console.error('Lỗi AJAX:', error);
-                var errorMsg = 'Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMsg = xhr.responseJSON.message;
-                }
-                alert(errorMsg);
-            });
-        }
-
+        // expose functions
         window.searchProducts = searchProducts;
         window.resetSearch = resetSearch;
         window.selectProduct = selectProduct;
