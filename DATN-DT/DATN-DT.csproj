@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\ImgResource\Icons\" />
+    <Folder Include="wwwroot\invoices\" />
   </ItemGroup>
 
   <ItemGroup>
