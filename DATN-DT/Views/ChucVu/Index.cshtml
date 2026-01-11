@@ -3,49 +3,6 @@
 @{
     ViewData["Title"] = "Quản lý Chức Vụ";
     Layout = null;
-
-    // Tham số từ query string
-    string search = Context.Request.Query["search"].ToString();
-    int pageSize = 10;
-    int pageNumber = 1;
-
-    if (Context.Request.Query.ContainsKey("page"))
-    {
-        int.TryParse(Context.Request.Query["page"], out pageNumber);
-    }
-
-    // Lọc dữ liệu
-    var filteredChucVus = Model;
-
-    if (!string.IsNullOrEmpty(search))
-    {
-        filteredChucVus = filteredChucVus.Where(cv =>
-            (cv.TenChucVu != null && cv.TenChucVu.Contains(search, StringComparison.OrdinalIgnoreCase)) ||
-            (cv.TenChucVuVietHoa != null && cv.TenChucVuVietHoa.Contains(search, StringComparison.OrdinalIgnoreCase))
-        );
-    }
-
-    // Phân trang
-    int totalItems = filteredChucVus.Count();
-    int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-    if (pageNumber > totalPages) pageNumber = totalPages;
-    if (pageNumber < 1) pageNumber = 1;
-
-    var paginatedChucVus = filteredChucVus
-        .Skip((pageNumber - 1) * pageSize)
-        .Take(pageSize)
-        .ToList();
-
-    // Tạo URL cho phân trang
-    string CreatePageUrl(int page)
-    {
-        var queryParams = new Dictionary<string, string>();
-        if (!string.IsNullOrEmpty(search)) queryParams["search"] = search;
-        queryParams["page"] = page.ToString();
-
-        var queryString = string.Join("&", queryParams.Select(x => $"{x.Key}={Uri.EscapeDataString(x.Value)}"));
-        return queryString.Length > 0 ? $"?{queryString}" : "";
-    }
 }
 
 <!DOCTYPE html>
@@ -54,771 +11,307 @@
     <meta charset="utf-8" />
     <title>Quản lý Chức Vụ</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+        }
+
         body {
-            background-color: #12121d;
-            color: white;
-            font-family: 'Segoe UI', sans-serif;
-            padding-bottom: 50px;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: var(--text-primary);
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
         }
 
         .container {
-            margin-top: 30px;
-            max-width: 1600px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         h2 {
-            text-align: center;
-            margin-bottom: 30px;
-            color: #f5f5f5;
-            font-weight: 600;
-        }
-
-        .card {
-            background-color: #1e1e2a;
-            border: 1px solid #2b2b33;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-
-        .search-filter-section {
-            background-color: #2b2b33;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .search-input {
-            padding-left: 15px;
-            background-color: #1e1e2a;
-            border: 1px solid #444;
-            color: white;
-            border-radius: 8px;
-            height: 45px;
-        }
-
-            .search-input:focus {
-                border-color: #4a90e2;
-                box-shadow: 0 0 0 0.25rem rgba(74, 144, 226, 0.25);
-            }
-
-        .btn-clear {
-            background-color: #6c757d;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            height: 45px;
-            padding: 0 20px;
-            transition: all 0.3s;
-        }
-
-            .btn-clear:hover {
-                background-color: #5a6268;
-                transform: translateY(-2px);
-            }
-
-        .table-responsive {
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        table {
-            background-color: #1e1e2a;
-            table-layout: fixed;
-            width: 100%;
-            margin-bottom: 0;
-        }
-
-        th {
-            background-color: #2b2b33;
-            color: #fff;
-            padding: 15px 10px;
-            font-weight: 600;
-            border-bottom: 2px solid #4a90e2;
-            text-align: left;
-        }
-
-        td {
-            color: #ddd;
-            padding: 15px 10px;
-            vertical-align: middle;
-            border-bottom: 1px solid #2b2b33;
-        }
-
-        tr:hover {
-            background-color: #2b2b33;
-            transition: background-color 0.2s;
+            margin: 0 0 30px 0;
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .btn-create {
-            background-color: #4a90e2;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
             border: none;
-            border-radius: 8px;
-            padding: 10px 25px;
-            font-weight: 500;
-            transition: all 0.3s;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-weight: 600;
+            transition: all 0.3s ease;
         }
 
-            .btn-create:hover {
-                background-color: #357ab8;
-                transform: translateY(-2px);
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            }
-
-        .action-button {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 8px 16px;
-            margin: 2px;
-            border: none;
-            border-radius: 4px;
-            font-weight: 500;
-            transition: all 0.2s;
-            min-width: 90px;
-            height: 36px;
-            font-size: 0.9rem;
+        .btn-create:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
         }
 
-        .btn-edit {
-            background-color: #ffc107;
-            color: #212529;
+        .table-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
 
-            .btn-edit:hover {
-                background-color: #e0a800;
-                transform: scale(1.02);
-            }
-
-        .btn-delete {
-            background-color: #dc3545;
-            color: white;
+        table {
+            margin: 0;
+            width: 100%;
+            background-color: var(--bg-card);
         }
 
-            .btn-delete:hover {
-                background-color: #c82333;
-                transform: scale(1.02);
-            }
+        thead {
+            background: linear-gradient(135deg, var(--bg-card) 0%, #0f172a 100%);
+        }
 
-        .pagination-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 30px;
+        th {
+            color: var(--text-primary);
+            font-weight: 600;
             padding: 15px;
-            background-color: #1e1e2a;
-            border-radius: 10px;
-        }
-
-        .pagination {
-            margin-bottom: 0;
-        }
-
-        .page-link {
-            background-color: #2b2b33;
-            border: 1px solid #444;
-            color: #ddd;
-            margin: 0 3px;
-            border-radius: 6px;
-            min-width: 40px;
             text-align: center;
-            transition: all 0.3s;
+            border-bottom: 2px solid var(--border-color);
         }
 
-            .page-link:hover {
-                background-color: #4a90e2;
-                border-color: #4a90e2;
-                color: white;
-                transform: translateY(-2px);
-            }
+        td {
+            color: var(--text-secondary);
+            padding: 16px;
+            text-align: center;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--border-color);
+        }
 
-            .page-link.active {
-                background-color: #4a90e2;
-                border-color: #4a90e2;
-                color: white;
-            }
+        tbody tr:hover {
+            background: rgba(99, 102, 241, 0.05);
+        }
 
-            .page-link.disabled {
-                background-color: #2b2b33;
-                border-color: #444;
-                color: #666;
-                cursor: not-allowed;
-            }
+        .btn-sm {
+            border-radius: 8px;
+            padding: 6px 16px;
+            font-weight: 600;
+            font-size: 13px;
+            border: none;
+        }
 
-        .page-info {
-            color: #aaa;
-            margin: 0 15px;
-            font-size: 0.9rem;
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning-color) 0%, #d97706 100%);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
         }
 
         .modal-content {
-            background-color: #2b2b33;
-            color: white;
-            border-radius: 12px;
-            border: 1px solid #444;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
         }
 
         .modal-header {
-            border-bottom: 1px solid #444;
-            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+        }
+
+        .modal-body {
+            padding: 24px;
         }
 
         .modal-footer {
-            border-top: 1px solid #444;
-            padding: 15px 20px;
+            border-top: 1px solid var(--border-color);
+            background-color: var(--bg-card);
         }
 
         .form-control {
-            background-color: #1e1e2a;
-            color: white;
-            border: 1px solid #444;
-            border-radius: 6px;
-            padding: 10px 15px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 8px;
+            padding: 12px 16px;
         }
 
-            .form-control:focus {
-                border-color: #4a90e2;
-                box-shadow: 0 0 0 0.25rem rgba(74, 144, 226, 0.25);
-                background-color: #1e1e2a;
-                color: white;
-            }
-
-            .form-control::placeholder {
-                color: #888;
-                opacity: 1;
-            }
-
-            .form-control:focus::placeholder {
-                color: transparent;
-            }
+        .form-control:focus {
+            background: rgba(30, 41, 59, 0.8);
+            border-color: var(--primary-color);
+            color: var(--text-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
 
         .form-label {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-
-        .required-star {
-            color: #ff4d4d;
-            font-size: 1.1em;
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 8px;
         }
 
         .text-danger {
-            color: #ff4d4d !important;
-            font-size: 0.875em;
+            color: var(--danger-color) !important;
+            font-size: 0.875rem;
             margin-top: 5px;
-            display: block;
         }
 
-        .form-text {
-            font-size: 0.875em;
-            margin-top: 5px;
-            color: #aaa !important;
-        }
-
-        .col-stt {
-            width: 60px;
-            text-align: center;
-        }
-
-        .col-id {
-            width: 80px;
-        }
-
-        .col-ten {
-            width: 250px;
-        }
-
-        .col-tenviethoa {
-            width: 200px;
-        }
-
-        .col-action {
-            width: 250px;
-            text-align: left;
-            padding: 10px 8px;
-        }
-
-        .action-buttons-horizontal {
-            display: flex;
-            gap: 8px;
-            flex-wrap: nowrap;
-            justify-content: flex-start;
-            align-items: center;
-            width: 100%;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #aaa;
-            background-color: #1e1e2a;
-            border-radius: 10px;
-            margin: 20px 0;
-        }
-
-            .empty-state i {
-                font-size: 60px;
-                margin-bottom: 20px;
-                color: #4a90e2;
-            }
-
-            .empty-state h4 {
-                font-size: 1.5rem;
-                margin-bottom: 15px;
-                color: #ddd;
-            }
-
-            .empty-state p {
-                font-size: 1.1rem;
-                margin-bottom: 25px;
-                color: #aaa;
-            }
-
-        .btn-clear-filters {
-            background-color: #4a90e2;
-            color: white;
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             border: none;
-            border-radius: 8px;
-            padding: 12px 30px;
-            font-weight: 500;
-            transition: all 0.3s;
-            font-size: 1rem;
-            margin-top: 10px;
-        }
-
-            .btn-clear-filters:hover {
-                background-color: #357ab8;
-                transform: translateY(-2px);
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            }
-
-        .alert-success {
-            background-color: rgba(40, 167, 69, 0.2);
-            border-color: rgba(40, 167, 69, 0.5);
-            color: #d4edda;
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1050;
-            min-width: 300px;
-            display: none;
-        }
-
-        .alert-danger {
-            background-color: rgba(220, 53, 69, 0.2);
-            border-color: rgba(220, 53, 69, 0.5);
-            color: #f8d7da;
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1050;
-            min-width: 300px;
-            display: none;
-        }
-
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1060;
-        }
-
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #4a90e2;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @@keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        .stats-box {
-            background-color: #2b2b33;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-
-            .stats-box .stat-label {
-                color: #aaa;
-                font-size: 0.9rem;
-                margin-bottom: 5px;
-            }
-
-            .stats-box .stat-value {
-                color: #4a90e2;
-                font-size: 1.2rem;
-                font-weight: 600;
-            }
-
-        .filter-badge {
-            background-color: #4a90e2;
             color: white;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
         }
 
-        .chucvu-badge {
-            background-color: rgba(74, 144, 226, 0.2);
-            color: #4a90e2;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.9rem;
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            color: white;
         }
 
-        .chucvu-viethoa-badge {
-            background-color: rgba(255, 193, 7, 0.2);
-            color: #ffc107;
+        .btn-secondary {
+            background: rgba(100, 116, 139, 0.2);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(100, 116, 139, 0.3);
+            color: var(--text-primary);
+        }
+
+        .badge-admin {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger-color);
             padding: 4px 12px;
-            border-radius: 20px;
+            border-radius: 12px;
             font-weight: 600;
-            font-size: 0.9rem;
+        }
+
+        .badge-normal {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success-color);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
-    <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
-    </div>
-
-    <!-- Success Alert -->
-    <div class="alert alert-success alert-dismissible fade show" id="successAlert" role="alert">
-        <div class="d-flex align-items-center">
-            <i class="bi bi-check-circle-fill me-2"></i>
-            <span id="successMessage"></span>
-        </div>
-        <button type="button" class="btn-close btn-close-white" onclick="hideAlert('successAlert')"></button>
-    </div>
-
-    <!-- Error Alert -->
-    <div class="alert alert-danger alert-dismissible fade show" id="errorAlert" role="alert">
-        <div class="d-flex align-items-center">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-            <span id="errorMessage"></span>
-        </div>
-        <button type="button" class="btn-close btn-close-white" onclick="hideAlert('errorAlert')"></button>
-    </div>
-
     <div class="container">
-        <div class="card p-4">
-            <h2 class="mb-4">👔 Quản Lý Chức Vụ</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
+            <h2><i class="fas fa-user-tie me-2"></i>Quản Lý Chức Vụ</h2>
+            <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
+                <i class="fas fa-plus me-2"></i>+ Thêm Chức Vụ
+            </button>
+        </div>
 
-            <!-- Thống kê -->
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <div class="stats-box">
-                        <div class="stat-label">Tổng số chức vụ</div>
-                        <div class="stat-value">@Model.Count()</div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="stats-box">
-                        <div class="stat-label">Đang hiển thị</div>
-                        <div class="stat-value">@totalItems</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tìm kiếm -->
-            <div class="search-filter-section">
-                <form id="searchForm" method="get" action="@Url.Action("Index", "ChucVu")">
-                    <div class="row g-3">
-                        <div class="col-md-8">
-                            <input type="text"
-                                   class="form-control search-input"
-                                   name="search"
-                                   placeholder="Tìm kiếm theo tên chức vụ..."
-                                   value="@search">
-                        </div>
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-primary w-100" style="height: 45px;">
-                                <i class="bi bi-search me-2"></i>Tìm kiếm
-                            </button>
-                        </div>
-                        <div class="col-md-2">
-                            <button type="button" class="btn btn-clear w-100" onclick="clearFilters()">
-                                <i class="bi bi-x-circle me-2"></i>Xóa lọc
-                            </button>
-                        </div>
-                    </div>
-                </form>
-
-                <!-- Hiển thị bộ lọc hiện tại -->
-                @if (!string.IsNullOrEmpty(search))
-                {
-                    <div class="mt-3">
-                        <small class="text-muted">Bộ lọc hiện tại:</small>
-                        <span class="filter-badge ms-2">
-                            Từ khóa: "@search"
-                            <button type="button" class="btn-close btn-close-white ms-2" style="font-size: 0.7rem;" onclick="removeSearch()"></button>
-                        </span>
-                    </div>
-                }
-            </div>
-
-            <!-- Header với nút thêm mới -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="text-muted">
-                    <i class="bi bi-info-circle me-1"></i>
-                    Hiển thị <strong>@paginatedChucVus.Count()</strong> trong tổng số <strong>@totalItems</strong> chức vụ
-                </div>
-                <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
-                    <i class="bi bi-plus-circle me-2"></i>Thêm Chức Vụ Mới
-                </button>
-            </div>
-
-            @if (paginatedChucVus.Any())
-            {
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th class="col-stt">STT</th>
-                                <th class="col-id">ID</th>
-                                <th class="col-ten">Tên Chức Vụ</th>
-                                <th class="col-tenviethoa">Tên Viết Hoa</th>
-                                <th class="col-action">Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @{
-                                int counter = (pageNumber - 1) * pageSize + 1;
-                            }
-                            @foreach (var item in paginatedChucVus)
-                            {
-                                <tr>
-                                    <td class="text-center">@(counter++)</td>
-                                    <td><strong>#@item.IdChucVu</strong></td>
-                                    <td>
-                                        <span class="chucvu-badge">
-                                            @item.TenChucVu
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="chucvu-viethoa-badge">
-                                            @item.TenChucVuVietHoa
-                                        </span>
-                                    </td>
-                                    <td class="col-action">
-                                        <div class="action-buttons-horizontal">
-                                            <button class="action-button btn-edit"
-                                                    data-id="@item.IdChucVu"
-                                                    data-ten="@item.TenChucVu"
-                                                    data-tenviethoa="@item.TenChucVuVietHoa"
-                                                    onclick="openEditModal(this)">
-                                                <i class="bi bi-pencil me-1"></i>Sửa
-                                            </button>
-                                            <button class="action-button btn-delete" 
-                                                    onclick="confirmDelete(@item.IdChucVu, '@item.TenChucVu?.Replace("'", "\\'")')">
-                                                <i class="bi bi-trash me-1"></i>Xóa
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Phân trang -->
-                @if (totalPages > 1)
-                {
-                    <div class="pagination-container">
-                        <nav aria-label="Page navigation">
-                            <ul class="pagination">
-                                <!-- Nút về trang đầu -->
-                                @if (pageNumber > 1)
+        <div class="table-container">
+            <table class="table table-hover text-center align-middle">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên Chức Vụ</th>
+                        <th>Mã Chức Vụ</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.IdChucVu</td>
+                            <td>@item.TenChucVu</td>
+                            <td>
+                                @if (item.TenChucVuVietHoa == "ADMIN")
                                 {
-                                    <li class="page-item">
-                                        <a class="page-link" href="@Html.Raw(CreatePageUrl(1))" aria-label="First">
-                                            <i class="bi bi-chevron-double-left"></i>
-                                        </a>
-                                    </li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="@Html.Raw(CreatePageUrl(pageNumber - 1))" aria-label="Previous">
-                                            <i class="bi bi-chevron-left"></i>
-                                        </a>
-                                    </li>
+                                    <span class="badge-admin">@item.TenChucVuVietHoa</span>
                                 }
                                 else
                                 {
-                                    <li class="page-item disabled">
-                                        <span class="page-link"><i class="bi bi-chevron-double-left"></i></span>
-                                    </li>
-                                    <li class="page-item disabled">
-                                        <span class="page-link"><i class="bi bi-chevron-left"></i></span>
-                                    </li>
+                                    <span class="badge-normal">@item.TenChucVuVietHoa</span>
                                 }
-
-                                <!-- Các trang -->
-                                @{
-                                    int startPage = Math.Max(1, pageNumber - 2);
-                                    int endPage = Math.Min(totalPages, startPage + 4);
-                                    if (endPage - startPage < 4)
-                                    {
-                                        startPage = Math.Max(1, endPage - 4);
-                                    }
-
-                                    for (int i = startPage; i <= endPage; i++)
-                                    {
-                                        if (i == pageNumber)
-                                        {
-                                            <li class="page-item active">
-                                                <span class="page-link">@i</span>
-                                            </li>
-                                        }
-                                        else
-                                        {
-                                            <li class="page-item">
-                                                <a class="page-link" href="@Html.Raw(CreatePageUrl(i))">@i</a>
-                                            </li>
-                                        }
-                                    }
-                                }
-
-                                <!-- Nút đến trang cuối -->
-                                @if (pageNumber < totalPages)
+                            </td>
+                            <td>
+                                @if (item.TenChucVuVietHoa != "ADMIN")
                                 {
-                                    <li class="page-item">
-                                        <a class="page-link" href="@Html.Raw(CreatePageUrl(pageNumber + 1))" aria-label="Next">
-                                            <i class="bi bi-chevron-right"></i>
-                                        </a>
-                                    </li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="@Html.Raw(CreatePageUrl(totalPages))" aria-label="Last">
-                                            <i class="bi bi-chevron-double-right"></i>
-                                        </a>
-                                    </li>
+                                    <div style="display: flex; gap: 8px; justify-content: center;">
+                                        <button class="btn btn-sm btn-warning btn-edit"
+                                                data-id="@item.IdChucVu"
+                                                data-ten="@item.TenChucVu"
+                                                data-tenviethoa="@item.TenChucVuVietHoa">
+                                            <i class="fas fa-edit me-1"></i>Sửa
+                                        </button>
+                                        <button class="btn btn-sm btn-danger btn-delete"
+                                                data-id="@item.IdChucVu"
+                                                data-ten="@item.TenChucVu">
+                                            <i class="fas fa-trash me-1"></i>Xóa
+                                        </button>
+                                    </div>
                                 }
                                 else
                                 {
-                                    <li class="page-item disabled">
-                                        <span class="page-link"><i class="bi bi-chevron-right"></i></span>
-                                    </li>
-                                    <li class="page-item disabled">
-                                        <span class="page-link"><i class="bi bi-chevron-double-right"></i></span>
-                                    </li>
+                                    <span class="text-muted">Không thể chỉnh sửa</span>
                                 }
-                            </ul>
-                        </nav>
-
-                        <div class="page-info">
-                            Trang @pageNumber/@totalPages - Hiển thị @((pageNumber - 1) * pageSize + 1)-@Math.Min(pageNumber * pageSize, totalItems) của @totalItems
-                        </div>
-                    </div>
-                }
-            }
-            else
-            {
-                <div class="empty-state">
-                    <i class="bi bi-person-badge"></i>
-                    <h4 class="mt-3">
-                        @if (!string.IsNullOrEmpty(search))
-                        {
-                            <text>Không tìm thấy chức vụ phù hợp</text>
-                        }
-                        else
-                        {
-                            <text>Chưa có dữ liệu chức vụ</text>
-                        }
-                    </h4>
-                    <p class="text-muted">
-                        @if (!string.IsNullOrEmpty(search))
-                        {
-                            <text>Không có chức vụ nào phù hợp với từ khóa tìm kiếm.</text>
-                        }
-                        else
-                        {
-                            <text>Hãy thêm chức vụ mới để bắt đầu quản lý</text>
-                        }
-                    </p>
-
-                    <!-- Nút xóa bộ lọc ở vị trí của table -->
-                    <div class="d-flex justify-content-center gap-3">
-                        @if (!string.IsNullOrEmpty(search))
-                        {
-                            <button class="btn-clear-filters" onclick="clearFilters()">
-                                <i class="bi bi-x-circle me-2"></i>Xóa Bộ Lọc
-                            </button>
-                        }
-                        <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createModal">
-                            <i class="bi bi-plus-circle me-2"></i>Thêm Chức Vụ Mới
-                        </button>
-                    </div>
-                </div>
-            }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 
     <!-- Create Modal -->
     <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Thêm Chức Vụ Mới</h5>
+                    <h5 class="modal-title">Thêm Chức Vụ</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <form id="createForm">
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">
-                                Tên Chức Vụ <span class="required-star">*</span>
-                            </label>
-                            <input type="text" id="createTenChucVu" class="form-control"
-                                   placeholder="VD: Nhân viên, Quản lý, Admin"
-                                   maxlength="50" />
-                            <div id="errorCreateTenChucVu" class="text-danger d-none"></div>
-                            <small class="form-text">Nhập tên chức vụ (ví dụ: Nhân viên, Quản lý, Admin)</small>
+                            <label class="form-label">Tên Chức Vụ <span class="text-danger">*</span></label>
+                            <input type="text" id="TenChucVu" class="form-control" placeholder="Ví dụ: Nhân viên bán hàng" />
+                            <small id="errorTenChucVu" class="text-danger d-none"></small>
                         </div>
-
                         <div class="mb-3">
-                            <label class="form-label">
-                                Tên Chức Vụ Viết Hoa <span class="required-star">*</span>
-                            </label>
-                            <input type="text" id="createTenChucVuVietHoa" class="form-control"
-                                   placeholder="VD: NHANVIEN, QUANLY, ADMIN"
-                                   maxlength="50" />
-                            <div id="errorCreateTenChucVuVietHoa" class="text-danger d-none"></div>
-                            <small class="form-text">Nhập tên chức vụ viết hoa (ví dụ: NHANVIEN, QUANLY, ADMIN)</small>
+                            <label class="form-label">Mã Chức Vụ (tự động)</label>
+                            <input type="text" id="TenChucVuVietHoa" class="form-control" placeholder="Sẽ tự động tạo từ tên chức vụ" readonly />
+                            <small class="text-muted">Mã chức vụ sẽ được tạo tự động từ tên chức vụ (viết hoa, bỏ khoảng trắng)</small>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="bi bi-x-circle me-1"></i>Hủy
-                        </button>
-                        <button type="button" class="btn btn-primary" onclick="createChucVu()">
-                            <i class="bi bi-save me-1"></i>Lưu Chức Vụ
-                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
                     </div>
                 </form>
             </div>
@@ -827,495 +320,172 @@
 
     <!-- Edit Modal -->
     <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Chỉnh Sửa Chức Vụ</h5>
+                    <h5 class="modal-title">Chỉnh sửa Chức Vụ</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <form id="editForm">
-                    <input type="hidden" id="editIdChucVu" />
+                    <input type="hidden" id="EditIdChucVu" />
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">
-                                Tên Chức Vụ <span class="required-star">*</span>
-                            </label>
-                            <input type="text" id="editTenChucVu" class="form-control"
-                                   placeholder="VD: Nhân viên, Quản lý, Admin"
-                                   maxlength="50" />
-                            <div id="errorEditTenChucVu" class="text-danger d-none"></div>
-                            <small class="form-text">Nhập tên chức vụ (ví dụ: Nhân viên, Quản lý, Admin)</small>
+                            <label class="form-label">Tên Chức Vụ <span class="text-danger">*</span></label>
+                            <input type="text" id="EditTenChucVu" class="form-control" />
+                            <small id="errorEditTenChucVu" class="text-danger d-none"></small>
                         </div>
-
                         <div class="mb-3">
-                            <label class="form-label">
-                                Tên Chức Vụ Viết Hoa <span class="required-star">*</span>
-                            </label>
-                            <input type="text" id="editTenChucVuVietHoa" class="form-control"
-                                   placeholder="VD: NHANVIEN, QUANLY, ADMIN"
-                                   maxlength="50" />
-                            <div id="errorEditTenChucVuVietHoa" class="text-danger d-none"></div>
-                            <small class="form-text">Nhập tên chức vụ viết hoa (ví dụ: NHANVIEN, QUANLY, ADMIN)</small>
+                            <label class="form-label">Mã Chức Vụ</label>
+                            <input type="text" id="EditTenChucVuVietHoa" class="form-control" />
+                            <small class="text-muted">Mã chức vụ (viết hoa, không khoảng trắng)</small>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="bi bi-x-circle me-1"></i>Hủy
-                        </button>
-                        <button type="button" class="btn btn-warning" onclick="updateChucVu()">
-                            <i class="bi bi-check-circle me-1"></i>Cập Nhật
-                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-warning">Cập nhật</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Xác Nhận Xóa</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <i class="bi bi-trash text-danger" style="font-size: 48px;"></i>
-                    <h5 class="mt-3">Bạn có chắc chắn muốn xóa?</h5>
-                    <p>Chức vụ: <strong id="deleteChucVuName"></strong></p>
-                    <p class="text-muted">Hành động này không thể hoàn tác!</p>
-                </div>
-                <div class="modal-footer border-0 justify-content-center">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-1"></i>Hủy
-                    </button>
-                    <button type="button" class="btn btn-danger" onclick="deleteChucVu()">
-                        <i class="bi bi-trash me-1"></i>Xóa
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
-        // ====== UTILITY FUNCTIONS ======
-        function showLoading() {
-            document.getElementById('loadingOverlay').style.display = 'flex';
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.classList.remove("d-none");
         }
 
-        function hideLoading() {
-            document.getElementById('loadingOverlay').style.display = 'none';
-        }
+        // Tự động tạo mã chức vụ từ tên
+        document.getElementById('TenChucVu').addEventListener('input', function() {
+            const tenChucVu = this.value.trim();
+            const tenVietHoa = tenChucVu.toUpperCase().replace(/\s+/g, '');
+            document.getElementById('TenChucVuVietHoa').value = tenVietHoa;
+        });
 
-        function showAlert(type, message) {
-            if (type === 'success') {
-                document.getElementById('successMessage').textContent = message;
-                document.getElementById('successAlert').style.display = 'block';
-                setTimeout(() => hideAlert('successAlert'), 5000);
-            } else {
-                document.getElementById('errorMessage').textContent = message;
-                document.getElementById('errorAlert').style.display = 'block';
-            }
-        }
+        // Thêm Chức Vụ
+        document.getElementById("createForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
 
-        function hideAlert(alertId) {
-            document.getElementById(alertId).style.display = 'none';
-        }
+            const tenChucVu = document.getElementById("TenChucVu").value.trim();
+            const tenChucVuVietHoa = document.getElementById("TenChucVuVietHoa").value.trim();
 
-        function showError(elementId, message) {
-            const element = document.getElementById(elementId);
-            element.textContent = message;
-            element.classList.remove('d-none');
-        }
-
-        function hideError(elementId) {
-            const element = document.getElementById(elementId);
-            element.classList.add('d-none');
-        }
-
-        function resetForm(formId) {
-            const form = document.getElementById(formId);
-            if (form) {
-                form.reset();
-                form.querySelectorAll('.text-danger').forEach(el => {
-                    el.classList.add('d-none');
-                });
-            }
-        }
-
-        // ====== FILTER FUNCTIONS ======
-        function clearFilters() {
-            window.location.href = '@Url.Action("Index", "ChucVu")';
-        }
-
-        function removeSearch() {
-            const url = new URL(window.location.href);
-            url.searchParams.delete('search');
-            url.searchParams.set('page', '1');
-            window.location.href = url.toString();
-        }
-
-        // ====== CREATE CHUCVU ======
-        async function createChucVu() {
-            console.log('=== CREATE CHUCVU START ===');
-
-            hideError('errorCreateTenChucVu');
-            hideError('errorCreateTenChucVuVietHoa');
-
-            const tenChucVuInput = document.getElementById('createTenChucVu');
-            const tenChucVuVietHoaInput = document.getElementById('createTenChucVuVietHoa');
-
-            if (!tenChucVuInput || !tenChucVuVietHoaInput) {
-                showAlert('error', 'Không tìm thấy các trường nhập liệu!');
+            if (!tenChucVu) {
+                showError('errorTenChucVu', 'Tên chức vụ không được để trống');
                 return;
             }
 
-            const tenChucVu = tenChucVuInput.value ? tenChucVuInput.value.trim() : '';
-            const tenChucVuVietHoa = tenChucVuVietHoaInput.value ? tenChucVuVietHoaInput.value.trim() : '';
-
-            const chucVu = {
+            const cvData = {
                 TenChucVu: tenChucVu,
-                TenChucVuVietHoa: tenChucVuVietHoa
+                TenChucVuVietHoa: tenChucVuVietHoa || tenChucVu.toUpperCase().replace(/\s+/g, '')
             };
-
-            console.log('Creating ChucVu:', chucVu);
-
-            let isValid = true;
-
-            if (!chucVu.TenChucVu || chucVu.TenChucVu === '') {
-                showError('errorCreateTenChucVu', 'Phải nhập tên chức vụ!');
-                isValid = false;
-            }
-
-            if (!chucVu.TenChucVuVietHoa || chucVu.TenChucVuVietHoa === '') {
-                showError('errorCreateTenChucVuVietHoa', 'Phải nhập tên chức vụ viết hoa!');
-                isValid = false;
-            }
-
-            if (!isValid) {
-                console.log('Validation failed');
-                return;
-            }
-
-            showLoading();
 
             try {
                 const response = await fetch('/ChucVu/Create', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(chucVu)
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(cvData)
                 });
 
-                console.log('Response status:', response.status);
-
-                let data = {};
-                try {
-                    const contentType = response.headers.get('content-type');
-                    if (contentType && contentType.includes('application/json')) {
-                        data = await response.json();
-                    } else if (response.status === 204) {
-                        data = { message: 'Thêm thành công!' };
-                    } else {
-                        const text = await response.text();
-                        console.log('Response text:', text);
-                        if (text) {
-                            data = JSON.parse(text);
-                        }
-                    }
-                } catch (jsonError) {
-                    console.warn('JSON parse error:', jsonError);
-                }
-
-                console.log('Response data:', data);
+                const result = await response.json();
 
                 if (response.ok) {
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('createModal'));
-                    if (modal) modal.hide();
-
-                    showAlert('success', data.message || 'Thêm chức vụ thành công!');
-
-                    document.getElementById('createForm').reset();
-
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1000);
+                    alert(result.message || 'Thêm chức vụ thành công!');
+                    bootstrap.Modal.getInstance(document.getElementById('createModal')).hide();
+                    location.reload();
                 } else {
-                    if (response.status === 400) {
-                        if (data.TenChucVu) showError('errorCreateTenChucVu', data.TenChucVu);
-                        if (data.TenChucVuVietHoa) showError('errorCreateTenChucVuVietHoa', data.TenChucVuVietHoa);
-                        if (data.Errors) {
-                            Object.entries(data.Errors).forEach(([field, error]) => {
-                                showError(`errorCreate${field}`, error);
-                            });
-                        }
-                    } else if (response.status === 409) {
-                        showError('errorCreateTenChucVu', data.message || 'Chức vụ đã tồn tại!');
-                    } else {
-                        showAlert('error', data.message || `Lỗi ${response.status}: ${response.statusText}`);
-                    }
+                    alert(result.message || 'Lỗi khi thêm chức vụ');
                 }
             } catch (error) {
-                console.error('Create error:', error);
-                showAlert('error', 'Lỗi kết nối đến server!');
-            } finally {
-                hideLoading();
-                console.log('=== CREATE CHUCVU END ===');
+                alert('Lỗi kết nối: ' + error.message);
             }
-        }
+        });
 
-        // ====== EDIT CHUCVU ======
-        let currentEditId = null;
+        // Lắng nghe sự kiện mở modal Sửa
+        document.querySelectorAll(".btn-edit").forEach(btn => {
+            btn.addEventListener("click", () => {
+                document.getElementById("EditIdChucVu").value = btn.dataset.id;
+                document.getElementById("EditTenChucVu").value = btn.dataset.ten;
+                document.getElementById("EditTenChucVuVietHoa").value = btn.dataset.tenviethoa;
+                new bootstrap.Modal(document.getElementById('editModal')).show();
+            });
+        });
 
-        function openEditModal(button) {
-            const id = button.getAttribute('data-id');
-            const ten = button.getAttribute('data-ten');
-            const tenVietHoa = button.getAttribute('data-tenviethoa') || '';
+        // Cập nhật Chức Vụ
+        document.getElementById("editForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
 
-            console.log('Opening edit modal for ID:', id);
+            const id = document.getElementById("EditIdChucVu").value;
+            const tenChucVu = document.getElementById("EditTenChucVu").value.trim();
+            const tenChucVuVietHoa = document.getElementById("EditTenChucVuVietHoa").value.trim();
 
-            document.getElementById('editIdChucVu').value = id;
-            document.getElementById('editTenChucVu').value = ten;
-            document.getElementById('editTenChucVuVietHoa').value = tenVietHoa;
-
-            hideError('errorEditTenChucVu');
-            hideError('errorEditTenChucVuVietHoa');
-
-            currentEditId = id;
-
-            const editModal = new bootstrap.Modal(document.getElementById('editModal'));
-            editModal.show();
-        }
-
-        async function updateChucVu() {
-            if (!currentEditId) {
-                console.error('No currentEditId!');
-                showAlert('error', 'Không tìm thấy ID chức vụ!');
+            if (!tenChucVu) {
+                showError('errorEditTenChucVu', 'Tên chức vụ không được để trống');
                 return;
             }
 
-            console.log('=== UPDATE CHUCVU START ===');
-            console.log('Updating ChucVu ID:', currentEditId);
-
-            hideError('errorEditTenChucVu');
-            hideError('errorEditTenChucVuVietHoa');
-
-            const editTenChucVuInput = document.getElementById('editTenChucVu');
-            const editTenChucVuVietHoaInput = document.getElementById('editTenChucVuVietHoa');
-
-            if (!editTenChucVuInput || !editTenChucVuVietHoaInput) {
-                showAlert('error', 'Không tìm thấy các trường nhập liệu!');
-                return;
-            }
-
-            const tenChucVu = editTenChucVuInput.value ? editTenChucVuInput.value.trim() : '';
-            const tenChucVuVietHoa = editTenChucVuVietHoaInput.value ? editTenChucVuVietHoaInput.value.trim() : '';
-
-            const chucVu = {
-                IdChucVu: parseInt(currentEditId),
+            const cvData = {
                 TenChucVu: tenChucVu,
-                TenChucVuVietHoa: tenChucVuVietHoa
+                TenChucVuVietHoa: tenChucVuVietHoa || tenChucVu.toUpperCase().replace(/\s+/g, '')
             };
 
-            console.log('Update data:', chucVu);
-
-            let isValid = true;
-
-            if (!chucVu.TenChucVu || chucVu.TenChucVu === '') {
-                showError('errorEditTenChucVu', 'Phải nhập tên chức vụ!');
-                isValid = false;
-            }
-
-            if (!chucVu.TenChucVuVietHoa || chucVu.TenChucVuVietHoa === '') {
-                showError('errorEditTenChucVuVietHoa', 'Phải nhập tên chức vụ viết hoa!');
-                isValid = false;
-            }
-
-            if (!isValid) {
-                console.log('Validation failed');
-                return;
-            }
-
-            showLoading();
-
             try {
-                const response = await fetch(`/ChucVu/Edit?id=${currentEditId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(chucVu)
+                const response = await fetch(`/ChucVu/Update/${id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(cvData)
                 });
 
-                console.log('Response status:', response.status);
-
-                let data = {};
-                try {
-                    const contentType = response.headers.get('content-type');
-                    if (contentType && contentType.includes('application/json')) {
-                        data = await response.json();
-                    } else if (response.status === 204) {
-                        data = { message: 'Cập nhật thành công!' };
-                    } else {
-                        const text = await response.text();
-                        console.log('Response text:', text);
-                        if (text) {
-                            try {
-                                data = JSON.parse(text);
-                            } catch {
-                                data = { message: text || 'Cập nhật thành công!' };
-                            }
-                        }
-                    }
-                } catch (jsonError) {
-                    console.warn('JSON parse error:', jsonError);
-                    if (response.ok) {
-                        data = { message: 'Cập nhật thành công!' };
-                    }
-                }
-
-                console.log('Response data:', data);
+                const result = await response.json();
 
                 if (response.ok) {
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
-                    if (modal) modal.hide();
-
-                    showAlert('success', data.message || 'Cập nhật chức vụ thành công!');
-
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1000);
+                    alert(result.message || 'Cập nhật chức vụ thành công!');
+                    bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+                    location.reload();
                 } else {
-                    if (response.status === 400) {
-                        if (data.TenChucVu) showError('errorEditTenChucVu', data.TenChucVu);
-                        if (data.TenChucVuVietHoa) showError('errorEditTenChucVuVietHoa', data.TenChucVuVietHoa);
-                        if (data.Errors) {
-                            Object.entries(data.Errors).forEach(([field, error]) => {
-                                showError(`errorEdit${field}`, error);
-                            });
-                        }
-                        if (data.Message) showAlert('error', data.Message);
-                    } else if (response.status === 404) {
-                        showAlert('error', data.message || `Không tìm thấy chức vụ với ID=${currentEditId}!`);
-                    } else if (response.status === 409) {
-                        showError('errorEditTenChucVu', data.message || 'Chức vụ đã tồn tại!');
-                    } else {
-                        showAlert('error', data.message || `Lỗi ${response.status}: ${response.statusText}`);
-                    }
+                    alert(result.message || 'Lỗi khi cập nhật chức vụ');
                 }
             } catch (error) {
-                console.error('Update error:', error);
-                showAlert('error', 'Lỗi kết nối đến server: ' + error.message);
-            } finally {
-                hideLoading();
-                console.log('=== UPDATE CHUCVU END ===');
+                alert('Lỗi kết nối: ' + error.message);
             }
-        }
+        });
 
-        // ====== DELETE CHUCVU ======
-        let chucVuToDelete = null;
+        // Xóa Chức Vụ
+        document.querySelectorAll(".btn-delete").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const id = btn.dataset.id;
+                const ten = btn.dataset.ten;
 
-        function confirmDelete(id, name) {
-            console.log('Confirm delete for ChucVu ID:', id);
-            chucVuToDelete = id;
-            document.getElementById('deleteChucVuName').textContent = name;
+                if (confirm(`Bạn có chắc chắn muốn xóa chức vụ "${ten}"?`)) {
+                    try {
+                        const response = await fetch(`/ChucVu/Delete/${id}`, {
+                            method: 'DELETE'
+                        });
 
-            const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-            deleteModal.show();
-        }
+                        const result = await response.json();
 
-        async function deleteChucVu() {
-            if (!chucVuToDelete) {
-                console.error('No ChucVu to delete!');
-                return;
-            }
-
-            console.log('=== DELETE CHUCVU START ===');
-            console.log('Deleting ChucVu ID:', chucVuToDelete);
-
-            showLoading();
-
-            try {
-                const response = await fetch(`/ChucVu/Delete?id=${chucVuToDelete}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
-
-                console.log('Final DELETE response status:', response.status);
-
-                let data = {};
-                try {
-                    if (response.status === 204) {
-                        data = { message: 'Xóa thành công!' };
-                    } else {
-                        const text = await response.text();
-                        if (text) {
-                            data = JSON.parse(text);
+                        if (response.ok) {
+                            alert(result.message || 'Xóa chức vụ thành công!');
+                            location.reload();
+                        } else {
+                            alert(result.message || 'Lỗi khi xóa chức vụ');
                         }
+                    } catch (error) {
+                        alert('Lỗi kết nối: ' + error.message);
                     }
-                } catch (jsonError) {
-                    console.warn('JSON parse error:', jsonError);
                 }
+            });
+        });
 
-                console.log('Response data:', data);
+        // Reset form khi đóng modal
+        document.getElementById('createModal').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('createForm').reset();
+            document.querySelectorAll('.text-danger').forEach(el => el.classList.add('d-none'));
+        });
 
-                if (response.ok) {
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
-                    if (modal) modal.hide();
-
-                    showAlert('success', data.message || 'Xóa chức vụ thành công!');
-
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1000);
-                } else {
-                    showAlert('error', data.message || 'Lỗi khi xóa chức vụ!');
-                }
-            } catch (error) {
-                console.error('Delete error:', error);
-                showAlert('error', 'Lỗi kết nối đến server!');
-            } finally {
-                hideLoading();
-                chucVuToDelete = null;
-                console.log('=== DELETE CHUCVU END ===');
-            }
-        }
-
-        // ====== INITIALIZATION ======
-        document.addEventListener('DOMContentLoaded', function () {
-            console.log('Page loaded. Total ChucVus:', @Model.Count());
-
-            setTimeout(() => {
-                hideAlert('successAlert');
-                hideAlert('errorAlert');
-            }, 5000);
-
-            const createModal = document.getElementById('createModal');
-            if (createModal) {
-                createModal.addEventListener('hidden.bs.modal', function () {
-                    resetForm('createForm');
-                });
-            }
-
-            const editModal = document.getElementById('editModal');
-            if (editModal) {
-                editModal.addEventListener('hidden.bs.modal', function () {
-                    resetForm('editForm');
-                    currentEditId = null;
-                });
-            }
-
-            // Tự động focus vào ô tìm kiếm
-            const searchInput = document.querySelector('input[name="search"]');
-            if (searchInput && '@search' !== '') {
-                searchInput.focus();
-                searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
-            }
+        document.getElementById('editModal').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('editForm').reset();
+            document.querySelectorAll('.text-danger').forEach(el => el.classList.add('d-none'));
         });
     </script>
 </body>

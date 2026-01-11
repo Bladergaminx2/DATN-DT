@@ -4,37 +4,209 @@
     Layout = "~/Views/Shared/_NonLayout.cshtml";
 }
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+    :root {
+        --bg-body: #0b0e14; /* Nền tối sâu giống ảnh screenshot */
+        --bg-card: #151921;
+        --bg-input: #1e232d;
+        --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); /* Gradient tím xanh */
+        --text-main: #ffffff;
+        --text-muted: #94a3b8;
+        --border-color: #2d3748;
+    }
+
+    body {
+        background-color: var(--bg-body);
+        color: var(--text-main);
+        font-family: 'Inter', -apple-system, system-ui, sans-serif;
+        margin: 0;
+    }
+
+    .auth-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .auth-card {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 40px;
+        width: 100%;
+        max-width: 420px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    }
+
+    .auth-card h2 {
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 8px;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: -1px;
+    }
+
+    .form-label {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        font-weight: 500;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    /* CSS cho Password Wrapper */
+    .password-wrapper {
+        position: relative;
+    }
+
+    .form-control {
+        background-color: var(--bg-input);
+        border: 1px solid var(--border-color);
+        color: white !important;
+        border-radius: 12px;
+        padding: 12px 16px;
+        width: 100%;
+        box-sizing: border-box;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        background-color: #242a35;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+        outline: none;
+    }
+
+    .form-control-password {
+        padding-right: 45px; /* Trừa chỗ cho con mắt */
+    }
+
+    .toggle-password {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        transition: color 0.3s;
+    }
+
+    .toggle-password:hover {
+        color: #818cf8;
+    }
+
+    .btn-auth {
+        background: var(--primary-gradient);
+        border: none;
+        color: white;
+        padding: 14px;
+        font-weight: 600;
+        border-radius: 12px;
+        width: 100%;
+        cursor: pointer;
+        margin-top: 10px;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-auth:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+        opacity: 0.95;
+    }
+
+    .btn-auth:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .auth-footer {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+        text-align: center;
+        font-size: 0.9rem;
+    }
+
+    .auth-link {
+        color: #818cf8;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .auth-link:hover {
+        text-decoration: underline;
+    }
+
+    .text-danger {
+        font-size: 0.8rem;
+        color: #f87171;
+        margin-top: 5px;
+        display: block;
+    }
+
+    /* Tùy chỉnh thông báo Alert */
+    .alert {
+        padding: 12px;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        font-size: 0.9rem;
+    }
+    .alert-success { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid #22c55e; }
+    .alert-danger { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+</style>
+
 <div class="auth-container">
     <div class="auth-card">
-        <h2 class="text-center mb-4">Đăng Nhập</h2>
+        <div class="text-center mb-4">
+            <h2>Đăng Nhập</h2>
+            <p style="color: var(--text-muted); text-align: center; margin-top: 0;">Chào mừng bạn đến với <b>Tech Phone</b></p>
+        </div>
         
         <form id="loginForm">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             
             <div class="form-group">
-                <label asp-for="EmailKhachHang" class="form-label">Email</label>
-                <input asp-for="EmailKhachHang" class="form-control" />
+                <label asp-for="EmailKhachHang" class="form-label">Email tài khoản</label>
+                <input asp-for="EmailKhachHang" class="form-control" placeholder="name@company.com" />
                 <span asp-validation-for="EmailKhachHang" class="text-danger"></span>
             </div>
 
             <div class="form-group">
                 <label asp-for="Password" class="form-label">Mật khẩu</label>
-                <input asp-for="Password" type="password" class="form-control" />
+                <div class="password-wrapper">
+                    <input asp-for="Password" type="password" class="form-control form-control-password" id="txtPassword" placeholder="••••••••" />
+                    <i class="fa-solid fa-eye toggle-password" id="toggleIcon"></i>
+                </div>
                 <span asp-validation-for="Password" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
-                <button type="submit" class="btn btn-primary btn-block" id="loginBtn">
-                    Đăng Nhập
-                </button>
-            </div>
+            <button type="submit" class="btn-auth" id="loginBtn">
+                Đăng Nhập
+            </button>
         </form>
 
         <div id="loginMessage" class="mt-3"></div>
 
-        <div class="text-center mt-3">
-            <p>Chưa có tài khoản? <a href="/Login/Register" class="text-primary">Đăng ký ngay</a></p>
-            <p>Nhân viên? <a href="/Login/NhanVien" class="text-primary">Đăng nhập tại đây</a></p>
+        <div class="auth-footer">
+            <p class="mb-2" style="color: var(--text-muted)">Chưa có tài khoản? 
+                <a href="/Login/Register" class="auth-link">Đăng ký ngay</a>
+            </p>
+            <p class="mb-0">
+                <a href="/Login/NhanVien" class="text-muted small">Bạn là nhân viên? Đăng nhập tại đây</a>
+            </p>
         </div>
     </div>
 </div>
@@ -42,20 +214,33 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
+            // 1. Logic ẩn hiện mật khẩu
+            $('#toggleIcon').on('click', function() {
+                const passwordInput = $('#txtPassword');
+                const icon = $(this);
+                
+                if (passwordInput.attr('type') === 'password') {
+                    passwordInput.attr('type', 'text');
+                    icon.removeClass('fa-eye').addClass('fa-eye-slash');
+                } else {
+                    passwordInput.attr('type', 'password');
+                    icon.removeClass('fa-eye-slash').addClass('fa-eye');
+                }
+            });
+
+            // 2. Logic Submit Form qua Ajax
             $('#loginForm').on('submit', function(e) {
                 e.preventDefault();
                 
                 if (!$('#loginForm').valid()) return;
                 
                 var btn = $('#loginBtn');
-                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status"></span> Đang xử lý...');
+                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Đang xử lý...');
                 
                 var formData = {
                     EmailKhachHang: $('#EmailKhachHang').val(),
-                    Password: $('#Password').val()
+                    Password: $('#txtPassword').val()
                 };
-                
-                console.log('Sending login data:', formData); // Debug log
                 
                 $.ajax({
                     url: '/Login/Login',
@@ -63,38 +248,34 @@
                     contentType: 'application/json',
                     data: JSON.stringify(formData),
                     success: function(response) {
-                        console.log('Login response:', response); // Debug log
                         if (response.success) {
-                            $('#loginMessage').html('<div class="alert alert-success">' + response.message + '</div>');
-                            // Lưu thông tin user và chuyển hướng
+                            $('#loginMessage').html('<div class="alert alert-success">Đăng nhập thành công!</div>');
+                            
                             localStorage.setItem('user', JSON.stringify(response.data));
                             localStorage.setItem('isAuthenticated', 'true');
                             localStorage.setItem('role', response.role.toUpperCase());
                             
-                            // Lấy returnUrl từ query string
                             const urlParams = new URLSearchParams(window.location.search);
                             const returnUrl = urlParams.get('returnUrl');
                             
-                            // Nếu có returnUrl, redirect đến đó, nếu không thì đến MuaHang
-                            const redirectUrl = returnUrl || '/MuaHang';
-                            
                             setTimeout(() => {
-                                window.location.href = redirectUrl;
+                                window.location.href = returnUrl || '/MuaHang';
                             }, 1000);
                         } else {
                             $('#loginMessage').html('<div class="alert alert-danger">' + response.message + '</div>');
+                            btn.prop('disabled', false).html('Đăng Nhập');
                         }
                     },
                     error: function(xhr) {
-                        console.log('Login error:', xhr); // Debug log
+                        let errorMsg = "Có lỗi xảy ra khi kết nối đến server";
                         try {
-                            var response = JSON.parse(xhr.responseText);
-                            $('#loginMessage').html('<div class="alert alert-danger">' + response.message + '</div>');
-                        } catch (e) {
-                            $('#loginMessage').html('<div class="alert alert-danger">Có lỗi xảy ra khi kết nối đến server</div>');
-                        }
-                    },
-                    complete: function() {
+                            if(xhr.responseText) {
+                                var response = JSON.parse(xhr.responseText);
+                                errorMsg = response.message;
+                            }
+                        } catch (e) {}
+                        
+                        $('#loginMessage').html('<div class="alert alert-danger">' + errorMsg + '</div>');
                         btn.prop('disabled', false).html('Đăng Nhập');
                     }
                 });

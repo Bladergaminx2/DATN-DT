@@ -55,62 +55,19 @@ namespace DATN_DT.Controllers
 
         // POST: Voucher/Create
         [HttpPost]
-        [Route("Create")]
-        [Consumes("application/json")]
         public async Task<IActionResult> Create([FromBody] Voucher voucher)
         {
             try
             {
-                Console.WriteLine("=== CREATE VOUCHER ===");
-                Console.WriteLine($"Received: {System.Text.Json.JsonSerializer.Serialize(voucher)}");
-
-                if (voucher == null)
-                {
-                    Console.WriteLine("Voucher is null");
-                    return BadRequest(new { success = false, message = "Dữ liệu voucher không hợp lệ" });
-                }
-
                 if (string.IsNullOrWhiteSpace(voucher.MaVoucher))
                 {
-                    Console.WriteLine("MaVoucher is empty");
                     return BadRequest(new { success = false, message = "Mã voucher không được để trống" });
-                }
-
-                if (string.IsNullOrWhiteSpace(voucher.TenVoucher))
-                {
-                    Console.WriteLine("TenVoucher is empty");
-                    return BadRequest(new { success = false, message = "Tên voucher không được để trống" });
-                }
-
-                if (string.IsNullOrWhiteSpace(voucher.LoaiGiam))
-                {
-                    Console.WriteLine("LoaiGiam is empty");
-                    return BadRequest(new { success = false, message = "Loại giảm không được để trống" });
-                }
-
-                if (voucher.GiaTri <= 0)
-                {
-                    Console.WriteLine("GiaTri is invalid");
-                    return BadRequest(new { success = false, message = "Giá trị phải lớn hơn 0" });
-                }
-
-                if (voucher.LoaiGiam == "PhanTram" && voucher.GiaTri > 100)
-                {
-                    Console.WriteLine("GiaTri percentage exceeds 100");
-                    return BadRequest(new { success = false, message = "Giá trị phần trăm không được vượt quá 100%" });
-                }
-
-                if (voucher.NgayKetThuc <= voucher.NgayBatDau)
-                {
-                    Console.WriteLine("NgayKetThuc must be after NgayBatDau");
-                    return BadRequest(new { success = false, message = "Ngày kết thúc phải sau ngày bắt đầu" });
                 }
 
                 // Kiểm tra mã voucher đã tồn tại chưa
                 var existingVoucher = await _voucherService.GetVoucherByCodeAsync(voucher.MaVoucher);
                 if (existingVoucher != null)
                 {
-                    Console.WriteLine($"MaVoucher already exists: {voucher.MaVoucher}");
                     return Conflict(new { success = false, message = "Mã voucher đã tồn tại" });
                 }
 
@@ -126,14 +83,11 @@ namespace DATN_DT.Controllers
                 voucher.SoLuongDaSuDung = 0;
 
                 var createdVoucher = await _voucherService.CreateVoucherAsync(voucher);
-                Console.WriteLine($"Voucher created successfully with ID: {createdVoucher.IdVoucher}");
-                return Ok(new { success = true, message = "Thêm voucher thành công", data = createdVoucher });
+                return Ok(new { success = true, data = createdVoucher });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"CREATE VOUCHER ERROR: {ex.Message}");
-                Console.WriteLine($"Stack trace: {ex.StackTrace}");
-                return StatusCode(500, new { success = false, message = $"Lỗi hệ thống: {ex.Message}" });
+                return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
 

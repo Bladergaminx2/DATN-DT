@@ -25,11 +25,13 @@ namespace DATN_DT.Controllers
     {
         private readonly MyDbContext _context;
         private readonly IWebHostEnvironment _env;
+        private readonly IConfiguration _configuration;
 
-        public DonHangController(MyDbContext context, IWebHostEnvironment env)
+        public DonHangController(MyDbContext context, IWebHostEnvironment env, IConfiguration configuration)
         {
             _context = context;
             _env = env;
+            _configuration = configuration;
         }
 
         // GET: Order
@@ -45,6 +47,48 @@ namespace DATN_DT.Controllers
             };
 
             return View(model);
+        }
+
+        // GET: API - Lấy thông tin tài khoản ngân hàng và tạo QR code
+        [HttpGet]
+        public IActionResult GetBankQRCode(decimal tongTien, string? noiDung = null)
+        {
+            try
+            {
+                var bankName = _configuration["BankAccount:BankName"] ?? "Vietcombank";
+                var accountNumber = _configuration["BankAccount:AccountNumber"] ?? "1234567890";
+                var accountName = _configuration["BankAccount:AccountName"] ?? "CONG TY TNHH ABC";
+                var bankCode = _configuration["BankAccount:BankCode"] ?? "VCB";
+
+                // Tạo nội dung chuyển khoản
+                var content = string.IsNullOrWhiteSpace(noiDung) 
+                    ? $"THANH TOAN DON HANG {DateTime.Now:yyyyMMdd}" 
+                    : noiDung;
+
+                // Tạo chuỗi dữ liệu cho QR code (VietQR format)
+                // Format: 2|99|{STK}|{TenChuTK}|{SoTien}|{NoiDung}
+                var qrData = $"2|99|{accountNumber}|{accountName}|{tongTien}|{content}";
+
+                // Tạo URL QR code từ API QR code generator
+                var qrCodeUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={Uri.EscapeDataString(qrData)}";
+
+                return Json(new
+                {
+                    success = true,
+                    bankName = bankName,
+                    accountNumber = accountNumber,
+                    accountName = accountName,
+                    bankCode = bankCode,
+                    tongTien = tongTien,
+                    noiDung = content,
+                    qrCodeUrl = qrCodeUrl,
+                    qrData = qrData
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi tạo QR code: " + ex.Message });
+            }
         }
 
         // Tìm kiếm sản phẩm
@@ -65,7 +109,7 @@ namespace DATN_DT.Controllers
                     query = query.Where(sp =>
                         (sp.MaSanPham != null && sp.MaSanPham.ToLower().Contains(keyword)) ||
                         (sp.TenSanPham != null && sp.TenSanPham.ToLower().Contains(keyword)) ||
-                        (sp.ThuongHieu != null && sp.ThuongHieu.TenThuongHieu != null &&
+                        (sp.ThuongHieu != null && sp.ThuongHieu.TenThuongHieu != null && 
                          sp.ThuongHieu.TenThuongHieu.ToLower().Contains(keyword))
                     );
                 }
@@ -193,7 +237,7 @@ namespace DATN_DT.Controllers
                 var handler = new JwtSecurityTokenHandler();
                 var jsonToken = handler.ReadJwtToken(token);
                 var nhanVienIdClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == "IdNhanVien");
-
+                
                 if (nhanVienIdClaim != null && int.TryParse(nhanVienIdClaim.Value, out int nhanVienId))
                 {
                     return nhanVienId;
@@ -212,15 +256,15 @@ namespace DATN_DT.Controllers
 
                 // Tìm khuyến mãi đang hoạt động cho sản phẩm này
                 var activePromotion = await (from mspkm in _context.ModelSanPhamKhuyenMais
-                                             join km in _context.KhuyenMais on mspkm.IdKhuyenMai equals km.IdKhuyenMai
-                                             where mspkm.IdModelSanPham == idModelSanPham
-                                                && km.NgayBatDau.HasValue
-                                                && km.NgayKetThuc.HasValue
-                                                && km.NgayBatDau.Value.Date <= now
-                                                && km.NgayKetThuc.Value.Date >= now
-                                                && km.TrangThaiKM == "Đang diễn ra"
-                                             orderby km.NgayKetThuc descending // Lấy khuyến mãi gần nhất
-                                             select km)
+                                           join km in _context.KhuyenMais on mspkm.IdKhuyenMai equals km.IdKhuyenMai
+                                           where mspkm.IdModelSanPham == idModelSanPham
+                                              && km.NgayBatDau.HasValue
+                                              && km.NgayKetThuc.HasValue
+                                              && km.NgayBatDau.Value.Date <= now
+                                              && km.NgayKetThuc.Value.Date >= now
+                                              && km.TrangThaiKM == "Đang diễn ra"
+                                           orderby km.NgayKetThuc descending // Lấy khuyến mãi gần nhất
+                                           select km)
                                           .FirstOrDefaultAsync();
 
                 if (activePromotion == null)
@@ -299,21 +343,21 @@ namespace DATN_DT.Controllers
                 {
                     return Json(new { success = false, message = "Vui lòng nhập số tiền khách đưa" });
                 }
-
+                
                 // Validate min/max số tiền khách đưa
                 decimal minTien = 0;
                 decimal maxTien = 10000000000; // 10 tỷ VNĐ
-
+                
                 if (orderModel.TienKhachDua.Value < minTien)
                 {
                     return Json(new { success = false, message = $"Số tiền khách đưa không được nhỏ hơn {minTien:N0} VNĐ" });
                 }
-
+                
                 if (orderModel.TienKhachDua.Value > maxTien)
                 {
                     return Json(new { success = false, message = $"Số tiền khách đưa không được vượt quá {maxTien:N0} VNĐ (10 tỷ VNĐ)" });
                 }
-
+                
                 // Tính tổng tiền tạm thời để validate
                 decimal tongTienTam = 0;
                 if (orderModel.ChiTietDonHang != null && orderModel.ChiTietDonHang.Any())
@@ -330,13 +374,13 @@ namespace DATN_DT.Controllers
                         }
                     }
                 }
-
+                
                 if (orderModel.TienKhachDua.Value < tongTienTam)
                 {
                     var thieu = tongTienTam - orderModel.TienKhachDua.Value;
                     return Json(new { success = false, message = $"Số tiền khách đưa không đủ! Còn thiếu: {thieu:N0} đ" });
                 }
-
+                
                 // Tính tiền thừa
                 orderModel.TienThua = orderModel.TienKhachDua.Value - tongTienTam;
             }
@@ -375,7 +419,7 @@ namespace DATN_DT.Controllers
                             .Include(i => i.ModelSanPham)
                             .ThenInclude(m => m.SanPham)
                             .FirstOrDefaultAsync(i => i.IdImei == imeiId);
-
+                        
                         if (imei == null)
                         {
                             imeiErrors.Add($"IMEI ID {imeiId} không tồn tại");
@@ -385,10 +429,10 @@ namespace DATN_DT.Controllers
                             // Kiểm tra trạng thái IMEI - chỉ cho phép bán nếu trạng thái là "Còn hàng"
                             var trangThaiHienTai = imei.TrangThai ?? "";
                             var trangThaiHopLe = trangThaiHienTai == "Còn hàng";
-
+                            
                             // Kiểm tra IMEI có đúng model không
                             var imeiDungModel = imei.IdModelSanPham == item.IdModelSanPham;
-
+                            
                             if (!trangThaiHopLe)
                             {
                                 var tenSanPham = imei.ModelSanPham?.SanPham?.TenSanPham ?? "N/A";
@@ -420,7 +464,7 @@ namespace DATN_DT.Controllers
                     var tonKho = await _context.TonKhos
                         .Where(t => t.IdModelSanPham == item.IdModelSanPham)
                         .SumAsync(t => t.SoLuong);
-
+                    
                     if (tonKho <= 0)
                     {
                         var model = await _context.ModelSanPhams
@@ -526,7 +570,7 @@ namespace DATN_DT.Controllers
                         if (model == null) continue;
 
                         var donGia = model.GiaBanModel ?? 0;
-
+                        
                         // Tính giá khuyến mãi nếu có
                         var idModelSanPham = item.IdModelSanPham;
                         var giaKhuyenMai = await CalculatePromotionPrice(idModelSanPham, donGia);
@@ -643,7 +687,7 @@ namespace DATN_DT.Controllers
                                                    _context.Imeis.Any(i => i.IdImei == b.IdImei.Value && i.IdModelSanPham == item.IdModelSanPham))
                                         .Select(b => b.IdImei.Value)
                                         .ToListAsync();
-
+                                    
                                     if (baoHanhImeis.Any())
                                     {
                                         imeis = await _context.Imeis
@@ -720,7 +764,7 @@ namespace DATN_DT.Controllers
                         var fileName = $"HoaDon_{donHang.MaDon}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
                         var filePath = Path.Combine(invoicesFolder, fileName);
                         await System.IO.File.WriteAllBytesAsync(filePath, pdfBytes);
-
+                        
                         pdfUrl = $"/DonHang/ExportPdf?maDon={donHang.MaDon}";
                     }
                     catch (Exception pdfEx)
@@ -796,7 +840,7 @@ namespace DATN_DT.Controllers
                 decimal? tienKhachDua = null;
                 decimal? tienThua = null;
                 decimal tongTien = chiTietList.Sum(c => c.ChiTiet.ThanhTien ?? 0);
-
+                
                 if (!string.IsNullOrWhiteSpace(donHang.GhiChu) && donHang.GhiChu.Contains("TIEN_KHACH_DUA:"))
                 {
                     var parts = donHang.GhiChu.Split('|');
@@ -881,7 +925,7 @@ namespace DATN_DT.Controllers
                 decimal? tienKhachDua = null;
                 decimal? tienThua = null;
                 decimal tongTien = chiTietList.Sum(c => c.ChiTiet.ThanhTien ?? 0);
-
+                
                 if (!string.IsNullOrWhiteSpace(donHang.GhiChu) && donHang.GhiChu.Contains("TIEN_KHACH_DUA:"))
                 {
                     var parts = donHang.GhiChu.Split('|');
@@ -927,7 +971,7 @@ namespace DATN_DT.Controllers
                 PdfDocument doc = converter.ConvertHtmlString(html);
                 byte[] pdfBytes = doc.Save();
                 doc.Close();
-
+                
                 // Tạo thư mục invoices nếu chưa có
                 var invoicesFolder = Path.Combine(_env.WebRootPath, "invoices");
                 if (!Directory.Exists(invoicesFolder))
@@ -959,7 +1003,7 @@ namespace DATN_DT.Controllers
             {
                 var viewEngine = HttpContext.RequestServices.GetService(typeof(ICompositeViewEngine)) as ICompositeViewEngine;
                 var viewResult = viewEngine?.FindView(ControllerContext, viewName, false);
-
+                
                 if (viewResult?.View == null)
                 {
                     throw new Exception($"View '{viewName}' not found");
@@ -1074,7 +1118,7 @@ namespace DATN_DT.Controllers
                         giaKhuyenMai = c.GiaKhuyenMai,
                         thanhTien = c.ThanhTien ?? 0,
                         hinhAnh = c.ModelSanPham?.AnhSanPhams?.FirstOrDefault()?.DuongDan ?? "/images/default-product.jpg"
-                    }).ToList()
+                    }).ToList() 
                 }).ToList();
 
                 return Json(new { success = true, data = orders });
@@ -1183,7 +1227,6 @@ namespace DATN_DT.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
-
     }
 
     // ViewModel cho trang Index
@@ -1229,16 +1272,4 @@ namespace DATN_DT.Controllers
         public DonHangChiTiet ChiTiet { get; set; }
         public List<string> Imeis { get; set; }
     }
-
-    public class QrThanhToanViewModel
-    {
-        public string TenNganHang { get; set; }
-        public string SoTaiKhoan { get; set; }
-        public string ChuTaiKhoan { get; set; }
-        public decimal SoTien { get; set; }
-        public string NoiDung { get; set; }
-        public string QrImageUrl { get; set; }
-        public string MaDon { get; set; }
-    }
-
 }
