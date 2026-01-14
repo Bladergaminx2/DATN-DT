@@ -638,6 +638,200 @@ namespace DATN_DT.Controllers
             }
         }
 
+        // GET: DonHang/Manage
+        public IActionResult Manage()
+        {
+            return View();
+        }
+
+        // GET: DonHang/GetOfflineOrders
+        [HttpGet]
+        public async Task<IActionResult> GetOfflineOrders(string? search, string? fromDate, string? toDate, string? paymentMethod)
+        {
+            try
+            {
+                var query = _context.DonHangs
+                    .Include(d => d.KhachHang)
+                    .Include(d => d.NhanVien)
+                    .Include(d => d.DonHangChiTiets)
+                        .ThenInclude(c => c.ModelSanPham)
+                            .ThenInclude(m => m.SanPham)
+                    .Where(d => d.TrangThaiHoaDon == "Đã thanh toán");
+
+                // Filter by search term
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    search = search.Trim();
+                    query = query.Where(d =>
+                        (d.MaDon != null && d.MaDon.Contains(search)) ||
+                        (d.HoTenNguoiNhan != null && d.HoTenNguoiNhan.Contains(search)) ||
+                        (d.SdtNguoiNhan != null && d.SdtNguoiNhan.Contains(search)) ||
+                        (d.KhachHang != null && d.KhachHang.HoTenKhachHang != null && d.KhachHang.HoTenKhachHang.Contains(search)) ||
+                        (d.KhachHang != null && d.KhachHang.SdtKhachHang != null && d.KhachHang.SdtKhachHang.Contains(search))
+                    );
+                }
+
+                // Filter by date range
+                if (!string.IsNullOrWhiteSpace(fromDate) && DateTime.TryParse(fromDate, out DateTime from))
+                {
+                    query = query.Where(d => d.NgayDat.HasValue && d.NgayDat.Value.Date >= from.Date);
+                }
+
+                if (!string.IsNullOrWhiteSpace(toDate) && DateTime.TryParse(toDate, out DateTime to))
+                {
+                    query = query.Where(d => d.NgayDat.HasValue && d.NgayDat.Value.Date <= to.Date);
+                }
+
+                // Filter by payment method
+                if (!string.IsNullOrWhiteSpace(paymentMethod))
+                {
+                    query = query.Where(d => d.PhuongThucThanhToan == paymentMethod);
+                }
+
+                var orders = await query
+                    .OrderByDescending(d => d.NgayDat)
+                    .ToListAsync();
+
+                var result = orders.Select(d => new
+                {
+                    idDonHang = d.IdDonHang,
+                    maDon = d.MaDon,
+                    hoTenKhachHang = d.IdKhachHang.HasValue && d.KhachHang != null
+                        ? d.KhachHang.HoTenKhachHang
+                        : d.HoTenNguoiNhan,
+                    sdtKhachHang = d.IdKhachHang.HasValue && d.KhachHang != null
+                        ? d.KhachHang.SdtKhachHang
+                        : d.SdtNguoiNhan,
+                    hoTenNhanVien = d.NhanVien != null ? d.NhanVien.HoTenNhanVien : null,
+                    ngayDat = d.NgayDat.HasValue ? d.NgayDat.Value.ToString("dd/MM/yyyy HH:mm") : "",
+                    trangThaiSo = d.TrangThaiDH ?? 1,
+                    phuongThucThanhToan = d.PhuongThucThanhToan ?? "Tiền mặt",
+                    tongTien = d.DonHangChiTiets != null
+                        ? d.DonHangChiTiets.Sum(c => c.ThanhTien ?? 0)
+                        : 0,
+                    soLuongSanPham = d.DonHangChiTiets != null
+                        ? d.DonHangChiTiets.Sum(c => c.SoLuong ?? 0)
+                        : 0
+                }).ToList();
+
+                return Json(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // GET: DonHang/GetOfflineOrderDetail
+        [HttpGet]
+        public async Task<IActionResult> GetOfflineOrderDetail(int id)
+        {
+            try
+            {
+                var donHang = await _context.DonHangs
+                    .Include(d => d.KhachHang)
+                    .Include(d => d.NhanVien)
+                    .Include(d => d.DonHangChiTiets)
+                        .ThenInclude(c => c.ModelSanPham)
+                            .ThenInclude(m => m.SanPham)
+                    .Include(d => d.DonHangChiTiets)
+                        .ThenInclude(c => c.ModelSanPham)
+                            .ThenInclude(m => m.RAM)
+                    .Include(d => d.DonHangChiTiets)
+                        .ThenInclude(c => c.ModelSanPham)
+                            .ThenInclude(m => m.ROM)
+                    .Include(d => d.DonHangChiTiets)
+                        .ThenInclude(c => c.ModelSanPham)
+                            .ThenInclude(m => m.AnhSanPhams)
+                    .FirstOrDefaultAsync(d => d.IdDonHang == id);
+
+                if (donHang == null)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy đơn hàng" });
+                }
+
+                // Get IMEIs for each order detail
+                var chiTietList = new List<object>();
+                if (donHang.DonHangChiTiets != null)
+                {
+                    foreach (var chiTiet in donHang.DonHangChiTiets)
+                    {
+                        var model = chiTiet.ModelSanPham;
+                        var sanPham = model?.SanPham;
+
+                        // Get IMEIs through BaoHanh records created around the order date
+                        var imeis = new List<string>();
+                        if (chiTiet.IdModelSanPham.HasValue && donHang.NgayDat.HasValue)
+                        {
+                            var ngayDat = donHang.NgayDat.Value;
+                            // Find IMEIs that were sold (status changed to "Đã bán") around the order time
+                            // We'll look for IMEIs of this model that have BaoHanh records created on the same day
+                            var imeiIds = await _context.BaoHanhs
+                                .Where(b => b.IdImei.HasValue &&
+                                           b.NgayNhan >= ngayDat.Date &&
+                                           b.NgayNhan < ngayDat.Date.AddDays(1))
+                                .Select(b => b.IdImei.Value)
+                                .ToListAsync();
+
+                            if (imeiIds.Any())
+                            {
+                                imeis = await _context.Imeis
+                                    .Where(i => imeiIds.Contains(i.IdImei) &&
+                                               i.IdModelSanPham == chiTiet.IdModelSanPham &&
+                                               i.TrangThai == "Đã bán")
+                                    .Select(i => i.MaImei ?? "")
+                                    .ToListAsync();
+                            }
+                        }
+
+                        var anh = model?.AnhSanPhams?.FirstOrDefault()?.DuongDan ?? "/images/default-product.jpg";
+
+                        chiTietList.Add(new
+                        {
+                            tenSanPham = sanPham?.TenSanPham ?? "",
+                            tenModel = model?.TenModel ?? "",
+                            mau = model?.Mau ?? "",
+                            ram = model?.RAM?.DungLuongRAM ?? "",
+                            rom = model?.ROM?.DungLuongROM ?? "",
+                            donGia = chiTiet.DonGia ?? 0,
+                            thanhTien = chiTiet.ThanhTien ?? 0,
+                            soLuong = chiTiet.SoLuong ?? 0,
+                            hinhAnh = anh,
+                            imeis = imeis
+                        });
+                    }
+                }
+
+                var result = new
+                {
+                    idDonHang = donHang.IdDonHang,
+                    maDon = donHang.MaDon,
+                    hoTenKhachHang = donHang.IdKhachHang.HasValue && donHang.KhachHang != null
+                        ? donHang.KhachHang.HoTenKhachHang
+                        : donHang.HoTenNguoiNhan,
+                    sdtKhachHang = donHang.IdKhachHang.HasValue && donHang.KhachHang != null
+                        ? donHang.KhachHang.SdtKhachHang
+                        : donHang.SdtNguoiNhan,
+                    hoTenNhanVien = donHang.NhanVien != null ? donHang.NhanVien.HoTenNhanVien : null,
+                    ngayDat = donHang.NgayDat.HasValue ? donHang.NgayDat.Value.ToString("dd/MM/yyyy HH:mm") : "",
+                    trangThaiSo = donHang.TrangThaiDH ?? 1,
+                    phuongThucThanhToan = donHang.PhuongThucThanhToan ?? "Tiền mặt",
+                    tongTien = donHang.DonHangChiTiets != null
+                        ? donHang.DonHangChiTiets.Sum(c => c.ThanhTien ?? 0)
+                        : 0,
+                    tienKhachDua = (decimal?)null, // Not stored in DonHang model
+                    tienThua = (decimal?)null, // Not stored in DonHang model
+                    chiTiet = chiTietList
+                };
+
+                return Json(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
         // Helper method để render view thành string
         private async Task<string> RenderViewToStringAsync(string viewName, object model)
         {
