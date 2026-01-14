@@ -252,39 +252,75 @@ namespace DATN_DT.Controllers
         {
             try
             {
-                // Cho phép 0..5 (vì bạn có "Chờ thanh toán")
                 if (model == null || model.TrangThai < 0 || model.TrangThai > 5)
                     return BadRequest(new { success = false, message = "Trạng thái không hợp lệ" });
 
                 var hoaDon = await _context.HoaDons
                     .Include(h => h.HoaDonChiTiets)
-                        .ThenInclude(hdct => hdct.Imei)
+                        .ThenInclude(ct => ct.Imei)
                     .FirstOrDefaultAsync(h => h.IdHoaDon == id);
 
                 if (hoaDon == null)
                     return NotFound(new { success = false, message = "Không tìm thấy hóa đơn" });
 
                 var idNhanVien = GetCurrentNhanVienId();
-
-                // Chỉ set nhân viên nếu chưa có
                 if (!hoaDon.IdNhanVien.HasValue && idNhanVien.HasValue)
                     hoaDon.IdNhanVien = idNhanVien;
 
-                // Nếu hủy đơn
-                var newStatusName = GetStatusName(model.TrangThai);
-                var isCancelling = model.TrangThai == 4 && NormalizeStoredStatus(hoaDon.TrangThaiHoaDon) != "Hủy đơn hàng";
-
-                if (isCancelling)
+                // Nếu chuyển trạng thái Hủy (4) => KHÔNG TRỪ.
+                // Nếu trước đó đã trừ thì ProcessPaymentCancel sẽ HOÀN lại.
+                if (model.TrangThai == 4 && NormalizeStoredStatus(hoaDon.TrangThaiHoaDon) != "Hủy đơn hàng")
                 {
-                    // ProcessPaymentCancel tự xử lý cập nhật status + hoàn imei/tồn kho
                     await ProcessPaymentCancel(hoaDon);
+                    return Ok(new { success = true, message = "Cập nhật trạng thái thành công!" });
                 }
-                else
+
+                // =========================
+                // Logic TRỪ chỉ chạy ở đây (KHÔNG PHẢI HỦY)
+                // Ví dụ: COD/Tiền mặt trừ khi chuyển sang >= 1
+                // =========================
+                var pay = (hoaDon.PhuongThucThanhToan ?? "").ToLower().Trim();
+                var isCashOrCOD = pay.Contains("cod") || pay.Contains("tiền mặt") || pay == "cash";
+                var shouldDeductNow = isCashOrCOD && model.TrangThai >= 1;
+
+                if (shouldDeductNow)
                 {
-                    hoaDon.TrangThaiHoaDon = newStatusName;
-                    _context.HoaDons.Update(hoaDon);
-                    await _context.SaveChangesAsync();
+                    var alreadyDeducted = hoaDon.HoaDonChiTiets != null && hoaDon.HoaDonChiTiets.Any(ct => ct.IdImei != null);
+                    if (!alreadyDeducted)
+                    {
+                        var groups = hoaDon.HoaDonChiTiets
+                            .Where(ct => ct.IdModelSanPham != null)
+                            .GroupBy(ct => ct.IdModelSanPham!.Value)
+                            .Select(g => new { IdModel = g.Key, Qty = g.Count() })
+                            .ToList();
+
+                        foreach (var g in groups)
+                        {
+                            var imeis = await _context.Imeis
+                                .Where(i => i.IdModelSanPham == g.IdModel && i.TrangThai == "Còn hàng")
+                                .OrderBy(i => i.IdImei)
+                                .Take(g.Qty)
+                                .ToListAsync();
+
+                            if (imeis.Count < g.Qty)
+                                return BadRequest(new { success = false, message = $"Không đủ IMEI khả dụng cho Model {g.IdModel}." });
+
+                            var detailRows = hoaDon.HoaDonChiTiets.Where(ct => ct.IdModelSanPham == g.IdModel).ToList();
+                            for (int idx = 0; idx < detailRows.Count; idx++)
+                            {
+                                detailRows[idx].IdImei = imeis[idx].IdImei;
+                                imeis[idx].TrangThai = "Đã bán";
+                            }
+
+                            await _tonKhoService.RefreshTonKhoForModel(g.IdModel);
+                        }
+                    }
                 }
+
+                // Cập nhật trạng thái hóa đơn (không phải hủy)
+                hoaDon.TrangThaiHoaDon = GetStatusName(model.TrangThai);
+                _context.HoaDons.Update(hoaDon);
+                await _context.SaveChangesAsync();
 
                 return Ok(new { success = true, message = "Cập nhật trạng thái thành công!" });
             }

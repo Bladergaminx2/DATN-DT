@@ -648,74 +648,23 @@ namespace DATN_DT.Controllers
             try
             {
                 // 1) Auth + customer
-                var khachHangEmail = GetCurrentKhachHangEmail();
-                if (string.IsNullOrEmpty(khachHangEmail))
-                    return Unauthorized(new { Success = false, Message = "Vui lòng đăng nhập" });
-
-                var khachHang = await _context.KhachHangs
-                    .FirstOrDefaultAsync(kh => kh.EmailKhachHang == khachHangEmail, ct);
-
+                var khachHang = await GetCurrentKhachHangAsync(ct);
                 if (khachHang == null)
-                    return Unauthorized(new { Success = false, Message = "Không tìm thấy thông tin khách hàng" });
+                    return Unauthorized(new { Success = false, Message = "Vui lòng đăng nhập / không tìm thấy khách hàng" });
 
-                // 2) Load cart items đã chọn (kèm model + sản phẩm để báo lỗi)
-                var selectedCartItems = await _context.GioHangChiTiets
-                    .Include(ghct => ghct.ModelSanPham)
-                        .ThenInclude(ms => ms.SanPham)
-                    .Where(ghct => model.SelectedCartItems.Contains(ghct.IdGioHangChiTiet))
-                    .ToListAsync(ct);
+                // 2) Payment parsing
+                var payment = ParsePaymentType(model.PhuongThucTT);
+                if (payment == PaymentType.Unknown)
+                    return BadRequest(new { Success = false, Message = "Phương thức thanh toán không hợp lệ" });
 
-                if (!selectedCartItems.Any())
+                // 3) Load cart items
+                var cartItems = await LoadSelectedCartItemsAsync(model.SelectedCartItems, ct);
+                if (cartItems.Count == 0)
                     return BadRequest(new { Success = false, Message = "Không tìm thấy sản phẩm đã chọn" });
 
-                // 3) Validate trạng thái + tồn kho + IMEI đủ
-                var errors = new List<string>();
-
-                foreach (var cartItem in selectedCartItems)
-                {
-                    var modelSp = cartItem.ModelSanPham;
-                    if (modelSp == null || modelSp.TrangThai != 1)
-                    {
-                        errors.Add($"Sản phẩm {modelSp?.SanPham?.TenSanPham} đã ngừng kinh doanh");
-                        continue;
-                    }
-
-                    // Kiểm tra số lượng tồn kho > 0
-                    var tonKho = await _context.TonKhos
-                        .Where(tk => tk.IdModelSanPham == cartItem.IdModelSanPham)
-                        .SumAsync(tk => tk.SoLuong, ct);
-
-                    // Kiểm tra IMEI còn hàng > 0
-                    var availableImei = await _context.Imeis
-                        .Where(i => i.IdModelSanPham == cartItem.IdModelSanPham && i.TrangThai == "Còn hàng")
-                        .CountAsync(ct);
-
-                    // Kiểm tra cả 2 điều kiện: số lượng > 0 và IMEI > 0
-                    if (tonKho <= 0)
-                    {
-                        errors.Add($"Sản phẩm {modelSp.SanPham?.TenSanPham} đã hết hàng (tồn kho: {tonKho})");
-                        continue; // Dừng xử lý sản phẩm này
-                    }
-
-                    if (availableImei <= 0)
-                    {
-                        errors.Add($"Sản phẩm {modelSp.SanPham?.TenSanPham} không còn IMEI khả dụng (số IMEI: {availableImei})");
-                        continue; // Dừng xử lý sản phẩm này
-                    }
-
-                    // Kiểm tra số lượng đủ để đáp ứng yêu cầu
-                    if (tonKho < cartItem.SoLuong)
-                    {
-                        errors.Add($"Sản phẩm {modelSp.SanPham?.TenSanPham} chỉ còn {tonKho} sản phẩm (yêu cầu: {cartItem.SoLuong})");
-                    }
-
-                    if (availableImei < cartItem.SoLuong)
-                    {
-                        errors.Add($"Sản phẩm {modelSp.SanPham?.TenSanPham} không đủ IMEI khả dụng (còn {availableImei}, yêu cầu: {cartItem.SoLuong})");
-                    }
-                }
-
-                if (errors.Any())
+                // 4) Validate business rules (COD: check TonKho only, Transfer: check TonKho + IMEI)
+                var errors = await ValidateCartItemsAsync(cartItems, payment, ct);
+                if (errors.Count > 0)
                 {
                     await tx.RollbackAsync(ct);
                     return BadRequest(new
@@ -726,213 +675,18 @@ namespace DATN_DT.Controllers
                     });
                 }
 
-                // 4) Lấy địa chỉ giao hàng (nếu cần lưu; HoaDon hiện chưa có field địa chỉ => bạn có thể bổ sung hoặc bỏ)
-                // Nếu bạn muốn lưu địa chỉ vào HoaDon thì hãy thêm field DiaChiGiaoHang vào class HoaDon.
-                // Ở đây tôi vẫn lấy để bạn có thể dùng về sau.
-                var diaChi = await _context.diachis
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(dc => dc.Id == model.DiaChiId && dc.IdKhachHang == khachHang.IdKhachHang, ct);
-
+                // 5) Address check (giữ lại như bạn đang làm)
+                var diaChi = await GetValidShippingAddressAsync(model.DiaChiId, khachHang.IdKhachHang, ct);
                 if (diaChi == null)
                     return BadRequest(new { Success = false, Message = "Không tìm thấy địa chỉ giao hàng" });
 
-                var diaChiGiaoHangText = diaChi.Diachicuthe ?? string.Empty;
+                // 6) Create invoice
+                var hoaDon = await CreateHoaDonAsync(khachHang, model.PhuongThucTT, payment, ct);
 
-                // (Nếu bạn cần GHN convert giống trước thì gắn lại đoạn convert ở đây)
+                // 7) Create details + reserve stock if needed
+                var createResult = await CreateInvoiceDetailsAsync(hoaDon, cartItems, payment, ct);
 
-                // 5) Tạo HoaDon
-                // Lấy ID nhân viên nếu có (nếu nhân viên/admin đang xử lý đơn hàng)
-                var idNhanVien = GetCurrentNhanVienId();
-                
-                // Phân biệt COD và chuyển khoản
-                var isCOD = model.PhuongThucTT?.ToLower().Contains("cod") == true || 
-                           model.PhuongThucTT?.ToLower().Contains("tiền mặt") == true;
-                var isBankTransfer = model.PhuongThucTT?.ToLower().Contains("chuyển khoản") == true ||
-                                    model.PhuongThucTT?.ToLower().Contains("bank") == true;
-                
-                var hoaDon = new HoaDon
-                {
-                    IdKhachHang = khachHang.IdKhachHang,
-                    HoTenNguoiNhan = khachHang.HoTenKhachHang,     // hoặc model.HoTen nếu bạn nhập ở FE
-                    SdtKhachHang = khachHang.SdtKhachHang,         // hoặc model.SoDienThoai
-                    IdNhanVien = idNhanVien,                       // Lưu ID nhân viên bán hàng (null nếu khách tự đặt)
-                    TrangThaiHoaDon = "Chờ xác nhận",              // Cả COD và chuyển khoản đều bắt đầu ở "Chờ xác nhận"
-                    NgayLapHoaDon = DateTime.Now,
-                    PhuongThucThanhToan = model.PhuongThucTT,
-                    TongTien = 0m,
-                    HoaDonChiTiets = new List<HoaDonChiTiet>()
-                };
-
-                _context.HoaDons.Add(hoaDon);
-                await _context.SaveChangesAsync(ct); // để có IdHoaDon
-
-                decimal tongTien = 0m;
-                var modelSanPhamIdsToRefresh = new HashSet<int>();
-
-                // 6) Tạo HoaDonChiTiet theo từng IMEI (SoLuong=1 mỗi dòng)
-                foreach (var cartItem in selectedCartItems)
-                {
-                    var modelSp = cartItem.ModelSanPham!;
-                    var qty = cartItem.SoLuong;
-
-                    var donGia = modelSp.GiaBanModel ?? 0m;
-                    
-                    // Tính giá khuyến mãi nếu có
-                    var idModelSanPham = cartItem.IdModelSanPham ?? 0;
-                    var giaKhuyenMai = await CalculatePromotionPrice(idModelSanPham, donGia, ct);
-                    var finalPrice = giaKhuyenMai ?? donGia; // Nếu có khuyến mãi thì dùng giá khuyến mãi, không thì dùng giá gốc
-
-                    // 🔹 NGHIỆP VỤ: COD trừ IMEI ngay, chuyển khoản chờ thanh toán thành công
-                    if (isCOD)
-                    {
-                        // 6.1 COD: Lấy đủ IMEI còn hàng và set "Đã bán"
-                        var imeis = await _context.Imeis
-                            .Where(i => i.IdModelSanPham == cartItem.IdModelSanPham && i.TrangThai == "Còn hàng")
-                            .OrderBy(i => i.IdImei)
-                            .Take(qty)
-                            .ToListAsync(ct);
-
-                        if (imeis.Count < qty)
-                        {
-                            await tx.RollbackAsync(ct);
-                            return BadRequest(new
-                            {
-                                Success = false,
-                                Message = $"IMEI thay đổi. Sản phẩm {modelSp.SanPham?.TenSanPham} không đủ IMEI khả dụng."
-                            });
-                        }
-
-                        // 6.2 COD: Mỗi IMEI = 1 dòng HoaDonChiTiet với IdImei
-                        foreach (var imei in imeis)
-                        {
-                            var ctRow = new HoaDonChiTiet
-                            {
-                                IdHoaDon = hoaDon.IdHoaDon,
-                                IdModelSanPham = cartItem.IdModelSanPham,
-                                IdImei = imei.IdImei, // COD: Gán IMEI ngay
-                                GiaKhuyenMai = giaKhuyenMai,
-                                DonGia = finalPrice,
-                                SoLuong = 1,
-                                ThanhTien = finalPrice
-                            };
-
-                            _context.HoaDonChiTiets.Add(ctRow);
-
-                            // Set IMEI đã bán (COD: Trừ ngay)
-                            imei.TrangThai = "Đã bán";
-
-                            tongTien += finalPrice;
-                        }
-
-                        // Thêm vào danh sách cần refresh tồn kho
-                        if (cartItem.IdModelSanPham.HasValue)
-                        {
-                            modelSanPhamIdsToRefresh.Add(cartItem.IdModelSanPham.Value);
-                        }
-                    }
-                    else if (isBankTransfer)
-                    {
-                        // 🔹 CHUYỂN KHOẢN: KHÔNG trừ IMEI và TonKho, chỉ lưu thông tin sản phẩm
-                        // Tạo HoaDonChiTiet với IdImei = null (sẽ gán sau khi thanh toán thành công)
-                        for (int i = 0; i < qty; i++)
-                        {
-                            var ctRow = new HoaDonChiTiet
-                            {
-                                IdHoaDon = hoaDon.IdHoaDon,
-                                IdModelSanPham = cartItem.IdModelSanPham,
-                                IdImei = null, // Chuyển khoản: Chưa gán IMEI, chờ thanh toán thành công
-                                GiaKhuyenMai = giaKhuyenMai,
-                                DonGia = finalPrice,
-                                SoLuong = 1,
-                                ThanhTien = finalPrice
-                            };
-
-                            _context.HoaDonChiTiets.Add(ctRow);
-                            tongTien += finalPrice;
-                        }
-                    }
-                    else
-                    {
-                        // Phương thức thanh toán khác: Xử lý như COD (an toàn)
-                        var need = qty;
-                        var tonKhoRows = await _context.TonKhos
-                            .Where(tk => tk.IdModelSanPham == cartItem.IdModelSanPham && tk.SoLuong > 0)
-                            .OrderBy(tk => tk.IdTonKho)
-                            .ToListAsync(ct);
-
-                        foreach (var row in tonKhoRows)
-                        {
-                            if (need <= 0) break;
-                            var take = Math.Min(row.SoLuong, need);
-                            row.SoLuong -= take;
-                            need -= take;
-                        }
-
-                        if (need > 0)
-                        {
-                            await tx.RollbackAsync(ct);
-                            return BadRequest(new
-                            {
-                                Success = false,
-                                Message = $"Tồn kho thay đổi. Sản phẩm {modelSp.SanPham?.TenSanPham} không đủ số lượng."
-                            });
-                        }
-
-                        // Trạng thái sẽ được tự động cập nhật bởi service sau khi thanh toán
-
-                        var imeis = await _context.Imeis
-                            .Where(i => i.IdModelSanPham == cartItem.IdModelSanPham && i.TrangThai == "Còn hàng")
-                            .OrderBy(i => i.IdImei)
-                            .Take(qty)
-                            .ToListAsync(ct);
-
-                        if (imeis.Count < qty)
-                        {
-                            await tx.RollbackAsync(ct);
-                            return BadRequest(new
-                            {
-                                Success = false,
-                                Message = $"IMEI thay đổi. Sản phẩm {modelSp.SanPham?.TenSanPham} không đủ IMEI khả dụng."
-                            });
-                        }
-
-                        foreach (var imei in imeis)
-                        {
-                            var ctRow = new HoaDonChiTiet
-                            {
-                                IdHoaDon = hoaDon.IdHoaDon,
-                                IdModelSanPham = cartItem.IdModelSanPham,
-                                IdImei = imei.IdImei,
-                                GiaKhuyenMai = giaKhuyenMai,
-                                DonGia = finalPrice,
-                                SoLuong = 1,
-                                ThanhTien = finalPrice
-                            };
-
-                            _context.HoaDonChiTiets.Add(ctRow);
-                            imei.TrangThai = "Đã bán";
-                            tongTien += finalPrice;
-                        }
-                    }
-
-                    // 6.4 Xóa cart item đã thanh toán
-                    _context.GioHangChiTiets.Remove(cartItem);
-                }
-
-                // 6.5 Refresh tồn kho và cập nhật trạng thái ModelSanPham cho COD
-                if (isCOD && modelSanPhamIdsToRefresh.Any())
-                {
-                    // Lưu thay đổi IMEI trước
-                    await _context.SaveChangesAsync(ct);
-
-                    foreach (var idModelSanPham in modelSanPhamIdsToRefresh)
-                    {
-                        // Refresh tồn kho và tự động cập nhật trạng thái (service sẽ xử lý)
-                        await _tonKhoService.RefreshTonKhoForModel(idModelSanPham);
-                    }
-                }
-
-                // 7) Xử lý voucher nếu có
+                // 8) Apply voucher (nếu có)
                 if (model.IdVoucher.HasValue && model.SoTienGiamVoucher > 0)
                 {
                     var voucherService = HttpContext.RequestServices.GetRequiredService<IVoucherService>();
@@ -944,14 +698,24 @@ namespace DATN_DT.Controllers
                     );
                 }
 
-                // 8) Update tổng tiền hóa đơn (đã trừ voucher)
-                hoaDon.TongTien = tongTien - model.SoTienGiamVoucher;
+                // 9) Update total, remove cart items
+                hoaDon.TongTien = createResult.TotalBeforeVoucher - model.SoTienGiamVoucher;
+
+                // Xóa cart item đã tạo đơn (bạn đang xóa luôn - giữ nguyên)
+                _context.GioHangChiTiets.RemoveRange(cartItems);
 
                 await _context.SaveChangesAsync(ct);
+
+                // 10) Refresh tồn kho ONLY when transfer (trừ ngay)
+                if (payment == PaymentType.Transfer && createResult.ModelSanPhamIdsToRefresh.Count > 0)
+                {
+                    foreach (var idModel in createResult.ModelSanPhamIdsToRefresh)
+                        await _tonKhoService.RefreshTonKhoForModel(idModel);
+                }
+
                 await tx.CommitAsync(ct);
 
-                // Tạo mã đơn hàng từ IdHoaDon
-                var maDon = GenerateOrderCode();
+                var maDon = GenerateOrderCode(); // bạn đang dùng random code; nếu muốn theo IdHoaDon thì đổi sau
 
                 return Ok(new
                 {
@@ -960,7 +724,7 @@ namespace DATN_DT.Controllers
                     Data = new
                     {
                         IdHoaDon = hoaDon.IdHoaDon,
-                        MaDon = maDon, // Tạo mã đơn hàng từ IdHoaDon
+                        MaDon = maDon,
                         TongTien = hoaDon.TongTien
                     }
                 });
@@ -971,6 +735,216 @@ namespace DATN_DT.Controllers
                 return StatusCode(500, new { Success = false, Message = "Lỗi server: " + ex.Message });
             }
         }
+
+        #region Helpers (Refactor)
+
+        private enum PaymentType { Unknown = 0, Cod = 1, Transfer = 2 }
+
+        private PaymentType ParsePaymentType(string? paymentRaw)
+        {
+            if (string.IsNullOrWhiteSpace(paymentRaw)) return PaymentType.Unknown;
+
+            var s = paymentRaw.Trim().ToLowerInvariant();
+
+            // COD / Cash
+            if (s.Contains("cod") || s.Contains("tiền mặt") || s.Contains("tien mat"))
+                return PaymentType.Cod;
+
+            // Bank transfer (chấp nhận nhiều biến thể DB của bạn: "ChuyenKhoan", "Chuyển khoản ngân hàng", ...)
+            if (s.Contains("chuyển khoản") || s.Contains("chuyen khoan") || s.Contains("bank") || s.Contains("transfer"))
+                return PaymentType.Transfer;
+
+            return PaymentType.Unknown;
+        }
+
+        private async Task<KhachHang?> GetCurrentKhachHangAsync(CancellationToken ct)
+        {
+            var email = GetCurrentKhachHangEmail();
+            if (string.IsNullOrWhiteSpace(email)) return null;
+
+            return await _context.KhachHangs.FirstOrDefaultAsync(kh => kh.EmailKhachHang == email, ct);
+        }
+
+        private async Task<List<GioHangChiTiet>> LoadSelectedCartItemsAsync(List<int>? selectedIds, CancellationToken ct)
+        {
+            selectedIds ??= new List<int>();
+            if (selectedIds.Count == 0) return new List<GioHangChiTiet>();
+
+            return await _context.GioHangChiTiets
+                .Include(x => x.ModelSanPham)
+                    .ThenInclude(ms => ms.SanPham)
+                .Where(x => x.IdGioHangChiTiet != 0 && selectedIds.Contains(x.IdGioHangChiTiet))
+                .ToListAsync(ct);
+        }
+
+        private async Task<List<string>> ValidateCartItemsAsync(List<GioHangChiTiet> cartItems, PaymentType payment, CancellationToken ct)
+        {
+            var errors = new List<string>();
+
+            foreach (var item in cartItems)
+            {
+                var modelSp = item.ModelSanPham;
+                if (modelSp == null || modelSp.TrangThai != 1)
+                {
+                    errors.Add($"Sản phẩm {modelSp?.SanPham?.TenSanPham} đã ngừng kinh doanh");
+                    continue;
+                }
+
+                var idModel = item.IdModelSanPham;
+                var qty = item.SoLuong;
+
+                var tonKho = await _context.TonKhos
+                    .Where(tk => tk.IdModelSanPham == idModel)
+                    .SumAsync(tk => tk.SoLuong, ct);
+
+                if (tonKho <= 0)
+                {
+                    errors.Add($"Sản phẩm {modelSp.SanPham?.TenSanPham} đã hết hàng (tồn kho: {tonKho})");
+                    continue;
+                }
+
+                if (tonKho < qty)
+                    errors.Add($"Sản phẩm {modelSp.SanPham?.TenSanPham} chỉ còn {tonKho} sản phẩm (yêu cầu: {qty})");
+
+                // ONLY Transfer requires IMEI now (trừ ngay)
+                if (payment == PaymentType.Transfer)
+                {
+                    var imeiAvailable = await _context.Imeis
+                        .Where(i => i.IdModelSanPham == idModel && i.TrangThai == "Còn hàng")
+                        .CountAsync(ct);
+
+                    if (imeiAvailable < qty)
+                        errors.Add($"Sản phẩm {modelSp.SanPham?.TenSanPham} không đủ IMEI khả dụng (còn {imeiAvailable}, yêu cầu: {qty})");
+                }
+            }
+
+            return errors;
+        }
+
+        private async Task<DiaChi?> GetValidShippingAddressAsync(int? diaChiId, int idKhachHang, CancellationToken ct)
+        {
+            if (!diaChiId.HasValue) return null;
+
+            return await _context.diachis
+                .AsNoTracking()
+                .FirstOrDefaultAsync(dc => dc.Id == diaChiId.Value && dc.IdKhachHang == idKhachHang, ct);
+        }
+
+        private async Task<HoaDon> CreateHoaDonAsync(KhachHang khachHang, string? paymentRaw, PaymentType payment, CancellationToken ct)
+        {
+            var idNhanVien = GetCurrentNhanVienId();
+
+            var status = payment switch
+            {
+                PaymentType.Cod => "Chờ xác nhận",
+                PaymentType.Transfer => "Đang vận chuyển",
+                _ => "Chờ xác nhận"
+            };
+
+            var hoaDon = new HoaDon
+            {
+                IdKhachHang = khachHang.IdKhachHang,
+                HoTenNguoiNhan = khachHang.HoTenKhachHang,
+                SdtKhachHang = khachHang.SdtKhachHang,
+                IdNhanVien = idNhanVien,
+                TrangThaiHoaDon = status,
+                NgayLapHoaDon = DateTime.Now,
+                PhuongThucThanhToan = paymentRaw,
+                TongTien = 0m,
+                HoaDonChiTiets = new List<HoaDonChiTiet>()
+            };
+
+            _context.HoaDons.Add(hoaDon);
+            await _context.SaveChangesAsync(ct); // lấy IdHoaDon
+
+            return hoaDon;
+        }
+
+        private sealed class CreateDetailsResult
+        {
+            public decimal TotalBeforeVoucher { get; init; }
+            public HashSet<int> ModelSanPhamIdsToRefresh { get; init; } = new();
+        }
+
+        private async Task<CreateDetailsResult> CreateInvoiceDetailsAsync(HoaDon hoaDon, List<GioHangChiTiet> cartItems, PaymentType payment, CancellationToken ct)
+        {
+            decimal total = 0m;
+            var refreshIds = new HashSet<int>();
+
+            foreach (var cartItem in cartItems)
+            {
+                var modelSp = cartItem.ModelSanPham!;
+                var qty = cartItem.SoLuong;
+                var idModel = cartItem.IdModelSanPham ?? 0;
+
+                var basePrice = modelSp.GiaBanModel ?? 0m;
+                var promoPrice = await CalculatePromotionPrice(idModel, basePrice, ct);
+                var finalPrice = promoPrice ?? basePrice;
+
+                if (payment == PaymentType.Cod)
+                {
+                    // COD: KHÔNG trừ ngay -> không gán IMEI, chỉ tạo chi tiết
+                    for (int i = 0; i < qty; i++)
+                    {
+                        _context.HoaDonChiTiets.Add(new HoaDonChiTiet
+                        {
+                            IdHoaDon = hoaDon.IdHoaDon,
+                            IdModelSanPham = cartItem.IdModelSanPham,
+                            IdImei = null,
+                            GiaKhuyenMai = promoPrice,
+                            DonGia = finalPrice,
+                            SoLuong = 1,
+                            ThanhTien = finalPrice
+                        });
+                        total += finalPrice;
+                    }
+                }
+                else if (payment == PaymentType.Transfer)
+                {
+                    // Transfer: TRỪ NGAY -> gán IMEI + set Đã bán
+                    var imeis = await _context.Imeis
+                        .Where(i => i.IdModelSanPham == cartItem.IdModelSanPham && i.TrangThai == "Còn hàng")
+                        .OrderBy(i => i.IdImei)
+                        .Take(qty)
+                        .ToListAsync(ct);
+
+                    if (imeis.Count < qty)
+                        throw new InvalidOperationException($"IMEI thay đổi. Sản phẩm {modelSp.SanPham?.TenSanPham} không đủ IMEI khả dụng.");
+
+                    foreach (var imei in imeis)
+                    {
+                        _context.HoaDonChiTiets.Add(new HoaDonChiTiet
+                        {
+                            IdHoaDon = hoaDon.IdHoaDon,
+                            IdModelSanPham = cartItem.IdModelSanPham,
+                            IdImei = imei.IdImei,
+                            GiaKhuyenMai = promoPrice,
+                            DonGia = finalPrice,
+                            SoLuong = 1,
+                            ThanhTien = finalPrice
+                        });
+
+                        imei.TrangThai = "Đã bán";
+                        total += finalPrice;
+                    }
+
+                    if (cartItem.IdModelSanPham.HasValue)
+                        refreshIds.Add(cartItem.IdModelSanPham.Value);
+                }
+            }
+
+            // Save ngay để đảm bảo IMEI update nằm trong transaction
+            await _context.SaveChangesAsync(ct);
+
+            return new CreateDetailsResult
+            {
+                TotalBeforeVoucher = total,
+                ModelSanPhamIdsToRefresh = refreshIds
+            };
+        }
+
+        #endregion
+
 
         [HttpGet]
         public async Task<IActionResult> GetDiaChiCuaToi(CancellationToken ct)
