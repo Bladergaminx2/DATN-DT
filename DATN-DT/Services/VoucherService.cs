@@ -1,24 +1,15 @@
 using DATN_DT.Data;
+using DATN_DT.IServices;
 using DATN_DT.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace DATN_DT.Services
 {
-    public interface IVoucherService
-    {
-        Task<List<Voucher>> GetAllVouchersAsync();
-        Task<Voucher?> GetVoucherByIdAsync(int id);
-        Task<Voucher?> GetVoucherByCodeAsync(string maVoucher);
-        Task<bool> ValidateVoucherAsync(string maVoucher, int idKhachHang, decimal tongTienDonHang);
-        Task<decimal> CalculateDiscountAsync(Voucher voucher, decimal tongTienDonHang, List<int>? danhSachIdSanPham = null);
-        Task<bool> UseVoucherAsync(int idVoucher, int idKhachHang, int? idHoaDon, decimal soTienGiam);
-        Task<Voucher> CreateVoucherAsync(Voucher voucher);
-        Task<bool> UpdateVoucherAsync(Voucher voucher);
-        Task<bool> DeleteVoucherAsync(int id);
-        Task UpdateVoucherStatusAsync();
-    }
-
+    // Implementation only — interface lives in DATN_DT.IServices\IVoucherService.cs
     public class VoucherService : IVoucherService
     {
         private readonly MyDbContext _context;
@@ -42,6 +33,7 @@ namespace DATN_DT.Services
 
         public async Task<Voucher?> GetVoucherByCodeAsync(string maVoucher)
         {
+            if (string.IsNullOrWhiteSpace(maVoucher)) return null;
             return await _context.Vouchers
                 .FirstOrDefaultAsync(v => v.MaVoucher == maVoucher);
         }
@@ -49,36 +41,20 @@ namespace DATN_DT.Services
         public async Task<bool> ValidateVoucherAsync(string maVoucher, int idKhachHang, decimal tongTienDonHang)
         {
             var voucher = await GetVoucherByCodeAsync(maVoucher);
-            if (voucher == null)
-                return false;
+            if (voucher == null) return false;
 
             var now = DateTime.Now;
 
-            // Kiểm tra trạng thái
-            if (voucher.TrangThai != "HoatDong")
-                return false;
+            if (voucher.TrangThai != "HoatDong") return false;
+            if (now < voucher.NgayBatDau || now > voucher.NgayKetThuc) return false;
+            if (voucher.DonHangToiThieu.HasValue && tongTienDonHang < voucher.DonHangToiThieu.Value) return false;
+            if (voucher.SoLuongSuDung.HasValue && voucher.SoLuongDaSuDung >= voucher.SoLuongSuDung.Value) return false;
 
-            // Kiểm tra thời gian
-            if (now < voucher.NgayBatDau || now > voucher.NgayKetThuc)
-                return false;
-
-            // Kiểm tra đơn hàng tối thiểu
-            if (voucher.DonHangToiThieu.HasValue && tongTienDonHang < voucher.DonHangToiThieu.Value)
-                return false;
-
-            // Kiểm tra số lượng sử dụng tổng
-            if (voucher.SoLuongSuDung.HasValue && voucher.SoLuongDaSuDung >= voucher.SoLuongSuDung.Value)
-                return false;
-
-            // Kiểm tra số lượng sử dụng mỗi khách hàng
-            // Chỉ kiểm tra nếu SoLuongMoiKhachHang > 0 (0 hoặc null = không giới hạn)
             if (voucher.SoLuongMoiKhachHang.HasValue && voucher.SoLuongMoiKhachHang.Value > 0)
             {
-                var soLanDaSuDung = await _context.VoucherSuDungs
-                    .CountAsync(v => v.IdVoucher == voucher.IdVoucher && v.IdKhachHang == idKhachHang);
-                
-                if (soLanDaSuDung >= voucher.SoLuongMoiKhachHang.Value)
-                    return false;
+                var used = await _context.VoucherSuDungs
+                    .CountAsync(x => x.IdVoucher == voucher.IdVoucher && x.IdKhachHang == idKhachHang);
+                if (used >= voucher.SoLuongMoiKhachHang.Value) return false;
             }
 
             return true;
@@ -86,40 +62,31 @@ namespace DATN_DT.Services
 
         public async Task<decimal> CalculateDiscountAsync(Voucher voucher, decimal tongTienDonHang, List<int>? danhSachIdSanPham = null)
         {
-            // Kiểm tra đơn hàng tối thiểu
-            if (voucher.DonHangToiThieu.HasValue && tongTienDonHang < voucher.DonHangToiThieu.Value)
-                return 0;
+            if (voucher == null) return 0m;
+            if (voucher.DonHangToiThieu.HasValue && tongTienDonHang < voucher.DonHangToiThieu.Value) return 0m;
 
-            decimal discount = 0;
-
-            if (voucher.LoaiGiam == "PhanTram")
+            decimal discount = 0m;
+            if (voucher.LoaiGiam?.Equals("PhanTram", StringComparison.OrdinalIgnoreCase) == true)
             {
-                discount = tongTienDonHang * (voucher.GiaTri / 100);
-                
-                // Áp dụng giảm tối đa nếu có
-                if (voucher.GiamToiDa.HasValue && discount > voucher.GiamToiDa.Value)
-                    discount = voucher.GiamToiDa.Value;
+                discount = Math.Round(tongTienDonHang * (voucher.GiaTri / 100m), 0);
+                if (voucher.GiamToiDa.HasValue) discount = Math.Min(discount, voucher.GiamToiDa.Value);
             }
-            else if (voucher.LoaiGiam == "SoTien")
+            else // SoTien
             {
                 discount = voucher.GiaTri;
-                
-                // Không giảm quá tổng tiền
-                if (discount > tongTienDonHang)
-                    discount = tongTienDonHang;
+                if (voucher.GiamToiDa.HasValue) discount = Math.Min(discount, voucher.GiamToiDa.Value);
+                if (discount > tongTienDonHang) discount = tongTienDonHang;
             }
 
-            return Math.Round(discount, 0);
+            return discount;
         }
 
         public async Task<bool> UseVoucherAsync(int idVoucher, int idKhachHang, int? idHoaDon, decimal soTienGiam)
         {
             var voucher = await GetVoucherByIdAsync(idVoucher);
-            if (voucher == null)
-                return false;
+            if (voucher == null) return false;
 
-            // Tạo bản ghi sử dụng
-            var voucherSuDung = new VoucherSuDung
+            var suDung = new VoucherSuDung
             {
                 IdVoucher = idVoucher,
                 IdKhachHang = idKhachHang,
@@ -128,12 +95,9 @@ namespace DATN_DT.Services
                 NgaySuDung = DateTime.Now
             };
 
-            _context.VoucherSuDungs.Add(voucherSuDung);
+            await _context.VoucherSuDungs.AddAsync(suDung);
 
-            // Cập nhật số lượng đã sử dụng
             voucher.SoLuongDaSuDung++;
-
-            // Kiểm tra nếu hết số lượng thì cập nhật trạng thái
             if (voucher.SoLuongSuDung.HasValue && voucher.SoLuongDaSuDung >= voucher.SoLuongSuDung.Value)
             {
                 voucher.TrangThai = "HetHan";
@@ -145,7 +109,15 @@ namespace DATN_DT.Services
 
         public async Task<Voucher> CreateVoucherAsync(Voucher voucher)
         {
-            _context.Vouchers.Add(voucher);
+            voucher.SoLuongDaSuDung = 0;
+            if (string.IsNullOrEmpty(voucher.TrangThai))
+            {
+                var now = DateTime.Now;
+                voucher.TrangThai = now < voucher.NgayBatDau ? "SapDienRa"
+                    : (now >= voucher.NgayBatDau && now <= voucher.NgayKetThuc) ? "HoatDong" : "HetHan";
+            }
+
+            await _context.Vouchers.AddAsync(voucher);
             await _context.SaveChangesAsync();
             return voucher;
         }
@@ -167,16 +139,11 @@ namespace DATN_DT.Services
         public async Task<bool> DeleteVoucherAsync(int id)
         {
             var voucher = await GetVoucherByIdAsync(id);
-            if (voucher == null)
-                return false;
+            if (voucher == null) return false;
 
-            // Kiểm tra xem có đang được sử dụng không
-            var hasUsage = await _context.VoucherSuDungs
-                .AnyAsync(v => v.IdVoucher == id);
-
+            var hasUsage = await _context.VoucherSuDungs.AnyAsync(v => v.IdVoucher == id);
             if (hasUsage)
             {
-                // Không xóa, chỉ đổi trạng thái
                 voucher.TrangThai = "TamDung";
                 await _context.SaveChangesAsync();
                 return true;
@@ -194,25 +161,17 @@ namespace DATN_DT.Services
                 .Where(v => v.TrangThai == "HoatDong" || v.TrangThai == "SapDienRa")
                 .ToListAsync();
 
-            foreach (var voucher in vouchers)
+            foreach (var v in vouchers)
             {
-                if (now > voucher.NgayKetThuc)
+                if (now > v.NgayKetThuc) v.TrangThai = "HetHan";
+                else if (now >= v.NgayBatDau && now <= v.NgayKetThuc)
                 {
-                    voucher.TrangThai = "HetHan";
+                    if (v.TrangThai == "SapDienRa") v.TrangThai = "HoatDong";
                 }
-                else if (now >= voucher.NgayBatDau && now <= voucher.NgayKetThuc)
-                {
-                    if (voucher.TrangThai == "SapDienRa")
-                        voucher.TrangThai = "HoatDong";
-                }
-                else if (now < voucher.NgayBatDau)
-                {
-                    voucher.TrangThai = "SapDienRa";
-                }
+                else if (now < v.NgayBatDau) v.TrangThai = "SapDienRa";
             }
 
             await _context.SaveChangesAsync();
         }
     }
 }
-

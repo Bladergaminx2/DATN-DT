@@ -689,7 +689,7 @@ namespace DATN_DT.Controllers
                 // 8) Apply voucher (nếu có)
                 if (model.IdVoucher.HasValue && model.SoTienGiamVoucher > 0)
                 {
-                    var voucherService = HttpContext.RequestServices.GetRequiredService<IVoucherService>();
+                    var voucherService = HttpContext.RequestServices.GetRequiredService<IServices.IVoucherService>();
                     await voucherService.UseVoucherAsync(
                         model.IdVoucher.Value,
                         khachHang.IdKhachHang,

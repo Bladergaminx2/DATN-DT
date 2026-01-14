@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using System;
 using System.Security.Claims;
+using DATN_DT.IServices;
 
 namespace DATN_DT.Controllers
 {
@@ -54,7 +55,7 @@ namespace DATN_DT.Controllers
         }
 
         // POST: Voucher/Create
-        [HttpPost]
+        [HttpPost("Create")]
         public async Task<IActionResult> Create([FromBody] Voucher voucher)
         {
             try
@@ -92,7 +93,7 @@ namespace DATN_DT.Controllers
         }
 
         // POST: Voucher/Update
-        [HttpPost]
+        [HttpPost("Update")]
         public async Task<IActionResult> Update([FromBody] Voucher voucher)
         {
             try
@@ -136,7 +137,7 @@ namespace DATN_DT.Controllers
         }
 
         // POST: Voucher/Delete
-        [HttpPost]
+        [HttpPost("Delete")]
         public async Task<IActionResult> Delete([FromBody] DeleteVoucherRequest request)
         {
             try

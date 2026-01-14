@@ -1274,12 +1274,16 @@
 
         function updateCartCount() {
             const cartCountElement = document.getElementById('cartCount');
-            if (cartCountElement) {
-                const count = cart.reduce((total, item) => {
-                    return total + (item.quantity || 0);
-                }, 0);
-                cartCountElement.textContent = count;
-                cartCountElement.setAttribute('aria-label', `${count} sản phẩm trong giỏ hàng`);
+            if (!cartCountElement) return;
+
+            // Luôn đọc lại từ localStorage để tránh desync
+            let stored = [];
+            try {
+                stored = JSON.parse(localStorage.getItem('cart') || '[]');
+            } catch (e) {
+                console.warn('Invalid cart in localStorage, resetting', e);
+                stored = [];
+                localStorage.setItem('cart', JSON.stringify([]));
             }
         }
 
