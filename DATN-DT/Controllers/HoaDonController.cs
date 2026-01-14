@@ -41,117 +41,135 @@ namespace DATN_DT.Controllers
         {
             return View();
         }
+        // ===================== CONTROLLER: HOA DON =====================
 
-        // GET: API - Lấy danh sách hóa đơn
+        // GET: API - Lấy danh sách hóa đơn (GỌN, NHANH, ĐÚNG EF)
         [HttpGet]
-        public async Task<IActionResult> GetInvoices(int? status, string? search, DateTime? fromDate, DateTime? toDate, string? paymentMethod)
+        public async Task<IActionResult> GetInvoices(
+            int? status,
+            string? search,
+            DateTime? fromDate,
+            DateTime? toDate,
+            string? paymentMethod // "" | "COD" | "TRANSFER" (khuyến nghị FE gửi như vậy)
+        )
         {
             try
             {
                 var query = _context.HoaDons
+                    .AsNoTracking()
                     .Include(h => h.KhachHang)
                     .Include(h => h.NhanVien)
                     .Include(h => h.HoaDonChiTiets)
-                        .ThenInclude(hdct => hdct.ModelSanPham)
-                            .ThenInclude(m => m.SanPham)
-                                .ThenInclude(sp => sp.ThuongHieu)
-                    .Include(h => h.HoaDonChiTiets)
-                        .ThenInclude(hdct => hdct.ModelSanPham)
-                            .ThenInclude(m => m.RAM)
-                    .Include(h => h.HoaDonChiTiets)
-                        .ThenInclude(hdct => hdct.ModelSanPham)
-                            .ThenInclude(m => m.ROM)
-                    .Include(h => h.HoaDonChiTiets)
-                        .ThenInclude(hdct => hdct.ModelSanPham)
-                            .ThenInclude(m => m.ManHinh)
-                    .Include(h => h.HoaDonChiTiets)
-                        .ThenInclude(hdct => hdct.ModelSanPham)
-                            .ThenInclude(m => m.CameraTruoc)
-                    .Include(h => h.HoaDonChiTiets)
-                        .ThenInclude(hdct => hdct.ModelSanPham)
-                            .ThenInclude(m => m.CameraSau)
-                    .Include(h => h.HoaDonChiTiets)
-                        .ThenInclude(hdct => hdct.ModelSanPham)
-                            .ThenInclude(m => m.AnhSanPhams)
-                    .Include(h => h.HoaDonChiTiets)
-                        .ThenInclude(hdct => hdct.Imei)
                     .AsQueryable();
 
-                // Filter theo trạng thái
+                // 1) Filter theo trạng thái (KHÔNG dùng GetStatusNumber trong Where)
                 if (status.HasValue)
                 {
-                    var statusValue = status.Value;
-                    query = query.Where(h => GetStatusNumber(h.TrangThaiHoaDon) == statusValue);
-                }
+                    var statusNumStr = status.Value.ToString();
+                    var statusName = GetStatusName(status.Value).Trim().ToLower();
 
-                // Tìm kiếm
-                if (!string.IsNullOrWhiteSpace(search))
-                {
-                    var searchLower = search.ToLower();
                     query = query.Where(h =>
-                        (h.IdHoaDon.ToString().Contains(searchLower)) ||
-                        (h.KhachHang != null && h.KhachHang.HoTenKhachHang != null && h.KhachHang.HoTenKhachHang.ToLower().Contains(searchLower)) ||
-                        (h.HoTenNguoiNhan != null && h.HoTenNguoiNhan.ToLower().Contains(searchLower)) ||
-                        (h.SdtKhachHang != null && h.SdtKhachHang.Contains(searchLower))
+                        h.TrangThaiHoaDon != null &&
+                        (
+                            h.TrangThaiHoaDon.Trim() == statusNumStr ||
+                            h.TrangThaiHoaDon.Trim().ToLower() == statusName
+                        )
                     );
                 }
 
-                // Filter theo ngày
-                if (fromDate.HasValue)
+                // 2) Tìm kiếm (mã đơn / tên / sdt)
+                if (!string.IsNullOrWhiteSpace(search))
                 {
-                    query = query.Where(h => h.NgayLapHoaDon >= fromDate.Value);
-                }
-                if (toDate.HasValue)
-                {
-                    query = query.Where(h => h.NgayLapHoaDon <= toDate.Value.AddDays(1).AddSeconds(-1));
+                    var sTrim = search.Trim();
+                    var sLower = sTrim.ToLower();
+
+                    // hỗ trợ "HD000001" hoặc "1"
+                    int? idFromNumber = null;
+                    if (int.TryParse(sTrim, out var parsedId)) idFromNumber = parsedId;
+
+                    var idFromMaDon = ParseMaDon(sTrim); // nếu bạn đã có hàm này
+
+                    query = query.Where(h =>
+                        (idFromNumber.HasValue && h.IdHoaDon == idFromNumber.Value) ||
+                        (idFromMaDon.HasValue && h.IdHoaDon == idFromMaDon.Value) ||
+                        (h.KhachHang != null && h.KhachHang.HoTenKhachHang != null &&
+                            EF.Functions.Like(h.KhachHang.HoTenKhachHang.ToLower(), $"%{sLower}%")) ||
+                        (h.HoTenNguoiNhan != null &&
+                            EF.Functions.Like(h.HoTenNguoiNhan.ToLower(), $"%{sLower}%")) ||
+                        (h.SdtKhachHang != null &&
+                            EF.Functions.Like(h.SdtKhachHang, $"%{sTrim}%"))
+                    );
                 }
 
-                // Filter theo phương thức thanh toán (Online/Offline)
-                if (!string.IsNullOrWhiteSpace(paymentMethod))
+                // 3) Filter theo ngày (from inclusive, to exclusive)
+                if (fromDate.HasValue)
                 {
-                    query = query.Where(h => h.PhuongThucThanhToan == paymentMethod);
+                    var from = fromDate.Value.Date;
+                    query = query.Where(h => h.NgayLapHoaDon.HasValue && h.NgayLapHoaDon.Value >= from);
+                }
+
+                if (toDate.HasValue)
+                {
+                    var toExclusive = toDate.Value.Date.AddDays(1);
+                    query = query.Where(h => h.NgayLapHoaDon.HasValue && h.NgayLapHoaDon.Value < toExclusive);
+                }
+
+                // 4) Filter theo phương thức thanh toán (CHỐT THEO NHÓM)
+                // FE khuyến nghị gửi: "" (tất cả) | "COD" | "TRANSFER"
+                var pmKey = NormalizePaymentKey(paymentMethod);
+
+                if (!string.IsNullOrEmpty(pmKey))
+                {
+                    if (pmKey == "cod")
+                    {
+                        query = query.Where(h =>
+                            h.PhuongThucThanhToan != null &&
+                            h.PhuongThucThanhToan.Trim().ToLower() == "cod"
+                        );
+                    }
+                    else if (pmKey == "transfer")
+                    {
+                        query = query.Where(h =>
+                            h.PhuongThucThanhToan != null &&
+                            (
+                                h.PhuongThucThanhToan.ToLower().Contains("chuyenkhoan") ||
+                                h.PhuongThucThanhToan.ToLower().Contains("chuyển khoản") ||
+                                h.PhuongThucThanhToan.ToLower().Contains("bank") ||
+                                h.PhuongThucThanhToan.ToLower().Contains("transfer")
+                            )
+                        );
+                    }
                 }
 
                 var hoaDons = await query
                     .OrderByDescending(h => h.NgayLapHoaDon)
                     .ToListAsync();
 
-                var invoices = hoaDons.Select(h => new
+                // Projection (ở đây mới dùng GetStatusNumber vì đã ToListAsync)
+                var invoices = hoaDons.Select(h =>
                 {
-                    idHoaDon = h.IdHoaDon,
-                    maDon = $"HD{h.IdHoaDon:D6}",
-                    ngayLap = h.NgayLapHoaDon?.ToString("dd/MM/yyyy HH:mm"),
-                    trangThai = h.TrangThaiHoaDon ?? "Chưa xác định",
-                    trangThaiSo = GetStatusNumber(h.TrangThaiHoaDon),
-                    tongTien = h.TongTien ?? 0,
-                    phuongThucThanhToan = h.PhuongThucThanhToan ?? "COD",
-                    hoTenKhachHang = h.KhachHang?.HoTenKhachHang ?? h.HoTenNguoiNhan ?? "N/A",
-                    sdtKhachHang = h.KhachHang?.SdtKhachHang ?? h.SdtKhachHang ?? "N/A",
-                    emailKhachHang = h.KhachHang?.EmailKhachHang ?? "N/A",
-                    hoTenNhanVien = h.NhanVien?.HoTenNhanVien ?? "N/A",
-                    soLuongSanPham = h.HoaDonChiTiets?.Count ?? 0,
-                    chiTiet = h.HoaDonChiTiets?.Select(hdct => new
+                    var trangThaiSo = GetStatusNumber(h.TrangThaiHoaDon);
+                    var trangThaiText = NormalizeStoredStatus(h.TrangThaiHoaDon);
+
+                    var payDisplay = NormalizePaymentKey(h.PhuongThucThanhToan) == "transfer"
+                        ? "Chuyển khoản"
+                        : "COD";
+
+                    return new
                     {
-                        tenSanPham = hdct.ModelSanPham?.SanPham?.TenSanPham ?? "N/A",
-                        tenModel = hdct.ModelSanPham?.TenModel ?? "N/A",
-                        tenThuongHieu = hdct.ModelSanPham?.SanPham?.ThuongHieu?.TenThuongHieu ?? "N/A",
-                        mau = hdct.ModelSanPham?.Mau ?? "N/A",
-                        ram = hdct.ModelSanPham?.RAM?.DungLuongRAM ?? "N/A",
-                        rom = hdct.ModelSanPham?.ROM?.DungLuongROM ?? "N/A",
-                        manHinh = hdct.ModelSanPham?.ManHinh != null 
-                            ? $"{hdct.ModelSanPham.ManHinh.KichThuoc ?? ""} {hdct.ModelSanPham.ManHinh.CongNgheManHinh ?? ""}".Trim()
-                            : "N/A",
-                        cameraTruoc = hdct.ModelSanPham?.CameraTruoc?.DoPhanGiaiCamTruoc ?? "N/A",
-                        cameraSau = hdct.ModelSanPham?.CameraSau?.DoPhanGiaiCamSau ?? "N/A",
-                        soLuong = hdct.SoLuong ?? 0,
-                        donGia = hdct.DonGia ?? 0,
-                        giaKhuyenMai = hdct.GiaKhuyenMai,
-                        thanhTien = hdct.ThanhTien ?? 0,
-                        hinhAnh = hdct.ModelSanPham?.AnhSanPhams?.FirstOrDefault()?.DuongDan ?? "/images/default-product.jpg",
-                        idImei = hdct.IdImei,
-                        maImei = hdct.Imei?.MaImei ?? "N/A",
-                        trangThaiImei = hdct.Imei?.TrangThai ?? "N/A"
-                    }).ToList()
+                        idHoaDon = h.IdHoaDon,
+                        maDon = $"HD{h.IdHoaDon:D6}",
+                        ngayLap = h.NgayLapHoaDon?.ToString("dd/MM/yyyy HH:mm"),
+                        trangThai = trangThaiText,
+                        trangThaiSo = trangThaiSo,
+                        tongTien = h.TongTien ?? 0,
+                        phuongThucThanhToan = payDisplay,
+                        hoTenKhachHang = h.KhachHang?.HoTenKhachHang ?? h.HoTenNguoiNhan ?? "N/A",
+                        sdtKhachHang = h.KhachHang?.SdtKhachHang ?? h.SdtKhachHang ?? "N/A",
+                        emailKhachHang = h.KhachHang?.EmailKhachHang ?? "N/A",
+                        hoTenNhanVien = h.NhanVien?.HoTenNhanVien ?? "N/A",
+                        soLuongSanPham = h.HoaDonChiTiets?.Count ?? 0
+                    };
                 }).ToList();
 
                 return Ok(new { success = true, data = invoices });
@@ -162,13 +180,15 @@ namespace DATN_DT.Controllers
             }
         }
 
-        // GET: API - Lấy chi tiết hóa đơn
+
+        // GET: API - Lấy chi tiết hóa đơn (mới include sâu)
         [HttpGet]
         public async Task<IActionResult> GetInvoiceDetail(int id)
         {
             try
             {
                 var hoaDon = await _context.HoaDons
+                    .AsNoTracking()
                     .Include(h => h.KhachHang)
                     .Include(h => h.NhanVien)
                     .Include(h => h.HoaDonChiTiets)
@@ -177,40 +197,27 @@ namespace DATN_DT.Controllers
                                 .ThenInclude(sp => sp.ThuongHieu)
                     .Include(h => h.HoaDonChiTiets)
                         .ThenInclude(hdct => hdct.ModelSanPham)
-                            .ThenInclude(m => m.RAM)
-                    .Include(h => h.HoaDonChiTiets)
-                        .ThenInclude(hdct => hdct.ModelSanPham)
-                            .ThenInclude(m => m.ROM)
-                    .Include(h => h.HoaDonChiTiets)
-                        .ThenInclude(hdct => hdct.ModelSanPham)
-                            .ThenInclude(m => m.ManHinh)
-                    .Include(h => h.HoaDonChiTiets)
-                        .ThenInclude(hdct => hdct.ModelSanPham)
-                            .ThenInclude(m => m.CameraTruoc)
-                    .Include(h => h.HoaDonChiTiets)
-                        .ThenInclude(hdct => hdct.ModelSanPham)
-                            .ThenInclude(m => m.CameraSau)
-                    .Include(h => h.HoaDonChiTiets)
-                        .ThenInclude(hdct => hdct.ModelSanPham)
                             .ThenInclude(m => m.AnhSanPhams)
                     .Include(h => h.HoaDonChiTiets)
                         .ThenInclude(hdct => hdct.Imei)
                     .FirstOrDefaultAsync(h => h.IdHoaDon == id);
 
                 if (hoaDon == null)
-                {
                     return NotFound(new { success = false, message = "Không tìm thấy hóa đơn" });
-                }
+
+                var payDisplay = NormalizePaymentKey(hoaDon.PhuongThucThanhToan) == "transfer"
+                    ? "Chuyển khoản"
+                    : "COD";
 
                 var invoice = new
                 {
                     idHoaDon = hoaDon.IdHoaDon,
                     maDon = $"HD{hoaDon.IdHoaDon:D6}",
                     ngayLap = hoaDon.NgayLapHoaDon?.ToString("dd/MM/yyyy HH:mm"),
-                    trangThai = hoaDon.TrangThaiHoaDon ?? "Chưa xác định",
+                    trangThai = NormalizeStoredStatus(hoaDon.TrangThaiHoaDon),
                     trangThaiSo = GetStatusNumber(hoaDon.TrangThaiHoaDon),
                     tongTien = hoaDon.TongTien ?? 0,
-                    phuongThucThanhToan = hoaDon.PhuongThucThanhToan ?? "COD",
+                    phuongThucThanhToan = payDisplay,
                     hoTenKhachHang = hoaDon.KhachHang?.HoTenKhachHang ?? hoaDon.HoTenNguoiNhan ?? "N/A",
                     sdtKhachHang = hoaDon.KhachHang?.SdtKhachHang ?? hoaDon.SdtKhachHang ?? "N/A",
                     emailKhachHang = hoaDon.KhachHang?.EmailKhachHang ?? "N/A",
@@ -218,21 +225,13 @@ namespace DATN_DT.Controllers
                     chiTiet = hoaDon.HoaDonChiTiets?.Select(hdct => new
                     {
                         tenSanPham = hdct.ModelSanPham?.SanPham?.TenSanPham ?? "N/A",
-                        tenModel = hdct.ModelSanPham?.TenModel ?? "N/A",
                         tenThuongHieu = hdct.ModelSanPham?.SanPham?.ThuongHieu?.TenThuongHieu ?? "N/A",
+                        tenModel = hdct.ModelSanPham?.TenModel ?? "N/A",
                         mau = hdct.ModelSanPham?.Mau ?? "N/A",
-                        ram = hdct.ModelSanPham?.RAM?.DungLuongRAM ?? "N/A",
-                        rom = hdct.ModelSanPham?.ROM?.DungLuongROM ?? "N/A",
-                        manHinh = hdct.ModelSanPham?.ManHinh != null 
-                            ? $"{hdct.ModelSanPham.ManHinh.KichThuoc ?? ""} {hdct.ModelSanPham.ManHinh.CongNgheManHinh ?? ""}".Trim()
-                            : "N/A",
-                        cameraTruoc = hdct.ModelSanPham?.CameraTruoc?.DoPhanGiaiCamTruoc ?? "N/A",
-                        cameraSau = hdct.ModelSanPham?.CameraSau?.DoPhanGiaiCamSau ?? "N/A",
                         soLuong = hdct.SoLuong ?? 0,
                         donGia = hdct.DonGia ?? 0,
                         thanhTien = hdct.ThanhTien ?? 0,
                         hinhAnh = hdct.ModelSanPham?.AnhSanPhams?.FirstOrDefault()?.DuongDan ?? "/images/default-product.jpg",
-                        idImei = hdct.IdImei,
                         maImei = hdct.Imei?.MaImei ?? "N/A",
                         trangThaiImei = hdct.Imei?.TrangThai ?? "N/A"
                     }).ToList()
@@ -246,59 +245,45 @@ namespace DATN_DT.Controllers
             }
         }
 
+
         // POST: API - Cập nhật trạng thái hóa đơn
         [HttpPost]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStatusModel model)
         {
             try
             {
-                if (model == null || model.TrangThai < 0 || model.TrangThai > 4)
-                {
+                // Cho phép 0..5 (vì bạn có "Chờ thanh toán")
+                if (model == null || model.TrangThai < 0 || model.TrangThai > 5)
                     return BadRequest(new { success = false, message = "Trạng thái không hợp lệ" });
-                }
 
                 var hoaDon = await _context.HoaDons
                     .Include(h => h.HoaDonChiTiets)
                         .ThenInclude(hdct => hdct.Imei)
                     .FirstOrDefaultAsync(h => h.IdHoaDon == id);
-                    
-                if (hoaDon == null)
-                {
-                    return NotFound(new { success = false, message = "Không tìm thấy hóa đơn" });
-                }
 
-                // Lấy ID nhân viên đang xử lý (nếu có)
+                if (hoaDon == null)
+                    return NotFound(new { success = false, message = "Không tìm thấy hóa đơn" });
+
                 var idNhanVien = GetCurrentNhanVienId();
-                
-                // Nếu hủy đơn hàng (trạng thái 4), cần khôi phục IMEI và tồn kho
-                var isCancelling = model.TrangThai == 4 && hoaDon.TrangThaiHoaDon != "Hủy đơn hàng";
-                
-                // Nếu đang hủy đơn hàng, ProcessPaymentCancel sẽ tự cập nhật trạng thái
+
+                // Chỉ set nhân viên nếu chưa có
+                if (!hoaDon.IdNhanVien.HasValue && idNhanVien.HasValue)
+                    hoaDon.IdNhanVien = idNhanVien;
+
+                // Nếu hủy đơn
+                var newStatusName = GetStatusName(model.TrangThai);
+                var isCancelling = model.TrangThai == 4 && NormalizeStoredStatus(hoaDon.TrangThaiHoaDon) != "Hủy đơn hàng";
+
                 if (isCancelling)
                 {
-                    // Lưu ID nhân viên nếu có
-                    if (!hoaDon.IdNhanVien.HasValue && idNhanVien.HasValue)
-                    {
-                        hoaDon.IdNhanVien = idNhanVien;
-                        _context.HoaDons.Update(hoaDon);
-                        await _context.SaveChangesAsync();
-                    }
-                    
-                    // ProcessPaymentCancel sẽ cập nhật trạng thái và khôi phục IMEI/tồn kho
+                    // ProcessPaymentCancel tự xử lý cập nhật status + hoàn imei/tồn kho
                     await ProcessPaymentCancel(hoaDon);
                 }
                 else
                 {
-                // Cập nhật trạng thái và lưu ID nhân viên xử lý
-                hoaDon.TrangThaiHoaDon = GetStatusName(model.TrangThai);
-                // Nếu chưa có nhân viên thì lưu, nếu đã có thì giữ nguyên (để lưu nhân viên đầu tiên tạo đơn)
-                if (!hoaDon.IdNhanVien.HasValue && idNhanVien.HasValue)
-                {
-                    hoaDon.IdNhanVien = idNhanVien;
-                }
-                
-                _context.HoaDons.Update(hoaDon);
-                await _context.SaveChangesAsync();
+                    hoaDon.TrangThaiHoaDon = newStatusName;
+                    _context.HoaDons.Update(hoaDon);
+                    await _context.SaveChangesAsync();
                 }
 
                 return Ok(new { success = true, message = "Cập nhật trạng thái thành công!" });
@@ -310,28 +295,72 @@ namespace DATN_DT.Controllers
             }
         }
 
-        // Helper: Chuyển đổi trạng thái từ string/số sang số
+
+        // ===================== HELPERS =====================
+
+        // Chuẩn hóa payment về key: "" | "cod" | "transfer"
+        private static string NormalizePaymentKey(string? payment)
+        {
+            var p = (payment ?? "").Trim().ToLowerInvariant();
+            if (string.IsNullOrEmpty(p)) return "";
+
+            if (p == "cod" || p.Contains("cod")) return "cod";
+
+            // nhận các biến thể bạn đang có
+            if (p.Contains("chuyenkhoan") || p.Contains("chuyển khoản") || p.Contains("bank") || p.Contains("transfer") || p == "transfer")
+                return "transfer";
+
+            // FE gửi TRANSFER
+            if (p == "transfer") return "transfer";
+
+            return p;
+        }
+
+        // Chuẩn hóa hiển thị trạng thái (text chuẩn)
+        private string NormalizeStoredStatus(string? stored)
+        {
+            if (string.IsNullOrWhiteSpace(stored))
+                return "Chưa xác định";
+
+            var s = stored.Trim();
+            // nếu DB lỡ lưu số-string
+            if (int.TryParse(s, out var n))
+                return GetStatusName(n);
+
+            // chuẩn hóa theo từ khóa
+            var lower = s.ToLowerInvariant();
+            if (lower.Contains("chờ thanh toán")) return "Chờ thanh toán";
+            if (lower.Contains("chờ xác nhận")) return "Chờ xác nhận";
+            if (lower.Contains("đã xác nhận")) return "Đã xác nhận";
+            if (lower.Contains("vận chuyển")) return "Đang vận chuyển";
+            if (lower.Contains("thành công")) return "Giao hàng thành công";
+            if (lower.Contains("hủy") || lower.Contains("huy")) return "Hủy đơn hàng";
+
+            return s;
+        }
+
+        // Chỉ dùng cho HIỂN THỊ (sau ToListAsync)
         private int GetStatusNumber(string? trangThai)
         {
-            if (string.IsNullOrEmpty(trangThai))
+            if (string.IsNullOrWhiteSpace(trangThai))
                 return -1;
 
-            // Nếu là số dạng string
-            if (int.TryParse(trangThai, out int statusNum))
+            var s = trangThai.Trim();
+
+            if (int.TryParse(s, out int statusNum))
                 return statusNum;
 
-            // Map từ string sang số
-            var lower = trangThai.ToLower();
-            if (lower.Contains("chờ") || lower.Contains("pending") || lower == "0") return 0;
-            if (lower.Contains("xác nhận") || lower.Contains("confirmed") || lower == "1") return 1;
-            if (lower.Contains("vận chuyển") || lower.Contains("shipping") || lower == "2") return 2;
-            if (lower.Contains("thành công") || lower.Contains("completed") || lower == "3") return 3;
-            if (lower.Contains("hủy") || lower.Contains("cancel") || lower == "4") return 4;
+            var lower = s.ToLowerInvariant();
+            if (lower.Contains("chờ thanh toán")) return 5;
+            if (lower.Contains("chờ xác nhận") || lower.Contains("pending")) return 0;
+            if (lower.Contains("đã xác nhận") || lower.Contains("confirmed")) return 1;
+            if (lower.Contains("vận chuyển") || lower.Contains("shipping")) return 2;
+            if (lower.Contains("thành công") || lower.Contains("completed")) return 3;
+            if (lower.Contains("hủy") || lower.Contains("cancel")) return 4;
 
             return -1;
         }
 
-        // Helper: Chuyển đổi trạng thái từ số sang string
         private string GetStatusName(int statusNum)
         {
             return statusNum switch
@@ -341,6 +370,7 @@ namespace DATN_DT.Controllers
                 2 => "Đang vận chuyển",
                 3 => "Giao hàng thành công",
                 4 => "Hủy đơn hàng",
+                5 => "Chờ thanh toán",
                 _ => "Chưa xác định"
             };
         }

@@ -1237,67 +1237,7 @@
             }
         }
 
-        function buyNow(event) {
-            // Validate
-            if (!productId || productId <= 0) {
-                showToast('Sản phẩm không hợp lệ', 'danger');
-                return;
-            }
-            
-            const quantityInput = document.getElementById('quantity');
-            if (!quantityInput) {
-                showToast('Không tìm thấy ô số lượng', 'danger');
-                return;
-            }
-            
-            const quantity = parseInt(quantityInput.value);
-            if (isNaN(quantity) || quantity <= 0) {
-                showToast('Vui lòng chọn số lượng hợp lệ', 'warning');
-                return;
-            }
-            
-            if (quantity > productStock) {
-                showToast(`Số lượng không được vượt quá ${productStock}`, 'warning');
-                return;
-            }
-
-            // Loading state
-            const btn = event?.target?.closest('.btn-secondary') || document.querySelector('.btn-secondary[onclick*="buyNow"]');
-            let originalContent = '';
-            if (btn) {
-                originalContent = btn.innerHTML;
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang chuyển...';
-            }
-
-            try {
-                // Add to cart first
-                const existingItem = cart.find(item => item.id === productId);
-                if (existingItem) {
-                    existingItem.quantity += quantity;
-                } else {
-                    cart.push({
-                        id: productId,
-                        name: productName,
-                        price: productPrice,
-                        image: productImage,
-                        quantity: quantity
-                    });
-                }
-
-                localStorage.setItem('cart', JSON.stringify(cart));
-
-                // Redirect to checkout
-                window.location.href = '/GioHang/Cart';
-            } catch (error) {
-                console.error('Error in buyNow:', error);
-                showToast('Có lỗi xảy ra. Vui lòng thử lại.', 'danger');
-                if (btn && originalContent) {
-                    btn.disabled = false;
-                    btn.innerHTML = originalContent;
-                }
-            }
-        }
+     
 
         // ========== NAVIGATION
         function goToHomePage() {

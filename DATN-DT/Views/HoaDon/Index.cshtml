@@ -440,11 +440,21 @@
             <!-- Payment Method Filter -->
             <div class="row mb-3">
                 <div class="col-md-12">
-                    <label class="form-label">Loại bán hàng</label>
+                    <label class="form-label">Phương thức thanh toán</label>
                     <div class="btn-group w-100" role="group">
-                        <input type="radio" class="btn-check" name="paymentType" id="onlineType" value="Chuyển khoản" checked>
-                        <label class="btn btn-outline-success" for="onlineType">
+                        <input type="radio" class="btn-check" name="paymentType" id="payAll" value="" checked>
+                        <label class="btn btn-outline-secondary" for="payAll">
+                            <i class="bi bi-list me-1"></i>Tất cả
+                        </label>
+
+                        <input type="radio" class="btn-check" name="paymentType" id="payTransfer" value="TRANSFER">
+                        <label class="btn btn-outline-success" for="payTransfer">
                             <i class="bi bi-globe me-1"></i>Online (Chuyển khoản)
+                        </label>
+
+                        <input type="radio" class="btn-check" name="paymentType" id="payCOD" value="COD">
+                        <label class="btn btn-outline-info" for="payCOD">
+                            <i class="bi bi-shop me-1"></i>Offline (COD)
                         </label>
                     </div>
                 </div>
@@ -549,140 +559,131 @@
     <script>
         var currentStatusFilter = null;
 
-        // Format tiền
-        function formatMoney(amount) {
-            return new Intl.NumberFormat('vi-VN').format(amount) + ' ₫';
-        }
-
-        // Lấy tên trạng thái từ số
-        function getStatusName(statusNum) {
-            switch (statusNum) {
-                case 0: return 'Chờ xác nhận';
-                case 1: return 'Đã xác nhận';
-                case 2: return 'Đang vận chuyển';
-                case 3: return 'Giao hàng thành công';
-                case 4: return 'Hủy đơn hàng';
-                default: return 'Không xác định';
+            function formatMoney(amount) {
+                return new Intl.NumberFormat('vi-VN').format(amount) + ' ₫';
             }
-        }
 
-        // Load danh sách hóa đơn
-        async function loadInvoices() {
-            try {
-                var search = document.getElementById('searchInput').value;
-                var fromDate = document.getElementById('fromDate').value;
-                var toDate = document.getElementById('toDate').value;
-                var status = currentStatusFilter;
-                
-                // Mặc định chỉ lấy hóa đơn online (Chuyển khoản)
-                var paymentMethod = 'Chuyển khoản';
-
-                var url = '/HoaDon/GetInvoices?';
-                if (status !== null) url += 'status=' + status + '&';
-                if (search) url += 'search=' + encodeURIComponent(search) + '&';
-                if (fromDate) url += 'fromDate=' + encodeURIComponent(fromDate) + '&';
-                if (toDate) url += 'toDate=' + encodeURIComponent(toDate) + '&';
-                if (paymentMethod) url += 'paymentMethod=' + encodeURIComponent(paymentMethod) + '&';
-
-                const response = await fetch(url);
-                const result = await response.json();
-
-                var container = document.getElementById('invoicesTableContainer');
-                if (!result.success) {
-                    container.innerHTML = '<p class="text-center text-danger" style="color: #dc3545 !important;">Lỗi: ' + (result.message || 'Không thể tải dữ liệu') + '</p>';
-                    return;
+            function getStatusName(statusNum) {
+                switch (statusNum) {
+                    case 0: return 'Chờ xác nhận';
+                    case 1: return 'Đã xác nhận';
+                    case 2: return 'Đang vận chuyển';
+                    case 3: return 'Giao hàng thành công';
+                    case 4: return 'Hủy đơn hàng';
+                    case 5: return 'Chờ thanh toán';
+                    default: return 'Không xác định';
                 }
+            }
 
-                // Debug: Log dữ liệu
-                console.log('Invoices data:', result.data);
-                
-                var html = '<table class="table table-hover" style="width: 100%;">' +
-                    '<thead>' +
-                    '<tr>' +
-                    '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Mã đơn</th>' +
-                    '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Loại</th>' +
-                    '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Khách hàng</th>' +
-                    '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Nhân viên</th>' +
-                    '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Ngày lập</th>' +
-                    '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Trạng thái</th>' +
-                    '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Tổng tiền</th>' +
-                    '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Số lượng SP</th>' +
-                    '<th style="color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important;">Thao tác</th>' +
-                    '</tr>' +
-                    '</thead>' +
-                    '<tbody>';
+            function isTransferMethod(pm) {
+                if (!pm) return false;
+                var p = pm.toString().toLowerCase();
+                return p.includes('chuyenkhoan') || p.includes('chuyển khoản') || p.includes('bank') || p.includes('transfer');
+            }
 
-                if (!result.data || result.data.length === 0) {
-                    html += '<tr><td colspan="9" class="text-center" style="color: #b0b0b0 !important; font-size: 15px !important; padding: 30px !important;"><i class="bi bi-inbox me-2"></i>Không có hóa đơn nào.</td></tr>';
-                } else {
-                    // Tính thống kê
-                    var totalCount = result.data.length;
-                    var totalRevenue = 0;
+            async function loadInvoices() {
+                try {
+                    var search = document.getElementById('searchInput').value;
+                    var fromDate = document.getElementById('fromDate').value;
+                    var toDate = document.getElementById('toDate').value;
+                    var status = currentStatusFilter;
 
-                    for (var i = 0; i < result.data.length; i++) {
-                        var invoice = result.data[i];
-                        totalRevenue += (invoice.tongTien || 0);
+                    // Lấy từ radio: "" | "COD" | "TRANSFER"
+                    var paymentMethod = document.querySelector('input[name="paymentType"]:checked')?.value || '';
+
+                    var url = '/HoaDon/GetInvoices?';
+                    if (status !== null) url += 'status=' + status + '&';
+                    if (search) url += 'search=' + encodeURIComponent(search) + '&';
+                    if (fromDate) url += 'fromDate=' + encodeURIComponent(fromDate) + '&';
+                    if (toDate) url += 'toDate=' + encodeURIComponent(toDate) + '&';
+                    if (paymentMethod) url += 'paymentMethod=' + encodeURIComponent(paymentMethod) + '&';
+
+                    const response = await fetch(url);
+                    const result = await response.json();
+
+                    var container = document.getElementById('invoicesTableContainer');
+                    if (!result.success) {
+                        container.innerHTML = '<p class="text-center text-danger" style="color: #dc3545 !important;">Lỗi: ' + (result.message || 'Không thể tải dữ liệu') + '</p>';
+                        return;
                     }
 
-                    // Cập nhật thống kê
-                    document.getElementById('totalInvoices').textContent = totalCount;
-                    document.getElementById('onlineInvoices').textContent = totalCount;
-                    document.getElementById('totalRevenue').textContent = formatMoney(totalRevenue);
+                    var html = '<table class="table table-hover" style="width: 100%;">' +
+                        '<thead><tr>' +
+                        '<th>Mã đơn</th><th>Loại</th><th>Khách hàng</th><th>Nhân viên</th>' +
+                        '<th>Ngày lập</th><th>Trạng thái</th><th>Tổng tiền</th><th>Số lượng SP</th><th>Thao tác</th>' +
+                        '</tr></thead><tbody>';
 
-                    for (var i = 0; i < result.data.length; i++) {
-                        var invoice = result.data[i];
-                        
-                        var statusClass = 'status-' + (invoice.trangThaiSo !== undefined ? invoice.trangThaiSo : 0);
-                        var statusName = getStatusName(invoice.trangThaiSo !== undefined ? invoice.trangThaiSo : 0);
-                        
-                        // Đảm bảo hiển thị đầy đủ thông tin
-                        var maDon = invoice.maDon || (invoice.idHoaDon ? 'HD' + String(invoice.idHoaDon).padStart(6, '0') : 'N/A');
-                        var hoTen = invoice.hoTenKhachHang || 'N/A';
-                        var sdt = invoice.sdtKhachHang || '';
-                        var hoTenNhanVien = invoice.hoTenNhanVien || 'N/A';
-                        var ngayLap = invoice.ngayLap || 'N/A';
-                        var tongTien = invoice.tongTien !== undefined && invoice.tongTien !== null ? invoice.tongTien : 0;
-                        var soLuongSP = invoice.soLuongSanPham !== undefined && invoice.soLuongSanPham !== null ? invoice.soLuongSanPham : 0;
-                        var phuongThuc = invoice.phuongThucThanhToan || 'COD';
-                        var isOnline = phuongThuc === 'Chuyển khoản';
-                        var paymentBadge = isOnline 
-                            ? '<span class="payment-badge payment-online"><i class="bi bi-globe me-1"></i>Online</span>'
-                            : '<span class="payment-badge payment-offline"><i class="bi bi-shop me-1"></i>Offline</span>';
+                    if (!result.data || result.data.length === 0) {
+                        html += '<tr><td colspan="9" class="text-center" style="padding:30px;"><i class="bi bi-inbox me-2"></i>Không có hóa đơn nào.</td></tr>';
 
-                        html += '<tr>' +
-                            '<td style="color: #ffffff !important; font-size: 14px !important;"><strong style="color: #ffffff !important; font-weight: 600 !important;">' + maDon + '</strong></td>' +
-                            '<td style="font-size: 14px !important;">' + paymentBadge + '</td>' +
-                            '<td style="color: #ffffff !important; font-size: 14px !important;">' +
-                            '<div style="font-weight: 600; color: #ffffff !important; margin-bottom: 4px;">' + hoTen + '</div>' +
-                            (sdt ? '<small style="color: #b0b0b0 !important; font-size: 12px !important;"><i class="bi bi-telephone me-1"></i>' + sdt + '</small>' : '') +
-                            '</td>' +
-                            '<td style="color: #f1f5f9 !important; font-size: 14px !important;">' +
-                            (hoTenNhanVien !== 'N/A' ? '<span style="color: #667eea !important; font-weight: 500;"><i class="bi bi-person-badge me-1"></i>' + hoTenNhanVien + '</span>' : '<span class="text-muted">Chưa có</span>') +
-                            '</td>' +
-                            '<td style="color: #f1f5f9 !important; font-size: 14px !important;">' + ngayLap + '</td>' +
-                            '<td style="font-size: 14px !important;"><span class="status-badge ' + statusClass + '">' + statusName + '</span></td>' +
-                            '<td style="font-size: 14px !important;"><strong style="color: #28a745 !important; font-weight: 600 !important; font-size: 14px !important;">' + formatMoney(tongTien) + '</strong></td>' +
-                            '<td style="font-size: 14px !important;"><span class="badge bg-secondary" style="font-size: 12px !important;">' + soLuongSP + '</span></td>' +
-                            '<td>' +
-                            '<div class="d-flex gap-2 flex-wrap">' +
-                            '<button class="btn btn-view btn-action" onclick="showInvoiceDetail(' + invoice.idHoaDon + ')">' +
-                            '<i class="bi bi-eye me-1"></i>Chi tiết</button>' +
-                            '<button class="btn btn-update-status btn-action" onclick="openUpdateStatusModal(' + invoice.idHoaDon + ', ' + (invoice.trangThaiSo !== undefined ? invoice.trangThaiSo : 0) + ')">' +
-                            '<i class="bi bi-pencil me-1"></i>Đổi trạng thái</button>' +
-                            '</div>' +
-                            '</td>' +
+                        // reset stats
+                        document.getElementById('totalInvoices').textContent = 0;
+                        document.getElementById('onlineInvoices').textContent = 0;
+                        document.getElementById('totalRevenue').textContent = '0 ₫';
+                    } else {
+                        var totalCount = result.data.length;
+                        var totalRevenue = 0;
+
+                        for (var i = 0; i < result.data.length; i++) {
+                            totalRevenue += (result.data[i].tongTien || 0);
+                        }
+
+                        document.getElementById('totalInvoices').textContent = totalCount;
+                        document.getElementById('onlineInvoices').textContent = totalCount; // page này bạn đang chỉ hiển thị online
+                        document.getElementById('totalRevenue').textContent = formatMoney(totalRevenue);
+
+                        for (var i = 0; i < result.data.length; i++) {
+                            var invoice = result.data[i];
+
+                            var trangThaiSo = (invoice.trangThaiSo !== undefined && invoice.trangThaiSo !== null) ? invoice.trangThaiSo : -1;
+                            var statusClass = 'status-' + trangThaiSo;
+
+                            // Ưu tiên text server (đã normalize)
+                            var statusName = (invoice.trangThai && invoice.trangThai.trim().length > 0)
+                                ? invoice.trangThai
+                                : getStatusName(trangThaiSo);
+
+                            var maDon = invoice.maDon || (invoice.idHoaDon ? 'HD' + String(invoice.idHoaDon).padStart(6, '0') : 'N/A');
+                            var hoTen = invoice.hoTenKhachHang || 'N/A';
+                            var sdt = invoice.sdtKhachHang || '';
+                            var hoTenNhanVien = invoice.hoTenNhanVien || 'N/A';
+                            var ngayLap = invoice.ngayLap || 'N/A';
+                            var tongTien = invoice.tongTien ?? 0;
+                            var soLuongSP = invoice.soLuongSanPham ?? 0;
+
+                            var phuongThuc = invoice.phuongThucThanhToan || '';
+                            var isOnline = isTransferMethod(phuongThuc);
+
+                            var paymentBadge = isOnline
+                                ? '<span class="payment-badge payment-online"><i class="bi bi-globe me-1"></i>Online</span>'
+                                : '<span class="payment-badge payment-offline"><i class="bi bi-shop me-1"></i>Offline</span>';
+
+                            html += '<tr>' +
+                                '<td><strong>' + maDon + '</strong></td>' +
+                                '<td>' + paymentBadge + '</td>' +
+                                '<td><div style="font-weight:600;">' + hoTen + '</div>' + (sdt ? '<small><i class="bi bi-telephone me-1"></i>' + sdt + '</small>' : '') + '</td>' +
+                                '<td>' + (hoTenNhanVien !== 'N/A' ? '<span><i class="bi bi-person-badge me-1"></i>' + hoTenNhanVien + '</span>' : '<span class="text-muted">Chưa có</span>') + '</td>' +
+                                '<td>' + ngayLap + '</td>' +
+                                '<td><span class="status-badge ' + statusClass + '">' + statusName + '</span></td>' +
+                                '<td><strong style="color:#28a745;">' + formatMoney(tongTien) + '</strong></td>' +
+                                '<td><span class="badge bg-secondary">' + soLuongSP + '</span></td>' +
+                                '<td><div class="d-flex gap-2 flex-wrap">' +
+                                    '<button class="btn btn-view btn-action" onclick="showInvoiceDetail(' + invoice.idHoaDon + ')"><i class="bi bi-eye me-1"></i>Chi tiết</button>' +
+                                    '<button class="btn btn-update-status btn-action" onclick="openUpdateStatusModal(' + invoice.idHoaDon + ', ' + trangThaiSo + ')"><i class="bi bi-pencil me-1"></i>Đổi trạng thái</button>' +
+                                '</div></td>' +
                             '</tr>';
+                        }
                     }
-                }
 
-                html += '</tbody></table>';
-                container.innerHTML = html;
-            } catch (error) {
-                console.error('Error loading invoices:', error);
-                document.getElementById('invoicesTableContainer').innerHTML =
-                    '<p class="text-center text-danger">Lỗi khi tải danh sách hóa đơn.</p>';
+                    html += '</tbody></table>';
+                    container.innerHTML = html;
+
+                } catch (error) {
+                    console.error('Error loading invoices:', error);
+                    document.getElementById('invoicesTableContainer').innerHTML =
+                        '<p class="text-center text-danger">Lỗi khi tải danh sách hóa đơn.</p>';
+                }
             }
-        }
 
         // Xem chi tiết hóa đơn
         async function showInvoiceDetail(id) {
@@ -838,6 +839,7 @@
             });
         });
     </script>
+
 </body>
 </html>
 
