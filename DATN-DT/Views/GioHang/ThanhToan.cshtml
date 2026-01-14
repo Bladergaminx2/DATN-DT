@@ -1150,15 +1150,36 @@
                 try {
                     const response = await fetch('/Voucher/GetActiveVouchers');
                     const result = await response.json();
+                    
+                    console.log('Voucher API Response:', result);
+                    console.log('Response status:', response.status);
+                    console.log('Response OK:', response.ok);
 
-                    if (result.success && result.data && result.data.length > 0) {
+                    // Kiểm tra response status
+                    if (!response.ok) {
+                        console.error('API Error:', response.status, response.statusText, result);
+                        container.innerHTML = `
+                            <div class="col-12">
+                                <div class="alert alert-danger">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    Lỗi khi tải danh sách voucher: ${result?.message || response.statusText}
+                                </div>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    // Kiểm tra kỹ response format
+                    if (result && result.success && result.data && Array.isArray(result.data) && result.data.length > 0) {
                         voucherListData = result.data;
+                        console.log('Found vouchers:', result.data.length);
                         container.innerHTML = '';
                         result.data.forEach((voucher, index) => {
                             const voucherCard = createVoucherCard(voucher, index);
                             container.appendChild(voucherCard);
                         });
                     } else {
+                        console.log('No vouchers found or invalid response format:', result);
                         container.innerHTML = `
                             <div class="col-12">
                                 <div class="no-vouchers">
@@ -1175,7 +1196,7 @@
                         <div class="col-12">
                             <div class="alert alert-danger">
                                 <i class="bi bi-exclamation-triangle me-2"></i>
-                                Có lỗi xảy ra khi tải danh sách voucher
+                                Có lỗi xảy ra khi tải danh sách voucher: ${error.message}
                             </div>
                         </div>
                     `;

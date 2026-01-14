@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using System;
+using System.Linq;
 using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace DATN_DT.Controllers
 {
@@ -166,6 +168,19 @@ namespace DATN_DT.Controllers
                 await _voucherService.UpdateVoucherStatusAsync();
                 
                 var now = DateTime.Now;
+                
+                // Debug: Kiểm tra tổng số voucher
+                var totalVouchers = await _context.Vouchers.CountAsync();
+                Console.WriteLine($"[GetActiveVouchers] Total vouchers in DB: {totalVouchers}");
+                
+                // Lấy tất cả voucher trước để debug
+                var allVouchers = await _context.Vouchers.ToListAsync();
+                Console.WriteLine($"[GetActiveVouchers] Vouchers by status:");
+                foreach (var statusGroup in allVouchers.GroupBy(v => v.TrangThai))
+                {
+                    Console.WriteLine($"  - {statusGroup.Key}: {statusGroup.Count()}");
+                }
+                
                 var vouchers = await _context.Vouchers
                     .Where(v => v.TrangThai == "HoatDong" 
                         && v.NgayBatDau <= now 
@@ -192,10 +207,13 @@ namespace DATN_DT.Controllers
                     })
                     .ToListAsync();
 
+                Console.WriteLine($"[GetActiveVouchers] Filtered vouchers count: {vouchers.Count}");
                 return Ok(new { success = true, data = vouchers });
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[GetActiveVouchers] Error: {ex.Message}");
+                Console.WriteLine($"[GetActiveVouchers] StackTrace: {ex.StackTrace}");
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
@@ -307,43 +325,34 @@ namespace DATN_DT.Controllers
         {
             try
             {
-                // Thử lấy từ User claims trước (nếu đã authenticate)
-                var emailFromUser = User.FindFirstValue(ClaimTypes.Name);
-                if (!string.IsNullOrEmpty(emailFromUser))
-                    return emailFromUser;
-
-                // Nếu không có, thử đọc từ JWT token trong cookie
+                // Thử lấy từ cookie JWT trước (như UserProfileController)
                 var token = Request.Cookies["jwt"];
-                if (string.IsNullOrEmpty(token)) 
+                if (!string.IsNullOrEmpty(token))
                 {
-                    Console.WriteLine("[Voucher] No JWT token found in cookies");
-                    return null;
-                }
-
-                var handler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
-                var jsonToken = handler.ReadJwtToken(token);
-                
-                // Tìm claim - trong LoginController, username được lưu vào ClaimTypes.Name
-                // và username chính là EmailKhachHang
-                var emailClaim = jsonToken.Claims.FirstOrDefault(c => 
-                    c.Type == ClaimTypes.Name || 
-                    c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name" ||
-                    c.Type == "name");
-                
-                if (emailClaim != null)
-                {
-                    Console.WriteLine($"[Voucher] Found email from token: {emailClaim.Value}");
-                    return emailClaim.Value;
+                    try
+                    {
+                        var handler = new JwtSecurityTokenHandler();
+                        var jsonToken = handler.ReadJwtToken(token);
+                        var emailClaim = jsonToken.Claims.FirstOrDefault(c => 
+                            c.Type == ClaimTypes.Name || 
+                            c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name" ||
+                            c.Type == "name" ||
+                            c.Type == "Email");
+                        if (emailClaim != null)
+                        {
+                            return emailClaim.Value;
+                        }
+                    }
+                    catch { }
                 }
                 
-                Console.WriteLine("[Voucher] No email claim found in token");
-                return null;
+                // Fallback: Lấy từ User claims
+                return User.FindFirstValue(ClaimTypes.Name) ?? User.FindFirstValue("Email");
             }
             catch (Exception ex)
             {
                 // Log error for debugging
                 Console.WriteLine($"[Voucher] Error getting customer email: {ex.Message}");
-                Console.WriteLine($"[Voucher] Stack trace: {ex.StackTrace}");
                 return null;
             }
         }
